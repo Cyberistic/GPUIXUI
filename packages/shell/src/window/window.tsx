@@ -1,23 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Window: the anatomy every native block wears.
- *
- * A Mac window is a sidebar that runs edge to edge under the traffic lights, a
- * unified toolbar over the content column, opaque content and an optional
- * inspector. The sidebar and toolbar paint their materials (`materialFill`), so
- * a vibrant window shows the desktop through them; the content never does.
- *
- * The parts are slots rather than children so the window knows where the lights
- * float: over the sidebar when there is one, otherwise over the toolbar, which
- * then leaves them their box. The sidebar resizes from its trailing hairline
- * as AppKit's does: the dock's `Divider` floats over the seam, so a drag or the
- * arrows move it between its bounds and nothing new paints.
- *
- * Open it with {@link nativeWindowOptions}: the runtime reserves no titlebar
- * (`docs/gpuix-capabilities.md` §Window chrome), so without a transparent
- * titlebar the OS bar paints above this one.
- */
-
 import { isTerminal, type Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { Divider, dragSize, resizeByKey, sizeBounds } from "@gpuixui/dock";
@@ -53,33 +34,30 @@ const WindowContext = createContext<WindowChrome>({
   lightsOverToolbar: false,
 });
 
-/** {@link Window} props. */
 export interface WindowProps extends Omit<Props, "children"> {
-  /** The source list, or any sidebar; it runs under the traffic lights. */
   readonly sidebar?: ReactNode;
-  /** The sidebar's starting width. Defaults to AppKit's 220. */
+
   readonly sidebarWidth?: number;
-  /** The narrowest the sidebar drags to. Defaults to 180. */
+
   readonly sidebarMinWidth?: number;
-  /** The widest the sidebar drags to. Defaults to 360; equal bounds fix it. */
+
   readonly sidebarMaxWidth?: number;
-  /** Reports the sidebar's width after a drag step or a key, to persist it. */
+
   readonly onSidebarWidthChange?: (width: number) => void;
-  /** The toolbar row, usually a {@link WindowToolbar}. */
+
   readonly toolbar?: ReactNode;
-  /** The toolbar's height step. Defaults to the unified 52-point bar. */
+
   readonly toolbarStyle?: ToolbarStyle;
-  /** The trailing inspector pane. */
+
   readonly inspector?: ReactNode;
-  /** The inspector's width. Defaults to 260. */
+
   readonly inspectorWidth?: number;
-  /** The platform whose chrome the window wears. Defaults to the host's. */
+
   readonly platform?: PlatformName;
-  /** The content column. */
+
   readonly children?: ReactNode;
 }
 
-/** The native window. */
 export const Window = ({
   sidebar,
   sidebarWidth = 220,
@@ -123,8 +101,7 @@ export const Window = ({
             width: "100%",
             height: "100%",
             minHeight: 0,
-            // A vibrant window leaves its frame to the desktop; every pane paints
-            // its own fill over it.
+
             ...(theme.window === "blurred"
               ? {}
               : { backgroundColor: theme.colors.background }),
@@ -223,17 +200,14 @@ export const Window = ({
   );
 };
 
-/** {@link WindowToolbar} props. */
 export interface WindowToolbarProps extends Omit<Props, "children"> {
-  /** The window title, leading-aligned as AppKit's unified toolbar draws it. */
   readonly title?: string;
-  /** Content before the title: back/forward, a sidebar toggle. */
+
   readonly leading?: ReactNode;
-  /** Content after the flexible space: a segmented control, search, actions. */
+
   readonly actions?: ReactNode;
 }
 
-/** The unified toolbar over the content column. */
 export const WindowToolbar = ({
   title,
   leading,

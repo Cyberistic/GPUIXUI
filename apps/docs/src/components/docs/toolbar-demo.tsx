@@ -9,35 +9,19 @@ import {
 } from "@/lib/shell-logic";
 import { BrowserIcon } from "./browser-icon";
 
-/**
- * Browser preview for the Toolbar page.
- *
- * `@gpuixui/shell`'s `Toolbar` is a GPUix host strip, so the page cannot mount
- * it and this drawing is a labelled approximation. The rules are the package's:
- * `splitOverflow` decides which actions stay in the strip and which overflow,
- * `initialRoving` and `moveRoving` decide which slot holds the single tab
- * stop. Only the paint is the browser's — and the paint is the shipped one: the
- * leading group is the shared `.gx-btn` family, the divider is a hairline, the
- * mode group is a `gx-tgroup`, and the overflow trigger is the square icon
- * action, so a reader sees the component's anatomy rather than a second chrome.
- */
-
-/** One action in the strip. */
 export interface ToolbarAction {
   readonly id: string;
   readonly label: string;
-  /** A label shared by adjacent actions; a separator falls between groups. */
+
   readonly group?: string;
   readonly disabled?: boolean;
 }
 
-/** One mode in the trailing group. */
 export interface ToolbarMode {
   readonly id: string;
   readonly label: string;
 }
 
-/** The actions the drawing opens with: two groups and a disabled action. */
 export const TOOLBAR_ACTIONS: ReadonlyArray<ToolbarAction> = [
   { id: "new", label: "New", group: "file" },
   { id: "open", label: "Open", group: "file", disabled: true },
@@ -47,19 +31,15 @@ export const TOOLBAR_ACTIONS: ReadonlyArray<ToolbarAction> = [
   { id: "find", label: "Find", group: "find" },
 ];
 
-/** The trailing mode group: the toolbar's own view switch. */
 export const TOOLBAR_MODES: ReadonlyArray<ToolbarMode> = [
   { id: "edit", label: "Edit" },
   { id: "preview", label: "Preview" },
 ];
 
-/** The visible slots the drawing offers: the overflow trigger takes one. */
 export const TOOLBAR_SLOTS: ReadonlyArray<number> = [3, 4, 5, 6];
 
-/** The slots the drawing opens with. */
 export const TOOLBAR_MAX = 5;
 
-/** The actions reduced to what the package's navigation needs. */
 export const toolbarSpecs = (
   actions: ReadonlyArray<ToolbarAction>,
 ): ReadonlyArray<ToolbarItemSpec> =>
@@ -68,17 +48,14 @@ export const toolbarSpecs = (
     disabled: action.disabled === true,
   }));
 
-/** The slots the strip holds: the visible actions and the overflow trigger. */
 export interface ToolbarStrip {
-  /** The actions painted in the strip. */
   readonly visible: ReadonlyArray<ToolbarAction>;
-  /** The actions the overflow menu holds. */
+
   readonly overflow: ReadonlyArray<ToolbarAction>;
-  /** How many slots the strip holds, the overflow trigger included. */
+
   readonly slots: number;
 }
 
-/** The strip the package's overflow split produces. */
 export const toolbarStrip = (
   actions: ReadonlyArray<ToolbarAction>,
   max: number,
@@ -93,18 +70,15 @@ export const toolbarStrip = (
   };
 };
 
-/** Whether a slot cannot take the tab stop: a disabled action, or no slot. */
 export const slotDisabled = (strip: ToolbarStrip, slot: number): boolean => {
   const overflowSlot = strip.slots - 1;
   if (Arr.length(strip.overflow) > 0 && slot === overflowSlot) return false;
   return strip.visible[slot]?.disabled === true;
 };
 
-/** The slot that holds the strip's single tab stop. */
 export const initialTabStop = (strip: ToolbarStrip): Option.Option<number> =>
   initialRoving(strip.slots, (slot) => slotDisabled(strip, slot));
 
-/** The slot an arrow key moves the tab stop to. */
 export const moveTabStop = (
   strip: ToolbarStrip,
   current: number,
@@ -112,7 +86,6 @@ export const moveTabStop = (
 ): Option.Option<number> =>
   moveRoving(current, strip.slots, delta, (slot) => slotDisabled(strip, slot));
 
-/** The label of the slot the tab stop sits on, or the overflow trigger's. */
 export const tabStopLabel = (
   strip: ToolbarStrip,
   tabStop: Option.Option<number>,
@@ -127,33 +100,30 @@ export const tabStopLabel = (
     },
   });
 
-/** What the drawing reports under the strip. */
 export const toolbarReadout = (
   strip: ToolbarStrip,
   tabStop: Option.Option<number>,
 ): string =>
   `${Arr.length(strip.visible)} of ${Arr.length(strip.visible) + Arr.length(strip.overflow)} in the strip · the tab stop is on ${tabStopLabel(strip, tabStop)}`;
 
-/** The drawing itself: the strip, its roving tab stop and its overflow menu. */
 export interface ToolbarFrameProps {
   readonly actions: ReadonlyArray<ToolbarAction>;
   readonly max: number;
   readonly tabStop: Option.Option<number>;
   readonly overflowOpen: boolean;
-  /** The trailing mode group. Omit to draw no group. */
+
   readonly modes?: ReadonlyArray<ToolbarMode>;
-  /** The pressed mode. */
+
   readonly mode?: string;
-  /** Reports the slot that holds the tab stop. */
+
   readonly onTabStopChange: (slot: Option.Option<number>) => void;
   readonly onOverflowOpenChange: (open: boolean) => void;
-  /** Reports the action a reader chose. */
+
   readonly onAction: (id: string) => void;
-  /** Reports the mode a reader pressed. */
+
   readonly onModeChange?: (id: string) => void;
 }
 
-/** The strip, the overflow menu and the readout. */
 export function ToolbarFrame({
   actions,
   max,
@@ -172,8 +142,7 @@ export function ToolbarFrame({
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
     const key = event.key;
     if (key !== "ArrowLeft" && key !== "ArrowRight") return;
-    // A key in the mode group is the group's; only an action or the overflow
-    // trigger roves this strip.
+
     const target = event.target as HTMLElement;
     if (target.closest(".gx-tgroup") !== null) return;
     event.preventDefault();
@@ -307,7 +276,6 @@ export function ToolbarFrame({
   );
 }
 
-/** The page's preview: the strip, its slots and the action a reader chose. */
 export function ToolbarDemo() {
   const [max, setMax] = useState(TOOLBAR_MAX);
   const [tabStop, setTabStop] = useState<Option.Option<number>>(() =>

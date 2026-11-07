@@ -1,12 +1,3 @@
-/**
- * Countdown behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: a display that ignores a new remaining value, an expired
- * countdown that still reads as live, an unsigned label, a style callback that
- * cannot see the expiry, and a remaining time the clock cannot read painted as
- * the literal word `NaN` while the countdown still read as live.
- */
-
 import { describe, expect, it } from "vitest";
 import { a11yNodes } from "../internal/a11y.js";
 import { darkTheme } from "../internal/theme.js";

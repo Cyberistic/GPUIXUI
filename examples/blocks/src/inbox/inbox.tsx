@@ -1,7 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Inbox — a thread list beside the open thread. A click on a thread opens it.
- */
 import { Avatar } from "@gpuixui/components/avatar";
 import { Badge } from "@gpuixui/components/badge";
 import { Button, Separator, Stack, Text } from "@gpuixui/primitives";
@@ -11,7 +8,6 @@ import * as Option from "effect/Option";
 import { useState } from "react";
 import { threads } from "./data.js";
 
-/** The inbox, as a window's whole content. */
 export const Inbox = () => {
   const theme = useTheme();
   const [open, setOpen] = useState(threads[0]?.id ?? "");

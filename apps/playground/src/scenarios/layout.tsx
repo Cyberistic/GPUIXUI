@@ -1,11 +1,3 @@
-/**
- * `layout-flex` — flex layout, gaps and absolute positioning.
- *
- * Verifies the arithmetic the whole component library sits on: explicit widths
- * are exact, `gap` is the space between boxes, and `position: "absolute"`
- * resolves against the nearest positioned ancestor. Every assertion is a
- * measured bound within 1px, never a pixel of a screenshot.
- */
 import { Effect } from "effect";
 import * as Option from "effect/Option";
 import { useTheme } from "@gpuixui/tokens/react";
@@ -99,16 +91,6 @@ export const layoutScenario: ScenarioBody = {
     }),
 };
 
-/**
- * `layout-flex-sizing` — the flex rules a `flex-1`, a `shrink-0` and a
- * truncating label rest on.
- *
- * The geometry lives in `live/flex-sizing.ts` because the window probe measures
- * the same rules: one table of expectations, one arithmetic, so the renderer
- * reading and the window reading cannot drift. The renderer's layout is the
- * runtime's own, so a rule that stops holding fails here in milliseconds rather
- * than only in a paid live run.
- */
 const FlexSizingProbe = () => {
   const theme = useTheme();
   const row = (id: string, width: number) => ({
@@ -291,9 +273,6 @@ export const layoutFlexSizingScenario: ScenarioBody = {
         { concurrency: 1, discard: true },
       );
 
-      // `flex-1` is the one declaration the whole library composes with: while
-      // both contents fit inside a share, a basis of zero splits the leftover
-      // evenly, which is what makes two columns of unequal text equal.
       const short = yield* boxOf(FLEX_IDS.basisZeroShort);
       const fit = yield* boxOf(FLEX_IDS.basisZeroFit);
       yield* ctx.expectNear(
@@ -303,8 +282,6 @@ export const layoutFlexSizingScenario: ScenarioBody = {
         1,
       );
 
-      // ...and a grower whose content is wider than its share keeps its
-      // content, which is why a truncating column declares `minWidth: 0`.
       const over = yield* boxOf(FLEX_IDS.overItem);
       yield* ctx.expectNear(
         "a basis-zero grower keeps the content its share cannot hold",
@@ -313,7 +290,6 @@ export const layoutFlexSizingScenario: ScenarioBody = {
         1,
       );
 
-      // An item that may not shrink keeps its width and paints past its row.
       const noShrinkRow = yield* boxOf(FLEX_IDS.noShrinkRow);
       const noShrinkItem = yield* boxOf(FLEX_IDS.noShrinkItem);
       yield* ctx.expectEqual(

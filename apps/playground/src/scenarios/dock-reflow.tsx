@@ -1,30 +1,3 @@
-/**
- * `dock-reflow` — a pane's `onLayout` fires again when a sibling takes its space.
- *
- * The docking probe pins a **fixed-width** split because a split's `max` is the
- * caller's number, and `docking-nested` records the consequence: an inner split
- * does not re-clamp when its parent shrinks. The stated way out is the
- * container's own `onLayout` ("a dock passes its own bounds"), and nothing had
- * measured that a reflow actually reports: an `onLayout` that fired only for the
- * first paint would make the workaround useless.
- *
- * 560px row: a 120px sidebar, a flexible centre pane and a fixed 100px
- * inspector. Pressing `Widen sidebar` takes 100px from the centre. Measured on
- * 0.11.0:
- *
- *   - the commit that changes the sidebar runs a layout pass **before** the new
- *     width applies, reporting the box the pane still has (`w=340 reports=2`),
- *     and the settled pass then reports `w=240` on the next frame;
- *   - the settled width equals the pane's painted `bounds`, so the report is the
- *     box rather than the style's intent — the dock re-clamp signal exists;
- *   - a pane that kept its box (the 100px inspector) still received a report, so
- *     a handler must be idempotent and must act on the width it is given;
- *   - giving the space back reports the original width again.
- *
- * The probe's view starts its readouts at the values the first paint will
- * report, because `onLayout` is the only channel that knows them and the first
- * pass is not guaranteed to be the settled one.
- */
 import { useState } from "react";
 import { Effect, pipe } from "effect";
 import * as Option from "effect/Option";
@@ -33,14 +6,12 @@ import { useTheme } from "@gpuixui/tokens/react";
 import { Pressable, Readout } from "../ui.js";
 import type { ScenarioBody } from "../types.js";
 
-/** The row's width, so the arithmetic is exact. */
 const ROW = 560;
-/** The sidebar at its narrow and wide widths. */
+
 const SIDEBAR = { narrow: 120, wide: 220 } as const;
-/** The inspector's fixed width. */
+
 const INSPECTOR = 100;
 
-/** The fields an `onLayout` payload may carry; every one is optional. */
 interface LayoutPayload {
   readonly x?: number;
   readonly y?: number;
@@ -48,13 +19,11 @@ interface LayoutPayload {
   readonly height?: number;
 }
 
-/** One pane's layout reports, as the readout prints them. */
 interface Reports {
   readonly width: number;
   readonly count: number;
 }
 
-/** A box the sidebar's toggle gives the panes. */
 interface Report {
   readonly sidebar: number;
   readonly centre: Reports;
@@ -132,7 +101,6 @@ const DockReflowProbe = () => {
   );
 };
 
-/** `key=value` out of a readout, as a number, or `-1` when it is absent. */
 const reported = (readout: string, key: string): number =>
   Option.getOrElse(
     pipe(
@@ -164,7 +132,6 @@ export const dockReflowScenario: ScenarioBody = {
           () => -1,
         );
 
-      // 1. The panes lay out to the row's remaining space.
       yield* ctx.expectEqual(
         "the centre pane takes the space the panel and inspector leave",
         centreWidth(),
@@ -181,10 +148,6 @@ export const dockReflowScenario: ScenarioBody = {
         boundsWidth("reflow-centre"),
       );
 
-      // 2. The commit that changes the sidebar runs a layout pass **before**
-      //    the new width is laid out, and that pass reports the box the pane
-      //    still has. A re-clamp must act on the width it is given, not on the
-      //    event's arrival.
       const reportsBefore = centreReports();
       ctx.host.click("reflow-widen");
       yield* ctx.expectEqual(
@@ -198,8 +161,6 @@ export const dockReflowScenario: ScenarioBody = {
         reportsBefore + 1,
       );
 
-      // 3. The settled report carries the new width, and it is the painted box:
-      //    the signal a dock re-clamps on.
       ctx.host.advance(50);
       ctx.host.advance(50);
       yield* ctx.expectEqual(
@@ -223,7 +184,6 @@ export const dockReflowScenario: ScenarioBody = {
         2,
       );
 
-      // 4. Giving the space back moves the centre back and reports again.
       const reportsWide = centreReports();
       ctx.host.click("reflow-narrow");
       ctx.host.advance(50);

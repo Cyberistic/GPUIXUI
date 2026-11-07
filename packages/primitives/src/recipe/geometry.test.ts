@@ -1,22 +1,3 @@
-/**
- * The geometry recipes → `StyleDesc` equivalence guard.
- *
- * The second migration wave converted the ten primitives whose resting
- * appearance was a *computed* numeric or dynamic value — `NumberField`,
- * `Checkbox`, `RadioGroup`, `Switch`, `Slider`, `RangeSlider`, `Meter`,
- * `Progress`, `Spinner`, `Skeleton`. The fix is three tiers: static classes,
- * derived tokens (a utility that is a function of the theme, e.g.
- * `switch-track` = `round(iconSize × 1.75)`), and a typed `style` seam for
- * data (percentage fills, caller sizes, pulse opacity).
- *
- * This suite proves the recipe + `style` agree with the pre-migration `core/`
- * resolvers, exactly as `recipe.test.ts` does for the first wave. For each
- * primitive, the compiled recipe (plus the data-driven `style` where the value
- * is data) equals the resolver's output. The data (`width: "50%"`, a dot's
- * opacity) is the *caller's* contribution and is merged in the test the same
- * way the component merges it, so a drift on either side fails here.
- */
-
 import { describe, expect, it } from "vitest";
 import type { StyleDesc } from "@gpuix/react";
 import { cn } from "@gpuixui/tw";
@@ -192,17 +173,6 @@ describe("selection recipes", () => {
     ).toEqual(selectionBoxStyle(spec, testTheme));
   });
 
-  /**
-   * The bug this guards: an empty box's edge was the `input` role, which in
-   * this design system is a field *fill*. In the light theme `input`, `card`
-   * and `popover` are all `#FFFFFF`, so an unchecked box inside a card drew its
-   * whole resting state at 1.00:1 — the mark only appears once checked. The
-   * design system's rule is that a control is carried by its edge, and the
-   * measured boundary role is `borderStrong`.
-   *
-   * The strips are derived from the token contract itself, so a new surface the
-   * table measures a boundary on is measured here without a second list.
-   */
   const boundaryStrips = Arr.flatMap(contrastPairs, (pair) =>
     pair.foreground === "borderStrong" && pair.floor === "boundary"
       ? [pair.background]
@@ -210,8 +180,6 @@ describe("selection recipes", () => {
   );
 
   const boundaryEdge = (style: StyleDesc): string =>
-    // `StyleDesc.borderColor` is the runtime's own optional shape, so the
-    // absent case is converted once here rather than probed at each call.
     Option.getOrElse(Option.fromNullishOr(style.borderColor), () => "");
 
   const expectOnEveryStrip = (
@@ -241,13 +209,11 @@ describe("selection recipes", () => {
         expectOnEveryStrip(edge, `${theme.mode} ${shape}`, theme);
       });
     });
-    // The field fill the box used to paint is not an edge: it is the card's own
-    // white in the light palette, which is what made the box disappear.
+
     expect(contrastRatio(lightTheme.colors.input, lightTheme.colors.card)).toBe(
       1,
     );
-    // And the utility that used to map the fill onto an edge is the default
-    // table's border role again, so a re-added override fails here.
+
     expect(
       recipeTw.classesToStyle("border-input", lightTheme).style.borderColor,
     ).toBe(lightTheme.colors.border);
@@ -299,9 +265,6 @@ describe("slider recipes", () => {
   });
 
   it("turns the same four parts onto the vertical axis", () => {
-    // The bug guarded: a vertical slider is the horizontal one rotated, so a
-    // recipe and an oracle that disagree paint the fill along the wrong axis —
-    // a bar that never moves while its value does.
     const vertical = spec({ orientation: "vertical" });
     expect(compiled(sliderTrackClass("md", "vertical"))).toEqual(
       sliderTrackStyle(vertical, testTheme),
@@ -372,10 +335,6 @@ describe("progress and meter recipes", () => {
   });
 
   it("paints the buffer in a role the tone's fill does not use", () => {
-    // The bug guarded: a `muted` fill is `mutedForeground`, which was the
-    // buffer's own role, so `value={20} buffer={80}` painted one continuous
-    // 80% bar and read as finished. Both segments are marks on the `muted`
-    // track, so each has to clear the floor `contrastPairs` applies there.
     const background = (style: StyleDesc): string =>
       Option.getOrElse(Option.fromNullishOr(style.backgroundColor), () => "");
     Arr.forEach(
@@ -404,8 +363,7 @@ describe("progress and meter recipes", () => {
         });
       },
     );
-    // The one tone whose fill already is the buffer's role takes the boundary
-    // role for its held share; every other tone keeps `mutedForeground`.
+
     expect(
       background(
         recipeTw.classesToStyle(progressBufferClass("muted"), lightTheme).style,

@@ -1,12 +1,3 @@
-/**
- * React wrappers that accept shadcn class strings.
- *
- * `Tw.div` / `Tw.text` / `Tw.input` resolve the classes against the nearest
- * `@gpuixui/tokens` theme and registry, and merge the caller's `style` last.
- * They are the bridge for the first slice; a JSX runtime can make this
- * automatic later.
- */
-
 import { forwardRef, type ReactElement } from "react";
 import type {
   InputProps,
@@ -19,14 +10,12 @@ import { classesToStyle, mergeTwStyle } from "./classes.js";
 import { useTwRegistry } from "./host.js";
 import type { TwState } from "./registry.js";
 
-/** State a class string can target that the native element cannot infer. */
 export interface TwStateProps extends TwState {
   readonly focused?: boolean;
   readonly invalid?: boolean;
   readonly disabled?: boolean;
 }
 
-/** The classes plus the component's own interaction state. */
 interface TwResolution {
   readonly style: StyleDesc;
 }
@@ -48,12 +37,10 @@ const resolve = (
   return { style: mergeTwStyle(tw.style, interaction) };
 };
 
-/** {@link TwDiv} props: a native div with shadcn classes. */
 export interface TwDivProps extends Props, TwStateProps {
   readonly className?: string;
 }
 
-/** A GPUix `div` that accepts a shadcn class string. */
 export const TwDiv = forwardRef<PublicInstance, TwDivProps>(
   (
     {
@@ -88,12 +75,10 @@ export const TwDiv = forwardRef<PublicInstance, TwDivProps>(
 );
 TwDiv.displayName = "TwDiv";
 
-/** {@link TwText} props: native text with shadcn classes. */
 export interface TwTextProps extends Props, TwStateProps {
   readonly className?: string;
 }
 
-/** A GPUix `text` that accepts a shadcn class string. */
 export const TwText = forwardRef<PublicInstance, TwTextProps>(
   (
     {
@@ -128,12 +113,10 @@ export const TwText = forwardRef<PublicInstance, TwTextProps>(
 );
 TwText.displayName = "TwText";
 
-/** {@link TwInput} props: native input with shadcn classes. */
 export interface TwInputProps extends InputProps, TwStateProps {
   readonly className?: string;
 }
 
-/** A GPUix `input` that accepts a shadcn class string. */
 export const TwInput = forwardRef<PublicInstance, TwInputProps>(
   (
     {
@@ -168,7 +151,6 @@ export const TwInput = forwardRef<PublicInstance, TwInputProps>(
 );
 TwInput.displayName = "TwInput";
 
-/** The class-aware host components. */
 export const Tw = {
   div: TwDiv,
   text: TwText,
@@ -177,5 +159,4 @@ export const Tw = {
 
 export { TwProvider, useTwRegistry } from "./host.js";
 
-/** Kept for callers that want the element type without the wrapper. */
 export type TwElement = ReactElement;

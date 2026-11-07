@@ -79,22 +79,3 @@ A tree the schema **can** read may still name no field: a query saved before its
 field was picked carries a blank `field`, which the tree's schema accepts. The
 builder does not refuse it — there is a clause to edit — it reads the missing
 name as `Field`, so the row is named and its sentence says which part is absent.
-
-## Notes
-- The builder edits a tree; it does not run one — use `filterByTree`.
-- `fields` is read as data: a saved record that carried `null` for the
-  list offers no field, so a clause falls back to the field's own name. An entry
-  that names a **blank** `field` is not a field either — it can never match a
-  column id, so it is dropped from the picker and from the list Add reads.
-- **Add is offered only while there is a field to name.** A new clause takes the
-  first offered field, so a builder with none to offer paints no Add clause and
-  no Add group — the press would append a clause over no field, a query that
-  narrows nothing. Clear stays. A blank `field` among other entries is skipped,
-  so the clause Add composes names the first field it can actually use.
-- A clause that names no field — the shape a saved query can carry — reads
-  `Field` in its clause row and its sentence, so it is never a nameless picker
-  and its sentence never opens on its comparison.
-- A `not` holds exactly one child and paints no Add of its own.
-- A clause carries Remove only where removing it changes the tree.
-- A tree the release cannot read is refused with Clear; it is not migrated into
-  the current comparison set.

@@ -1,9 +1,3 @@
-/**
- * The launch film's takes (plan 060), one per shot that shows GPUIxUI. Each is
- * a real tree under real input; `take.ts` captures it.
- *
- *   nub apps/playground/dist/film/takes.js <take> <outDir>
- */
 import { Tabs, TabsList, TabsTrigger } from "@gpuixui/components/tabs";
 import { Card } from "@gpuixui/components/card";
 import {
@@ -63,7 +57,6 @@ import { capture, type Take, type Waypoint } from "./take.js";
 
 const mac = platformTheme(lightTheme, "darwin");
 
-/** A 960×540 stage (1920×1080 captured) holding one control, centred. */
 const stage = (theme: Theme, child: ReactNode) => (
   <ThemeProvider theme={theme}>
     <div
@@ -81,10 +74,8 @@ const stage = (theme: Theme, child: ReactNode) => (
   </ThemeProvider>
 );
 
-/** A beat of the score (120 BPM) in frames: 15. */
 const BEAT = (30 * 60) / 120;
 
-/** The Settings block in its window, restyled by its own Look control. */
 const SettingsWindow = () => {
   const [look, setLook] = useState<Look>("darwin");
   const [dark, setDark] = useState(false);
@@ -107,13 +98,6 @@ const SettingsWindow = () => {
   );
 };
 
-/**
- * The Settings block alone at the terminal's own 1024×576 and darwin theme: the
- * app area of the terminal, painted by the window renderer. The terminal platform
- * coalesces its paints to one commit per take (see `terminal-take.ts`), so a take
- * recorded through it can only show a single state; this one paints every frame,
- * which is what lets the film show look → dark → look inside the terminal.
- */
 const TerminalSettings = () => {
   const [look, setLook] = useState<Look>("darwin");
   const [dark, setDark] = useState(true);
@@ -133,11 +117,8 @@ const TerminalSettings = () => {
   );
 };
 
-/** The macOS look with an opaque window: what the offscreen renderer can paint
- * of a vibrant one (the blur is the window server's). */
 const macWindow = extendTheme(mac, { window: "opaque" });
 
-/** A Mac-app block, 1100×700, with the lights the OS would draw over it. */
 const macApp = (
   view: ReactNode,
   pointer: ReadonlyArray<Waypoint>,
@@ -159,25 +140,21 @@ const macApp = (
   keys,
 });
 
-/** A wallpaper the film ships; the desktop blocks paint it instead of their ground. */
 const wallpaper = (name: string): string =>
   new URL(
     `../../../../media/launch/assets/wallpaper/${name}.jpg`,
     import.meta.url,
   ).pathname;
 
-/** A theme's own wallpaper, as Omarchy ships it with the palette. */
 const omarchyWallpaper = (name: string): string =>
   new URL(
     `../../../../media/launch/assets/wallpaper/omarchy-${name}.jpg`,
     import.meta.url,
   ).pathname;
 
-/** One still of the desktop in a theme: the palette file repaints the tree. */
 const omarchy = (palette: PaletteName, name: string): Take => ({
   width: 1280,
   height: 720,
-  // Its charts draw on mount: the film uses the settled last frame.
   frames: 54,
   view: () => (
     <TilingDesktop
@@ -188,11 +165,9 @@ const omarchy = (palette: PaletteName, name: string): Take => ({
   ),
 });
 
-/** The theme a floating Mac-style window wears on a desktop. */
 const desktopWindow = (look: PlatformName): Theme =>
   extendTheme(platformTheme(lightTheme, look), { window: "opaque" });
 
-/** The chat block over a desktop, for the three-OS flip. */
 const chatOn = (look: PlatformName, desktop: ReactNode): Take => ({
   width: 1280,
   height: 800,
@@ -225,7 +200,6 @@ const chatOn = (look: PlatformName, desktop: ReactNode): Take => ({
   pointer: [{ frame: 0, aim: { x: 900, y: 700 } }],
 });
 
-/** A press on `testId` at `frame`, arriving from `from` and settling near it. */
 const pressAt = (
   testId: string,
   frame: number,
@@ -235,11 +209,10 @@ const pressAt = (
   { frame: frame - 4, aim: { testId } },
   { frame, aim: { testId }, down: true },
   { frame: frame + 3, aim: { testId } },
-  // At rest on a fixed point: the press may remove its own target (a photo opens).
+
   { frame: 74, aim: { x: from.x - 80, y: from.y - 60 } },
 ];
 
-/** `text` typed one character every `every` frames from `frame`. */
 const typing = (
   text: string,
   frame: number,
@@ -250,7 +223,6 @@ const typing = (
     keys: char === " " ? "space" : char,
   }));
 
-/** The desktop block: Start pressed at frame 24, a window raised at 60. */
 const desktop = (look: DesktopLook): Take => ({
   width: 1280,
   height: 800,
@@ -268,11 +240,6 @@ const desktop = (look: DesktopLook): Take => ({
   ],
 });
 
-/**
- * A close-up: one control in its card on the film's ground, at 1× for two
- * seconds. A 960×540 stage captures to exactly 1920×1080, so the composition's
- * camera stays at or below 1; the recipes' fixed metrics never meet a scaled theme.
- */
 const closeUp = (
   child: ReactNode,
   pointer: ReadonlyArray<Waypoint>,
@@ -293,16 +260,10 @@ const closeUp = (
   keys,
 });
 
-/**
- * The switch at 4× its shipped metrics. A camera crop would upscale the 2×
- * capture and soften the knob; the same primitive drawn larger keeps every
- * pixel the renderer has, which is what a macro shot wants.
- */
 const macroSwitch = extendTheme(mac, {
   switchMetrics: { width: 152, height: 88, knob: 80, inset: 4, border: 0 },
 });
 
-/** A control alone on the paper: no card, no label — the film's opening. */
 const solo = (
   child: ReactNode,
   pointer: ReadonlyArray<Waypoint>,
@@ -315,7 +276,6 @@ const solo = (
   pointer,
 });
 
-/** The pointer arrives, presses `testId` at 0.8 s, and stays on it. */
 const tap = (testId: string): ReadonlyArray<Waypoint> => [
   { frame: 0, aim: { testId, dx: 140, dy: 110 } },
   { frame: 20, aim: { testId } },
@@ -331,7 +291,6 @@ const watching = (control: string, take: Take): Take => ({
   watch: control,
 });
 
-/** The console as the terminal's whole page, its theme a real state of the app. */
 const TerminalConsole = () => {
   const [dark, setDark] = useState(true);
   return (
@@ -348,7 +307,6 @@ const TerminalConsole = () => {
 export const takes: Readonly<Record<string, Take>> = {
   ...wallTakes,
   "shadcn-v8": shadcnTake,
-  /** Collapse the sidebar, go light, deploy: each from one press, in one take. */
   "console-v8": {
     width: 1024,
     height: 553,
@@ -368,7 +326,6 @@ export const takes: Readonly<Record<string, Take>> = {
       { frame: 89, aim: { testId: "deploy", dx: 20, dy: 60 } },
     ],
   },
-  /** ⌘K: the HUD over nothing, "vault" typed; the film grows it into the app. */
   "launcher-v8": {
     width: 720,
     height: 500,
@@ -387,7 +344,6 @@ export const takes: Readonly<Record<string, Take>> = {
     pointer: [{ frame: 0, aim: { testId: "launcher-query" } }],
     keys: typedQuery("vault", 12),
   },
-  /** A wiki link is pressed: the title, the graph and the backlinks all answer. */
   "vault-v8": {
     width: 980,
     height: 620,
@@ -415,7 +371,6 @@ export const takes: Readonly<Record<string, Take>> = {
       { frame: 44, aim: { testId: "graph-gon", dx: 30, dy: 30 } },
     ],
   },
-  /** The dashboard's range is pressed on the film's beat and the chart redraws. */
   "dashboard-v8": {
     width: 1400,
     height: 900,
@@ -442,7 +397,6 @@ export const takes: Readonly<Record<string, Take>> = {
       { frame: 59, aim: { testId: "range-30d", dx: 40, dy: 60 } },
     ],
   },
-  /** The look moves on the film's two presses, 30 frames apart. */
   "settings-v8": {
     width: 880,
     height: 470,
@@ -459,10 +413,6 @@ export const takes: Readonly<Record<string, Take>> = {
       { frame: 89, aim: { testId: "look-linux", dx: 30, dy: 40 } },
     ],
   },
-  /**
-   * The app inside the terminal: one continuous take, so a press and the repaint
-   * it causes are the same frame.
-   */
   "term-v8": {
     width: 1024,
     height: 576,
@@ -604,7 +554,6 @@ export const takes: Readonly<Record<string, Take>> = {
     ),
   ),
 
-  /** The console at the terminal's own 1024×576, in the terminal's theme. */
   "console-term": {
     width: 1024,
     height: 576,
@@ -661,7 +610,6 @@ export const takes: Readonly<Record<string, Take>> = {
     [],
     false,
   ),
-  /** The blueprint: the same stats screen, its painted boxes written to `boxes.json`. */
   blueprint: {
     ...macApp(
       <Window
@@ -680,7 +628,6 @@ export const takes: Readonly<Record<string, Take>> = {
     frames: 1,
     boxes: true,
   },
-  /** Slang, for the bento: 7 × 6 = on the keypad. */
   slang: {
     width: 1060,
     height: 760,
@@ -741,7 +688,6 @@ export const takes: Readonly<Record<string, Take>> = {
     [],
     false,
   ),
-  /** The player is a small floating window; it hugs its content. */
   podcast: {
     width: 1100,
     height: 700,
@@ -774,7 +720,6 @@ export const takes: Readonly<Record<string, Take>> = {
   "omarchy-rose-pine": omarchy("rose-pine", "rose-pine"),
   "omarchy-catppuccin-latte": omarchy("catppuccin-latte", "catppuccin-latte"),
   "omarchy-everforest": omarchy("everforest", "everforest"),
-  /** The report screen: a real dashboard, driven by its own controls. */
   dashboard: {
     width: 1400,
     height: 900,
@@ -794,7 +739,6 @@ export const takes: Readonly<Record<string, Take>> = {
       { frame: 74, aim: { testId: "range-30d", dx: 40, dy: 60 } },
     ],
   },
-  /** The monitor is a tall dashboard; it gets its own window height. */
   monitor: {
     width: 1100,
     height: 860,

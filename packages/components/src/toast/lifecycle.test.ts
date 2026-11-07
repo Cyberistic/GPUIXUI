@@ -1,12 +1,3 @@
-/**
- * Runtime disposal under StrictMode.
- *
- * The bug this guards: disposing the toast runtime in the first effect cleanup
- * left the StrictMode remount subscribed to a dead runtime, so the first pushed
- * toast was dropped. Disposal is deferred one microtask and cancelled by a
- * remount.
- */
-
 import { describe, expect, it, vi } from "vitest";
 import { createRuntimeLifecycle } from "./lifecycle.js";
 

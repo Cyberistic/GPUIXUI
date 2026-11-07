@@ -1,33 +1,3 @@
-/**
- * `virtual-list-prepend` — a page prepended above the reader does not move them.
- *
- * A feed, a notification centre, a message scroller and a log viewer that loads
- * older pages all prepend rows the reader has already scrolled past. The
- * runtime types say nothing about where those rows land: a splice that keeps the
- * scroll offset still would shift the reader's content down by the page height,
- * and nothing in this repo measured which one happens.
- *
- * Two lists, both 20px rows in a 160px viewport:
- *
- *   - `Feed` starts with 12 rows (240px) so it **overflows at mount**, which is
- *     the only state that can show anchoring at all: while the content is
- *     shorter than the viewport the list re-anchors to the first row on every
- *     layout, so a broken prepend looks correct (see the `Short` list below);
- *   - `Short` starts with 2 rows (40px) and stays short after a prepend, so it
- *     is the control: it stays pinned to its first row whatever the splice does.
- *
- * Measured on 0.11.0:
- *
- *   - a prepend while scrolled keeps the painted rows `103..110` and their `y`
- *     exactly, and moves the offset by the inserted height (`-60` → `-140` for
- *     4 × 20px), so the anchor is logical and the new rows sit above the
- *     viewport;
- *   - a prepend at the **top** is the opposite case: the offset stays `0` and
- *     the new rows paint, so a page loaded above a reader at the top is shown
- *     rather than hidden — the browser behaviour a feed wants;
- *   - the prepended rows are in the retained tree even while unpainted, so
- *     "nothing moved" cannot be a splice that never happened.
- */
 import { useState } from "react";
 import { Effect, pipe } from "effect";
 import * as Arr from "effect/Array";
@@ -39,23 +9,22 @@ import { Pressable, Readout } from "../ui.js";
 import type { ScenarioBody } from "../types.js";
 import type { Smoke } from "@gpuixui/testing";
 
-/** The list viewport: 8 whole 20px rows, so every list here can overflow. */
 const VIEWPORT = 160;
-/** One row's drawn height, used as the page's arithmetic. */
+
 const ROW = 20;
-/** Rows the feed mounts with: 240px, already taller than the viewport. */
+
 const INITIAL = 12;
-/** Rows each press prepends. */
+
 const PREPEND = 4;
-/** Rows the control list mounts with: 40px, shorter than the viewport. */
+
 const SHORT = 2;
-/** The feed's first id; prepends walk downwards from it. */
+
 const FEED_START = 100;
-/** The feed's last id, which a prepend never changes. */
+
 const FEED_END = FEED_START + INITIAL - 1;
-/** The control list's first id. */
+
 const SHORT_START = 200;
-/** The control list's last id. */
+
 const SHORT_END = SHORT_START + SHORT - 1;
 
 const feedPattern = /^Feed (\d+)$/;
@@ -113,7 +82,6 @@ const FeedProbe = () => {
   );
 };
 
-/** The rows of one list the frame paints, in paint order. */
 const paintedRows = (
   pattern: RegExp,
   lines: ReadonlyArray<string>,
@@ -150,7 +118,6 @@ export const virtualListPrependScenario: ScenarioBody = {
           (offset) => offset.y,
         );
 
-      // 1. The feed overflows at mount: the only state that can show anchoring.
       const atRest = painted(feedPattern);
       yield* ctx.expectEqual(
         "the feed starts at its first row",
@@ -173,7 +140,6 @@ export const virtualListPrependScenario: ScenarioBody = {
         Arr.join(Arr.map(Arr.range(SHORT_START, SHORT_END), String), ","),
       );
 
-      // 2. Scroll the feed away from the top.
       ctx.host.wheel("plist", 0, -60);
       ctx.host.advance(50);
       const offsetBefore = yield* ctx.expectSome(
@@ -191,7 +157,6 @@ export const virtualListPrependScenario: ScenarioBody = {
         false,
       );
 
-      // 3. A prepend holds the anchor: the rows, and their place on screen.
       const before = painted(feedPattern);
       const topBefore = yield* ctx.expectSome(
         "a painted row exists before the prepend",
@@ -238,7 +203,6 @@ export const virtualListPrependScenario: ScenarioBody = {
         2,
       );
 
-      // 4. At the top the opposite must happen: a page above is shown.
       ctx.host.wheel("plist", 0, 1000);
       ctx.host.advance(50);
       yield* ctx.expectEqual(
@@ -268,7 +232,6 @@ export const virtualListPrependScenario: ScenarioBody = {
         1,
       );
 
-      // 5. The short control cannot show the difference: it is pinned anyway.
       ctx.host.click("slist-prepend");
       ctx.host.advance(50);
       ctx.host.advance(50);

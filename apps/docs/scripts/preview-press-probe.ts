@@ -1,54 +1,20 @@
-/**
- * Prove that a curated preview's press path runs in a **hydrated** browser.
- *
- * Every other docs probe reads a page's server-rendered paint. This one presses
- * a control, because a preview's state machine is only real once React has
- * attached: `docs/preview-strategy.md` records the measured trap — a capture
- * taken while the dev server is still compiling the route tree proves SSR paint
- * and nothing about a click. Hydration is detected by React's own fiber key on
- * a DOM node, so the probe cannot mistake "the markup looks right" for "the
- * handler exists".
- *
- * The carousel page is the target because its workflow demo prints the slide it
- * is on (`Slide 1 of 4 · wraps at both ends`), so a press has one observable
- * consequence: the number moves, and the previous control moves it back.
- *
- * Run (a dev server is already up):
- * `nub apps/docs/scripts/preview-press-probe.ts`
- * `--url <url>`, `--timeout <ms>` (hydration budget), `--chrome <path>`.
- *
- * Measured on macOS 15.8.1 x86_64, headless Google Chrome 155.0.8059.80: the
- * first load of a cold dev server took ~10 s to hydrate (every route module is
- * compiled before the client entry commits), and the press then moved the
- * readout `Slide 1 of 4` → `Slide 2 of 4` and back.
- */
 import { findChrome, openChrome } from "./chrome-session.ts";
 import { hasHandler } from "./react-ready.ts";
 
-/** The page a cold dev server serves, and the demo it carries. */
 export const defaultUrl = "http://localhost:4175/components/carousel";
 
-/** The slide a carousel readout names, or `undefined` when it names none. */
 export const slideOf = (text: string): number | undefined => {
   const match = /Slide (\d+) of (\d+)/.exec(text);
   const slide = match?.[1];
   return slide === undefined ? undefined : Number(slide);
 };
 
-/** React marks every mounted DOM node with a `__reactFiber$…` key. */
 const fiberCount = `String(
   [...document.querySelectorAll("*")].filter((node) =>
     Object.getOwnPropertyNames(node).some((key) => key.startsWith("__react")),
   ).length,
 )`;
 
-/**
- * Whether the demo's next control carries React's `onClick` prop.
- *
- * A fiber alone is not enough: the route tree hydrates over several seconds on
- * a cold dev server, and a press on a node that has a fiber but no props yet
- * does nothing. The handler is the precondition a press needs.
- */
 const controlReady = `(() => {
   const frame = [...document.querySelectorAll(".gx-carousel-frame")].find((node) =>
     /Slide \\d+ of \\d+/.test(node.textContent ?? ""),
@@ -60,7 +26,6 @@ const controlReady = `(() => {
   return ${hasHandler("button")} ? "ready" : "cold";
 })()`;
 
-/** The workflow demo's frame, selected by the readout only it carries. */
 const demoText = `(() => {
   const frame = [...document.querySelectorAll(".gx-carousel-frame")].find((node) =>
     /Slide \\d+ of \\d+/.test(node.textContent ?? ""),
@@ -68,7 +33,6 @@ const demoText = `(() => {
   return frame?.textContent ?? "";
 })()`;
 
-/** Press one named control inside that frame. */
 const press = (label: string): string => `(() => {
   const frame = [...document.querySelectorAll(".gx-carousel-frame")].find((node) =>
     /Slide \\d+ of \\d+/.test(node.textContent ?? ""),
@@ -81,7 +45,6 @@ const press = (label: string): string => `(() => {
   return "pressed";
 })()`;
 
-/** Poll `read` until `accept` holds, or the budget runs out. */
 const until = async (
   read: () => Promise<string>,
   accept: (value: string) => boolean,
@@ -96,7 +59,6 @@ const until = async (
   return accept(value) ? value : undefined;
 };
 
-/** Run the project. Returns the process exit code. */
 export const main = async (argv: ReadonlyArray<string>): Promise<number> => {
   const argument = (flag: string): string | undefined => {
     const index = argv.indexOf(flag);

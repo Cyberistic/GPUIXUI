@@ -1,11 +1,3 @@
-/**
- * `rovingIndex` — the one tab stop a group of controls shares.
- *
- * The bug this suite guards: the stop sat on the chosen option even when that
- * option was disabled. A disabled row has no `tabIndex`, so the group had no
- * reachable stop at all and a keyboard user could not enter it.
- */
-
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import { rovingIndex } from "./roving.js";

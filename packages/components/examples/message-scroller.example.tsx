@@ -1,14 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * MessageScroller example: a conversation that follows new rows and leaves a
- * reader who scrolled up alone.
- *
- * "Append message" adds a row. "Stream a reply" grows the last row token by
- * token, which proves the pinned viewport keeps the bottom in sight without a
- * new child. Scroll up first and the affordance appears while the same stream
- * keeps running.
- */
-
 import { useEffect, useRef, useState } from "react";
 import { Button } from "../src/internal/button.js";
 import { textStyle, useTheme } from "../src/internal/theme.js";
@@ -49,7 +39,6 @@ const WORDS = [
   "are.",
 ];
 
-/** A conversation with an append control and a token-stream control. */
 export const MessageScrollerExample = () => {
   const theme = useTheme();
   const [messages, setMessages] = useState(initial);

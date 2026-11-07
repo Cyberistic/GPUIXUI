@@ -1,13 +1,3 @@
-/**
- * The multiple-selection rules.
- *
- * The bugs these guard: a toggle that appends a value twice (so the consumer
- * receives `["a", "a"]` from two clicks), a toggle that drops the first-added
- * order, a range that includes a disabled row or reverses when the click lands
- * above the anchor, a "changed" report for a selection that did not change, and
- * a select-all that puts a disabled row into the selection.
- */
-
 import { describe, expect, it } from "vitest";
 import {
   range,
@@ -17,7 +7,6 @@ import {
   type SelectableRow,
 } from "./selection.js";
 
-/** Four rows in declaration order; the second is disabled. */
 const rows: ReadonlyArray<SelectableRow> = [
   { value: "a", disabled: false },
   { value: "b", disabled: true },

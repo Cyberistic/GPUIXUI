@@ -1,17 +1,3 @@
-/**
- * `text-selection` — native text selection over the shipped `Text` primitive.
- *
- * Two claims the library makes and no suite measured: `selectable` (`userSelect:
- * "text"`) really lets the window select a line, and the default `select-text`-off
- * node really opts out. The probe drives the renderer's own `dragSelect`, because
- * selection listeners are registered during **paint**: a hand-rolled
- * down/move/up with no flush between the steps selects nothing, so a pointer
- * `drag` would pass or fail for reasons that have nothing to do with `Text`.
- *
- * What it means for the library: a log viewer, code block or message row can be
- * copied by dragging, and a toolbar or line-number gutter cannot be swept into
- * the clipboard.
- */
 import { Effect } from "effect";
 import * as Option from "effect/Option";
 import { Text, ThemeProvider } from "@gpuixui/primitives";
@@ -20,10 +6,8 @@ import { Smoke } from "@gpuixui/testing";
 import { palettes } from "../palettes.js";
 import type { ScenarioBody } from "../types.js";
 
-/** The selectable line: a word the checks can name in a failure. */
 const SELECTABLE = "hello selectable world";
 
-/** The chrome line: it must never reach the clipboard. */
 const CHROME = "chrome must not select";
 
 const SelectionProbe = () => {
@@ -50,13 +34,11 @@ const SelectionProbe = () => {
   );
 };
 
-/** A point just inside the left edge of `testId`, at the middle of its line. */
 const startOf = (bounds: Smoke.Bounds): Smoke.Offset => ({
   x: bounds.x + 2,
   y: bounds.y + bounds.height / 2,
 });
 
-/** A point past the right edge, so a partial first character is still included. */
 const endOf = (bounds: Smoke.Bounds): Smoke.Offset => ({
   x: bounds.x + bounds.width + 4,
   y: bounds.y + bounds.height / 2,
@@ -92,8 +74,6 @@ export const textSelectionScenario: ScenarioBody = {
         SELECTABLE,
       );
 
-      // The opt-out: dragging the same way over a default node must select
-      // nothing, so a toolbar or gutter cannot be swept into the clipboard.
       ctx.host.clearSelection();
       yield* ctx.expectEqual(
         "clearing drops the selection",

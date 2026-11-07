@@ -1,18 +1,3 @@
-/**
- * Holds the arithmetic the `field-ink` probe reads, and the claims it prints.
- *
- * The bugs this guards: a hint measured with the wrong role (the runtime's grey
- * and the theme's `placeholder` are one palette step apart in the dark theme, so
- * a mistyped constant measures nothing), a crop that forgets the capture's
- * device scale (it would count the page around the field), a "value paints the
- * seam's ink" claim that holds for the platform default too (the value ink is
- * the element's `color`, not the theme's `text`), and a README check count that
- * no longer matches the probe.
- *
- * `node:fs` is deliberate, as in `confirm.test.ts`: this checks the repository's
- * own probe and prose, not a runtime path.
- */
-
 import { readFileSync } from "node:fs";
 import { getTheme } from "@gpuixui/tokens";
 import * as Option from "effect/Option";
@@ -37,13 +22,6 @@ const read = (path: string): string =>
 const scenarios = read("./scenarios.tsx");
 const readme = read("../../README.md");
 
-/**
- * One synthetic frame: a fill, and one row carrying the runtime's hint, the
- * platform's black ink and the seam's ink.
- *
- * The margin matters: `peakInk` trims the border a field draws, so a frame with
- * no room around its pixels is an empty crop and reads `None`.
- */
 const fill: ReadonlyArray<number> = [25, 29, 37, 255];
 const frame = new Pixels.Pixels({
   width: 6,
@@ -51,7 +29,6 @@ const frame = new Pixels.Pixels({
   data: new Uint8Array(6 * 4 * 4).map((_, at) => fill[at % 4] ?? 0),
 });
 
-/** Paints one pixel of the synthetic frame. */
 const paint = (x: number, y: number, colour: ReadonlyArray<number>): void => {
   const at = (y * 6 + x) * 4;
   frame.data.set(colour, at);

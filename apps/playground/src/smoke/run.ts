@@ -1,20 +1,3 @@
-/**
- * The native smoke CLI.
- *
- * Shape: preflight → mount each scenario → run its steps → report.
- *
- * The preflight is why `@gpuix/react/testing` is imported **dynamically**: a
- * static import anywhere in this module graph would load the binding (and
- * crash) before the CLI could explain that the host is unsupported. See plan
- * 120 §2 and ADR 0001.
- *
- * `nub run --filter playground smoke` is the entrypoint. The exit code is the
- * contract: `0` passed, `1` a real failure, `2` no evidence (unsupported host,
- * or an argument this CLI does not understand). Arguments are validated before
- * the preflight, so `--list` and a typo cost no binding load — and `--list`
- * answers only after that validation, because a mode that reported `0` over a
- * typo would be the silent pass the parser exists to prevent.
- */
 import {
   Clock,
   Console,
@@ -38,36 +21,27 @@ import type { WindowKeyHandler } from "../window-handlers.js";
 import { palettes } from "../palettes.js";
 import { registry, selectScenarios } from "../scenarios/registry.js";
 
-/** The process exit code: 0 passed, 1 failed, 2 unverified. */
 export const EXIT = { passed: 0, failed: 1, unverified: 2 } as const;
-/** The process exit code: 0 passed, 1 failed, 2 unverified. */
+
 export type ExitCode = (typeof EXIT)[keyof typeof EXIT];
 
 const DEFAULT_ARTIFACTS = "apps/playground/.artifacts";
 
-/** Parsed command line. */
 export interface CliFlags {
   readonly json: boolean;
   readonly screenshots: boolean;
-  /** Print the scenario ids and exit without loading the binding. */
+
   readonly list: boolean;
-  /** The scenarios to run; empty means all of them. */
+
   readonly only: ReadonlyArray<string>;
   readonly artifacts: string;
 }
 
-/** The flags plus any token the parser did not recognise. */
 export interface ParsedArgs {
   readonly flags: CliFlags;
   readonly unknown: ReadonlyArray<string>;
 }
 
-/**
- * Parses the CLI's argv (without `node` and the script path).
- *
- * Unknown flags are collected, never silently ignored: the CLI prints them so a
- * typo like `--onlyy` cannot quietly run everything (or nothing).
- */
 export const parseArgs = (argv: ReadonlyArray<string>): ParsedArgs => {
   const step = (
     rest: ReadonlyArray<string>,
@@ -130,12 +104,10 @@ export const parseArgs = (argv: ReadonlyArray<string>): ParsedArgs => {
   );
 };
 
-/** The scenario ids, in run order. */
 export const idsOf = <A extends { readonly id: string }>(
   list: ReadonlyArray<A>,
 ): ReadonlyArray<string> => Arr.map(list, (scenario) => scenario.id);
 
-/** The usage text, printed with every argument error. */
 export const usage: string = Arr.join(
   [
     "usage:",
@@ -149,7 +121,6 @@ export const usage: string = Arr.join(
   "\n",
 );
 
-/** A bad id names the id and every valid one, so a typo is self-correcting. */
 export const formatMissing = (
   id: string,
   known: ReadonlyArray<string>,
@@ -164,7 +135,6 @@ export const formatMissing = (
     "\n",
   );
 
-/** The preflight message for a host with no GPUix binding. Actionable, not a stack trace. */
 export const formatUnsupported = (
   runtime: Runtime.RuntimeUnsupported,
   suite = "native smoke",
@@ -178,20 +148,12 @@ export const formatUnsupported = (
     "\n",
   );
 
-/** The two effects the CLI needs, injected so the unsupported path is testable. */
 export interface RunDeps {
   readonly detect: Effect.Effect<Runtime.RuntimeStatus>;
-  /** Only evaluated when the host is supported, so the binding never loads here. */
+
   readonly runSuite: Effect.Effect<ExitCode>;
 }
 
-/**
- * Preflight, then run the suite only if a binding loaded.
- *
- * Returns exit `2` and evaluates nothing else on an unsupported host — the
- * whole point of the split is that a missing binding produces a report we can
- * trust, not a crash.
- */
 export const runScenarioCli = (deps: RunDeps): Effect.Effect<ExitCode> =>
   Effect.gen(function* () {
     const runtime = yield* deps.detect;
@@ -205,7 +167,6 @@ export const runScenarioCli = (deps: RunDeps): Effect.Effect<ExitCode> =>
     return yield* deps.runSuite;
   });
 
-/** A failure to load the native testing module after a green preflight. */
 class NativeLoadError extends Schema.TaggedError<NativeLoadError>()(
   "NativeLoadError",
   {
@@ -226,7 +187,6 @@ const viewOf = (
     (candidate) => candidate.view,
   );
 
-/** Mounts each scenario's own view in the test root before its steps run. */
 const mount =
   (
     flags: CliFlags,
@@ -263,7 +223,6 @@ const mount =
       : render;
   };
 
-/** The real suite: load the binding, drive the selected scenarios, write the report. */
 export const program = (
   flags: CliFlags,
 ): Effect.Effect<
@@ -284,8 +243,6 @@ export const program = (
         }),
     }).pipe(Effect.orDie);
 
-    // The views are imported only after the preflight: `@gpuix/react` loads the
-    // native binding at import time, and `--list` must cost no binding load.
     const { scenarios } = yield* Effect.tryPromise({
       try: () => import("../scenarios/index.js"),
       catch: (cause) =>
@@ -306,9 +263,6 @@ export const program = (
       );
     }
 
-    // The app-level window key handler: GPUix delivers window keys only through
-    // `render({ onKeyDown })`, so the CLI is the "app" that owns it and forwards
-    // to whatever the mounted scenario registered (`useWindowKey`).
     const windowKey: { current: Option.Option<WindowKeyHandler> } = {
       current: Option.none(),
     };
@@ -343,21 +297,17 @@ export const program = (
     );
     yield* Console.log(Report.formatReport(report));
     if (flags.json) yield* Console.log(Report.reportJson(report));
-    // Release the native window before the effect completes: the test root's
-    // window keeps Node's event loop alive, and a `--only` run (no later
-    // scenario replacing the tree) would otherwise never exit.
+
     root.unmount();
     return Report.exitCode(report);
   });
 
-/** The process inputs the CLI needs, injected so the argument guard is testable. */
 export interface MainDeps {
   readonly argv: ReadonlyArray<string>;
-  /** Loads the native binding; the argument guard must run first. */
+
   readonly load: () => Promise<unknown>;
 }
 
-/** Validates the arguments, then wires the real preflight and suite. */
 export const main = (deps: MainDeps): Effect.Effect<ExitCode> =>
   Effect.gen(function* () {
     const parsed = parseArgs(deps.argv);
@@ -411,9 +361,6 @@ export const main = (deps: MainDeps): Effect.Effect<ExitCode> =>
     });
   });
 
-// Run only when executed directly (`node dist/smoke/run.js`), never on import,
-// so the pure tests can import this module without launching a suite.
-// `Effect.runPromise` is the process entrypoint boundary (EF-21).
 const entry = process.argv[1];
 if (entry !== undefined && import.meta.filename === entry) {
   process.exitCode = await Effect.runPromise(

@@ -1,10 +1,3 @@
-/**
- * `@gpuixui/tw` — shadcn class recipes for the GPUix native renderer.
- *
- * The root entry is renderer-free (plus `cn`); React wrappers live at
- * `@gpuixui/tw/react` so a pure test can resolve classes without a renderer.
- */
-
 export { cn } from "cn";
 export {
   classesToStyle,

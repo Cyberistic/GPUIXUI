@@ -1,11 +1,3 @@
-/**
- * A theme from the CSS shadcn's theme builders export: a `:root { --primary: … }`
- * block, in `oklch()`, `hsl()`, bare `h s% l%` or hex. It is what makes "paste the
- * theme" true: the variable names are shadcn's, so the file needs no mapping.
- *
- * It will not guess. A value it cannot read is reported in `problems` and the role
- * keeps the base theme's colour, the same contract as {@link decodeOmarchyPalette}.
- */
 import type { ThemeColors } from "./color.js";
 import { extendTheme, type Theme } from "./theme.js";
 
@@ -67,7 +59,6 @@ const fromHsl = (h: number, s: number, l: number): string => {
 const numbers = (text: string): ReadonlyArray<number> =>
   (text.match(/-?\d*\.?\d+/g) ?? []).map(Number);
 
-/** One CSS colour as hex, or `undefined` when it is not a form this reads. */
 export const cssColorToHex = (value: string): string | undefined => {
   const text = value.trim().toLowerCase();
   if (/^#[0-9a-f]{6}$/.test(text)) return text.toUpperCase();
@@ -79,7 +70,6 @@ export const cssColorToHex = (value: string): string | undefined => {
   return undefined;
 };
 
-/** The theme a builder's CSS describes, and the variables it could not read. */
 export interface ShadcnThemeFile {
   readonly theme: Theme;
   /** The variables that were named but could not be read. */
@@ -108,16 +98,7 @@ const declarations = (
 
 const isRole = (name: string): name is keyof typeof ROLES => name in ROLES;
 
-/**
- * The theme a builder's CSS describes, over `base`. `mode` picks the block:
- * `:root` for light, `.dark` for dark.
- *
- * @example
- * ```ts
- * const { theme } = shadcnTheme(css, darkTheme, "dark");
- * ```
- */
-export const shadcnTheme = (
+export const shadcnBuilderTheme = (
   css: string,
   base: Theme,
   mode: "light" | "dark" = "light",

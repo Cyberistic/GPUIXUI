@@ -1,10 +1,3 @@
-/**
- * Browser preview for the Bubbles page.
- *
- * The native field rises `count` seeded bubbles through the caller's bounded
- * box; the preview draws the same scatter with CSS and rises them off the top.
- */
-
 import { scatter } from "./scatter";
 
 const points = scatter(32, 7, 6, 28);

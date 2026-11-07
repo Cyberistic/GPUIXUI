@@ -3,15 +3,6 @@ import { describe, expect, it } from "vitest";
 import { demos } from "../components/docs/demos";
 import { sidebarPages } from "./sidebar-pages.test-util";
 
-/**
- * The composition pages.
- *
- * .agents/slop/MISSION.md names Layouts, Workspace and Data display as information-
- * architecture lanes, and the component inventory is the only honest source for
- * what each lane contains. A page must therefore mount the generated lane table
- * and sit in the sidebar; a hand-written copy of the inventory is what drifts.
- */
-
 const dir = new URL("../../content/docs/", import.meta.url);
 
 const read = (name: string): string => readFileSync(new URL(name, dir), "utf8");
@@ -22,20 +13,8 @@ interface LanePage {
   readonly title: string;
 }
 
-/**
- * The data lane's page lives in a folder, not beside the other two.
- *
- * The `@gpuixui/data` collection is mounted at `/data-display`, so the
- * package's own pages share the prefix with the lane page; the lane page moves
- * into `data-display/index.mdx` to leave the folder free for them.
- */
 const dataDisplayPage = "data-display/index.mdx";
 
-/**
- * The workspace lane's page lives in a folder for the same reason: the three
- * workspace packages mount their pages under the lane's own route, so the
- * lane page moves into `workspace/index.mdx` to leave the folder free.
- */
 const workspacePage = "workspace/index.mdx";
 
 const pages: ReadonlyArray<LanePage> = [
@@ -43,7 +22,6 @@ const pages: ReadonlyArray<LanePage> = [
   { file: dataDisplayPage, lane: "data-display", title: "Data display" },
 ];
 
-/** The `pages` array of the root `meta.json`. */
 const sidebar = sidebarPages(new URL("../../", import.meta.url));
 
 describe("the composition pages", () => {
@@ -72,12 +50,6 @@ describe("the composition pages", () => {
   });
 
   it("list the pages their packages ship from the collections, not by hand", () => {
-    // Bug guarded: both pages answered "what does this lane ship" with a
-    // hand-written list. The data one had lost table selection, sorting and
-    // column configuration; the workspace one had no list at all, so the
-    // editor, file, shell and media pages were reachable only from the
-    // sidebar. `LanePages` reads the mounted collections and the component
-    // suite holds it to the docs folders.
     const mounted = [
       { file: dataDisplayPage, lane: "data-display" },
       { file: workspacePage, lane: "workspace" },
@@ -106,11 +78,6 @@ describe("the composition pages", () => {
   });
 
   it("show the surface the lane is about, from a demo that exists", () => {
-    // Bug guarded: a lane page is the entry to its section and listed the
-    // inventory without ever showing the surface a reader came for — the data
-    // lane was the last one with no drawing, while its Table page carried the
-    // preview a reader had to find first. The mount is checked from both sides
-    // so a lane cannot name a demo the registry does not hold either.
     const mounted = pages.flatMap(({ file }) =>
       [...read(file).matchAll(/<ComponentPreview\s+name="([^"]+)"/g)].map(
         (match) => [file, match[1] ?? ""] as const,
@@ -144,14 +111,12 @@ describe("the composition pages", () => {
 
   it("sit in the sidebar beside the component lanes", () => {
     const positions = pages.map(({ file }) => {
-      // A lane page that moved into a folder is listed by its folder's name.
       const slug = file.replace(/\/index\.mdx$/, "").replace(/\.mdx$/, "");
       return sidebar.indexOf(slug);
     });
 
     expect(positions.every((position) => position > 0)).toBe(true);
-    // The two package lanes follow the component group in the order the root
-    // meta declares.
+
     expect(sidebar.indexOf("data-display")).toBeGreaterThan(
       sidebar.indexOf("components"),
     );

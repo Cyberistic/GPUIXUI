@@ -41,12 +41,3 @@ The block paints the theme's `skeleton` role, which the token contract measures
 on every strip a placeholder can stand in — the page, a card, a popover and a
 muted toolbar — so a switched platform style repaints it without a component
 change.
-
-## Notes
-- No shimmer sweep: 0.11.0 animates opacity and size, so the pulse is a
-  two-frame step (full and 60%) rather than a moving gradient.
-- The reduced-motion preference is the app's `MotionProvider`; the runtime
-  exposes no system query.
-- A side that is not a paintable length — a `NaN` measurement, a stored blank
-  string — takes its default, because the runtime refuses a style batch for one
-  dimension it cannot parse.

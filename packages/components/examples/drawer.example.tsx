@@ -1,12 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Drawer example: filters at the right edge and a details sheet at the bottom.
- *
- * Both are uncontrolled: the trigger and the close control own the open state.
- * A consumer that needs to coordinate with its own workflow passes `open` /
- * `onOpenChange` instead.
- */
-
 import {
   Drawer,
   DrawerClose,
@@ -18,7 +10,6 @@ import {
   DrawerTrigger,
 } from "../src/drawer.js";
 
-/** A right-edge filter drawer. */
 export const DrawerExample = () => (
   <Drawer>
     <DrawerTrigger>Filters</DrawerTrigger>
@@ -36,7 +27,6 @@ export const DrawerExample = () => (
   </Drawer>
 );
 
-/** A bottom sheet, useful for details on a narrow layout. */
 export const DrawerSheetExample = () => (
   <Drawer>
     <DrawerTrigger>Details</DrawerTrigger>

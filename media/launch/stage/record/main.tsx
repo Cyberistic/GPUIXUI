@@ -1,9 +1,3 @@
-/**
- * Mount one scene at 1920×1080. `?scene=bento` plays it in real time (for
- * `film.mjs` rehearsal); `&record` installs the skill's virtual clock first, so
- * `record.mjs` steps it one 30 fps frame at a time and every frame is the same
- * on every render.
- */
 import { installVirtualClock } from "../kit/clock";
 
 const params = new URLSearchParams(location.search);

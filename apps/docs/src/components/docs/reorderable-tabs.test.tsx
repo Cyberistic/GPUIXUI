@@ -14,17 +14,6 @@ import {
   type TabBox,
 } from "./reorderable-tabs-logic";
 
-/**
- * The editor tab strip's arithmetic and its two public exits.
- *
- * Bug guarded: a drop used to count the tab being dragged as a target, so
- * dragging a tab right counted its own old box and landed one slot short; a
- * close picked the first remaining tab instead of the next one, so closing the
- * middle tab jumped the selection to the start. The arithmetic below is the one
- * the pointer, the keyboard and the close share, so a regression in any of them
- * fails here before a browser test can only describe it.
- */
-
 const read = (path: string): string =>
   readFileSync(fileURLToPath(new URL(path, import.meta.url)), "utf8");
 
@@ -54,7 +43,7 @@ describe("the drop slot", () => {
 
   it("subtracts the rail's origin from the pointer's viewport coordinate", () => {
     const rest = boxes.filter((box) => box.id !== "page.tsx");
-    // The rail starts at 240px in the page; the pointer is at 387px.
+
     expect(dropIndex(rest, 387, 240)).toBe(1);
     expect(dropIndex(rest, 346, 240)).toBe(0);
   });
@@ -166,16 +155,15 @@ describe("the strip's public shape", () => {
     expect(css).toContain("touch-action: none");
     expect(css).toContain('[data-dragging="true"]');
     expect(css).toContain('[data-closing="true"]');
-    // The slot is named before the release, not only discovered on it.
+
     expect(source).toContain("gx-reorder-indicator");
     expect(css).toContain(".gx-reorder-indicator");
-    // The slot is the dragged tab's whole width, at a wash rather than a line.
+
     expect(source).toContain("width: dropWidth");
     expect(css).toContain("opacity: 0.2");
-    // The caller owns the order, so the transforms stay until its array lands.
+
     expect(source).toContain("pendingClear");
-    // The commit frame drops the transform transition, so it cannot animate a
-    // second time after the base position has already moved.
+
     expect(source).toContain("data-settling");
     expect(css).toContain('[data-settling="true"]');
   });

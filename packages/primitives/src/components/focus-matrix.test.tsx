@@ -1,21 +1,3 @@
-/**
- * The focus matrix: every focusable Tier 1 control in one table.
- *
- * The guarded defects are the two that only a sweep can catch: a control that
- * declares a focus ring but keeps a tab stop while disabled, and a new focusable
- * part that lands without a ring at all. Each row states how many tab stops the
- * control owes at rest; the renderer is then asked for the tree with and without
- * `disabled`, and the same two rules are applied to every row:
- *
- * - **rest**: exactly the stated number of tab stops, and at least one element
- *   declares the keyboard outline (`focusVisible`);
- * - **disabled**: no tab stop and no outline anywhere in the tree.
- *
- * `Select` is absent on purpose: its trigger and items are GPUix's own
- * components, so this element tree never contains their host nodes; its ring and
- * tab behaviour are pinned in `Select.test.tsx` and the runtime suite.
- */
-
 import type { ReactElement } from "react";
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
@@ -64,10 +46,9 @@ const span = () =>
   ] as const);
 const selected = () => initValueState(Option.some("a"), "");
 
-/** A control in the matrix. */
 interface Row {
   readonly name: string;
-  /** Tab stops the control owes while enabled. */
+
   readonly stops: number;
   readonly render: (disabled: boolean) => ReactElement;
 }
@@ -267,7 +248,6 @@ const ROWS: ReadonlyArray<Row> = [
   },
 ];
 
-/** Every element in the tree, host or component, depth first. */
 const flatten = (element: ReactElement): ReadonlyArray<ReactElement> => [
   element,
   ...Arr.flatMap(elementChildren(element), flatten),
@@ -279,14 +259,6 @@ const tabIndexOf = (element: ReactElement): Option.Option<number> =>
     Schema.decodeUnknownOption(Schema.Number),
   );
 
-/**
- * Whether the runtime would put the element in the Tab order.
- *
- * Two conventions are in use: a `div` states `tabIndex={0}`, and a native field
- * leaves the prop out and is focusable by default; `-1` takes either out of the
- * tab order while keeping programmatic focus, which is what a disabled field
- * does.
- */
 const isTabStop = (element: ReactElement): boolean =>
   Option.match(tabIndexOf(element), {
     onSome: (index) => index === 0,
@@ -297,7 +269,6 @@ const isTabStop = (element: ReactElement): boolean =>
       }),
   });
 
-/** Whether the element declares the keyboard outline at rest. */
 const declaresRing = (element: ReactElement): boolean =>
   Option.match(hostStyleRecord(element), {
     onSome: (style) => style["focusVisible"] !== undefined,

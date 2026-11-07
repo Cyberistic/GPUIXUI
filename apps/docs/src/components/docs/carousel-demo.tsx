@@ -12,31 +12,6 @@ import {
   stepIndex,
 } from "./carousel-preview";
 
-/**
- * Browser previews for the Carousel page.
- *
- * The shipped carousel is **discrete**: GPUix `motion` has no transform and the
- * runtime has no scroll snap, so a sliding track is not honestly expressible.
- * Every slide stays mounted and only the active one is displayed, which the
- * preview mirrors with its own stacked slides — the name typed on slide three
- * is still there after visiting slide one, exactly because the slide never
- * unmounted.
- *
- * The three routes to a slide share one rule: the controls, the arrow keys and
- * the dots all run the same clamp and loop (`carousel-preview.ts`), and the
- * dots are one roving tab stop on the active slide with a wider pill so the
- * state is not colour-only.
- *
- * Every slide is stacked in one grid cell, so the frame is as tall as its
- * tallest slide and the controls never move as a reader steps. The inactive
- * slides stay mounted and keep their height with `visibility`, and `inert` and
- * `aria-hidden` take them out of the tab order and the accessibility tree.
- *
- * A preview is a browser rendering: the native root publishes `role="group"`
- * with its `label`, and its dots publish `aria-selected` because `0.11.0` has
- * no `aria-current` — the page says both.
- */
-
 interface Slide {
   readonly id: string;
   readonly title: string;
@@ -49,15 +24,10 @@ interface CarouselPreviewProps {
   readonly slides: ReadonlyArray<Slide>;
   readonly initial?: number;
   readonly loop?: boolean;
-  /** Hide the previous/next pair, leaving the dots as the only route. */
+
   readonly controls?: boolean;
 }
 
-/**
- * One carousel: a focusable region, one displayed slide, the controls and the
- * dots. Arrow keys step from wherever focus is inside it, `Home`/`End` jump to
- * the ends, and a dot jumps to the slide it names.
- */
 const CarouselPreview = ({
   label,
   slides,
@@ -198,7 +168,6 @@ const CarouselPreview = ({
   );
 };
 
-/** A field on a slide: its draft proves the slide was never unmounted. */
 const MemberDraft = () => {
   const [name, setName] = useState("");
   return (

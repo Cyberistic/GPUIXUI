@@ -10,16 +10,6 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { BadgeStatesBody, BadgeWorkflowBody } from "./badge-demo";
 
-/**
- * The badge previews, as they render.
- *
- * A demo that dropped a variant from the gallery, drew a state with the wrong
- * fill, or let the panel print a row the model does not contain would still
- * build. These cases hold the markup to the model and the style sheet to the
- * theme's roles, and they check the one thing the page promises about the pill:
- * it is out of the pointer, so the row around it is the press target.
- */
-
 const workflow = renderToStaticMarkup(<BadgeWorkflowBody />);
 const states = renderToStaticMarkup(<BadgeStatesBody />);
 
@@ -28,7 +18,6 @@ const css = readFileSync(
   "utf8",
 );
 
-/** The declarations of the first `selector { … }` block in the style sheet. */
 const block = (selector: string): string => {
   const start = css.indexOf(`${selector} {`);
   return start === -1 ? "" : css.slice(start, css.indexOf("}", start));
@@ -45,8 +34,7 @@ describe("the deployments panel preview", () => {
     );
 
     expect(missing).toEqual([]);
-    // A branch names something and is the one outline pill; a state is never
-    // drawn with the variant that has no fill to carry it.
+
     expect((workflow.match(/gx-badge-outline/g) ?? []).length).toBe(6);
   });
 
@@ -61,7 +49,7 @@ describe("the deployments panel preview", () => {
           !row.includes('aria-pressed="false"'),
       ),
     ).toEqual([]);
-    // The one selectable thing in a row is the row; the pills are spans.
+
     expect(workflow.match(/<span[^>]*data-badge="true"/g)?.length).toBe(12);
   });
 
@@ -73,10 +61,6 @@ describe("the deployments panel preview", () => {
   });
 
   it("draws the filters with the Button exactly, not a box of their own", () => {
-    // Guarded bug: these three were `.gx-badge-choice` — a bordered box with a
-    // 12px label, its own radius and a `[data-chosen]` fill, none of which the
-    // library's Button has. They are the recipe's `outline` and `secondary`
-    // variants at `sm`, so the fill and the height are read out of the recipe.
     const start = workflow.indexOf('class="gx-badge-filters"');
     const filters = workflow.slice(start, workflow.indexOf("</div>", start));
     const buttons = [...filters.matchAll(/<button[^>]*class="([^"]+)"/g)].map(
@@ -152,7 +136,7 @@ describe("the badge states preview", () => {
     expect(states_).toContain("gx-badge-info");
     expect(states_).toContain("gx-badge-neutral");
     expect(states_).toContain("gx-badge-warning");
-    // The tint is never the only signal: each pill prints its word.
+
     expect(states_).toContain(">Passed<");
     expect(states_).toContain(">Stale<");
   });

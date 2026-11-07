@@ -1,16 +1,3 @@
-/**
- * The pinned header's arithmetic, without a renderer.
- *
- * The bugs these guard: a header that jumps to the top before its section gets
- * there; one that scrolls away instead of holding; one that outlives its section
- * and paints over the next; a section that paints a header before it has been
- * measured (so every header stacks at the top of the first frame); a `NaN`
- * header height or offset reaching the runtime as a style value; and content
- * tops folded from painted `y`s, which already carry the shift they would feed
- * back into; and a section list a store handed back as `null`, which threw
- * before the first header painted.
- */
-
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
 import {
@@ -21,7 +8,6 @@ import {
   sectionsOf,
 } from "./logic.js";
 
-/** Two 200px sections with a 32px header each. */
 const heights = [232, 232];
 
 describe("sectionBands", () => {
@@ -53,18 +39,16 @@ describe("pinnedHeaders", () => {
   it("travels a header with its section and holds it at the top", () => {
     const frames = pinnedHeaders(heights, -100, 32);
     expect(frames[0]).toMatchObject({ top: 0, pinned: true, visible: true });
-    // The next section is still 132px below the viewport top.
+
     expect(frames[1]).toMatchObject({ top: 132, pinned: false });
   });
 
   it("is pushed out of the viewport by the section's last row", () => {
-    // At -220 the first section's bottom is 12px from the top, so its header is
-    // already 20px above the viewport and only its bottom edge shows.
     expect(pinnedHeaders(heights, -220, 32)[0]).toMatchObject({
       top: -20,
       visible: true,
     });
-    // At -232 the section has ended: the header has nowhere left to paint.
+
     expect(pinnedHeaders(heights, -232, 32)[0]).toMatchObject({
       top: -32,
       visible: false,
@@ -83,21 +67,17 @@ describe("pinnedHeaders", () => {
   });
 
   it("falls back for a height or offset it cannot paint", () => {
-    // A NaN header would reach the runtime as null and drop the row.
     expect(pinnedHeaderHeight).toBe(32);
     expect(headerHeightOf(Option.none())).toBe(32);
     expect(headerHeightOf(Option.some(Number.NaN))).toBe(32);
     expect(headerHeightOf(Option.some(0))).toBe(32);
     expect(headerHeightOf(Option.some(41.6))).toBe(42);
-    // A bounce past the start is the start, not a negative scroll.
+
     expect(pinnedHeaders(heights, Number.NaN, 32)[0]?.top).toBe(0);
     expect(pinnedHeaders(heights, 40, 32)[0]?.top).toBe(0);
   });
 
   it("reads a stored section list as sections, and nothing for anything else", () => {
-    // A sectioned list is composed in code as often as it is restored with a
-    // saved layout, and JSON writes `null` for a list a record never carried:
-    // `Arr.map` over it threw `self is not iterable` from the first render.
     const today = { title: "Today" } as const;
     const yesterday = { title: "Yesterday" } as const;
     expect(sectionsOf([today, yesterday])).toEqual([today, yesterday]);
@@ -107,9 +87,6 @@ describe("pinnedHeaders", () => {
   });
 
   it("drops an entry that names no section, keeping the ones beside it", () => {
-    // A deleted record leaves `null` inside the list, and an entry whose title
-    // is not text has no key for its measured height and no words for its
-    // header: the row threw on that title while its neighbours painted.
     const today = { title: "Today" } as const;
     const yesterday = { title: "Yesterday" } as const;
     expect(

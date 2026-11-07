@@ -1,14 +1,3 @@
-/**
- * `RadioGroup` — the element tree the runtime receives.
- *
- * The bug this suite guards is the roving tab stop: arrows changed the
- * selection but native focus stayed on the old radio, so the platform's
- * "selection follows focus" contract was broken and a ring would have sat on
- * the wrong item. It also holds the group to the supported accessibility
- * subset: `@gpuix/native` 0.11.0 has no `aria-checked`, so state is announced through
- * `aria-valuetext`.
- */
-
 import { describe, expect, it, vi } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -47,7 +36,7 @@ const unfocused: RadioGroupFocus = {
   onFocus: vi.fn(),
   onBlur: vi.fn(),
 };
-/** The group's handlers, with the focus move recorded by default. */
+
 const radioHandlers = (
   onSelect: (value: string) => void,
 ): RadioGroupHandlers => ({
@@ -65,7 +54,6 @@ const options: ReadonlyArray<RadioOption> = [
 ];
 const labels = Arr.map(options, (option) => option.label);
 
-/** Type-ahead as the component wires it: the buffer is the caller's, the match is not. */
 const typeAhead = (from: number, key: string) =>
   decideTypeAhead(labels, from, key);
 
@@ -86,9 +74,6 @@ describe("RadioGroup", () => {
   });
 
   it("lands on the option a typed prefix names, and selects it", () => {
-    // The bug this guards: a reader who knows the label had to arrow through
-    // the group. Type-ahead reaches the option by name, and a radio group's
-    // selection follows the focus it lands on.
     const onSelect = vi.fn();
     const element = renderRadioGroup(
       { options },
@@ -103,8 +88,6 @@ describe("RadioGroup", () => {
   });
 
   it("selects on the Space release, not on the press before it", () => {
-    // The bug guarded: the group handled only the press, where Space is not an
-    // activation, so Space did nothing although the docs promise it selects.
     const onSelect = vi.fn();
     const element = renderRadioGroup(
       { options },
@@ -137,12 +120,6 @@ describe("RadioGroup", () => {
   });
 
   it("reads a stored orientation name as the documented vertical axis", () => {
-    // The bug guarded: `orientation` is a stored layout choice as often as a
-    // literal, so a name this release does not carry arrives as a string the
-    // union no longer names. Read raw it reached `ARROW_KEYS[orientation]`, and
-    // destructuring threw `TypeError: Cannot destructure property 'forward'`
-    // on the first plain key press, so the group's whole keyboard contract was
-    // dead on a name. It reads as the documented vertical instead.
     const onSelect = vi.fn();
     const groupHandlers = radioHandlers(onSelect);
     const element = renderRadioGroup(
@@ -163,19 +140,12 @@ describe("RadioGroup", () => {
   });
 
   it("continues from the row that holds focus when the owner has not applied the choice", () => {
-    // The bug guarded: the key contract started from the *selected* value, so a
-    // controlled group whose owner declined a choice — a save still in flight, a
-    // rule the row has to confirm — sent every arrow from the value it still
-    // held: the focus stalled on the first row an arrow reached, and the tab
-    // stop stayed on the old value's row, so Tab from the focused row re-entered
-    // the group instead of leaving it. Its two siblings (`CheckboxGroup`,
-    // `ToggleGroup`) already read the stop from the focus.
     const onSelect = vi.fn();
     const handlers = radioHandlers(onSelect);
     const element = renderRadioGroup(
       { options },
       testTheme,
-      // The owner still holds Alpha while the reader's focus has reached Beta.
+
       text("alpha"),
       0,
       { focusedIndex: Option.some(1), onFocus: vi.fn(), onBlur: vi.fn() },
@@ -190,10 +160,6 @@ describe("RadioGroup", () => {
   });
 
   it("falls back to the value's row when the focused row can no longer take keys", () => {
-    // A row disabled while focused keeps no ring and refuses every key, so it is
-    // not where the next arrow starts: the value's row is, because that is where
-    // the reader's keyboard path resumes. Without the rule the stop would jump
-    // to the first row the group draws instead of the chosen one.
     const handlers = radioHandlers(vi.fn());
     const element = renderRadioGroup(
       {
@@ -271,9 +237,6 @@ describe("RadioGroup", () => {
   });
 
   it("moves the tab stop off a chosen option that cannot take focus", () => {
-    // The bug guarded: the stop stayed on the selected option even when it was
-    // disabled, and a disabled row has no tabIndex, so the group had no
-    // reachable stop and a keyboard user could not enter it at all.
     const element = renderRadioGroup(
       {
         options: [
@@ -315,9 +278,6 @@ describe("RadioGroup", () => {
   });
 
   it("reports no focus for an option the group no longer draws", () => {
-    // The bug guarded: focus is tracked by index, so a group whose options shrank
-    // kept telling its `style` callback `focused: true` while the row that held
-    // native focus was gone.
     const groupSeen: RadioGroupState[] = [];
     const rowSeen: RadioItemState[] = [];
     const element = renderRadioGroup(
@@ -386,10 +346,6 @@ describe("RadioGroup", () => {
   });
 
   it("puts the ring, the floor and the press on the row, not its circle", () => {
-    // The bugs these guard: `focusVisible` on the circle never painted (the
-    // runtime applies a focus refinement only to an element it tracks focus
-    // for), the circle's fill owns a mouse-blocking hitbox so it swallowed the
-    // row's press, and a single-line row measured 17px tall — under the floor.
     const element = renderRadioGroup(
       { options },
       testTheme,
@@ -408,12 +364,6 @@ describe("RadioGroup", () => {
   });
 
   it("marks an invalid group on every empty edge and every row ring", () => {
-    // The bug guarded: `CheckboxGroup` could paint a failed validation but its
-    // sibling `RadioGroup` had no `invalid` prop at all, so a form could not
-    // show the error a radio group failed on. A chosen radio keeps its accent
-    // fill — the fill is the selection, not the error — while an empty circle's
-    // edge and every row's keyboard ring take the destructive role, the same
-    // split the standalone `Checkbox` and the checkbox group paint.
     const element = renderRadioGroup(
       { options, invalid: true },
       testTheme,
@@ -451,7 +401,6 @@ describe("RadioGroup", () => {
   });
 });
 
-/** Three items written as elements, the middle one disabled and rich. */
 const itemChildren = (
   <>
     <RadioGroupItem value="alpha" label="Alpha" />
@@ -462,11 +411,9 @@ const itemChildren = (
   </>
 );
 
-/** The group's option rows, from the rendered tree. */
 const rows = (element: ReturnType<typeof renderRadioGroup>) =>
   elementChildren(element);
 
-/** A row's tab stop, with "absent" standing in for `undefined`. */
 const stopOf = (row: ReturnType<typeof rows>[number]): number | "absent" =>
   Option.getOrElse(
     Option.flatMap(hostProp(row, "tabIndex"), (value) =>
@@ -485,16 +432,12 @@ describe("RadioGroupItem", () => {
       true,
       undefined,
     ]);
-    // Rich content is carried through, and the name stays the label.
+
     expect(items[1]?.content).toBeDefined();
     expect(items[1]?.label).toBe("Beta");
   });
 
   it("reads a stored list structurally, dropping a record it cannot place", () => {
-    // The bug guarded: the data prop is a saved list, and JSON leaves `null` in
-    // an array whose record was deleted. Read raw, that entry threw
-    // `Cannot read properties of null (reading 'value')` and took every row
-    // beside it out of the render.
     const items = groupOptions([
       null,
       { value: "alpha" },
@@ -521,8 +464,6 @@ describe("RadioGroupItem", () => {
 
     expectSome(hostHandler(element, "onKeyDown"))(keyEvent("down"));
 
-    // `beta` is disabled, so the arrow lands on `gamma` — the same skip the
-    // data path performs.
     expect(onSelect).toHaveBeenCalledWith("gamma");
     expect(handlers.onFocusMove).toHaveBeenCalledWith(2);
   });
@@ -544,11 +485,6 @@ describe("RadioGroupItem", () => {
   });
 
   it("announces an option's caption as the row's help", () => {
-    // The bug guarded: an option's `description` was painted text only — this
-    // runtime has no `aria-describedby`, so a radio that says "Every Monday."
-    // was heard as "Weekly" alone. The row is the control, so its caption is the
-    // row's help (`aria-description`, the channel every control here uses), and
-    // a blank caption is absence like a blank name.
     const element = renderRadioGroup(
       {
         options: [
@@ -571,10 +507,6 @@ describe("RadioGroupItem", () => {
   });
 
   it("paints an option whose value is the empty string as the chosen one", () => {
-    // Bug guarded: `""` is the group's default (no choice) value, and the state
-    // reader also refused it as a choice — so an option whose value was `""`
-    // could hold the tab stop, accept a press that reported `""`, and still paint
-    // unchecked. The value is the value, whatever its length.
     const element = renderRadioGroup(
       {
         options: [
@@ -603,7 +535,7 @@ describe("RadioGroupItem", () => {
       radioHandlers(vi.fn()),
     );
     const beta = rows(element)[1] ?? expect.fail("no second row");
-    // The row draws its box, then the body that holds the item's content.
+
     const body = elementChildren(beta)[1] ?? expect.fail("no item body");
     const glyph = elementChildren(body)[0] ?? expect.fail("no rich content");
 
@@ -626,11 +558,6 @@ describe("RadioGroupItem", () => {
   });
 
   it("publishes a trimmed row name, and no name at all for a blank label", () => {
-    // The bug guarded: the row's `aria-label` was the option's label verbatim,
-    // so a padded label announced its padding and a blank one published `""` —
-    // an empty name in the accessibility tree rather than no name, which is
-    // what the package's `accessibleName` rule exists to prevent everywhere
-    // else.
     const element = renderRadioGroup(
       {
         options: [
@@ -652,17 +579,8 @@ describe("RadioGroupItem", () => {
   });
 });
 
-// The `Checkbox`/`Switch` halves of the old selection suite moved to their own
-// files: those two controls do not need the native binding, and keeping them in
-// one file made a `useGpuix` import in `RadioGroup` take their tests down with
-// it.
-
 describe("a radio group's address and help", () => {
   it("announces the help on the group and addresses the row that holds the tab stop", () => {
-    // Bug guarded: a form could not focus the group it failed on, and a
-    // `Label`'s description reached nobody. The wrapper is not focusable, so
-    // the address lands on the roving row; the help describes the group, not
-    // each choice.
     const ref = vi.fn();
     const layout = vi.fn();
     const element = renderRadioGroup(
@@ -683,7 +601,7 @@ describe("a radio group's address and help", () => {
     expect(expectSome(hostProp(element, "aria-description"))).toBe(
       "Choose the plan you want to bill.",
     );
-    // `beta` is selected, so its row is the tab stop and therefore the address.
+
     const beta = rows(element)[1] ?? expect.fail("no beta row");
     const merged = Option.getOrElse(hostRef(beta), () =>
       expect.fail("the beta row carried no ref"),
@@ -718,10 +636,6 @@ describe("a radio group's address and help", () => {
 
 describe("a radio group's row locators", () => {
   it("names each row from its value and leaves the group's own id on the wrapper", () => {
-    // The bug guarded: `testId` landed on the wrapper, which paints the group
-    // and takes no focus, and every row it built carried none — so a native
-    // probe could address the group and never press one choice. The derived
-    // locator is what makes a data-option row a subject a test can name.
     const element = renderRadioGroup(
       {
         options,
@@ -743,8 +657,6 @@ describe("a radio group's row locators", () => {
   });
 
   it("paints no row locator when the caller derives none", () => {
-    // A caller passing only `testId` still gets a group whose rows are
-    // unaddressable rather than rows named after something nobody wrote.
     const element = renderRadioGroup(
       { options, testId: "plan" },
       testTheme,

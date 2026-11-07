@@ -1,9 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Stats — Heavens Arena's numbers: four tiles with sparklines, bout wins by
- * fighter, aura output over the period, and the season's Nen types. The range
- * control swaps the whole data set.
- */
 import { Card } from "@gpuixui/components/card";
 import { BarChart, DonutChart, LineChart, Sparkline } from "@gpuixui/data";
 import { Stack, Text, ToggleGroup } from "@gpuixui/primitives";
@@ -13,7 +8,6 @@ import { useState } from "react";
 import { datasets, nenTypes, ranges, type Range } from "./data.js";
 import { isRange } from "./logic.js";
 
-/** The block, as a window's whole content. */
 export const Stats = () => {
   const theme = useTheme();
   const [range, setRange] = useState<Range>("week");

@@ -3,16 +3,6 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { CarouselWorkflow } from "./carousel-demo";
 
-/**
- * The carousel's stable frame.
- *
- * The frame used to size itself to the displayed slide, so stepping from a
- * two-line slide to the one with the invite field made the card grow and the
- * controls jump under the reader. Every slide is now stacked in one grid cell;
- * the tallest sets the height and the others keep their layout with
- * `visibility`, so the footer (and the page below it) never moves.
- */
-
 const markup = renderToStaticMarkup(<CarouselWorkflow />);
 
 const css = readFileSync(
@@ -29,9 +19,9 @@ describe("the carousel preview", () => {
   it("keeps every slide mounted, with one on stage", () => {
     expect(markup.match(/class="gx-carousel-slide"/g)?.length).toBe(4);
     expect(markup.match(/data-active=""/g)?.length).toBe(1);
-    // `hidden` removed the slide from layout, which is why the frame resized.
+
     expect(markup).not.toMatch(/gx-carousel-slide[^>]*hidden/);
-    // The still-mounted slides are unreachable without leaving the layout.
+
     expect(markup.match(/inert=""/g)?.length).toBe(3);
   });
 

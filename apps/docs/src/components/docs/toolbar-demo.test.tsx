@@ -17,17 +17,6 @@ import {
   toolbarStrip,
 } from "./toolbar-demo";
 
-/**
- * The Toolbar preview.
- *
- * `packages/shell/docs/toolbar.mdx` is the package's Markdown, so the site
- * mounts the drawing from `package-preview.ts` and the page itself carries no
- * `<ComponentPreview>`. The registry's own guard sees the demo; what it cannot
- * see is whether the drawing still runs the package's rules instead of a copy
- * of them. These cases hold the strip to `@gpuixui/shell`'s `splitOverflow`,
- * `initialRoving` and `moveRoving`.
- */
-
 const root = new URL("../../../../../", import.meta.url);
 
 const read = (path: string): string =>
@@ -36,7 +25,6 @@ const read = (path: string): string =>
 const markup = (node: Parameters<typeof renderToStaticMarkup>[0]): string =>
   renderToStaticMarkup(node);
 
-/** The declarations of the first `selector { … }` block in a style sheet. */
 const block = (css: string, selector: string): string => {
   const start = css.indexOf(`${selector} {`);
   if (start === -1) return "";
@@ -69,8 +57,6 @@ describe("the Toolbar preview", () => {
     const strip = toolbarStrip(TOOLBAR_ACTIONS, TOOLBAR_MAX);
     const split = splitOverflow(toolbarSpecs(TOOLBAR_ACTIONS), TOOLBAR_MAX);
 
-    // The overflow trigger takes one of the visible slots, so `max - 1` actions
-    // stay in the strip and the rest overflow.
     expect(strip.visible.map((action) => action.id)).toEqual([
       "new",
       "open",
@@ -97,7 +83,7 @@ describe("the Toolbar preview", () => {
     expect(html).toContain('data-action="redo"');
     expect(html).toContain('data-action="find"');
     expect(html.match(/role="menuitem"/g)).toHaveLength(2);
-    // The menu is closed until the trigger is pressed.
+
     expect(frame(initialTabStop(strip))).not.toContain('role="menu"');
   });
 
@@ -108,7 +94,6 @@ describe("the Toolbar preview", () => {
     expect(slotDisabled(strip, 1)).toBe(true);
     expect(Option.getOrNull(initialTabStop(strip))).toBe(0);
 
-    // Right past the disabled action lands on the next enabled one.
     const moved = moveTabStop(strip, 0, 1);
     expect(Option.getOrNull(moved)).toBe(2);
     expect(tabStopLabel(strip, moved)).toBe("Save");
@@ -125,8 +110,6 @@ describe("the Toolbar preview", () => {
   it("wraps the roving tab stop, as the package's move does", () => {
     const strip = toolbarStrip(TOOLBAR_ACTIONS, TOOLBAR_MAX);
 
-    // The overflow trigger is the last slot, so a right from it wraps to the
-    // first action.
     expect(Option.getOrNull(moveTabStop(strip, 4, 1))).toBe(0);
     expect(Option.getOrNull(moveTabStop(strip, 0, -1))).toBe(4);
     expect(tabStopLabel(strip, Option.some(4))).toBe("More actions");
@@ -138,7 +121,7 @@ describe("the Toolbar preview", () => {
     expect(toolbarReadout(strip, Option.some(0))).toBe(
       "4 of 6 in the strip · the tab stop is on New",
     );
-    // A wider strip takes one more action out of the menu.
+
     expect(
       toolbarReadout(toolbarStrip(TOOLBAR_ACTIONS, 6), Option.some(0)),
     ).toBe("6 of 6 in the strip · the tab stop is on New");
@@ -148,9 +131,6 @@ describe("the Toolbar preview", () => {
   });
 
   it("paints the shared button family in the strip's groups", () => {
-    // Guarded bug: the drawing shipped a second button chrome (`.gx-shell-action`)
-    // and put the overflow trigger after the last action, so the strip had no
-    // trailing group and no mode group — nothing like the component's anatomy.
     const html = frame(
       initialTabStop(toolbarStrip(TOOLBAR_ACTIONS, TOOLBAR_MAX)),
     );
@@ -159,13 +139,12 @@ describe("the Toolbar preview", () => {
     const buttons = [...html.matchAll(/<button[^>]*class="([^"]*)"/g)].map(
       (match) => match[1] ?? "",
     );
-    // Four visible actions, two modes and the overflow trigger.
+
     expect(buttons).toHaveLength(7);
     expect(buttons.every((classes) => classes.includes("gx-btn"))).toBe(true);
     expect(html).toContain('class="gx-btn gx-btn-ghost gx-btn-sm"');
     expect(html).toContain("gx-btn-square");
 
-    // Leading group, flexible spacer, then the trailing group.
     const toolbar = html.slice(html.indexOf('role="toolbar"'));
     const spacer = toolbar.indexOf("gx-shell-spacer");
     const modes = toolbar.indexOf('class="gx-tgroup"');
@@ -174,8 +153,6 @@ describe("the Toolbar preview", () => {
     expect(modes).toBeGreaterThan(spacer);
     expect(overflow).toBeGreaterThan(modes);
 
-    // The strip is the window's full-width row, its controls spaced by the
-    // recipe's gap, and it owns no radius of its own.
     const strip = block(css, ".gx-shell-toolbar");
     expect(strip).toContain("width: 100%;");
     expect(strip).toContain("gap: 4px;");
@@ -189,7 +166,7 @@ describe("the Toolbar preview", () => {
     expect(demo).toContain("splitOverflow");
     expect(demo).toContain("initialRoving");
     expect(demo).toContain("moveRoving");
-    // A local copy of the split would show up as the arithmetic it re-implements.
+
     expect(demo).not.toMatch(/max - 1/);
   });
 });

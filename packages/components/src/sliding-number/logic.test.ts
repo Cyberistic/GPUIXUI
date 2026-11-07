@@ -1,14 +1,3 @@
-/**
- * The digits a value paints and the columns they belong to.
- *
- * The bugs these guard: a column keyed by position, so a value that gains a
- * digit rolls every column instead of the one that changed; a fraction digit
- * keyed against the integer's places; a point painted where the value has no
- * fraction; a reading that drops the sign or the caller's affixes; decimals that
- * reach `toFixed` unclamped; and a value no column can paint, laid out as ten
- * blank cells.
- */
-
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
@@ -20,7 +9,6 @@ import {
   slidingNumberDecimalsCap,
 } from "./logic.js";
 
-/** The `key:digit` of every cell, `point` standing for the separator. */
 const cells = (value: number, format?: Parameters<typeof numberLayout>[1]) =>
   Arr.map(numberLayout(value, format).cells, (cell) =>
     Option.match(cell.digit, {

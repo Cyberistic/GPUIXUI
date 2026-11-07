@@ -1,14 +1,3 @@
-/**
- * Combobox ranking, selection and the create row.
- *
- * The bugs these guard: ranking sorted substring matches before prefix matches,
- * so typing `ca` highlighted `Vacation` above `Calendar`; a tie reordered the
- * caller's list, so the highlighted row jumped between renders; a blank query
- * filtered everything out instead of showing the full list; toggling a value
- * that was already selected added it a second time; and a create row that
- * offered itself over a real match, or lost the query's spaces in the round trip.
- */
-
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import {
@@ -51,8 +40,6 @@ describe("labelOf", () => {
   });
 
   it("reads a blank label as absence, and trims the one it keeps", () => {
-    // A label decoded from a table is often whitespace where it has no name;
-    // the value is then the only name the trigger and the row have.
     expect(labelOf(option("a", "   "))).toBe("a");
     expect(labelOf(option("a", " Alpha "))).toBe("Alpha");
   });
@@ -163,9 +150,6 @@ describe("optionsOf", () => {
   });
 
   it("reads an absent slot, a lost label and a lost flag as their defaults", () => {
-    // JSON writes `null` where a saved record carried nothing: the label is
-    // absence (the value names the row), the description is not painted and the
-    // row is selectable.
     expect(
       optionsOf([
         { value: "a", label: null, description: null, disabled: null },
@@ -198,8 +182,6 @@ describe("selectionOf", () => {
   });
 
   it("reads an absent selection as no selection, never a crash", () => {
-    // A store writes `null` for the field it never set; the component spread
-    // and indexed that value before it painted.
     expect(selectionOf(null)).toEqual(Option.none());
     expect(selectionOf(undefined)).toEqual(Option.none());
     expect(selectionOf(3)).toEqual(Option.none());

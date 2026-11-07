@@ -1,81 +1,44 @@
-/**
- * The crop area's arithmetic: the hole, the mask it leaves, the handle that
- * drags it, the bounds every edge keeps and the ratio a resize preserves.
- *
- * A crop is one rectangle in the frame's own points. The runtime has no mask
- * and no clip path, so the mask is four positioned bars around the hole — the
- * shape the playground's `crop-overlay` probe measured in a window. This module
- * keeps the geometry out of the component so a drag, a keyboard step and the
- * painted veil all read one rule.
- */
-
 import { Match } from "effect";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
-/** The four corners a crop can be resized from. */
 export const CropCorner = Schema.Literals(["nw", "ne", "sw", "se"]);
-/** The four corners a crop can be resized from. */
+
 export type CropCorner = typeof CropCorner.Type;
 
-/** The smallest side a crop may keep; a smaller hole cannot be grabbed. */
 export const CROP_MIN_SIZE = 24;
 
-/** A corner handle's default side in points. */
 export const CROP_HANDLE_SIZE = 10;
 
-/** A rectangle in the frame's points. */
 export class CropRect extends Schema.Class<CropRect>("CropRect")({
   x: Schema.Number,
   y: Schema.Number,
   width: Schema.Number,
   height: Schema.Number,
 }) {
-  /** The rectangle's right edge. */
   get right(): number {
     return this.x + this.width;
   }
 
-  /** The rectangle's bottom edge. */
   get bottom(): number {
     return this.y + this.height;
   }
 }
 
-/** The frame a crop lives in. */
 export interface CropBounds {
   readonly width: number;
   readonly height: number;
 }
 
-/**
- * Whether two rectangles paint the same hole.
- *
- * A gesture reports through `onChange`, and a drag held past the frame's edge
- * asks for the rectangle already on screen once per delivered move. Comparing
- * here is what lets a component stay silent when there is nothing to change.
- */
 export const sameCrop = Schema.toEquivalence(CropRect);
 
-/**
- * Whether a pointer payload names the primary press a gesture may begin on.
- *
- * The runtime reports which button went down (0 is the primary one). A
- * secondary press on the picture is the reader asking for a context menu, not
- * a drag: beginning a gesture on it would move or resize the hole, and a
- * release delivered outside the frame would leave that gesture armed for the
- * next plain hover. A payload that names no button is a primary press — the
- * only one a gesture begins on.
- */
 export const isPrimaryPress = (button: number | null | undefined): boolean =>
   button === undefined || button === null || button === 0;
 
-/** One side of the mask. */
 export const CROP_BAR_SIDES = ["top", "right", "bottom", "left"] as const;
-/** One side of the mask. */
+
 export type CropBarSide = (typeof CROP_BAR_SIDES)[number];
 
-/** A mask bar and its box. */
 export interface CropBar {
   readonly side: CropBarSide;
   readonly box: CropRect;
@@ -84,15 +47,8 @@ export interface CropBar {
 const clamp = (value: number, low: number, high: number): number =>
   Math.min(Math.max(value, low), high);
 
-/** A coordinate a pointer or key can move by; a non-finite one moves nothing. */
 const delta = (value: number): number => (Number.isFinite(value) ? value : 0);
 
-/**
- * The minimum side a frame can actually offer. A minimum that cannot be laid
- * out (a stored preference: not finite, or not positive) reads as the default,
- * so it cannot poison every side the clamp multiplies it into or let a hole
- * shrink until no corner is left to grab.
- */
 const floorOf = (bounds: CropBounds, min: number): number =>
   Math.max(
     0,
@@ -103,20 +59,11 @@ const floorOf = (bounds: CropBounds, min: number): number =>
     ),
   );
 
-/** A caller's ratio (width / height), when it names a shape a crop can keep. */
 const ratioOf = (ratio: number | undefined): Option.Option<number> =>
   typeof ratio === "number" && Number.isFinite(ratio) && ratio > 0
     ? Option.some(ratio)
     : Option.none();
 
-/**
- * A rectangle reshaped to `ratio` around the corner that stays put.
- *
- * The moving corner's larger movement drives the width, so a vertical drag
- * resizes a locked square as surely as a horizontal one. A frame that cannot
- * hold a minimum-sized hole at the ratio leaves the rectangle free rather than
- * painting a hole too thin to grab.
- */
 const fitRatio = (
   rect: CropRect,
   start: CropRect,
@@ -146,16 +93,13 @@ const fitRatio = (
   );
   const movesLeft = corner === "nw" || corner === "sw";
   const movesTop = corner === "nw" || corner === "ne";
-  // The room is what the anchored corner leaves in the direction the hole
-  // grows: the whole frame is not available to a corner that must not move.
+
   const roomW = movesLeft ? anchor.x : maxW - anchor.x;
   const roomH = movesTop ? anchor.y : maxH - anchor.y;
   const cap = Math.min(roomW, roomH * ratio);
   const width = Math.max(minWidth, Math.min(wanted, cap));
   const height = width / ratio;
   return new CropRect({
-    // A shaped stored hole has no drag to anchor, so it is nudged inside a
-    // frame whose origin leaves too little room for the ratio's minimum.
     x: clamp(movesLeft ? anchor.x - width : anchor.x, 0, maxW - width),
     y: clamp(movesTop ? anchor.y - height : anchor.y, 0, maxH - height),
     width,
@@ -163,18 +107,6 @@ const fitRatio = (
   });
 };
 
-/**
- * The crop a frame can hold: inside the bounds, at least the minimum side and,
- * when the caller names one, on its aspect ratio.
- *
- * A crop restored from storage may name a rectangle the frame it is shown in
- * cannot hold, so a component clamps before it paints rather than drawing a
- * hole outside the picture. A rectangle that is **absent** (a save that carried
- * no crop) has no fields to read: it reads as the frame's origin at the smallest
- * side, the rectangle an unreadable field reads as, so the frame still paints.
- * A ratio that cannot be read leaves the rectangle free, the same rule the other
- * stored values follow.
- */
 export const clampCrop = (
   crop: CropRect | null | undefined,
   bounds: CropBounds,
@@ -186,9 +118,7 @@ export const clampCrop = (
     Option.fromNullishOr(crop),
     () => new CropRect({ x: 0, y: 0, width: 0, height: 0 }),
   );
-  // A restored rectangle may carry a field that cannot be laid out (a ratio
-  // over a frame that never arrived). A coordinate reads from the origin and a
-  // side from the floor, so the hole is still painted and still grabbable.
+
   const side = (value: number): number =>
     Number.isFinite(value) ? value : floor;
   const point = (value: number): number => (Number.isFinite(value) ? value : 0);
@@ -206,7 +136,6 @@ export const clampCrop = (
   });
 };
 
-/** The four bars a crop paints around its hole; a zero-side bar is dropped. */
 export const cropBars = (
   crop: CropRect,
   bounds: CropBounds,
@@ -248,22 +177,11 @@ export const cropBars = (
   return bars.filter(({ box }) => box.width > 0 && box.height > 0);
 };
 
-/** One rule-of-thirds guide inside the hole. */
 export interface CropGuide {
-  /** `v1`/`v2` are the vertical thirds; `h1`/`h2` the horizontal ones. */
   readonly name: "v1" | "v2" | "h1" | "h2";
   readonly box: CropRect;
 }
 
-/**
- * The four rule-of-thirds guides inside a hole.
- *
- * They are thin boxes inside the crop, not lines the runtime draws: the mask's
- * bars sit around the hole, and a guide is the same absolute box one point wide.
- * A hole narrower than the line cannot hold one at its third, so the line is
- * capped at the hole's own side and its origin held inside: the box never spills
- * past the edge it divides.
- */
 export const cropGuides = (crop: CropRect): ReadonlyArray<CropGuide> => {
   const thirdW = crop.width / 3;
   const thirdH = crop.height / 3;
@@ -291,15 +209,6 @@ export const cropGuides = (crop: CropRect): ReadonlyArray<CropGuide> => {
   ];
 };
 
-/**
- * A corner handle's box, centred on the crop's corner. A side that cannot be
- * laid out (not finite, or not positive) reads as {@link CROP_HANDLE_SIZE}, so
- * a stored preference never paints a one-point box no pointer can grab.
- *
- * Given the frame, a handle the corner would push past its edge is held inside
- * it: the frame clips its children, so a centred handle on a hole touching the
- * edge would paint half a box and keep half a press target.
- */
 export const handleBox = (
   crop: CropRect,
   corner: CropCorner,
@@ -330,7 +239,6 @@ export const handleBox = (
   });
 };
 
-/** A crop resized by dragging one corner. */
 export const resizeCrop = (
   crop: CropRect,
   corner: CropCorner,
@@ -372,13 +280,6 @@ export const resizeCrop = (
   });
 };
 
-/**
- * A crop translated by dragging the picture inside the frame.
- *
- * A move translates the hole and never reshapes it, so the caller's minimum
- * travels with it: a hole `minSize` allowed below the default stays the size it
- * was, on the pointer path and the keyboard path alike.
- */
 export const moveCrop = (
   crop: CropRect,
   dx: number,
@@ -395,7 +296,6 @@ export const moveCrop = (
   });
 };
 
-/** The arrow key's delta along each axis. */
 const keyDelta = (
   key: string,
   step: number,
@@ -408,12 +308,6 @@ const keyDelta = (
     Match.orElse(() => Option.none()),
   );
 
-/**
- * A crop resized from the keyboard; `None` for a key that is not an arrow.
- *
- * A negative step is read as its magnitude so a caller that forwards a computed
- * value cannot invert the arrow the reader pressed.
- */
 export const keyboardCrop = (
   crop: CropRect,
   corner: CropCorner,
@@ -429,14 +323,6 @@ export const keyboardCrop = (
   );
 };
 
-/**
- * A crop moved from the keyboard; `None` for a key that is not an arrow.
- *
- * A move keeps the hole's shape, so the ratio a resize would keep is held here
- * too; the step reads a negative value as its magnitude like the resize path.
- * The caller's minimum travels with it: a hole the caller allowed to be smaller
- * than the default must not grow on a move.
- */
 export const keyboardMove = (
   crop: CropRect,
   key: string,
@@ -448,24 +334,15 @@ export const keyboardMove = (
     moveCrop(crop, delta.dx, delta.dy, bounds, min),
   );
 
-/** The modifiers a handle's key payload may carry. */
 export interface CropModifiers {
   readonly shift?: boolean;
   readonly alt?: boolean;
 }
 
-/** The step an arrow takes: 1 point, or 8 while Shift is held. */
 export const cropKeyStep = (
   modifiers: CropModifiers | null | undefined,
 ): number => (modifiers?.shift === true ? 8 : 1);
 
-/**
- * The crop a focused handle's key asks for.
- *
- * A plain arrow resizes the handle's corner; an arrow with **Alt** moves the
- * whole hole, so a reader who cannot drag can also place the crop, not only
- * size it. `None` for a key that is not an arrow.
- */
 export const cropKey = (
   crop: CropRect,
   corner: CropCorner,
@@ -487,7 +364,6 @@ export const cropKey = (
         aspectRatio,
       );
 
-/** A gesture in progress: what was pressed, where, and the crop it began on. */
 export type CropGesture =
   | {
       readonly kind: "move";
@@ -503,7 +379,6 @@ export type CropGesture =
       readonly y: number;
     };
 
-/** The crop a gesture leaves when the pointer is at `at`. */
 export const gestureCrop = (
   gesture: CropGesture,
   at: { readonly x: number; readonly y: number },
@@ -523,11 +398,9 @@ export const gestureCrop = (
         aspectRatio,
       );
 
-/** A crop's bounds as the sentence a reader hears on its handle. */
 export const cropLabel = (crop: CropRect): string =>
   `${Math.round(crop.x)}, ${Math.round(crop.y)}, ${Math.round(crop.width)} × ${Math.round(crop.height)}`;
 
-/** The corner as the words a reader hears. */
 export const cornerLabel = (corner: CropCorner): string =>
   Match.value(corner).pipe(
     Match.when("nw", () => "top left"),
@@ -537,14 +410,6 @@ export const cornerLabel = (corner: CropCorner): string =>
     Match.exhaustive,
   );
 
-/**
- * The resize cursor a corner points along.
- *
- * A double arrow names the diagonal a corner drags on, so the two corners on
- * one diagonal share it: `nw`/`se` drag the top-left-to-bottom-right axis and
- * `ne`/`sw` the other. One cursor for all four points across the wrong diagonal
- * on half of them.
- */
 export const cornerCursor = (
   corner: CropCorner,
 ): "nwse-resize" | "nesw-resize" =>

@@ -1,20 +1,3 @@
-/**
- * The package-surface budget.
- *
- * `@gpuixui/components` is consumed from source, so the entry's import graph is
- * what every consumer pays for: every family re-exported from one barrel. The
- * cost was unmeasured — no number backed "this package is heavy to load" — and
- * a family that reached a new package would have added load time to every
- * consumer with nothing to notice it.
- *
- * `src/surface.ts` is the measurement; `scripts/surface-io.ts` reads this
- * workspace (the same resolver the report command uses, so the gate and the
- * printed numbers cannot disagree); `src/surface.budget.ts` records the ceiling.
- * The scanner itself is tested with literal sources, because the rules that
- * matter — type-only statements cost nothing, a multi-line clause is one import,
- * an exported string is not a specifier — are invisible in the totals.
- */
-
 import { fileURLToPath } from "node:url";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -30,7 +13,6 @@ import { surfaceBudget } from "./surface.budget.js";
 const scan = (source: string): ReadonlyArray<string> =>
   runtimeSpecifiers(source);
 
-/** A graph made of literal sources: `resolves` are the paths an import may reach. */
 const fakeIo = (input: {
   readonly files: Readonly<Record<string, string>>;
   readonly resolves?: ReadonlyArray<string>;
@@ -94,10 +76,6 @@ describe("runtime specifiers", () => {
   });
 
   it("does not read an exported string as a specifier", () => {
-    // A real defect this caught: `export const systemUiFont = ".SystemUIFont"`
-    // in `@gpuixui/tokens` was counted as an import of a package named
-    // `.SystemUIFont`, because any line starting with `export` and containing a
-    // quote looked like a re-export.
     const source = [
       'export const systemUiFont = ".SystemUIFont";',
       'export type Variant = "a" | "b";',
@@ -180,14 +158,6 @@ describe("the recorded budget", () => {
     () => ({ name: "@gpuixui/components", modules: 0, bytes: 0 }),
   );
 
-  /**
-   * One family's graph: what a consumer of `@gpuixui/components/<family>` pays.
-   *
-   * The barrel re-exports every family, so the entry's graph answers a different
-   * question from a consumer's. `motion-grid` is the animated family that draws
-   * the entrance seam and nothing else, so its motion share is the seam's cost
-   * rather than a physics hook's.
-   */
   const family = measurePackageSurface(
     fileURLToPath(new URL("./reveal.tsx", import.meta.url)),
   );
@@ -196,7 +166,6 @@ describe("the recorded budget", () => {
     () => ({ name: "@gpuixui/motion", modules: 0, bytes: 0 }),
   );
 
-  /** The modules of a package in one graph, by file name. */
   const moduleNames = (
     graph: ReadonlyArray<{ readonly path: string; readonly group: string }>,
     group: string,
@@ -242,19 +211,12 @@ describe("the recorded budget", () => {
   });
 
   it("gives a family the presence half of motion, not its physics", () => {
-    // The bug this guards: the seam imported `@gpuixui/motion/react` for the
-    // provider and the two presence hooks, and that entry drives a retained
-    // `MotionValue` — so every family that enters and leaves loaded the spring,
-    // inertia, timeline and hook bookkeeping the fade never samples. The React
-    // presence half is its own entry now, and a family that imports only the
-    // seam pays for it alone.
     expect(family.unresolved).toEqual([]);
     expect(familyMotion.modules).toBe(surfaceBudget.familyMotion.modules);
     expect(familyMotion.bytes).toBeLessThanOrEqual(
       surfaceBudget.familyMotion.bytes,
     );
-    // The names, so a sampler rejoining the route fails by name rather than by
-    // a count a reader has to decode.
+
     const physics = [
       "easing.ts",
       "hook-read.ts",
@@ -270,8 +232,7 @@ describe("the recorded budget", () => {
     expect(Arr.filter(present, (name) => Arr.contains(physics, name))).toEqual(
       [],
     );
-    // The half it does pay is really there: a graph that reached no motion
-    // module cannot satisfy the rule above by reading nothing.
+
     expect(present).toEqual(
       expect.arrayContaining(["presence.ts", "provider.ts", "timing.ts"]),
     );

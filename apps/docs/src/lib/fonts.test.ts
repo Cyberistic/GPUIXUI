@@ -16,9 +16,6 @@ describe("the preview font", () => {
   });
 
   it("gives a platform theme that platform's family, not the host's", () => {
-    // The bug: every platform style names `.SystemUIFont`, which mapped to one
-    // macOS-first stack, so switching to Windows left the preview in San
-    // Francisco and the switch had no typographic axis on a Mac.
     expect(previewFontStack(platformTheme(themes.dark, "win32"), "win32")).toBe(
       platformFontStack("win32"),
     );

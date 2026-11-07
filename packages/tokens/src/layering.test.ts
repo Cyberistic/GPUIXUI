@@ -1,19 +1,3 @@
-/**
- * Holds `docs/tokens.md` §Layering to the model it promises and to the package.
- *
- * The bug this guards: layering is the one part of the design system that is
- * *not* a token — the runtime has no `zIndex`, so paint order is tree order and
- * the contract lives in prose. Nothing read that prose, so the section could
- * disappear, a numeric `z` scale could be added to the package (a token the
- * renderer would ignore), a layer could name a surface the inventory no longer
- * ships, or the reserved empty `overlay` elevation level could be confused with
- * the `overlay` scrim role again, and every test stayed green.
- *
- * `node:fs` is deliberate, as in `docs.test.ts`, `inventory.test.ts` and
- * `design-system-docs.test.ts`: this checks the repository's own Markdown, and
- * the package keeps zero runtime dependencies (no `effect`, so no `FileSystem`
- * service to inject).
- */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { decorativeSurfaces } from "./decorative.js";
@@ -36,7 +20,6 @@ const inventory = readFileSync(
   "utf8",
 );
 
-/** A source file from `packages/components`, the package that paints overlays. */
 const components = (path: string): string =>
   readFileSync(
     new URL(`../../components/src/${path}`, import.meta.url),
@@ -53,11 +36,6 @@ const twUtilities = readFileSync(
   "utf8",
 );
 
-/**
- * The `## Layering` section, from its heading to the next one. A missing
- * heading yields an empty string, so every statement check fails by name rather
- * than by a thrown index.
- */
 const section = ((): string => {
   const start = doc.indexOf("\n## Layering\n");
   if (start < 0) {
@@ -67,7 +45,6 @@ const section = ((): string => {
   return next < 0 ? doc.slice(start) : doc.slice(start, next);
 })();
 
-/** The five layers in mounting order, as the page must name them. */
 const layerOrder = [
   "**inline**",
   "**anchored**",
@@ -76,7 +53,6 @@ const layerOrder = [
   "**notice**",
 ] as const;
 
-/** The surface each layer names, and the `.agents/slop/COMPONENTS.md` row it belongs to. */
 const surfaces = [
   { named: "DropdownMenu", row: "Dropdown menus" },
   { named: "Popover", row: "Popovers" },
@@ -85,7 +61,6 @@ const surfaces = [
   { named: "ToastViewport", row: "Toasts / notifications" },
 ] as const;
 
-/** The statements from `wanted` the page no longer carries, whitespace-normalised. */
 const missing = (wanted: ReadonlyArray<string>): ReadonlyArray<string> => {
   const text = section.replaceAll(/\s+/g, " ");
   return wanted.filter((statement) => !text.includes(statement));
@@ -160,8 +135,6 @@ describe("docs/tokens.md §Layering", () => {
   });
 
   it("keeps the reserved level empty in every shipped theme", () => {
-    // The page's claim is only true while the level paints nothing; a theme
-    // that filled it without the section moving would be a silent shadow.
     expect(lightElevation.overlay).toEqual([]);
     expect(darkElevation.overlay).toEqual([]);
     [
@@ -180,17 +153,6 @@ describe("docs/tokens.md §Layering", () => {
 });
 
 describe("the lift each floating surface paints", () => {
-  /**
-   * The surface, the recipe it compiles, and the painter that raises it.
-   *
-   * The bug this guards: `docs/tokens.md` said floating surfaces take
-   * `elevation.md` (menus and popovers) or `elevation.lg` (dialogs and command
-   * palettes) while `popover.tsx`, `menu/surface.tsx` and `dialog.tsx` all
-   * passed `"lg"`, and the three surfaces that really paint `md` — the toast
-   * card, the preview card and the navigation-menu panel, whose recipes name
-   * `shadow-md` and pass no level — were named nowhere. The page's table was
-   * the opposite of the paint in both directions, and nothing read it.
-   */
   const floatingSurfaces = [
     {
       surface: "dialog",
@@ -243,13 +205,11 @@ describe("the lift each floating surface paints", () => {
     },
   ] as const;
 
-  /** The class string `packages/tw/src/recipes.ts` exports under `name`. */
   const recipe = (name: string): string =>
     new RegExp(`export const ${name} =\\s*\\n?\\s*"([^"]*)"`).exec(
       twRecipes,
     )?.[1] ?? "";
 
-  /** The level a Tailwind shadow utility compiles to, read from its compiler. */
   const elevationOf = (utility: string | undefined): string | undefined => {
     const block =
       /const ELEVATION[^=]*= \{([\s\S]*?)\};/.exec(twUtilities)?.[1] ?? "";
@@ -258,7 +218,6 @@ describe("the lift each floating surface paints", () => {
     )?.[2];
   };
 
-  /** The level a painter passes to `overlaySurfaceStyle`, if it passes one. */
   const explicitLevel = (
     painter: string,
     recipeName: string,
@@ -272,7 +231,6 @@ describe("the lift each floating surface paints", () => {
     return /"(sm|md|lg|overlay)"/.exec(call)?.[1];
   };
 
-  /** What the surface paints: the level it passes, else its recipe's own lift. */
   const paintedLevel = (surface: (typeof floatingSurfaces)[number]) =>
     explicitLevel(surface.painter, surface.recipe) ??
     elevationOf(/\bshadow-(\w+)/.exec(recipe(surface.recipe))?.[1]);
@@ -343,8 +301,7 @@ describe("the lift each floating surface paints", () => {
           .map((surface) => surface.over),
       ),
     ];
-    // The narrower claim the page shipped: the veil was measured on the page's
-    // own content strips only, so a modal over an undimmed sidebar passed.
+
     expect(strips.length).toBeGreaterThan(2);
     expect(
       strips.filter((strip) => !section.includes(`\`${strip}\``)),
@@ -374,7 +331,7 @@ describe("the package ships no stacking token", () => {
     [lightTheme, darkTheme].forEach((theme) => {
       const keys = Object.keys(theme);
       expect(keys.filter((key) => /^z/i.test(key))).toEqual([]);
-      // The scrim is a colour role, not a weight.
+
       expect(theme.colors.overlay).toMatch(/^#[0-9A-F]{6}[0-9A-F]{2}$/i);
     });
   });

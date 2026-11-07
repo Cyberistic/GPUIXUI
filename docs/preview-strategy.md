@@ -298,51 +298,6 @@ banner `#1e222a` at `500,149`, and after one press through the automation locato
 the banner sampled `#0e5135` with the status reading "Pressed 1 time" — the same
 four claims, now painted by a React tree instead of a hand-fed batch.
 
-### Build-time frames: the library rendered once, for every page
-
-Strategy 1 is no longer one hand-written scene. The registry that feeds the
-native playground — `@gpuixui/components/examples` and
-`@gpuixui/data/examples` — is the set of screens a component page documents, and
-the wasm renderer can mount any of them. Two route forms expose that:
-
-- `/live?scene=example&id=accordion` mounts one registered example and reports
-  `status=painting`, `id`, `platform` and `mode`. This is what the Native tab's
-  "open the same scene live" link opens.
-- `/live?scene=examples` mounts no example until
-  `window.__gpuixCapture.render(id)` is called, then swaps the root to that
-  example in the same surface. One document, one wasm initialisation, any number
-  of frames. `clear()` paints the empty stage first, so a slow example cannot be
-  captured as the previous one.
-
-`scripts/native-previews.ts` drives the second form in headless Chrome and writes
-`src/assets/native/<id>.webp` for every registered example. It verifies each
-frame by **counting distinct colours across every pixel**: a screenshot that
-exists is not a paint, and an earlier five-point sample grid called a real
-toolbar flat because every point landed between its controls. A frame with one
-colour is the empty stage, and the run fails that example by id. The captures are
-checked in, roughly 657 KiB for 92 examples.
-
-That gives the site a real native still on every component page whose id the
-registry carries (the **Native** tab in `<ComponentPreview>`), and a real native
-poster in the component index before hydration: the server-rendered tile carries
-the image, and the mount replaces it with the interactive browser demo. The still
-is one platform and one palette — the caption names both — so it does not repaint
-with the platform switch; the live scene it links to does.
-
-The live example form uses the same frame as a **poster**: the server HTML for
-`/live?scene=example&id=accordion` carries the checked-in image, and the route
-starts the wasm fetch beside the backend probe instead of after it. The reader
-therefore sees the real library immediately; the canvas replaces the poster when
-the page reports `painting`. The Native tab's "open the same scene live" link
-starts the download on hover, focus or press, so the transfer overlaps the
-reader's decision and the live page's own fetch is served from cache. The 19 MiB
-payload is still a first-visit download
-and compile — the poster makes the wait honest, it does not remove it. The docs
-deploy sets `/assets/*` to `public, max-age=31536000, immutable` through
-Alchemy's asset headers, so the hashed wasm and native frames survive a repeat
-visit without revalidation; Cloudflare serves the Brotli encoding when the
-browser asks for it.
-
 ### Reading a hydrated node
 
 Every probe below gates its first press on a control's own `onClick`, because the

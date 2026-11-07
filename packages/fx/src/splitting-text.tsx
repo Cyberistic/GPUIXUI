@@ -1,24 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * SplittingText: a headline that arrives unit by unit.
- *
- * The runtime cannot animate the characters of one text node, so the split is
- * the component: every word (or every code point) is its own `<text>` host with
- * its own tween, staggered by `@gpuixui/motion`'s rule. Each unit **fades** and
- * **rises** the house offset — a relative `top`, not a transform, because the
- * runtime has no transform style key (upstream issue #102). The offset moves the
- * unit without reflowing the line: the measured box stays where the layout put
- * it.
- *
- * A unit's key is its position and its text, so a parent re-render replays
- * nothing and a changed word replays that word. Redraw the whole phrase by
- * changing its identity: `<SplittingText key={step} text={phrase} />`.
- *
- * The split itself is `splitting-text/store.ts`: the phrase, the mode and the
- * stagger are props, and a change is a write into an Effect `SubscriptionRef`
- * rather than a split recomputed on every render.
- */
-
 import type { Props } from "@gpuix/react";
 import {
   mergeStyles,
@@ -44,45 +24,31 @@ import {
 import { offsetOf, type SplitMode } from "./splitting-text/logic.js";
 import { makeSplittingStore } from "./splitting-text/store.js";
 
-/** What a splitting reveal draws at one frame. */
 export interface SplittingTextState {
   readonly text: string;
-  /** How many units the phrase split into. */
+
   readonly units: number;
   readonly reducedMotion: boolean;
 }
 
-/** {@link SplittingText} props. */
 export interface SplittingTextProps extends Omit<Props, "children" | "style"> {
-  /**
-   * The phrase to reveal. A changed phrase replays the units it changed, and a
-   * value a saved record left absent paints no units rather than taking the
-   * render down.
-   */
   readonly text: string;
-  /** Split into words or code points. Default `"words"`. */
+
   readonly split?: SplitMode;
-  /** Milliseconds between two units. Default `40`; `0` reveals in one frame. */
+
   readonly stepMs?: number;
-  /** Where the stagger starts. Default `"start"`. */
+
   readonly from?: StaggerFrom;
-  /** Pixels a unit rises from. Default `8`; a negative value starts it above. */
+
   readonly offset?: number;
-  /** A typographic role from the theme. Default `"body"`. */
+
   readonly role?: TextRole;
-  /** A Tailwind class string, joined after the resting style so it wins. */
+
   readonly className?: string;
-  /** A style, or a function of the reveal. */
+
   readonly style?: StateStyle<SplittingTextState>;
 }
 
-/**
- * A phrase whose units fade and rise into place, one after another.
- *
- * The accessible text is the units themselves, read in order: `0.11.0` has no
- * `aria-hidden`, so a character split is heard a letter at a time and a word
- * split a word at a time (see `docs/splitting-text.mdx` §Accessibility).
- */
 export const SplittingText = ({
   text,
   split = "words",
@@ -96,15 +62,13 @@ export const SplittingText = ({
 }: SplittingTextProps) => {
   const theme = useTheme();
   const timing = useSurfaceTiming("normal");
-  /** The phrase a saved layout may have lost; JSON writes `null` for it. */
+
   const phrase = textOf(text);
   const store = useLocalStore(
     makeSplittingStore({ text: phrase, split, stepMs, from }),
   );
   const reveal = useLocalState(store.local);
 
-  // The phrase and the split it needs are props, so a change is forwarded to
-  // the store; the reveal's keys stay put while none of them moves.
   useEffect(() => {
     send(store.show({ text: phrase, split, stepMs, from }));
   }, [store, phrase, split, stepMs, from]);
@@ -136,8 +100,7 @@ export const SplittingText = ({
             flexDirection: "row",
             flexWrap: "wrap",
             alignItems: "baseline",
-            // A word gap is the column gap; a character split carries its own
-            // spaces, so the letters stay joined.
+
             columnGap:
               split === "words" ? Math.round(metrics.fontSize * 0.3) : 0,
           }}
@@ -165,7 +128,6 @@ export const SplittingText = ({
   );
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 600). */
 export const splittingTextMeta = {
   name: "Splitting text",
   tier: 5,

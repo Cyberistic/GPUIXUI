@@ -12,10 +12,6 @@ import {
   SbTrigger,
 } from "./sidebar-kit";
 
-/**
- * Sidebar 14 — the docs table of contents on the right edge, with its toggle
- * moved into the page header's trailing corner.
- */
 export const Sidebar14Render = () => (
   <SbShell>
     <SbInset

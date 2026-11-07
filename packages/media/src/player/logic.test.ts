@@ -1,13 +1,3 @@
-/**
- * The player's arithmetic and its transport vocabulary.
- *
- * The bugs these guard: a transport that divides by a zero-length clip, a
- * playhead that leaves its clip, a clock that prints `NaN`, a buffered range
- * that paints past the played one, a rate of `0`, a volume of `2`, and a
- * keyboard map where Shift + arrow seeks by the small step or a focused field's
- * letter is read as a shortcut.
- */
-
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import {
@@ -42,9 +32,6 @@ const frame = (width: number, height: number): Uint8Array =>
 
 describe("the frame a picture paints", () => {
   it("reads a decoded frame structurally, and paints nothing it cannot lay out", () => {
-    // The bug guarded: the frame was trusted, so a decoder that answered a box
-    // without bytes threw out of the layout effect on `pixels.length` and took
-    // the whole player — transport included — down with it.
     expect(isFrame({ width: 2, height: 2, pixels: frame(2, 2) })).toBe(true);
     expect(isFrame({ width: 1, height: 1, pixels: frame(2, 2) })).toBe(true);
     expect(isFrame({ width: 2, height: 2, pixels: frame(1, 1) })).toBe(false);
@@ -63,8 +50,6 @@ describe("the frame a picture paints", () => {
   });
 
   it("reads a stored frame source as one only when it is a function", () => {
-    // The bug guarded: a restored player carries JSON's `null` for the frame
-    // source its record never held, and the layout effect called it.
     const source = (): Option.Option<never> => Option.none();
     expect(frameAtOf(source)).toBe(source);
     expect(frameAtOf(null)).toBeUndefined();
@@ -193,8 +178,6 @@ describe("the progress track", () => {
   });
 
   it("keeps the buffered range at least as far as the played one, and the thumb inside", () => {
-    // The bug guarded: a caller's buffered range behind the playhead painted a
-    // lighter fill inside the played one, so the timeline read as two ranges.
     const behind = mediaPaint(
       restingState({ duration: 4000, playhead: 3000 }),
       1000,

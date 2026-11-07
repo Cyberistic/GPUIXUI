@@ -1,11 +1,3 @@
-/**
- * The live probes: one real-window view and one `steps` effect each.
- *
- * A probe is deliberately **not** a headless scenario: a window's automation
- * API is asynchronous and its renderer reports no style, so a probe asserts
- * focus and captures paint states as screenshots. The checks are still the
- * shared `Smoke` ones, so both suites emit one report shape.
- */
 import type { Dispatch, ReactNode, SetStateAction } from "react";
 import {
   createContext,
@@ -1226,10 +1218,9 @@ import {
   OPACITY_WIDTH,
   withinBytes,
 } from "./opacity.js";
-/** Long enough for one paint after an input reaches the window. */
+
 const SETTLE = Duration.millis(40);
 
-/** One focusable sample; every sample carries the ring the library ships. */
 const Sample = ({
   testId,
   label,
@@ -1293,7 +1284,6 @@ const FocusVisibleProbe = (): ReactNode => {
   );
 };
 
-/** One focusable sample whose outline sits `offset` points outside its box. */
 const OffsetRingSample = ({
   testId,
   offset,
@@ -1331,14 +1321,6 @@ const OffsetRingSample = ({
   );
 };
 
-/**
- * Two identical controls, one with the ring flush to its border box and one
- * with the theme's gap, plus a sibling that must not move when either appears.
- *
- * The gap is read on the page between the two: offset 2 puts the line three
- * points out, so the point one point out is the page and the sibling's `y` is
- * the layout proof.
- */
 const FocusRingOffsetProbe = (): ReactNode => {
   const theme = useTheme();
   return (
@@ -1381,16 +1363,6 @@ const FocusRingOffsetProbe = (): ReactNode => {
   );
 };
 
-/**
- * Two shipped filled actions plus a non-focusable sibling, to read the ring a
- * real control paints against its own fill.
- *
- * The actions are the primitives' `Button`, which declares `controlRing` — the
- * one component seam both packages route through — so this measures the
- * library rather than a sample style. `primary` and `destructive` are the two
- * faces whose fill is a role the ring shares: a flush line is drawn in the
- * fill's own colour, and the gap is the whole point of the offset.
- */
 const ActionRingProbe = (): ReactNode => {
   const theme = palettes.dark;
   return (
@@ -1435,17 +1407,6 @@ const ActionRingProbe = (): ReactNode => {
   );
 };
 
-/**
- * A surface that can be moved without being resized, and a one-pixel probe at
- * its origin.
- *
- * The control above opens a panel, which pushes the surface down by
- * `MOVED_BY`; the surface's size is unchanged, so its own `onLayout` — which
- * the runtime fires on a size change — has nothing to report. The probe's
- * width alternates on every pointer read, and its report carries the origin
- * the surface has now. The readout publishes the frame facts the probe
- * asserts, so a failure names the numbers it read.
- */
 const SurfaceOriginProbeView = (): ReactNode => {
   const theme = useTheme();
   const [pad, setPad] = useState(0);
@@ -1562,8 +1523,7 @@ const SurfaceOriginProbeView = (): ReactNode => {
                 onNone: () => {},
                 onSome: ([x, y]) => {
                   setPoint(Option.some({ x, y }));
-                  // The repair a pointer-driven surface performs: ask for a
-                  // fresh origin by changing the probe's own size.
+
                   setNudge((value) => (value === 0 ? 1 : 0));
                 },
               }),
@@ -1593,7 +1553,6 @@ const SurfaceOriginProbeView = (): ReactNode => {
   );
 };
 
-/** One sample with the runtime's default focus dimming, or opted out. */
 const DimSample = ({
   testId,
   label,
@@ -1629,12 +1588,6 @@ const DimSample = ({
   );
 };
 
-/**
- * Three identical samples, one opted out of the runtime's focus dimming.
- *
- * The outside pair models "the rest of the window" while the keyboard focus is
- * elsewhere; the third shows the per-element opt-out the runtime documents.
- */
 const FocusDimProbe = (): ReactNode => {
   const theme = useTheme();
   return (
@@ -1669,26 +1622,6 @@ const FocusDimProbe = (): ReactNode => {
   );
 };
 
-/**
- * The shipped actions under the runtime's keyboard dim.
- *
- * The token layer measures the dim (`focus-dim.test.ts`) and the components
- * declare the opt-out their behaviour suites read from the style tree; neither
- * paints the pair in a window. Here the fourth action takes the keyboard focus,
- * so the three measured actions are "other focusables", and each is counted in a
- * colour nothing else in the view paints: the filled action keeps every pixel of
- * its fill, the action a caller forces back into the cue loses all of them, and
- * the ghost action's label — a role no other element uses — is dimmed away. The
- * ghost's label takes its colour and a 28px size from the caller `style`,
- * because a ghost paints no fill and the label is the only pixel the mechanism
- * can change; the size keeps enough exact-coloured glyph interiors for the count
- * to read on a non-retina display.
- *
- * A text field is **not** the focus target: the runtime skips the dim entirely
- * while an `<input>`/`<textarea>` holds the focus ("typing is keyboard input too,
- * and dimming the window while someone types is noise", `renderer.rs`
- * `keyboard_focus_path`), so tabbing into a field measures no dim at all.
- */
 const FilledActionDimProbe = (): ReactNode => {
   const theme = useTheme();
   return (
@@ -1730,7 +1663,6 @@ const FilledActionDimProbe = (): ReactNode => {
   );
 };
 
-/** One sample of `SQUARE_WORD` at the probe's size, in `family` or the default. */
 const FaceSample = ({
   testId,
   family,
@@ -1756,14 +1688,6 @@ const FaceSample = ({
   );
 };
 
-/**
- * The same word three ways: the theme's family, a family no runtime knows, and
- * the family the runner registered before this view first painted.
- *
- * The unknown name is the control: it proves the family *string* changes
- * nothing on its own, so a width difference in the third row is the font file,
- * not the style.
- */
 const RegisterFontProbe = (): ReactNode => {
   const theme = useTheme();
   return (
@@ -1794,17 +1718,6 @@ const RegisterFontProbe = (): ReactNode => {
   );
 };
 
-/**
- * Text naming a family the renderer does not know yet, and a control that
- * repaints it.
- *
- * Nothing installs the face before this view mounts — that is the measurement.
- * The probe installs it afterwards and presses the re-layout control, so the
- * second width is the same text laid out again by a runtime that now knows the
- * family. The tint alternates on every press, so the node's style really
- * changes: a re-render that skips an unchanged node could not hide the
- * measurement behind a reconciler bail-out.
- */
 const LateRegistrationProbe = (): ReactNode => {
   const theme = useTheme();
   const [relayouts, setRelayouts] = useState(0);
@@ -1880,15 +1793,6 @@ const LateRegistrationProbe = (): ReactNode => {
   );
 };
 
-/**
- * Three anchors in a real window, one per placement this probe asks about.
- *
- * The headless `floating-placement` scenario proves the same engine against the
- * `TestRenderer`. A window can differ (it did for the tabs indicator), and the
- * left/right sides plus the `align="center"` quirk were never measured live, so
- * each anchor mounts its own layer: `side=right`, `side=left`, and
- * `side=right align=center` — the state every menu compensates for.
- */
 const FloatingSidesProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -1981,13 +1885,6 @@ const FloatingSidesProbe = (): ReactNode => {
   );
 };
 
-/**
- * The library's own `Input`, wired to a readout.
- *
- * The readout is the proof: it shows the value React received through
- * `onChange`, so a keystroke that the window delivered but the component
- * swallowed fails by name rather than by a screenshot nobody reads.
- */
 const TextInputProbe = (): ReactNode => {
   const theme = useTheme();
   const [value, setValue] = useState("");
@@ -2036,16 +1933,6 @@ const TextInputProbe = (): ReactNode => {
   );
 };
 
-/**
- * The shipped `Field` with a schema-backed message the caller owns.
- *
- * `Field` never validates on a keystroke — it paints the `error` it is handed —
- * so the probe *is* the caller: `submitSlug` runs the package's `validate` when
- * the field submits, and the field swaps its description for the schema's own
- * message. What a window proves and a `TestRenderer` cannot: `Enter` in the
- * field submits through the host, the focus stays in the field, and the invalid
- * message is paint (counted in the frame) rather than a declared style.
- */
 const ValidationProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -2054,7 +1941,6 @@ const ValidationProbe = (): ReactNode => {
   const [applied, setApplied] = useState(Option.none<string>());
   const [submits, setSubmits] = useState(0);
 
-  /** The caller's half: validate on submit, and record what it accepted. */
   const submit = (): void => {
     setSubmits((count) => count + 1);
     const message = submitSlug(slug);
@@ -2111,16 +1997,6 @@ const ValidationProbe = (): ReactNode => {
   );
 };
 
-/**
- * The shipped `Form`, `Stepper`, `Field` and `Checkbox` as one three-step
- * wizard.
- *
- * The app owns the step, the draft and the acceptance; the step gate is the
- * wizard's own rule, while the form's schema decodes the whole record once, at
- * submit. Keeping both layers visible is the point: a wizard that gates forward
- * movement and then trusts it would carry an invalid record, so the review
- * step's acceptance is checked by `Form` alone.
- */
 const MultiStepProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -2133,8 +2009,6 @@ const MultiStepProbe = (): ReactNode => {
     Option.none(),
   );
 
-  // The message follows the value once the reader has tried to move on, so a
-  // corrected field clears it without another press.
   const error = attempted ? stepError(step, draft) : Option.none<string>();
 
   const advance = (): void => {
@@ -2276,15 +2150,6 @@ const MultiStepProbe = (): ReactNode => {
   );
 };
 
-/**
- * The library's own `Checkbox`: a press and a Space key each toggle it, with a
- * readout that prints the state React received.
- *
- * Both paths matter in a window rather than in the offscreen renderer: the press
- * proves the painted box is hit-testable, and Space proves the runtime routes the
- * key to a focused `div role="checkbox"` — the component's own keyboard
- * contract, not a host element's.
- */
 const CheckboxProbe = (): ReactNode => {
   const theme = useTheme();
   const [checked, setChecked] = useState(false);
@@ -2334,15 +2199,6 @@ const CheckboxProbe = (): ReactNode => {
   );
 };
 
-/**
- * The shipped `Tabs` from `@gpuixui/components`: four triggers (the third
- * disabled) and a controlled value the readout prints.
- *
- * The readout is the proof the selection is React's own state, and the
- * `tabs-indicator` element is the component's measured selected surface — a
- * window reports it in `bounds`, so the probe can assert the pill actually
- * covers the selected trigger rather than trusting the renderer's layout.
- */
 const TabsProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -2447,15 +2303,6 @@ const TabsProbe = (): ReactNode => {
   );
 };
 
-/**
- * The shipped `Slider` from `@gpuixui/primitives`: a controlled value, a
- * readout, and a second disabled track beside it.
- *
- * The readout carries `centred` so a press in the middle of the track is an
- * exact check without parsing a number: the hit-test has to turn the pointer's
- * x into a value near 50, which a wrapper that never read the track's box cannot
- * do.
- */
 const SliderProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -2517,17 +2364,6 @@ const SliderProbe = (): ReactNode => {
   );
 };
 
-/**
- * What the runtime does with a press that leaves the element.
- *
- * GPUix captures the pointer on left mouse down **only** for an element that
- * listens to both `mouseDown` and `mouseMove` (`renderer.rs` arms
- * `capture_pointer` from that pair). A splitter, a drag handle and the shipped
- * `Slider` all qualify; a move-only element does not, and the element under the
- * pointer receives the moves instead. The probe mounts both cases and the
- * shipped `Slider`, then reads the counters back, because a drag control's
- * whole behaviour depends on this rule.
- */
 const PointerCaptureProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -2645,16 +2481,6 @@ const PointerCaptureProbe = (): ReactNode => {
   );
 };
 
-/**
- * A cross-pane drag: an item in the left pane, dropped on the right one.
- *
- * The source records the press; the **drop target** resolves the travel and the
- * release. That split is forced by a measured window timing: the automation
- * protocol delivers the whole drag (press, eight moves, release) before React
- * commits the press's render, so a handler that gated on `dragging` **state**
- * saw `false` for every move and the drag never started. The pointer flag
- * therefore lives in a ref; the state only drives the readout.
- */
 const DragProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -2663,10 +2489,7 @@ const DragProbe = (): ReactNode => {
   const [rightMoves, setRightMoves] = useState(0);
   const [drops, setDrops] = useState(0);
   const [dragging, setDragging] = useState(false);
-  // The protocol delivers the whole drag before React commits the press's
-  // render, so a handler that gated on `dragging` state would see `false` for
-  // every move and never count the gesture. The ref is the synchronous truth;
-  // the state only drives the readout.
+
   const draggingRef = useRef(false);
 
   const pane = (side: "left" | "right", children?: ReactNode): ReactNode => (
@@ -2762,13 +2585,10 @@ const DragProbe = (): ReactNode => {
   );
 };
 
-/** The rows `drag-reorder` moves, in their declared order. */
 const REORDER_ROWS = ["alpha", "bravo", "charlie", "delta"] as const;
 
-/** One row's height, so a probe can aim at a row it read a box from. */
 const REORDER_ROW_HEIGHT = 44;
 
-/** What `drag-reorder`'s readout prints; one flat shape keeps a failure readable. */
 interface ReorderReadout {
   readonly from: Option.Option<string>;
   readonly over: Option.Option<string>;
@@ -2789,17 +2609,9 @@ const REORDER_START: ReorderReadout = {
   top: "none",
 };
 
-/** A row name, or `"none"`, so the readout reads the same either way. */
 const nameOf = (value: Option.Option<string>): string =>
   Option.getOrElse(value, () => "none");
 
-/**
- * What the topmost hit belongs to: a row of this list, another element, nothing.
- *
- * The distinction is the reason the drop rule looks past the first id: the
- * pointer is often over a painted child (a row's `<text>` label), which reads
- * `other` while the row beneath it is the target.
- */
 const topOf = (
   hits: ReadonlyArray<number>,
   handles: ReadonlyArray<RowHandle<string>>,
@@ -2810,14 +2622,6 @@ const topOf = (
       Arr.some(handles, (handle) => handle.id === hit) ? "own" : "other",
   });
 
-/**
- * One row in the reorder list: a press starts the drag, a move hit-tests the
- * pointer, and a release on the dragged row resolves the drop.
- *
- * The row registers its own native id — and nothing else: the hit test reports
- * its `<text>` label first, because a painted child sits above its parent, so
- * the drop rule has to walk past ids that are not the row.
- */
 const ReorderRow = ({
   name,
   register,
@@ -2864,17 +2668,6 @@ const ReorderRow = ({
   );
 };
 
-/**
- * A reorderable list whose rows capture the pointer, the other half of
- * `drag-between-panes`.
- *
- * A row that wants the travel after it leaves its box listens to `mouseDown`
- * and `mouseMove`, which makes the runtime capture the pointer: every move and
- * the release stay on the dragged row, so the row under the pointer hears
- * nothing. The drop is therefore resolved by the runtime's hit test
- * (`renderer.getElementsAt`) against the ids the rows registered from their
- * refs — the composition a tier-3 reorder, a file tree or a tab strip needs.
- */
 const DragReorderProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -2916,8 +2709,7 @@ const DragReorderProbe = (): ReactNode => {
     const started = pressed.current;
     pressed.current = Option.none();
     if (Option.isNone(started)) return;
-    // Another row heard a release while this list was being dragged: the
-    // pointer was not captured, which is the runtime fact the probe reports.
+
     if (!Option.exists(started, (name) => name === row)) {
       setReadout((current) => ({ ...current, heard: current.heard + 1 }));
       return;
@@ -3000,15 +2792,6 @@ const DragReorderProbe = (): ReactNode => {
   );
 };
 
-/**
- * The shipped `Dialog` from `@gpuixui/components`, with a readout of what its
- * `onOpenChange` reported.
- *
- * The readout is the proof the probe is not just seeing a painted box: React has
- * to have received both transitions, and the trigger has to be the opener that
- * gets focus back. The dialog is uncontrolled, so the component owns the state a
- * consumer would otherwise wire by hand.
- */
 const DialogProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -3056,8 +2839,7 @@ const DialogProbe = (): ReactNode => {
                   The sample project cannot be restored.
                 </DialogDescription>
               </DialogHeader>
-              {/* Two focusable stops of our own, so the Tab trap's cycle is
-                  addressable by testId. */}
+              {}
               <div
                 testId="dialog-field-a"
                 tabIndex={0}
@@ -3116,13 +2898,6 @@ const DialogProbe = (): ReactNode => {
   );
 };
 
-/**
- * The shipped `ConfirmDialog` with the probe playing the caller.
- *
- * The component reports a confirm and leaves the close to the app, so the
- * fixture owns `open` through `confirmFlow`: a confirm closes, a cancel closes
- * without reporting, and the readout carries every count the checks read.
- */
 const ConfirmProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -3179,15 +2954,6 @@ const ConfirmProbe = (): ReactNode => {
   );
 };
 
-/**
- * The shipped `Drawer` with the probe playing the caller.
- *
- * The fixture owns the edge, the size, `dismissible` and the open state, so the
- * checks read the app's own record rather than the component's internals. The
- * controls sit on the page's left, where a right-hand drawer leaves them under
- * the veil — pressing one while a drawer is open would test the veil, not a
- * choice, so the probe only changes them while the surface is closed.
- */
 const DrawerProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -3305,18 +3071,6 @@ const DrawerProbe = (): ReactNode => {
   );
 };
 
-/**
- * Whether an open modal contains the wheel.
- *
- * The page is a real scroller and so is the shipped modal's own body
- * (`DialogContent` carries `overflow: "scroll"`). One wheel is aimed at each in
- * turn and then at the veil between them, and the page's readout says whether
- * its own handler heard any of them — the question a scroll lock would answer,
- * which the app cannot implement as a gesture guard because the host publishes
- * no wheel handler and no `preventDefault`. The same scroll carries the
- * surface's close control out of view, which the probe measures and names as a
- * component gap rather than hiding.
- */
 const ModalScrollProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -3325,7 +3079,6 @@ const ModalScrollProbe = (): ReactNode => {
   const [viewport, setViewport] = useState(0);
   const [dialog, setDialog] = useState(initialScrollReading);
 
-  /** The offset `onScrollChange` reports, leaving the wheel count alone. */
   const noteOffset =
     (
       setter: Dispatch<SetStateAction<ScrollReading>>,
@@ -3337,7 +3090,6 @@ const ModalScrollProbe = (): ReactNode => {
         y: event.scrollY ?? 0,
       }));
 
-  /** The gesture `onScroll` reports — one per wheel the scroller heard. */
   const noteWheel =
     (
       setter: Dispatch<SetStateAction<ScrollReading>>,
@@ -3431,16 +3183,6 @@ const ModalScrollProbe = (): ReactNode => {
   );
 };
 
-/**
- * The shipped `Dialog` over a white page: the entry fade the presence seam
- * paints, as paint rather than bounds.
- *
- * A window reports no style, so a surface's opacity is only provable from the
- * pixel it paints on the way in. The probe reads one point inside the content's
- * own padding (where nothing but the surface is painted) partway through the
- * entry tween and again past it, and the reduce control swaps the motion
- * preference so the same probe measures the journey the timing removes.
- */
 const SurfaceFadeProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -3498,9 +3240,7 @@ const SurfaceFadeProbe = (): ReactNode => {
                   The surface enters on its own opacity, not on a cut.
                 </DialogDescription>
               </DialogHeader>
-              {/* Room for the surface to be read below the copy: the sampled
-                  point is in the left padding, and a taller box keeps the
-                  centre clear of the children's edges. */}
+              {}
               <div style={{ height: 180 }} />
             </DialogContent>
           </Dialog>
@@ -3513,22 +3253,8 @@ const SurfaceFadeProbe = (): ReactNode => {
   );
 };
 
-/**
- * The shipped `Tooltip` from `@gpuixui/primitives`: one trigger, and a second
- * focusable element to move the pointer onto when the tip has to close.
- *
- * A tooltip has no state a caller can read, so the probe measures the tip the
- * way the runtime paints it: its **text** through `getPaintedText`, and its
- * **box** through the content's own `onLayout`. The automation tree does not
- * address a tooltip's layer by `testId` in a window (measured: the content
- * paints while `text tooltip-content` reports no locator), which is why the box
- * is published on a readout instead. The trigger sits low in the window on
- * purpose: the tip opens on its `side="top"` default, and a trigger near the top
- * would be clamped by the window edge instead of measuring the placement.
- */
 const TOOLTIP_CONTENT = "Rename the file";
 
-/** A painted box, as the runtime's own layout report gives it. */
 interface Painted {
   readonly y: number;
   readonly height: number;
@@ -3536,7 +3262,6 @@ interface Painted {
   readonly width: number;
 }
 
-/** The fields an `onLayout` payload may carry; every one is optional. */
 interface LayoutPayload {
   readonly x?: number;
   readonly y?: number;
@@ -3544,7 +3269,6 @@ interface LayoutPayload {
   readonly height?: number;
 }
 
-/** A layout report as a box, or `None` while a field is missing. */
 const boxOf = (payload: LayoutPayload): Option.Option<Painted> =>
   Option.map(
     Option.all([
@@ -3646,11 +3370,7 @@ const TooltipProbe = (): ReactNode => {
           or Escape closes it. This window delivers no focus event at all, so a
           Tab traversal leaves the tip closed.
         </text>
-        {/*
-          The white strip the entry is sampled over: the tip floats above the
-          trigger, inside this band, so its fade composites against a page a
-          dark surface can be told apart from (`surface-fade`'s backing).
-        */}
+        {}
         <div
           style={{
             display: "flex",
@@ -3708,14 +3428,6 @@ const TooltipProbe = (): ReactNode => {
   );
 };
 
-/**
- * The shipped `DropdownMenu`: opened from the keyboard at its first row, moved
- * with the arrow keys, activated with Enter, and closed by a pointer press.
- *
- * A menu's highlight is real focus, so every step reads the renderer's focus id
- * rather than a painted colour: an arrow key that moved a highlight without
- * moving focus would fail here.
- */
 const MenuProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -3783,13 +3495,6 @@ const MenuProbe = (): ReactNode => {
   );
 };
 
-/**
- * The shipped `ContextMenu`, with a sibling that is **not** its trigger.
- *
- * The context menu is the only overlay opened by a right press, so the probe
- * also mounts a neighbouring target: a right press there must open nothing, and
- * while the menu is open it must close it (the menu is scoped to its trigger).
- */
 const ContextMenuProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -3899,20 +3604,6 @@ const ContextMenuProbe = (): ReactNode => {
   );
 };
 
-/**
- * The runtime's `motion` measured on painted geometry.
- *
- * `motion` is the only animation the library has, and two inventory rows name
- * it — Tier 3's "expandable rows" (`motion` height) and Tier 4's "collapsible
- * sidebars" (`motion` width, an **outer clipping container** rather than an
- * inner reflow). Neither had been measured in a window: a `TestRenderer` frame
- * is not a run. The box animates height (and width, if the wrapper shrink-wraps
- * it), and holds a fixed-size child that must not be reflowed while the box is
- * smaller than the child.
- *
- * `testId` is not part of `MotionDivProps`, so the measured node is the plain
- * wrapper that shrink-wraps the animated box.
- */
 const MotionProbe = (): ReactNode => {
   const theme = useTheme();
   const [grown, setGrown] = useState(false);
@@ -3998,23 +3689,6 @@ const MotionProbe = (): ReactNode => {
   );
 };
 
-/**
- * The runtime's `motion` measured across a **retarget**: the capability record's
- * Animation interruption row claims a target change starts the next transition
- * from the current visible value, and no probe had changed a target mid-flight.
- *
- * The box rests at 120 and is driven to 400, then cut to 240 while it is still
- * rising; later it is driven to 120 and cut back to 400 while it is still
- * falling. The two cuts point in opposite directions, so a restart (paints the
- * interrupted run's start) and a finish-first (paints the run's old target)
- * are both readable from one width: the sampled value is within a frame's
- * travel of the value painted before the press.
- *
- * `duration: 3` is the transition `motion-geometry` also drives, so the two
- * probes measure the same declaration. The cut lands at a quarter of the
- * travel, where the window painted **191.5** on the way out and **329.5** on
- * the way back; the frame after each press painted **192** and **329.5**.
- */
 const MotionInterruptProbe = (): ReactNode => {
   const theme = useTheme();
   const [target, setTarget] = useState<MotionTarget>("rest");
@@ -4104,7 +3778,6 @@ const MotionInterruptProbe = (): ReactNode => {
   );
 };
 
-/** The panel a `useToast` caller lives in: one push control and a queue count. */
 const ToastPanel = (): ReactNode => {
   const theme = useTheme();
   const toast = useToast();
@@ -4145,15 +3818,6 @@ const ToastPanel = (): ReactNode => {
   );
 };
 
-/**
- * The shipped toast system: a press queues a toast into the viewport, and its
- * dismiss control removes it.
- *
- * The provider owns the store and its own `ManagedRuntime`, so this probe also
- * proves that an Effect-backed store runs inside a real window rather than only
- * under the test clock. The viewport is the last child, as its paint-order
- * contract requires.
- */
 const ToastProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -4195,14 +3859,6 @@ const ToastProbe = (): ReactNode => {
   );
 };
 
-/**
- * The shipped `Popover` — a floating panel anchored to its trigger.
- *
- * Three popovers, because placement is three claims: the default one opens
- * below its trigger on the trigger's start edge, the second asks for `center`
- * (which the runtime centres on the containing block, so the component measures
- * and compensates), and the third sits where a panel below it would not fit.
- */
 const PopoverProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -4258,9 +3914,7 @@ const PopoverProbe = (): ReactNode => {
           </Popover>
         </div>
       </div>
-      {/* Top-right, where no panel below a trigger can cover it: a press that
-          lands on a panel is an inside press, so the outside-press check needs
-          a target the panels cannot reach. */}
+      {}
       <div
         style={{
           position: "absolute",
@@ -4290,10 +3944,7 @@ const PopoverProbe = (): ReactNode => {
           {`presses=${presses}`}
         </text>
       </div>
-      {/* Low in the window, with a panel too tall to fit below the trigger.
-          The wrapper is a child of the root on purpose: an absolute element
-          resolves against its **direct** parent, so it has to be the root for
-          `bottom` to mean the bottom of the window. */}
+      {}
       <div
         style={{
           position: "absolute",
@@ -4312,31 +3963,19 @@ const PopoverProbe = (): ReactNode => {
   );
 };
 
-/**
- * Measures the shipped popover's placement and its dismissal rules in a window.
- *
- * The placement claims are the ones the runtime got wrong: `align="center"` ends
- * the panel on the trigger's centre line, and a snapped panel near the window
- * edge lands **on** its trigger instead of flipping. The component measures both
- * and compensates, so the checks here are about the compensation, in the
- * runtime the compensation was tuned for.
- */
 const popoverSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
-    /** Whether `testId` is absent from the window's tree, once it settles. */
     const unpainted = (
       testId: string,
     ): Effect.Effect<boolean, Smoke.SmokeHostError> => settleGone(ctx, testId);
 
     yield* ctx.host.waitFor("popover-trigger");
 
-    // The default placement: below the trigger, on its start edge, one gap down.
     yield* ctx.host.click("popover-trigger");
     yield* Effect.sleep(SETTLE);
     const trigger = yield* paintedBox(ctx, "popover-trigger");
     const panel = yield* paintedBox(ctx, "popover-panel");
-    // The panel enters with a few pixels of travel on its entry axis, so the
-    // gap is read at rest: a mid-tween read reported `0.5` for `6`.
+
     const panelY = yield* settleNumber(boxAxis("y")(ctx, "popover-panel"));
     yield* ctx.expectEqual(
       "the panel opens below its trigger",
@@ -4357,7 +3996,6 @@ const popoverSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("popover-open");
 
-    // `center`, which the runtime centres on the containing block.
     yield* ctx.host.key("escape");
     yield* Effect.sleep(SETTLE);
     yield* ctx.host.click("popover-center-trigger");
@@ -4372,7 +4010,6 @@ const popoverSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("popover-centred");
 
-    // A trigger with no room below it.
     yield* ctx.host.key("escape");
     yield* Effect.sleep(SETTLE);
     yield* ctx.host.click("popover-low-trigger");
@@ -4393,7 +4030,6 @@ const popoverSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "popover-low-trigger",
     );
 
-    // The dismissal rules, on the first popover.
     yield* ctx.host.click("popover-trigger");
     yield* Effect.sleep(SETTLE);
     yield* ctx.host.key("escape");
@@ -4435,17 +4071,6 @@ const popoverSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/**
- * The shipped `CommandMenu` — the Tier 4 command palette — over four actions.
- *
- * The palette is controlled and has no trigger part: the application opens it
- * from a shortcut or from its own control, so the probe's button stands in for
- * that shortcut. The readout is React's report of what ran, which is the
- * difference between a highlighted row and an executed one.
- *
- * The fourth action is disabled: it paints, and it runs nothing — the
- * difference a menu with only enabled rows cannot show.
- */
 const CommandPaletteProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -4558,20 +4183,14 @@ const CommandPaletteProbe = (): ReactNode => {
   );
 };
 
-/** What a probe module supplies; the registry supplies the metadata. */
 export interface LiveProbeBody {
   readonly id: LiveProbeId;
-  /**
-   * The faces the runner installs with `registerFonts` before the probe's first
-   * paint, in the documented order: a family the runtime did not know when the
-   * text was laid out has already fallen back.
-   */
+
   readonly fonts?: ReadonlyArray<FontSource>;
   readonly view: () => ReactNode;
   readonly steps: Smoke.AsyncSmokeScenario["steps"];
 }
 
-/** The focused `testId`, with `"none"` for no focus so a failure reads clearly. */
 const focusedId = (
   ctx: Smoke.AsyncSmokeContext,
 ): Effect.Effect<string, Smoke.SmokeHostError> =>
@@ -4579,7 +4198,6 @@ const focusedId = (
     Option.getOrElse(Option.fromNullishOr(id), () => "none"),
   );
 
-/** How many pixels of the capture under `name` paint exactly `colour`. */
 const paintedPixels = (
   ctx: Smoke.AsyncSmokeContext,
   name: string,
@@ -4602,7 +4220,6 @@ const focusVisibleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       Option.fromNullishOr(Pixels.hexToRgba(palettes.dark.colors.ring)),
     );
 
-    // 1. A mouse press focuses the element; `focusVisible` must not paint.
     yield* ctx.host.click("press-ring");
     yield* ctx.expectEqual(
       "a press focuses the element",
@@ -4616,8 +4233,6 @@ const focusVisibleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       0,
     );
 
-    // 2. Native traversal (`window.focus_next`) before any key is delivered:
-    //    a traversal is not keyboard input, so the ring must stay off.
     yield* ctx.host.focusNext();
     yield* ctx.expectEqual(
       "native traversal moves focus",
@@ -4631,7 +4246,6 @@ const focusVisibleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       0,
     );
 
-    // 3. Programmatic focus, still before any key: same expected null ring.
     yield* ctx.host.focusElement("programmatic-ring");
     yield* ctx.expectEqual(
       "programmatic focus moves native focus",
@@ -4645,8 +4259,6 @@ const focusVisibleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       0,
     );
 
-    // 4. Tab traverses natively and is the keyboard-input case the ring is
-    //    meant for. Focus wraps from the last sample to the first.
     yield* ctx.host.key("tab");
     yield* ctx.expectEqual(
       "Tab traverses natively and wraps",
@@ -4660,8 +4272,6 @@ const focusVisibleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 5. Programmatic focus after keyboard input has happened: does the ring
-    //    persist, or is it tied to the input that caused the focus?
     yield* ctx.host.focusElement("programmatic-ring");
     yield* ctx.expectEqual(
       "programmatic focus moves native focus after Tab",
@@ -4676,16 +4286,9 @@ const focusVisibleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/** A box as one comparable scalar, so a moved control names its new box. */
 const boxText = (box: Smoke.Bounds): string =>
   `${box.x},${box.y},${box.width},${box.height}`;
 
-/**
- * The colour at `point`, failing by name when the point is outside the capture.
- *
- * A missing sample is not a mismatch: a probe that reads `None` cannot tell a
- * gap from a frame that cropped the control, so the read is its own check.
- */
 const colourAtPoint = (
   ctx: Smoke.AsyncSmokeContext,
   frame: Pixels.Pixels,
@@ -4695,7 +4298,6 @@ const colourAtPoint = (
 ): Effect.Effect<Pixels.Rgba, Smoke.SmokeAssertionError> =>
   ctx.expectSome(label, colourAt(frame, point, scale));
 
-/** Whether `sample` is the paint `expected` within the frame's tolerance. */
 const expectPaint = (
   ctx: Smoke.AsyncSmokeContext,
   label: string,
@@ -4743,8 +4345,6 @@ const focusRingOffsetSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       page,
     );
 
-    // A press focuses the flush sample without entering keyboard mode, then Tab
-    // walks to the offset sample and paints only its ring.
     yield* ctx.host.click("ring-flush");
     yield* ctx.host.key("tab");
     yield* ctx.expectEqual(
@@ -4797,8 +4397,6 @@ const focusRingOffsetSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       page,
     );
 
-    // The outline is a paint, not layout: the focused control and its sibling
-    // report the same boxes as before the ring appeared.
     yield* ctx.expectEqual(
       "the ring does not move the control it surrounds",
       boxText(yield* paintedBox(ctx, "ring-offset")),
@@ -4810,8 +4408,6 @@ const focusRingOffsetSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       boxText(neighbourBefore),
     );
 
-    // Tab wraps to the flush sample: the same outline at offset 0 sits on the
-    // border box, so the points the offset ring painted swap their paint.
     yield* ctx.host.key("tab");
     yield* ctx.expectEqual(
       "Tab wraps to the flush control",
@@ -4890,7 +4486,6 @@ const actionRingSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       captureScale(rest, window),
     );
 
-    // At rest nothing declares the ring's paint; the band is the page.
     yield* expectPaint(
       ctx,
       "a filled action at rest paints no ring outside its box",
@@ -4909,8 +4504,6 @@ const actionRingSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       false,
     );
 
-    // The pointer path: a press focuses the action and `focusVisible` stays off,
-    // so the band is still the page and the fill is untouched.
     yield* ctx.host.click(ACTION_RING_PRIMARY);
     yield* ctx.expectEqual(
       "a press focuses the filled action",
@@ -4939,15 +4532,9 @@ const actionRingSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       ),
     );
 
-    // Move the pointer off the actions so the keyboard path reads their resting
-    // fills: a hovered action paints its derived hover, not the role its ring
-    // shares.
     yield* ctx.host.hover(ACTION_RING_NEIGHBOUR);
     yield* Effect.sleep(SETTLE);
 
-    // Tab is the keyboard path the ring exists for. It walks to the danger
-    // action: its ring is on the page, one strong-border gap out, and the fill
-    // inside the box is still the fill.
     yield* ctx.host.key("tab");
     yield* ctx.expectEqual(
       "Tab carries focus to the second filled action",
@@ -5010,8 +4597,6 @@ const actionRingSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       page,
     );
 
-    // Back on the primary action — the case the gap exists for, because its fill
-    // *is* the ring role. The separation is the page showing between them.
     yield* ctx.host.key("tab");
     yield* ctx.expectEqual(
       "Tab returns to the primary action",
@@ -5057,8 +4642,6 @@ const actionRingSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       primaryFill,
     );
 
-    // The outline is a paint, not layout: both actions and the sibling keep the
-    // boxes they had before the rings appeared.
     yield* ctx.expectEqual(
       "the ring does not move the action it surrounds",
       boxText(yield* paintedBox(ctx, ACTION_RING_PRIMARY)),
@@ -5076,12 +4659,6 @@ const actionRingSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/**
- * Whether two coordinates name the same point to within a rounding point.
- *
- * The window reports whole points while a centre is a box plus half a side, so
- * an exact comparison would fail on the arithmetic rather than on the paint.
- */
 const nearPoint = (left: number, right: number): boolean =>
   Math.abs(left - right) <= 1;
 
@@ -5093,7 +4670,7 @@ const surfaceOriginSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       ctx.host.text(SURFACE_ORIGIN_READOUT),
       (text) => Effect.succeed(decodeReadout(text)),
     );
-    /** The readout once it decodes and holds, or the last line it rendered. */
+
     const settled = (holds: (readout: SurfaceReadout) => boolean) =>
       settleUntil(readout, (value) =>
         Option.match(value, { onNone: () => false, onSome: holds }),
@@ -5101,8 +4678,6 @@ const surfaceOriginSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     const at = (value: Option.Option<SurfaceReadout>, label: string) =>
       ctx.expectSome(label, value);
 
-    // A pointer read at rest: the probe reports the origin the surface itself
-    // reports, so the two agree before anything moves.
     yield* ctx.host.hover(SURFACE_ORIGIN_TARGET);
     const rest = yield* at(
       yield* settled((value) => value.surface >= 1 && value.probe >= 1),
@@ -5124,9 +4699,6 @@ const surfaceOriginSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       { x: rest.pointX, y: rest.pointY },
     );
 
-    // Opening a panel above the surface moves it without resizing it. The
-    // runtime reports a layout on a size change, so the surface's own report —
-    // the box a pointer surface would keep — does not move with it.
     yield* ctx.host.click(SURFACE_ORIGIN_MOVE);
     const moved = yield* at(
       yield* settled((value) => value.pad === MOVED_BY),
@@ -5144,9 +4716,6 @@ const surfaceOriginSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("surface-origin-moved");
 
-    // The pointer read that follows is what a surface asks for a fresh origin
-    // with: the probe's width changes, so the runtime lays the probe out again
-    // and its report carries the origin the surface has now.
     yield* ctx.host.hover(SURFACE_ORIGIN_TARGET);
     const after = yield* at(
       yield* settled(
@@ -5159,14 +4728,12 @@ const surfaceOriginSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
 
     yield* ctx.host.capture("surface-origin-fresh");
 
-    // The pointer payload is fresh: it moved with the surface.
     yield* ctx.expectEqual(
       "the pointer's own point moves with the surface",
       nearPoint(after.pointY - rest.pointY, MOVED_BY),
       true,
     );
 
-    // The probe's report is fresh too, which is the whole repair.
     yield* ctx.expectEqual(
       "the nudged probe reports the origin the surface has now",
       nearPoint(after.originY - rest.originY, MOVED_BY),
@@ -5178,9 +4745,6 @@ const surfaceOriginSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // Reading the fresh point against the fresh origin is the same local point
-    // as at rest; reading it against the surface's own report is a local point
-    // a panel's height too far down, which is the defect the repair removes.
     const afterLocal = localPoint(
       { x: after.originX, y: after.originY },
       { x: after.pointX, y: after.pointY },
@@ -5200,8 +4764,6 @@ const surfaceOriginSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // The repair is a paint: the probe is one pixel wide, and neither the move
-    // nor the pointer read resized the surface.
     const nudge = yield* ctx.expectSome(
       "the probe paints a box",
       Option.fromNullishOr(yield* ctx.host.bounds(SURFACE_ORIGIN_NUDGE)),
@@ -5218,7 +4780,6 @@ const surfaceOriginSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/** How many pixels paint the theme's `muted` fill in the capture under `name`. */
 const mutedPixels = (
   ctx: Smoke.AsyncSmokeContext,
   name: string,
@@ -5235,9 +4796,6 @@ const focusDimSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor("focus-dim-probe");
 
-    // A pointer press focuses a sample without entering keyboard mode, so every
-    // fill is at full strength: this is the baseline the dimming is measured
-    // against.
     yield* ctx.host.click("dim-first");
     yield* ctx.expectEqual(
       "a press focuses the first sample",
@@ -5247,8 +4805,6 @@ const focusDimSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("pointer");
     const plain = yield* mutedPixels(ctx, "pointer");
 
-    // The same three fills after Tab: the focused sample keeps its fill, the
-    // dimmed one loses it, and the opted-out one must keep its own.
     yield* ctx.host.key("tab");
     yield* ctx.expectEqual(
       "Tab focuses the second sample",
@@ -5264,8 +4820,7 @@ const focusDimSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       dimmed < plain,
       true,
     );
-    // One sample dims (the first) and one opts out (the third), so the drop is
-    // about a third. A whole-window dim would take far more than half.
+
     yield* ctx.expectEqual(
       "only the default sample dims, not the opted-out one",
       dimmed > plain / 2,
@@ -5273,7 +4828,6 @@ const focusDimSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/** The dark theme's `role` colour, failing by name when it cannot be painted. */
 const themeColour = (
   ctx: Smoke.AsyncSmokeContext,
   role: keyof Theme["colors"],
@@ -5290,9 +4844,6 @@ const filledActionDimSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     const success = yield* themeColour(ctx, "success");
     const destructive = yield* themeColour(ctx, "destructive");
 
-    // A pointer press focuses the fourth action without entering keyboard mode,
-    // and leaves the pointer on it, so no measured action is hovered: the
-    // baseline is every fill at full strength.
     yield* ctx.host.click("dim-focus");
     yield* ctx.expectEqual(
       "a press focuses the action the dim is measured against",
@@ -5319,10 +4870,6 @@ const filledActionDimSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // Four tab stops in tree order. The first Tab puts the window in keyboard
-    // mode, and the fourth lands the focus back on the action it started from —
-    // so both captures have the same focus and pointer position, and only the
-    // dim differs.
     yield* ctx.host.key("tab");
     yield* ctx.expectEqual(
       "Tab enters the actions at the first one",
@@ -5356,7 +4903,6 @@ const filledActionDimSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/** The painted width of `testId`, failing by name when the runtime omitted it. */
 const paintedWidth = (
   ctx: Smoke.AsyncSmokeContext,
   testId: string,
@@ -5369,17 +4915,8 @@ const paintedWidth = (
     return bounds.width;
   });
 
-/** The placement gap every layer in `floating-sides` uses. */
 const GAP = 6;
 
-/**
- * Waits until `testId` stops painting, and reports whether it did.
- *
- * A dismissal is a transition, not an instant: the shipped surfaces stay mounted
- * for their exit tween, so `bounds` still answers for a few hundred milliseconds
- * after Escape. Polling the settled state keeps the check about the dismissal
- * rather than about the tween's duration.
- */
 const settleGone = (
   ctx: Smoke.AsyncSmokeContext,
   testId: string,
@@ -5391,14 +4928,6 @@ const settleGone = (
     (gone) => gone,
   );
 
-/**
- * Waits until `testId` paints, and reports whether it did.
- *
- * The mirror of {@link settleGone} for a check that expects a surface to
- * survive its input: polling for the painted state stops as soon as the frame
- * arrives, where polling for its absence spends the whole budget on a surface
- * that is doing exactly what it should.
- */
 const settlePainted = (
   ctx: Smoke.AsyncSmokeContext,
   testId: string,
@@ -5410,7 +4939,6 @@ const settlePainted = (
     (painted) => painted,
   );
 
-/** The painted `x` or `y` of `testId`; `NaN` while it paints nothing. */
 const boxAxis =
   (field: "x" | "y") =>
   (
@@ -5424,12 +4952,6 @@ const boxAxis =
       }),
     );
 
-/**
- * The painted width of `testId`; `NaN` while it paints nothing.
- *
- * No assertion of its own: a poll reads this many times, so only the check
- * that follows the poll is counted.
- */
 const boxWidth = (
   ctx: Smoke.AsyncSmokeContext,
   testId: string,
@@ -5441,7 +4963,6 @@ const boxWidth = (
     }),
   );
 
-/** Waits for a travelling box to paint `target`, then reports what it read. */
 const settledWidth = (
   ctx: Smoke.AsyncSmokeContext,
   testId: string,
@@ -5453,7 +4974,6 @@ const settledWidth = (
     200,
   );
 
-/** The painted height of `testId`; `NaN` while it paints nothing. */
 const boxHeight = (
   ctx: Smoke.AsyncSmokeContext,
   testId: string,
@@ -5465,7 +4985,6 @@ const boxHeight = (
     }),
   );
 
-/** Waits for a travelling box to paint `target`, then reports what it read. */
 const settledHeight = (
   ctx: Smoke.AsyncSmokeContext,
   testId: string,
@@ -5477,12 +4996,6 @@ const settledHeight = (
     200,
   );
 
-/**
- * The painted box of `testId` once it paints, failing by name if it never does.
- *
- * A surface mounts before its entry tween paints it, so a box read on the frame
- * after the press can miss a surface that is arriving.
- */
 const settledBox = (
   ctx: Smoke.AsyncSmokeContext,
   testId: string,
@@ -5495,7 +5008,6 @@ const settledBox = (
     return yield* paintedBox(ctx, testId);
   });
 
-/** The painted box of `testId`, failing by name when the runtime omitted it. */
 const paintedBox = (
   ctx: Smoke.AsyncSmokeContext,
   testId: string,
@@ -5525,8 +5037,7 @@ const registerFontSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       SQUARE_WORD_WIDTH,
       1,
     );
-    // The control: a family the runtime does not know must not paint the
-    // installed face's advances, so the row above can only come from the file.
+
     yield* ctx.expectEqual(
       "an unknown family does not paint the installed face",
       Math.abs(missing - SQUARE_WORD_WIDTH) > 5,
@@ -5539,17 +5050,6 @@ const registerFontSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/**
- * Registers the face after the text naming it has painted, then re-lays it out.
- *
- * The documented order is still "create the renderer, register, then render",
- * because that is the only order with no fallback frame in between. This probe
- * asks the sharper question the typings answer conservatively — a family that
- * arrives later "has already fallen back" — by measuring whether the *next*
- * layout picks the file up. It does: the same node repainted after the install
- * paints the installed advances, so a late registration costs a repaint, not a
- * permanently wrong typeface.
- */
 const lateRegistrationSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor("late-face");
@@ -5558,8 +5058,6 @@ const lateRegistrationSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     const controlBefore = yield* paintedWidth(ctx, "late-control");
     yield* ctx.host.capture("late-before");
 
-    // The control names a family nothing ever installs, so a width change there
-    // would make the measurement below meaningless.
     yield* ctx.expectEqual(
       "the control family paints the fallback",
       Math.abs(controlBefore - SQUARE_WORD_WIDTH) > 5,
@@ -5579,10 +5077,6 @@ const lateRegistrationSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     const controlAfter = yield* paintedWidth(ctx, "late-control");
     yield* ctx.host.capture("late-after");
 
-    // The claim: the repaint lays the text out against the face installed a
-    // moment earlier. This is the measurand the typings' "already fallen back"
-    // warning does not describe: the fallback is not permanent, it is what the
-    // next layout replaces.
     yield* ctx.expectNear(
       "the next layout paints the face installed after the first one",
       after,
@@ -5602,16 +5096,6 @@ const lateRegistrationSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/**
- * Measures the two horizontal sides and the `align="center"` quirk in a window.
- *
- * Each anchor mounts its layer at rest, so there is no open/close state to race:
- * the probe compares the panel's box with its anchor's on the axis each prop
- * controls. `align="center"` is asserted the way the runtime behaves (the panel
- * ends at the anchor's centre line, short by half its own height), because the
- * components compensate with a measured offset and a live change to that quirk
- * must fail here rather than silently move every menu.
- */
 const floatingSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor("anchor-right");
@@ -5657,22 +5141,6 @@ const floatingSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("floating-sides");
   });
 
-/**
- * `floating-reflow-lifecycle` — an open panel when its anchor is laid out again.
- *
- * `header-menu-lifecycle` proved an anchored surface follows its anchor's
- * **paint-level** offset (a wheel moves the trigger and the panel together). A
- * reflow is a different event: the anchor's box is computed again, and a panel
- * that is already open was placed against the old one. The dock case is a menu
- * left open while a divider is dragged; the table case is a column menu while a
- * column hides; the window case is this probe, because `zoomWindow` is the one
- * reflow the automation protocol can drive without a pointer.
- *
- * Every anchor's `left`/`top` is derived from `useWindowSize`, so the zoom moves
- * them and nothing here writes a pixel the runtime did not lay out. Two raw
- * `FloatingLayer`s answer for the primitive (`side` and `align` on both axes);
- * the shipped `Popover` mounted open answers for the component layer.
- */
 const FloatingReflowProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -5778,24 +5246,13 @@ const FloatingReflowProbe = (): ReactNode => {
   );
 };
 
-/**
- * The reflow probe's checks.
- *
- * Each anchor is measured against its panel's painted box, never against a
- * constant: the gap the layer asks for and the top edge `align="start"` holds
- * are the contract, and the assertions after the zoom re-read them against the
- * anchor's **new** box, so a panel left on its old pixels fails naming the gap
- * it actually paints.
- */
 const floatingReflowSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor(REFLOW_IDS.probe);
 
-    /** A painted box read that records no check, so a poll can re-read freely. */
     const optionalBox = (testId: string) =>
       Effect.map(ctx.host.bounds(testId), Option.fromNullishOr);
 
-    /** An anchor and its panel, once both paint. */
     const optionalPair = (anchorId: string, panelId: string) =>
       Effect.map(
         Effect.all([optionalBox(anchorId), optionalBox(panelId)], {
@@ -5804,13 +5261,6 @@ const floatingReflowSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         ([anchor, panel]) => Option.all([anchor, panel]),
       );
 
-    /**
-     * Both boxes painted — and, when a placement is given, resting on it.
-     *
-     * A panel follows its anchor within a frame or two, so a check that names a
-     * placement polls for it and then asserts the value it settled on; a panel
-     * that never arrives reports the pixels it kept instead.
-     */
     const paintedPair = (
       anchorId: string,
       panelId: string,
@@ -5833,7 +5283,6 @@ const floatingReflowSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
           ),
       );
 
-    /** The window's size once it changed and the anchor's box moved with it. */
     const settledReflow = (previous: Smoke.Size, anchorId: string) => {
       const poll = (
         tries: number,
@@ -5868,8 +5317,6 @@ const floatingReflowSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 1. At rest, each raw layer sits one gap left of its anchor on the
-    //    anchor's top edge, and the shipped popover opens below its trigger.
     const right = yield* paintedPair(
       REFLOW_IDS.rightAnchor,
       REFLOW_IDS.rightPanel,
@@ -5910,12 +5357,8 @@ const floatingReflowSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // The popover is opened by a press rather than mounted open: its placement
-    // is measured once per open, and a surface mounted open measures the
-    // trigger during the mount's own layout pass.
     yield* ctx.host.click(REFLOW_IDS.popoverTrigger);
-    // The surface is measured against its anchor once per open, one frame after
-    // the open commits; the wait keeps the "rest" offset a rest offset.
+
     yield* Effect.sleep(Duration.millis(300));
     const popoverRest = yield* paintedPair(
       REFLOW_IDS.popoverTrigger,
@@ -5923,8 +5366,7 @@ const floatingReflowSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "at rest",
     );
     const [triggerRest, popoverPanelRest] = popoverRest;
-    // The panel enters with a few pixels of travel along its entry axis, so the
-    // offset is read at rest: a mid-tween read measures the travel, not the gap.
+
     const popoverRestY = yield* settleNumber(
       boxAxis("y")(ctx, REFLOW_IDS.popoverPanel),
     );
@@ -5934,8 +5376,6 @@ const floatingReflowSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     });
     yield* ctx.host.capture("floating-reflow");
 
-    // 2. Reflow the window. Every anchor's left/top is derived from
-    //    `useWindowSize`, so the zoom lays all three out again.
     yield* ctx.host.zoomWindow();
     const zoomed = yield* settledReflow(opened, REFLOW_IDS.rightAnchor);
     yield* ctx.expectEqual(
@@ -6031,8 +5471,6 @@ const floatingReflowSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("floating-reflow-zoomed");
 
-    // 3. Zoom back, so the window is left as the probes after it expect, and
-    //    the same offsets hold on the way back.
     yield* ctx.host.zoomWindow();
     const restored = yield* settledReflow(zoomed, REFLOW_IDS.rightAnchor);
     yield* ctx.expectNear(
@@ -6065,7 +5503,6 @@ const textInputSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "value= submits=0",
     );
 
-    // A field needs focus before the window routes keys to it.
     yield* ctx.host.click("input-field");
     yield* ctx.host.key("h");
     yield* ctx.host.key("i");
@@ -6086,11 +5523,9 @@ const textInputSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("typed");
   });
 
-/** The width every probe field takes, so a crop is the field and not the page. */
 const INK_FIELD_WIDTH = 320;
 const INK_FIELD_PADDING = 10;
 
-/** The field chrome the four hosts share: the fill the seam's pairs sit on. */
 const inkFieldStyle = (theme: Theme, colour?: string): StyleDesc => ({
   width: INK_FIELD_WIDTH,
   paddingTop: INK_FIELD_PADDING,
@@ -6104,18 +5539,6 @@ const inkFieldStyle = (theme: Theme, colour?: string): StyleDesc => ({
   color: colour,
 });
 
-/**
- * What a field paints for a hint and for a value, four ways.
- *
- * A window reports no style, so the two inks are read from a captured frame:
- * `@gpuix/native@0.11.0` shapes an empty host's placeholder with a fixed
- * `#8F8F8F` whatever `nativeTextTheme` says, and it paints a value in the
- * element's own `color` rather than the theme object's `text`. So the probe
- * shows the runtime's own hint, the workaround the fields ship (an empty host
- * with no placeholder and a `<text>` in the `placeholder` role over it), a value
- * typed into a host given only the seam, and the same value with `color` set
- * from the seam's ink.
- */
 const FieldInkProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -6219,7 +5642,6 @@ const FieldInkProbe = (): ReactNode => {
   );
 };
 
-/** Types `value` into the field `id` and lets React paint the result. */
 const typeInto = (
   ctx: Smoke.AsyncSmokeContext,
   id: string,
@@ -6275,7 +5697,6 @@ const fieldInkSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         (field) => field.box,
       );
 
-    // 1. The runtime's own hint: the grey, never the role the seam hands over.
     const host = yield* boxOf(FIELD_INK_IDS.host);
     const hostInk = fieldInk(rest, host, scale, placeholder);
     yield* ctx.expectEqual(
@@ -6289,7 +5710,6 @@ const fieldInkSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       false,
     );
 
-    // 2. The workaround: no host placeholder, the role painted as text over it.
     const paintedField = yield* boxOf(FIELD_INK_IDS.painted);
     const paintedInk = fieldInk(rest, paintedField, scale, placeholder);
     yield* ctx.expectEqual(
@@ -6303,8 +5723,6 @@ const fieldInkSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 3. A value in a field given only the seam: the runtime's black, not the
-    //    seam's ink, because a value paints the element's `color`.
     const plainBox = yield* boxOf(FIELD_INK_IDS.plain);
     yield* ctx.expectEqual(
       "an empty field still shows the runtime's hint",
@@ -6338,8 +5756,6 @@ const fieldInkSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 4. The same value with `color` from the seam: the ink a library field
-    //    paints.
     const seamedBox = yield* boxOf(FIELD_INK_IDS.seamed);
     yield* typeInto(ctx, FIELD_INK_IDS.seamed, HINT_TYPED);
     yield* ctx.host.capture("field-ink-seamed");
@@ -6358,8 +5774,6 @@ const fieldInkSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 5. The shipped `Input`: its own hint, and the ink its recipe sets. This is
-    //    the half a component owes — the runtime cannot reach either role.
     const shippedBox = yield* boxOf(FIELD_INK_IDS.shipped);
     const shippedRest = fieldInk(rest, shippedBox, scale, placeholder);
     yield* ctx.expectEqual(
@@ -6396,15 +5810,6 @@ const fieldInkSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/**
- * Validates a shipped `Field` on submit and reads the invalid state back.
- *
- * MISSION names "input update/validation": `text-input` measures the update,
- * and this measures validation as a window sees it. The caller owns the rule
- * (`submitSlug`), the field paints `error`, and every check reads something a
- * declared style cannot promise — the message text the field swapped in, the
- * focus the submit left alone, and the destructive role counted in the frame.
- */
 const validationSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor(VALIDATION_INPUT);
@@ -6432,8 +5837,6 @@ const validationSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       0,
     );
 
-    // Submit the empty field: the shipped `validate` runs in the caller, and a
-    // failed submit must not move the reader out of the field they are fixing.
     yield* ctx.host.focusElement(VALIDATION_INPUT);
     yield* ctx.host.key("enter");
     yield* Effect.sleep(SETTLE);
@@ -6465,15 +5868,13 @@ const validationSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // A usable slug: the next submit clears the message and records the value.
     yield* ctx.host.key("d");
     yield* ctx.host.key("e");
     yield* ctx.host.key("s");
     yield* ctx.host.key("i");
     yield* ctx.host.key("g");
     yield* ctx.host.key("n");
-    // The typing reaches React as a state update, so the submit that follows
-    // must see the rendered value rather than the closure's.
+
     yield* Effect.sleep(SETTLE);
     yield* ctx.host.key("enter");
     yield* Effect.sleep(SETTLE);
@@ -6500,8 +5901,6 @@ const validationSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       0,
     );
 
-    // A trailing space is the last case: the value the field kept is what the
-    // next submit validates, so the failure is about content, not focus.
     yield* ctx.host.key("space");
     yield* Effect.sleep(SETTLE);
     yield* ctx.host.key("enter");
@@ -6518,15 +5917,6 @@ const validationSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/**
- * Drives a three-step wizard built from the shipped `Form`, `Stepper`, `Field`
- * and `Checkbox`.
- *
- * The two gates are the measurement: a step refuses to advance on its own
- * field's rule, while the review step's acceptance is decoded by `Form` alone
- * and paints its summary where no step gate looks. The draft stays the app's
- * across Back and Next, so a reader loses nothing on the way through.
- */
 const multiStepSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor(MULTI_STEP_IDS.next);
@@ -6537,8 +5927,6 @@ const multiStepSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       multiStepReadout(1, emptyMultiStepDraft, false, 0),
     );
 
-    // Back cannot move before the first step: the control is disabled, and a
-    // disabled action refuses the press in a window.
     yield* ctx.host.click(MULTI_STEP_IDS.back);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -6547,7 +5935,6 @@ const multiStepSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       multiStepReadout(1, emptyMultiStepDraft, false, 0),
     );
 
-    // Next with no name: the step gate refuses and the field paints its rule.
     yield* ctx.host.click(MULTI_STEP_IDS.next);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -6561,10 +5948,6 @@ const multiStepSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       MULTI_STEP_NAME_MESSAGE,
     );
 
-    // A usable name, then Enter: the field's own submit path advances too. The
-    // cleared message is polled, not read once after a fixed sleep: a loaded
-    // box paints the field a frame or two after the keystrokes land, and a
-    // single read measured the message the previous frame carried.
     yield* typeInto(ctx, MULTI_STEP_IDS.nameInput, "desk");
     const nameAfterTyping = yield* settleUntil(
       ctx.host.text(MULTI_STEP_IDS.name),
@@ -6583,7 +5966,6 @@ const multiStepSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       multiStepReadout(2, { name: "desk", port: "" }, false, 0),
     );
 
-    // The second step's own rule refuses an out-of-range port.
     yield* typeInto(ctx, MULTI_STEP_IDS.portInput, "70000");
     yield* ctx.host.click(MULTI_STEP_IDS.next);
     yield* Effect.sleep(SETTLE);
@@ -6598,9 +5980,6 @@ const multiStepSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       MULTI_STEP_PORT_MESSAGE,
     );
 
-    // A corrected value clears the message without another press, and Next
-    // reaches the review step. The press on Next moved the focus, so the field
-    // takes it back before the replacement.
     yield* ctx.host.click(MULTI_STEP_IDS.portInput);
     yield* ctx.host.key("cmd-a");
     yield* Effect.forEach(
@@ -6637,7 +6016,6 @@ const multiStepSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("multi-step-review");
 
-    // Back keeps the draft: the port is still there, and Next returns.
     yield* ctx.host.click(MULTI_STEP_IDS.back);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -6653,8 +6031,6 @@ const multiStepSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       multiStepReadout(3, { name: "desk", port: "3000" }, false, 0),
     );
 
-    // The accepted review is the form's decode: one press reaches the caller
-    // with the class instance's own values.
     yield* ctx.host.click(MULTI_STEP_IDS.terms);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -6683,10 +6059,6 @@ const multiStepSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("multi-step-submitted");
 
-    // A refused review still records no submit, and the recovery is the gate's
-    // own: re-accepting and pressing the same control reaches the caller
-    // again. The `Form` clears the field errors its own submit validator owned,
-    // so the second attempt is not stuck behind the first failure.
     yield* ctx.host.click(MULTI_STEP_IDS.terms);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -6738,9 +6110,6 @@ const checkboxSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "checked=true changes=1",
     );
 
-    // Space is the component's own keyboard contract: a focused `div
-    // role="checkbox"` has to see the key from the window. The release is a
-    // separate verb because a window's `keystrokes` delivers only the press.
     yield* ctx.host.key("space");
     yield* ctx.host.keyUp("space");
     yield* Effect.sleep(SETTLE);
@@ -6752,16 +6121,6 @@ const checkboxSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("toggled");
   });
 
-/**
- * Drives the shipped `Tabs` through the paths a tab set has to survive in a
- * window: the selected pill covers the selected trigger, a press moves both, an
- * arrow moves **real focus** and selects (skipping the disabled tab), Home/End
- * jump to the ends, and a disabled tab ignores a press.
- *
- * The pill's geometry is the point: `tabs-indicator` is the component's one
- * measured selected surface, so the assertion is the runtime's own `bounds`
- * against the selected trigger's box rather than a colour read off a frame.
- */
 const tabsSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor("tabs-overview");
@@ -6801,8 +6160,6 @@ const tabsSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("tabs-overview");
 
-    // Keyboard first, from the window's own traversal: Tab enters the list on
-    // the roving tab stop.
     yield* ctx.host.key("tab");
     yield* Effect.sleep(Duration.millis(150));
     yield* ctx.expectEqual(
@@ -6810,14 +6167,7 @@ const tabsSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       yield* focusedId(ctx),
       "tabs-overview",
     );
-    // Measured on 0.11.0, three runs 2026-10-22: the traversal focuses the
-    // element but does not run its `onFocus`, so the counter stays 0. The
-    // offscreen host, whose renderer fakes window activation, does dispatch it —
-    // and `blur-delivery-lifecycle` measured why this window does not: GPUI
-    // reports focus paths only for an active window, and this one never becomes
-    // active, on any route. The component's key-origin anchor is what carries
-    // the arrow move here; a row seeded only from `onFocus` would re-anchor at
-    // the first enabled tab in this window.
+
     yield* ctx.expectEqual(
       "the traversal focuses the trigger without running its onFocus",
       yield* ctx.host.text("tabs-focus-readout"),
@@ -6848,7 +6198,7 @@ const tabsSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
     const reports = yield* paintedBox(ctx, "tabs-reports");
-    // The pill slides to the selected trigger's start edge; read it at rest.
+
     const secondX = yield* settleNumber(boxAxis("x")(ctx, "tabs-indicator"));
     yield* ctx.expectNear(
       "the pill follows the selected trigger",
@@ -6902,7 +6252,6 @@ const tabsSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "value=archive changes=4",
     );
 
-    // A press is the pointer path: it selects without moving through the list.
     yield* ctx.host.click("tabs-reports");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectContains(
@@ -6928,16 +6277,6 @@ const tabsSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/**
- * Drives the shipped `Slider` in a window: a press in the middle of the track
- * becomes a value there (the hit-test reads the track's box), the keys step and
- * jump to the ends, and a disabled track ignores a press.
- *
- * Pointer capture is real, but it is a separate measurement: `pointer-capture`
- * drags this same component off its track and proves the value follows, because
- * the runtime captures for an element that listens to both `mouseDown` and
- * `mouseMove`. This probe stays on the press and keyboard paths.
- */
 const sliderSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor("slider");
@@ -7006,15 +6345,6 @@ const sliderSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("slider-keys");
   });
 
-/**
- * Measures the pointer rule and what it means for a drag control.
- *
- * The check is the counters, not a screenshot: a runtime that kept delivering
- * moves without capture would make `move=8`, and one that stopped at the box
- * edge would leave `both` at 0 with the element under the pointer counting. The
- * shipped `Slider` is the third sample, so the probe measures the component the
- * library ships rather than a stand-in.
- */
 const pointerCaptureSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor("capture-both");
@@ -7049,8 +6379,6 @@ const pointerCaptureSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "sliderFollowed=true",
     );
 
-    // The range's two thumbs are separate stops on one track: the press picks
-    // the nearer end, so the other one must not move.
     yield* ctx.host.drag("capture-range", 60, 120);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectContains(
@@ -7066,17 +6394,6 @@ const pointerCaptureSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("pointer-capture");
   });
 
-/**
- * Drives a cross-pane drag in a window: the item records the press, each pane
- * records the travel and the release over itself, and the readout names the side
- * that received the drop.
- *
- * The source records the press; the pane under the pointer counts the travel and
- * resolves the release. The probe drags item → right pane and back and requires
- * the target pane to have counted a move, so a drag that never reached it fails
- * even if the drop lands. The press flag is a ref, not state, because the
- * protocol delivers every move before React commits the press's render.
- */
 const dragSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor("drag-item");
@@ -7118,7 +6435,6 @@ const dragSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("drag-right");
 
-    // Back again, so the gesture is not a one-way special case.
     const left = yield* paintedBox(ctx, "drag-left");
     const moved = yield* paintedBox(ctx, "drag-item");
     yield* ctx.host.drag(
@@ -7151,17 +6467,6 @@ const dragSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("drag-left");
   });
 
-/**
- * Drags a row onto another and reads back the order, the pointer's target and
- * which channel resolved it.
- *
- * What it measures: the dragged row keeps every move and the release (the list's
- * other rows never hear it), the row under the pointer comes from
- * `renderer.getElementsAt` matched against the rows' own ids, and the painted
- * order follows with the moved row in the drop row's slot. A release that never
- * left its own row reorders nothing, and a release over no row is a miss rather
- * than a drop on the nearest one.
- */
 const dragReorderSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor("reorder-readout");
@@ -7230,7 +6535,6 @@ const dragReorderSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("drag-reorder");
 
-    // A release that never left its own row is not a reorder.
     yield* ctx.host.drag("row-bravo", 0, 4);
     yield* Effect.sleep(SETTLE);
     const jittered = yield* ctx.host.text("reorder-readout");
@@ -7250,7 +6554,6 @@ const dragReorderSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "drops=2",
     );
 
-    // The hit test decides, not the distance travelled.
     yield* ctx.host.drag("row-alpha", 420, 0);
     yield* Effect.sleep(SETTLE);
     const missed = yield* ctx.host.text("reorder-readout");
@@ -7272,7 +6575,6 @@ const dragReorderSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/** One transcript row, sized so the probe can predict the content height. */
 const TranscriptRow = ({
   testId,
   children,
@@ -7298,15 +6600,6 @@ const TranscriptRow = ({
   );
 };
 
-/**
- * The input proof: a plain scroller that follows the tail on every render.
- *
- * The real scroller must leave an unpinned reader's offset alone, and "the
- * offset did not move" is also what a probe reads when its append control is
- * dead. This control appends the same page through the same verbs and always
- * follows, so its offset *does* move — proving the wheel and the append reached
- * a scroller before the real transcript's unchanged offset is believed.
- */
 const FollowingControl = ({ count }: { readonly count: number }): ReactNode => {
   const theme = useTheme();
   const renderer = useGpuix().renderer;
@@ -7353,20 +6646,6 @@ const FollowingControl = ({ count }: { readonly count: number }): ReactNode => {
   );
 };
 
-/**
- * `message-scroller-lifecycle` — the shipped `MessageScroller` in a real window.
- *
- * The component's rules are `TestRenderer` facts so far: a pinned transcript
- * follows an appended row with `scrollIntoView`, an unpinned one keeps the
- * reader's offset and counts what arrived, and the way back re-pins. The window
- * is where the two scroll channels meet React: `scrollIntoView` has to paint
- * synchronously, `onScroll` has to report the wheel before the rule folds it,
- * and the jump control has to repaint the viewport on the following frame.
- *
- * Two transcripts share the geometry. The real one measures the shipped rules;
- * the control (`FollowingControl`) is a plain scroller that always follows, so
- * the "the reader was not yanked" check has a measured non-zero delta beside it.
- */
 const MessageScrollerProbe = (): ReactNode => {
   const theme = useTheme();
   const [count, setCount] = useState(TRANSCRIPT_START_ROWS);
@@ -7439,7 +6718,6 @@ const MessageScrollerProbe = (): ReactNode => {
   );
 };
 
-/** The offset `testId` holds, failing by name when the element is no scroller. */
 const scrollY = (
   ctx: Smoke.AsyncSmokeContext,
   testId: string,
@@ -7452,14 +6730,12 @@ const scrollY = (
     return offset.y;
   });
 
-/** Whether `testId` painted at all. */
 const paintedAt = (
   ctx: Smoke.AsyncSmokeContext,
   testId: string,
 ): Effect.Effect<boolean, Smoke.SmokeHostError> =>
   Effect.map(ctx.host.bounds(testId), (bounds) => bounds !== null);
 
-/** Whether a row sits wholly inside the viewport's painted box. */
 const rowInside = (
   ctx: Smoke.AsyncSmokeContext,
   row: string,
@@ -7478,7 +6754,6 @@ const messageScrollerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.waitFor("ms-state");
     yield* Effect.sleep(SETTLE);
 
-    // 1. A fresh transcript follows the end.
     yield* ctx.expectEqual(
       "a transcript starts pinned with nothing unseen",
       yield* ctx.host.text("ms-state"),
@@ -7506,7 +6781,6 @@ const messageScrollerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("message-scroller-end");
 
-    // 2. An appended page is followed while pinned.
     yield* ctx.host.click("ms-append");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -7531,7 +6805,6 @@ const messageScrollerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("message-scroller-followed");
 
-    // 3. Scrolling away unpins and offers the way back.
     yield* ctx.host.wheel("ms-viewport", 0, 400);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -7557,7 +6830,6 @@ const messageScrollerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("message-scroller-unpinned");
 
-    // 4. A page while unpinned is counted, not followed.
     const before = yield* scrollY(ctx, "ms-viewport");
     yield* ctx.host.click("ms-append");
     yield* Effect.sleep(SETTLE);
@@ -7588,8 +6860,6 @@ const messageScrollerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("message-scroller-unpinned-arrivals");
 
-    // 5. The control proves the verbs above reach a scroller: it always
-    //    follows, so the same page moves its offset back to its end.
     yield* ctx.host.wheel("ms-control-viewport", 0, 400);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectNear(
@@ -7607,7 +6877,6 @@ const messageScrollerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       2,
     );
 
-    // 6. Jumping returns to the newest row and clears the count.
     yield* ctx.host.click("ms-jump");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -7637,7 +6906,6 @@ const messageScrollerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("message-scroller-jumped");
 
-    // 7. A wheel back to the end re-pins without the control.
     yield* ctx.host.wheel("ms-viewport", 0, 400);
     yield* Effect.sleep(SETTLE);
     yield* ctx.host.click("ms-append");
@@ -7668,17 +6936,6 @@ const messageScrollerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("message-scroller-rerolled");
   });
 
-/**
- * `combobox-lifecycle` — the shipped `Combobox` in a real window.
- *
- * The component wraps GPUix's headless combobox, so focus, the active row and
- * the keyboard are the runtime's; its 21 behaviour tests run in a
- * `TestRenderer`, where `renderer.focusElement` lands immediately. A window is
- * the only place that proves the popup takes the focus from a press, that a
- * typed query filters the painted rows, that a disabled row is skipped by the
- * arrow path, and that Escape/outside press close it without stealing the
- * focus back.
- */
 const ComboboxProbe = (): ReactNode => {
   const theme = useTheme();
   const [value, setValue] = useState<string | null>(null);
@@ -7747,7 +7004,6 @@ const comboboxSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.waitFor("cb-trigger");
     yield* Effect.sleep(SETTLE);
 
-    // 1. Closed at rest.
     yield* ctx.expectEqual(
       "the combobox starts closed with nothing chosen",
       yield* ctx.host.text("cb-readout"),
@@ -7764,13 +7020,10 @@ const comboboxSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       false,
     );
 
-    // 2. A press opens the list below the trigger and moves focus in.
     const trigger = yield* paintedBox(ctx, "cb-trigger");
     yield* ctx.host.click("cb-trigger");
     yield* Effect.sleep(SETTLE);
-    // The box enters on a 200 ms fade-and-travel, so the placement is read once
-    // the entry has run: a box read on the first paint is mid-tween and its
-    // `top` is the frame it happens to be on, not where it was placed.
+
     yield* Effect.sleep(Duration.millis(220));
     const surface = yield* paintedBox(ctx, "combobox-content");
     yield* ctx.expectEqual(
@@ -7803,7 +7056,6 @@ const comboboxSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("combobox-open");
 
-    // 3. Typing filters by the component's ranking.
     yield* ctx.host.key("g");
     yield* ctx.host.key("r");
     yield* Effect.sleep(SETTLE);
@@ -7830,7 +7082,6 @@ const comboboxSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("combobox-filtered");
 
-    // 4. Enter selects the highlighted match, closes and restores focus.
     yield* ctx.host.key("enter");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -7859,7 +7110,6 @@ const comboboxSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "cb-trigger",
     );
 
-    // 5. Arrows move the highlight and skip the disabled row.
     yield* ctx.host.click("cb-trigger");
     yield* Effect.sleep(SETTLE);
     yield* ctx.host.key("down");
@@ -7877,7 +7127,6 @@ const comboboxSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("combobox-selected");
 
-    // 6. A query that only matches a disabled row chooses nothing.
     yield* ctx.host.click("cb-trigger");
     yield* Effect.sleep(SETTLE);
     yield* ctx.host.key("a");
@@ -7902,7 +7151,6 @@ const comboboxSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 7. Escape closes and returns the focus; the value is untouched.
     yield* ctx.host.key("escape");
     yield* ctx.expectEqual(
       "Escape closes the list",
@@ -7920,7 +7168,6 @@ const comboboxSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "value=linus changes=2 presses=0",
     );
 
-    // 8. The empty state, and an outside press that dismisses without focus.
     yield* ctx.host.click("cb-trigger");
     yield* Effect.sleep(SETTLE);
     yield* ctx.host.key("z");
@@ -7953,7 +7200,6 @@ const comboboxSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/** One row of the list probe: a value, a title and the disabled flag. */
 const ListRowItem = ({
   row,
   prefix,
@@ -7971,16 +7217,6 @@ const ListRowItem = ({
   </ListItem>
 );
 
-/**
- * `list-lifecycle` — the shipped `List` selection model in a real window.
- *
- * The list is the keyboard and selection foundation the menus and tabs reuse:
- * a roving tab stop, arrow moves that skip disabled rows, Enter/Space
- * activation (Space on the release), Home/End, type-ahead, and `Cmd+A` /
- * `Shift+Arrow` in multiple mode. Its 38 behaviour tests run in a
- * `TestRenderer`; the window is where the key event has to bubble from the
- * focused row to the list, which is the origin rule `keyOrigin` exists for.
- */
 const ListProbe = (): ReactNode => {
   const theme = useTheme();
   const [single, setSingle] = useState("");
@@ -8061,7 +7297,6 @@ const listSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.waitFor("list-single-readout");
     yield* Effect.sleep(SETTLE);
 
-    // 1. A press selects and focuses the row it landed on.
     yield* ctx.expectEqual(
       "the single list starts with nothing selected",
       yield* ctx.host.text("list-single-readout"),
@@ -8080,7 +7315,6 @@ const listSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "single-row-grace",
     );
 
-    // 2. An arrow moves real focus and skips the disabled row.
     yield* ctx.host.key("down");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -8094,7 +7328,6 @@ const listSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "selected=grace changes=1 activates=1",
     );
 
-    // 3. Enter selects the row focus landed on.
     yield* ctx.host.key("enter");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -8103,7 +7336,6 @@ const listSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "selected=linus changes=2 activates=2",
     );
 
-    // 4. Space selects on the release, and never runs the action.
     yield* ctx.host.key("up");
     yield* Effect.sleep(SETTLE);
     yield* ctx.host.key("space");
@@ -8115,7 +7347,6 @@ const listSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "selected=grace changes=3 activates=2",
     );
 
-    // 5. Home/End move to the edges; Enter acts on what focus names.
     yield* ctx.host.key("home");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -8138,7 +7369,6 @@ const listSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "selected=margaret changes=4 activates=3",
     );
 
-    // 6. A typed letter jumps focus, and the next Enter acts from there.
     yield* ctx.host.key(TYPEAHEAD_LETTER);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -8159,7 +7389,6 @@ const listSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "selected=grace changes=5 activates=4",
     );
 
-    // 7. A disabled row can take the pointer's focus but is never chosen.
     yield* ctx.host.click("single-row-alan");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -8188,7 +7417,6 @@ const listSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("list-single");
 
-    // 8. Multiple mode: a plain press replaces, Shift extends, Cmd+A selects.
     yield* ctx.expectEqual(
       "the multiple list starts empty",
       yield* ctx.host.text("list-multi-readout"),
@@ -8232,14 +7460,6 @@ const listSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("list-multiple");
   });
 
-/**
- * Opens the shipped Dialog by press, proves focus entered the surface and that
- * Escape closes it and returns focus, then closes it with its own `DialogClose`.
- *
- * Every step is measured through the window: `bounds` is `null` for an element
- * the runtime never painted (the closed state), the focus id is the renderer's,
- * and the readout is React's own report of the two transitions.
- */
 const dialogSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor("dialog-trigger");
@@ -8256,9 +7476,6 @@ const dialogSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // Control for the trap check below: with the dialog closed the trigger is the
-    // page's first stop, so the same focused-id read reports it. A focus that
-    // leaked out of an open dialog would therefore be named, not hidden.
     yield* ctx.host.key("tab");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -8287,11 +7504,6 @@ const dialogSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("dialog-open");
 
-    // The Tab trap in a window, which no headless suite can prove: the surface
-    // handles Tab itself (`focusNextWithin` + `preventDefault`), so a window
-    // that delivered the key to the default traversal instead would leak the
-    // focus to `dialog-trigger`. Six presses must cycle every stop, come back
-    // to the surface, and never name the trigger.
     const stops = yield* Effect.forEach(
       Arr.range(0, 5),
       () =>
@@ -8315,8 +7527,7 @@ const dialogSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       Arr.contains(stops, "dialog-field-b"),
       true,
     );
-    // The surface itself is not in the tab order (`tabIndex: -1`), so the wrap
-    // goes to the first stop again rather than back to `dialog-content`.
+
     yield* ctx.expectEqual(
       "the trap cycles through the surface's stops",
       Arr.length(Arr.filter(stops, (id) => id === "dialog-field-a")) >= 2,
@@ -8377,18 +7588,6 @@ const dialogSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("dialog-closed");
   });
 
-/**
- * Confirms and cancels the shipped `ConfirmDialog` in a window — the flow
- * MISSION names beside the plain dialog's open/close.
- *
- * Three claims a `TestRenderer` suite cannot make, because they are about real
- * input: `Cancel` holds the initial focus, so `Enter` on an untouched dialog
- * takes the safe path instead of destroying; a confirm reports exactly once and
- * the surface goes away because the *caller* closes it; and every close path —
- * confirm, cancel, Escape — hands the focus back to the app's opener. The
- * fixture is the caller (`confirmFlow`), so the counts the checks read are the
- * app's own, not the component's state.
- */
 const confirmSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor(CONFIRM_OPENER);
@@ -8403,10 +7602,6 @@ const confirmSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    /**
-     * Focuses the app's opener and presses it. The press is what records the
-     * restore target, so the opener must hold the focus before it opens.
-     */
     const open = Effect.gen(function* () {
       yield* ctx.host.focusElement(CONFIRM_OPENER);
       yield* ctx.host.click(CONFIRM_OPENER);
@@ -8429,14 +7624,10 @@ const confirmSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       yield* ctx.host.text(CONFIRM_READOUT),
       "open=true opens=1",
     );
-    // Capture-only wait: the surface is painted but still fading in on its
-    // `slow` level, and a screenshot that shows a half-opacity dialog is poor
-    // evidence for the docs. No check reads the frame.
+
     yield* Effect.sleep(Duration.millis(400));
     yield* ctx.host.capture("confirm-open");
 
-    // The safety property: the focused control is Cancel, so Enter takes the
-    // safe path. A dialog that focused its confirm action would destroy here.
     yield* ctx.host.key("enter");
     yield* ctx.expectEqual(
       "Enter on the untouched dialog dismisses it",
@@ -8455,7 +7646,6 @@ const confirmSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("confirm-cancelled");
 
-    // Confirm: one report, and the surface goes because the fixture closed it.
     yield* open;
     yield* ctx.host.click(CONFIRM_ACCEPT);
     yield* ctx.expectEqual(
@@ -8475,7 +7665,6 @@ const confirmSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("confirm-accepted");
 
-    // Cancel: the destructive action must not run.
     yield* open;
     yield* ctx.host.click(CONFIRM_CANCEL);
     yield* ctx.expectEqual(
@@ -8494,7 +7683,6 @@ const confirmSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       CONFIRM_OPENER,
     );
 
-    // Escape is the third close path, and it is a cancel rather than a confirm.
     yield* open;
     yield* ctx.host.key("escape");
     yield* ctx.expectEqual(
@@ -8515,18 +7703,6 @@ const confirmSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("confirm-escaped");
   });
 
-/**
- * Opens, edges, sizes and dismisses the shipped `Drawer` in a window.
- *
- * Four claims an offscreen suite cannot make. The **edge** is paint and layout
- * together: the surface must sit flush against the window edge it names, and
- * the veil must leave the rest of the page visible but dimmed. A **press on the
- * veil** must reach the dismiss layer while a press inside the surface must not
- * — that is the runtime's hit test, not the component's tree. **Tab** is the
- * window's real traversal, so a trap is a sequence of focused ids rather than a
- * simulated event. And a **pinned drawer** must refuse both Escape and a veil
- * press, which is the one dismissal rule a caller can take away.
- */
 const drawerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor(DRAWER_IDS.opener);
@@ -8555,17 +7731,14 @@ const drawerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("drawer-closed");
 
-    /** Focuses the app's opener and presses it, so the restore target is real. */
     const open = Effect.gen(function* () {
       yield* ctx.host.focusElement(DRAWER_IDS.opener);
       yield* ctx.host.click(DRAWER_IDS.opener);
       yield* settlePainted(ctx, DRAWER_IDS.surface);
-      // The surface travels a few points in from its edge, so a box read on the
-      // mount's frame names the entry rather than the resting box.
+
       yield* Effect.sleep(Duration.millis(400));
     });
 
-    // ── A right-hand column ────────────────────────────────────────────────
     yield* open;
     yield* ctx.expectEqual(
       "a right drawer fills the window's height against its right edge",
@@ -8588,8 +7761,6 @@ const drawerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       drawerBoxText({ x: 0, y: 0, width: window.width, height: window.height }),
     );
 
-    // Real traversal: backwards from the surface wraps to its last stop, and
-    // forwards walks both footer actions before wrapping back to the first.
     yield* ctx.host.key("shift-tab");
     yield* ctx.expectEqual(
       "Shift+Tab from the surface wraps to its last stop",
@@ -8621,8 +7792,6 @@ const drawerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       DRAWER_IDS.cancel,
     );
 
-    // Capture-only wait: the surface enters on its `slow` level, and a
-    // half-faded screenshot is poor evidence rather than a wrong one.
     yield* Effect.sleep(Duration.millis(400));
     yield* ctx.host.capture("drawer-right");
     const rightFrame = yield* ctx.host.pixels("drawer-right");
@@ -8688,7 +7857,6 @@ const drawerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       DRAWER_IDS.opener,
     );
 
-    // ── The size's own column width, on the same edge ──────────────────────
     yield* ctx.host.click(DRAWER_IDS.sizeLg);
     yield* open;
     yield* ctx.expectEqual(
@@ -8703,7 +7871,6 @@ const drawerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // ── The other edge ─────────────────────────────────────────────────────
     yield* ctx.host.click(DRAWER_IDS.sizeMd);
     yield* ctx.host.click(DRAWER_IDS.sideLeft);
     yield* Effect.sleep(SETTLE);
@@ -8730,7 +7897,6 @@ const drawerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "open=false opens=3 closes=3 side=left size=md dismissible=true",
     );
 
-    // ── A bottom sheet ─────────────────────────────────────────────────────
     yield* ctx.host.click(DRAWER_IDS.sideBottom);
     yield* ctx.host.click(DRAWER_IDS.sizeLg);
     yield* open;
@@ -8746,7 +7912,6 @@ const drawerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // ── A drawer that may not be dismissed ─────────────────────────────────
     yield* ctx.host.click(DRAWER_IDS.sideRight);
     yield* ctx.host.click(DRAWER_IDS.sizeMd);
     yield* ctx.host.click(DRAWER_IDS.dismissibleOff);
@@ -8787,22 +7952,6 @@ const drawerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("drawer-pinned");
   });
 
-/**
- * Reads the fade the presence seam paints, from the pixel the entry leaves.
- *
- * The seam is a `motion` description, and no window exposes one, so the surface
- * is measured where it paints: a point inside the content's own padding, over a
- * page the probe fills white. The reading is taken on the renderer's **motion
- * clock** rather than on wall time — a software renderer can block a paint
- * longer than the tween, and a read "at 107 ms" would then name a frame the
- * renderer had not produced. Freeze, advance by an exact offset, let the frame
- * paint, capture: the same read is repeatable.
- *
- * Partway through the level the pixel is a mix of the surface and the page; past
- * it the pixel is the surface's own colour. The frozen clock then repeats the
- * reading under a reduced preference, where the resting frame paints with no
- * journey at all — so the timing, not the paint, is what the preference removes.
- */
 const surfaceFadeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor("fade-trigger");
@@ -8830,7 +7979,6 @@ const surfaceFadeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    /** The surface's painted box right now; frozen time keeps it the sampled frame's. */
     const currentBox = (): Effect.Effect<
       FadeBox,
       Smoke.SmokeAssertionError | Smoke.SmokeHostError
@@ -8842,13 +7990,6 @@ const surfaceFadeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         );
       });
 
-    /**
-     * The colour at the sample point of a capture.
-     *
-     * The device scale is read from a frame once: a capture that is not the
-     * window's box cannot be sampled at a logical point, and saying so is better
-     * than reading a pixel from another part of the window.
-     */
     const sampleIn = (
       frame: Pixels.Pixels,
       box: FadeBox,
@@ -8858,7 +7999,6 @@ const surfaceFadeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       return Option.fromNullishOr(Pixels.pixelAt(frame, point.x, point.y));
     };
 
-    /** Captures `name` and samples it, once the paint has caught up with the clock. */
     const captureSample = (
       name: string,
       scale: number,
@@ -8875,9 +8015,6 @@ const surfaceFadeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         );
       });
 
-    // ── Animated: the surface arrives on a painted fade ─────────────────────
-    // The clock is frozen before the press, so the mount's first frame is
-    // opacity 0 and stays there until the probe advances it.
     const frozenAt = yield* pauseClock();
     yield* ctx.host.click("fade-trigger");
     yield* ctx.expectContains(
@@ -8935,10 +8072,6 @@ const surfaceFadeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* resumeClock();
 
-    // ── Reduced: the journey is gone, the resting frame is not ──────────────
-    // Freezing the clock is what makes this a control: an animated surface
-    // under the same frozen clock stays at opacity 0, so a preference the
-    // runtime ignored could never paint the surface here.
     yield* ctx.host.key("escape");
     yield* ctx.expectEqual(
       "Escape unpaints the surface",
@@ -8974,28 +8107,12 @@ const surfaceFadeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/**
- * Drives the shipped `Tooltip` through the paths it opens on and the way it
- * leaves: a `Tab` traversal's focus, the pointer entering the trigger, and a
- * pointer leaving or an Escape dismissing it.
- *
- * A window reports no style and a tooltip has no readout, so the checks are the
- * runtime's own bounds for the tip and its text: `bounds` answers nothing while
- * the tip is closed, which is what makes "closed" measurable at all.
- */
 const tooltipSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
-    /** The tip is painted exactly when its text is in the frame. */
     const painted = Effect.map(ctx.host.paintedText(), (lines) =>
       lines.join("\n").includes(TOOLTIP_CONTENT),
     );
 
-    /**
-     * Waits until the tip's paint state is `wanted`, then gives up.
-     *
-     * The shared bounded poll: the assertion that follows reports the state it
-     * actually read.
-     */
     const settleTip = (
       wanted: boolean,
     ): Effect.Effect<void, Smoke.SmokeHostError> =>
@@ -9009,18 +8126,8 @@ const tooltipSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "enters=0 leaves=0",
     );
 
-    // The keyboard path, measured on 0.11.0 (three runs 2026-10-22): the
-    // traversal focuses the trigger without running its `onFocus`, so the tip
-    // — which the runtime opens on focus — stays closed. `blur-delivery-lifecycle`
-    // measured the cause: no route delivers the focus pair in this window,
-    // because GPUI reports focus paths only for an active window and this one
-    // never becomes active. Hover is the only open path this probe can measure;
-    // an active app is expected to open the tip on focus, unproven here. The
-    // text still reaches assistive technology as the trigger's `aria-description`.
     yield* ctx.host.key("tab");
-    // Wait the whole window the old "it opens" check allowed (~2s), so a
-    // delayed delivery cannot pass as "never delivered": the value the
-    // assertion reports is the one this poll settled on.
+
     const afterTraversal = yield* settleUntil(painted, (shown) => shown);
     yield* ctx.expectEqual(
       "Tab lands on the trigger",
@@ -9045,8 +8152,6 @@ const tooltipSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "tooltip-trigger",
     );
 
-    // The pointer path. The tip opens immediately (the wrapper's provider has a
-    // zero delay), so the wait is for the frame, not for a timer.
     yield* ctx.host.hover("tooltip-trigger");
     yield* settleTip(true);
     yield* ctx.expectContains(
@@ -9059,8 +8164,7 @@ const tooltipSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       yield* painted,
       true,
     );
-    // The tip's box is the content's own layout report: `side="top"` puts it
-    // above the trigger, overlapping it on the horizontal axis.
+
     yield* ctx.expectContains(
       "the tip opens above its trigger on the default side",
       yield* ctx.host.text("tooltip-readout"),
@@ -9068,8 +8172,6 @@ const tooltipSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("tooltip-open");
 
-    // Leaving is a pointer move too: the runtime schedules the close 80ms later,
-    // so the probe reads frames until the tip is gone rather than one fixed one.
     yield* ctx.host.hover("tooltip-away");
     yield* settleTip(false);
     yield* ctx.expectContains(
@@ -9083,9 +8185,6 @@ const tooltipSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       false,
     );
 
-    // A second hover proves the tip reopens, then Escape (the runtime's
-    // window-level dismissal, which does not need the focus inside the layer)
-    // is the keyboard way out.
     yield* ctx.host.hover("tooltip-trigger");
     yield* settleTip(true);
     yield* ctx.expectEqual(
@@ -9102,13 +8201,6 @@ const tooltipSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "tooltip-trigger",
     );
 
-    // ── The entry, on the renderer's motion clock ───────────────────────────
-    // The tip has no readout of its own paint: the fade is a value no style
-    // report can see, so it is read where it paints — a point inside the
-    // surface, over the white strip the fixture paints behind the trigger. The
-    // reading is taken on the motion clock (see `surface-fade`) so a slow paint
-    // cannot name a frame the renderer never produced: freeze, advance by an
-    // exact offset, capture.
     const pauseClock = yield* ctx.expectSome(
       "the window exposes a motion clock",
       Option.fromNullishOr(ctx.host.clockPause),
@@ -9126,7 +8218,6 @@ const tooltipSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       surfaceFadeColour(palettes.dark.colors.popover),
     );
 
-    /** The tip's box as its own layout report publishes it right now. */
     const tipBox = (): Effect.Effect<
       TooltipBox,
       Smoke.SmokeAssertionError | Smoke.SmokeHostError
@@ -9135,7 +8226,6 @@ const tooltipSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         ctx.expectSome("the tip publishes its own box", parseTooltipBox(value)),
       );
 
-    /** The colour at the sample point of a capture of `box`. */
     const sampleIn = (
       frame: Pixels.Pixels,
       box: TooltipBox,
@@ -9145,7 +8235,6 @@ const tooltipSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       return Option.fromNullishOr(Pixels.pixelAt(frame, point.x, point.y));
     };
 
-    /** Captures `name` and samples it at the point inside `box`. */
     const captureSample = (
       name: string,
       box: TooltipBox,
@@ -9162,8 +8251,6 @@ const tooltipSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         );
       });
 
-    // The pointer is on the trigger from the Escape above, so the entry starts
-    // from a leave rather than from an open tip.
     yield* ctx.host.hover("tooltip-away");
     yield* settleTip(false);
 
@@ -9218,10 +8305,6 @@ const tooltipSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // The travel is painted on the content, not on the surface's own edge (the
-    // floating layer's plate keeps its box): the entering ink sits lower than
-    // the ink it settles at, and the fade is the ink's own colour moving from
-    // the surface toward its resting ink.
     const partialFrame = yield* ctx.host.pixels("tooltip-fade-partial");
     const settledFrame = yield* ctx.host.pixels("tooltip-fade-settled");
     const rest = yield* tipBox();
@@ -9254,15 +8337,8 @@ const tooltipSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* resumeClock();
   });
 
-/**
- * Drives the shipped `DropdownMenu` through the paths a menu has to survive in a
- * window: a press opens it, Escape dismisses it and returns focus, a keyboard
- * open lands on the first row, arrows move real focus, Enter activates the row,
- * and a press activates one too.
- */
 const menuSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
-    /** The menu surface is gone once its exit tween has finished. */
     const unpainted = settleGone(ctx, "menu-content");
 
     yield* ctx.host.waitFor("menu-trigger");
@@ -9286,8 +8362,6 @@ const menuSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("menu-open");
 
-    // Escape is delivered to the trigger, which holds focus after a pointer
-    // open: the menu's dismiss layer is what hears it, not the surface.
     yield* ctx.host.key("escape");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -9301,7 +8375,6 @@ const menuSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "menu-trigger",
     );
 
-    // A keyboard open lands on the first row, so the highlight is real focus.
     yield* ctx.host.key("down");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -9353,19 +8426,8 @@ const menuSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("menu-closed");
   });
 
-/**
- * Drives the shipped `ContextMenu` in a window.
- *
- * This is the one overlay whose opening input is a **right press**, and no
- * window probe had produced one: the headless suites synthesise the aux click
- * themselves. The checks are the two opening paths and their different close
- * rules — a pointer-opened menu keeps its origin at the pointer and leaves the
- * focus where the close put it, while Shift+F10 places the surface from the
- * trigger's own bounds and hands the focus back.
- */
 const contextMenuSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
-    /** The surface is gone once its exit tween has finished. */
     const unpainted = settleGone(ctx, "context-menu");
 
     yield* ctx.host.waitFor("context-trigger");
@@ -9381,7 +8443,6 @@ const contextMenuSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // A primary press is not an aux click, so it must open nothing.
     yield* ctx.host.click("context-trigger");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -9398,8 +8459,7 @@ const contextMenuSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       yield* ctx.host.text("context-readout"),
       "opens=1",
     );
-    // The panel enters with a few pixels of travel on its entry axis, so both
-    // axes are read at rest: a mid-tween read reported `y=121.5` for `124`.
+
     const pointerX = yield* settleNumber(boxAxis("x")(ctx, "context-menu"));
     const pointerY = yield* settleNumber(boxAxis("y")(ctx, "context-menu"));
     yield* ctx.expectNear(
@@ -9450,8 +8510,6 @@ const contextMenuSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // The keyboard route: Shift+F10 places the surface under the trigger and
-    // Escape returns the focus, which a pointer-opened menu does not.
     yield* ctx.host.rightClick("context-trigger");
     yield* Effect.sleep(SETTLE);
     yield* ctx.host.key("escape");
@@ -9480,8 +8538,7 @@ const contextMenuSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       yield* ctx.host.text("context-readout"),
       "opens=3",
     );
-    // The surface enters with a few pixels of travel on its entry axis, so both
-    // axes are read at rest: a mid-tween read reported `y=201` for `204`.
+
     const fromKeyboardX = yield* settleNumber(
       boxAxis("x")(ctx, "context-menu"),
     );
@@ -9509,8 +8566,6 @@ const contextMenuSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "context-trigger",
     );
 
-    // The scope rule: a right press on a sibling opens nothing, and while the
-    // menu is open the same press dismisses it rather than opening another.
     yield* ctx.host.rightClick("context-sibling");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -9536,18 +8591,9 @@ const contextMenuSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("context-closed");
   });
 
-/** A geometry sample the animation is still travelling between. */
 const isTravelling = (height: number, from: number, to: number): boolean =>
   height > from + 2 && height < to - 2;
 
-/**
- * Eight painted heights of the animated box, sampled about 50ms apart.
- *
- * A 0.6s `easeInOut` tween moves slowly at both ends, so one sample is not
- * enough to tell a tween from a jump: the run's first 240ms only reaches ~90px.
- * The samples straddle the slow start; the value read after the last one is the
- * settled height.
- */
 const motionSamples = (
   ctx: Smoke.AsyncSmokeContext,
 ): Effect.Effect<
@@ -9565,28 +8611,10 @@ const motionSamples = (
     { concurrency: 1 },
   );
 
-/**
- * Measures whether `motion` animates **in a window**, and what it does to the
- * content inside a shrinking box.
- *
- * The box tweens 0.6s between 120x40 and 240x240, so intermediate samples are
- * the proof that it animates rather than jumping — the negative control is
- * `transition={{ duration: 0 }}`, which lands on the target with no frame in
- * between. The fixed 320x200 child must keep its own size the whole way: a
- * collapsible sidebar animates its **outer** box and clips, rather than
- * flex-shrinking the content inside it.
- *
- * Measured caveat for the probe itself: a screenshot stalls the animation clock,
- * and the run then completes early once frames resume (a capture taken just
- * before the reverse press made it snap from 238 to 40 in one sample). Captures
- * therefore sit after each run's sampling, with a settle between them.
- */
 const motionSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor("motion-box");
-    // A previous probe's screenshot stalls the animation clock, and a run whose
-    // frames resume late completes in one step. Settling the window before the
-    // first press is what makes this measurement independent of what ran before.
+
     yield* Effect.sleep(Duration.millis(800));
     const small = yield* paintedBox(ctx, "motion-box");
     yield* ctx.expectNear(
@@ -9618,8 +8646,7 @@ const motionSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
 
     yield* ctx.host.click("motion-toggle");
     const growSamples = yield* motionSamples(ctx);
-    // The declared duration is not a wall-clock promise: under load the same
-    // transition ran for seconds. Wait for the target, not for 900ms.
+
     yield* settledHeight(ctx, "motion-box", 240);
     const grown = yield* paintedBox(ctx, "motion-box");
 
@@ -9640,7 +8667,7 @@ const motionSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       240,
       1,
     );
-    // The completion lands a frame after the target does.
+
     const grownReadout = yield* settleUntil(
       ctx.host.text("motion-readout"),
       (text) => text.includes("completes=1"),
@@ -9692,9 +8719,6 @@ const motionSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // Captures come last, after every timed run: a screenshot stalls the
-    // animation clock, so a capture taken between a press and its samples makes
-    // the next run complete in one step (measured: `240, 238, 40, 40`).
     yield* ctx.host.click("motion-toggle");
     yield* settledHeight(ctx, "motion-box", 240);
     yield* ctx.host.capture("motion-grown");
@@ -9703,32 +8727,10 @@ const motionSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("motion-shrunk");
   });
 
-/**
- * Measures what `motion` does when the target changes mid-flight.
- *
- * The claim is the capability record's **Animation interruption** row: a target
- * change starts the next transition from the current visible value. The box is
- * first driven from 120 to 400, and 1.2s in the target is cut to 240; a restart
- * paints 120 and a finish-first paints 400, each ~120 points from the value cut
- * at. The second cut runs the other way: from 400 down toward 120, then back to
- * 400, so a restart is the interrupted run's own start and a finish-first its
- * own target — both ~140 points from the cut.
- *
- * The run length is not a promise (`motion-geometry` measured the same declared
- * duration completing in a few hundred milliseconds on an idle box), so the
- * probe polls for the target rather than sleeping a fixed time, and the cut is
- * timed from the measured travel rather than assumed.
- *
- * A screenshot stalls the animation clock (`motion-geometry` records the
- * measured snap), so every capture sits after the timed runs and a settle.
- */
 const motionInterruptSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor(MOTION_INTERRUPT_IDS.probe);
-    // A previous probe's capture stalls this one's clock; settle first so the
-    // clock is running, then spend one full run on a prime: the first
-    // animation after a capture has completed in a single frame (measured when
-    // this probe runs after `motion-geometry`).
+
     yield* Effect.sleep(Duration.millis(800));
     yield* ctx.host.click(MOTION_INTERRUPT_IDS.far);
     yield* settledWidth(ctx, MOTION_INTERRUPT_IDS.box, MOTION_FAR_WIDTH);
@@ -9748,10 +8750,6 @@ const motionInterruptSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       motionInterruptReadout(MOTION_INTERRUPT_REST),
     );
 
-    // ── A rising run cut downward ──────────────────────────────────────────
-    // Cut at a measured fraction of the travel, not a fixed time: the same
-    // declaration has run in a fraction of a second and in seconds, and a
-    // fixed cut sat past the landing on the fast one.
     yield* ctx.host.click(MOTION_INTERRUPT_IDS.far);
     const rising = yield* settleUntil(
       boxWidth(ctx, MOTION_INTERRUPT_IDS.box),
@@ -9772,9 +8770,7 @@ const motionInterruptSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       continuesFrom(rising, cutDown.width),
       true,
     );
-    // A poll, not a fixed wait: `motion-geometry` measured the same declared
-    // duration completing anywhere from ~250ms to seconds, so waiting for the
-    // target is the only honest settle.
+
     yield* settledWidth(ctx, MOTION_INTERRUPT_IDS.box, MOTION_MID_WIDTH);
     const settledMid = yield* paintedBox(ctx, MOTION_INTERRUPT_IDS.box);
     yield* ctx.expectNear(
@@ -9789,7 +8785,6 @@ const motionInterruptSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       motionInterruptReadout({ target: "mid" }),
     );
 
-    // ── A falling run cut back upward ──────────────────────────────────────
     yield* ctx.host.click(MOTION_INTERRUPT_IDS.far);
     yield* settledWidth(ctx, MOTION_INTERRUPT_IDS.box, MOTION_FAR_WIDTH);
     const atFar = yield* paintedBox(ctx, MOTION_INTERRUPT_IDS.box);
@@ -9839,21 +8834,12 @@ const motionInterruptSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       motionInterruptReadout({ target: "far" }),
     );
 
-    // Captures last: a screenshot stalls the animation clock.
     yield* ctx.host.capture("motion-interrupt-far");
     yield* ctx.host.click(MOTION_INTERRUPT_IDS.rest);
     yield* settledWidth(ctx, MOTION_INTERRUPT_IDS.box, MOTION_REST_WIDTH);
     yield* ctx.host.capture("motion-interrupt-rest");
   });
 
-/**
- * Queues a toast from the shipped `ToastProvider` and dismisses it with the
- * card's own control.
- *
- * The queue count is read from `useToast()`, so a toast that never entered the
- * store would not count, and the viewport's text is read separately because the
- * store and the paint are different claims.
- */
 const toastSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor("toast-probe");
@@ -9888,28 +8874,12 @@ const toastSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("toast-dismissed");
   });
 
-/**
- * Drives the shipped `CommandMenu` the way an application shortcut would.
- *
- * Six claims, each of which a browser-shaped test cannot make: a window's
- * keystrokes reach the palette's search field, typing really filters the rows,
- * the arrow key moves the *highlight* while the field keeps native focus (the
- * component's documented contract — moving focus would stop the typing), Enter
- * runs the highlighted row rather than the first one, a disabled action paints
- * but runs nothing, and `Escape` dismisses the surface.
- *
- * The focus after the dismissal is the seventh: the palette gives the focus back
- * to its opener, which is what a modal must do. `modal-focus-restore` isolates
- * the three cases that rule depends on.
- */
 const commandPaletteSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
-    /** Whether `testId` is absent from the window's tree, once it settles. */
     const unpainted = (
       testId: string,
     ): Effect.Effect<boolean, Smoke.SmokeHostError> => settleGone(ctx, testId);
 
-    /** Types a key sequence in order; one keystroke at a time. */
     const type = (
       keys: ReadonlyArray<string>,
     ): Effect.Effect<void, Smoke.SmokeHostError> =>
@@ -9918,15 +8888,8 @@ const commandPaletteSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         concurrency: 1,
       });
 
-    /** Presses the trigger and waits for the surface and its field. */
     const openPalette: Effect.Effect<void, Smoke.SmokeHostError> = Effect.gen(
       function* () {
-        // A press sent while the last surface is still on its exit tween is
-        // dismissed by the layer that is closing, so the palette never opens
-        // (measured: `the runtime paints command-zoom — expected a value, got
-        // none`, after a reopen that raced the previous close). Waiting for the
-        // two states the next steps need — the surface painted, the search
-        // field focused — makes the open the probe's, not the box's load.
         yield* settleGone(ctx, "command-menu");
         yield* ctx.host.focusElement("palette-trigger");
         yield* ctx.host.click("palette-trigger");
@@ -9947,7 +8910,6 @@ const commandPaletteSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // The unfiltered list: four rows, the first one highlighted.
     yield* openPalette;
     yield* ctx.expectEqual(
       "a press opens the palette surface",
@@ -9961,8 +8923,6 @@ const commandPaletteSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("palette-open");
 
-    // The design claim: the highlight moves, the field keeps the focus. If the
-    // arrow key moved focus instead, the typing below would stop working.
     yield* ctx.host.key("down");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -9989,7 +8949,6 @@ const commandPaletteSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("palette-closed");
 
-    // The filtered list: typing reaches the field and really filters the rows.
     yield* openPalette;
     yield* type(["t", "h", "e", "m", "e"]);
     yield* Effect.sleep(SETTLE);
@@ -10017,7 +8976,6 @@ const commandPaletteSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "ran=theme runs=2",
     );
 
-    // A query whose only match is disabled: the row paints, and it runs nothing.
     yield* openPalette;
     yield* type(["z", "o", "o", "m"]);
     yield* Effect.sleep(SETTLE);
@@ -10053,22 +9011,6 @@ const commandPaletteSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/**
- * Three modals and the question the command palette raised: does a modal give
- * the focus back when the focused thing unmounts with it?
- *
- * The three cases differ only in what holds the focus while the surface is
- * open:
- *
- * - the **control** has nothing focusable inside, so the modal's own surface
- *   holds the focus;
- * - the **manual** field is focused by the modal itself (`initialFocus`), after
- *   the surface exists;
- * - the **auto** field takes the focus the way the runtime does it
- *   (`autoFocus`, at mount) — before the modal has looked at the focus.
- *
- * All three unmount with their surface, so all three are the case that matters.
- */
 const ModalFocusRestoreProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -10165,18 +9107,10 @@ const ModalFocusRestoreProbe = (): ReactNode => {
   );
 };
 
-/**
- * Measures where the focus lands after each modal closes.
- *
- * The control comes first: a modal whose own surface held the focus gives it
- * back, so the two readings after it are about the field, not about modals in
- * general.
- */
 const modalFocusRestoreSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor("restore-control-trigger");
 
-    // The control: nothing focusable inside, the surface holds the focus.
     yield* ctx.host.click("restore-control-trigger");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -10192,7 +9126,6 @@ const modalFocusRestoreSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "restore-control-trigger",
     );
 
-    // A field the modal focused itself, after the surface existed.
     yield* ctx.host.click("restore-manual-trigger");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -10208,7 +9141,6 @@ const modalFocusRestoreSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "restore-manual-trigger",
     );
 
-    // A field that took the focus at mount, before the modal looked.
     yield* ctx.host.click("restore-auto-trigger");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -10218,9 +9150,7 @@ const modalFocusRestoreSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.key("escape");
     yield* Effect.sleep(SETTLE);
-    // The modal records the opener in the render that opens it, before the
-    // field exists, so `autoFocus` cannot steal the restore target: the focus
-    // comes back to the trigger.
+
     yield* ctx.expectEqual(
       "a field that took the focus at mount gives it back to the opener",
       yield* focusedAfterPaint(ctx),
@@ -10228,22 +9158,11 @@ const modalFocusRestoreSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/**
- * The surfaces a chart or an image preview would draw with.
- *
- * A real chart is generated markup, so the SVG is `source` (no file). Measured:
- * one `<svg>` paints a **tinted mask**, so the chart source is mounted beside
- * one shape per layer, five stacked `<svg>` elements each carrying its own tint.
- * The image arrives the two ways an app supplies one — a data URL and a pixel
- * buffer it already holds — and the canvas sits on a fill of its own, so the
- * frame shows whether it paints anything at all.
- */
 const ContentSurfacesProbe = (): ReactNode => {
   const theme = useTheme();
   const image = useRef<ImgInstance>(null);
   const [imageStatus, setImageStatus] = useState("pending");
-  // The upstream waveform example uses a layout effect: the pixels must be on
-  // the element before the frame that paints it.
+
   useLayoutEffect(() => {
     const instance = image.current;
     if (instance === null) {
@@ -10332,7 +9251,6 @@ const ContentSurfacesProbe = (): ReactNode => {
   );
 };
 
-/** How many pixels of `colour` the capture under `name` paints. */
 const painted = (
   ctx: Smoke.AsyncSmokeContext,
   name: string,
@@ -10342,7 +9260,6 @@ const painted = (
     Pixels.countColour(frame, new Pixels.Rgba({ ...colour, a: 0xff })),
   );
 
-/** Asserts that the capture paints `colour`. */
 const expectPaints = (
   ctx: Smoke.AsyncSmokeContext,
   name: string,
@@ -10353,7 +9270,6 @@ const expectPaints = (
     ctx.expectEqual(label, count > 0, true),
   );
 
-/** Asserts that the capture paints no pixel of `colour`. */
 const expectAbsent = (
   ctx: Smoke.AsyncSmokeContext,
   name: string,
@@ -10369,9 +9285,6 @@ const contentSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.waitFor("content-probe");
     yield* ctx.host.capture("content");
 
-    // 1. One `<svg>` with a whole chart in it: GPUI rasterises the markup and
-    //    paints it in `style.color`, so every `fill` a chart author writes is
-    //    replaced by one tint.
     yield* ctx.expectSome(
       "the svg surface occupies space",
       Option.fromNullishOr(yield* ctx.host.bounds("chart-svg")),
@@ -10389,8 +9302,6 @@ const contentSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "an svg does not paint the fills its markup names",
     );
 
-    // 2. One shape per layer, each with its own tint: the only way this runtime
-    //    can show a multi-colour chart.
     yield* Effect.forEach(
       LAYER_SHAPES,
       (shape) =>
@@ -10409,8 +9320,6 @@ const contentSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       { concurrency: 1 },
     );
 
-    // 3. An image the app holds as bytes: the route for a screenshot or a
-    //    decoded photo, which needs no file on disk.
     yield* ctx.expectSome(
       "the buffer image occupies space",
       Option.fromNullishOr(yield* ctx.host.bounds("buffer-image")),
@@ -10427,8 +9336,6 @@ const contentSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "an image paints a pixel buffer set after mount",
     );
 
-    // 4. A data URL is the same bytes in a string; whether it loads is the
-    //    runtime's answer, so this check records what the frame shows.
     yield* ctx.expectSome(
       "the data-url image occupies space",
       Option.fromNullishOr(yield* ctx.host.bounds("url-image")),
@@ -10440,9 +9347,6 @@ const contentSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "a data-url image paints its bytes",
     );
 
-    // 5. A canvas is a blank host element: it tracks no painted bounds and
-    //    paints nothing, so the fill behind it shows through. Measured on
-    //    0.11.0 — the matrix's "no 2D-context or draw props" claim, painted.
     yield* ctx.expectSome(
       "the canvas parent occupies space",
       Option.fromNullishOr(yield* ctx.host.bounds("canvas-parent")),
@@ -10462,22 +9366,12 @@ const contentSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/** The wheel probe's content: 24 rows of 40px in a 320×200 viewport. */
 const SCROLL_ROWS = 24;
 const SCROLL_ROW_HEIGHT = 40;
 const SCROLL_VIEWPORT = { width: 320, height: 200 } as const;
-/** Where the offset stops at the end: the viewport minus the content. */
+
 const SCROLL_MAX = SCROLL_VIEWPORT.height - SCROLL_ROWS * SCROLL_ROW_HEIGHT;
 
-/**
- * A vertical strip and the two scroll events, plus a jump control that calls the
- * last row's own `scrollIntoView`.
- *
- * The strip has no padding: the content height is exactly `rows × height`, so
- * the probe can name the clamp a wheel has to stop at instead of only checking
- * that the offset moved. Every row is a fixed height, so the text cannot grow
- * it.
- */
 const ScrollProbe = (): ReactNode => {
   const theme = useTheme();
   const [events, setEvents] = useState(0);
@@ -10611,7 +9505,6 @@ const scrollSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "x=0 y=0",
     );
 
-    // The wheel is hit-tested, so an event over a sibling reaches no scroller.
     yield* ctx.host.wheel("scroll-outside", 0, -200);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -10625,7 +9518,6 @@ const scrollSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "events=0 delta=0",
     );
 
-    // GPUI's sign convention: a negative delta scrolls down.
     yield* ctx.host.wheel("scroll-view", 0, -200);
     yield* Effect.sleep(SETTLE);
     const scrolled = yield* offsetOf;
@@ -10654,7 +9546,6 @@ const scrollSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       0,
     );
 
-    // The row's own `scrollIntoView`, with no wheel involved.
     yield* ctx.host.click("scroll-jump");
     yield* Effect.sleep(Duration.millis(300));
     const jumped = yield* offsetOf;
@@ -10683,28 +9574,12 @@ const scrollSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("scroll-end");
   });
 
-/**
- * A scroll region reached by a real traversal and paged by real keys.
- *
- * `ScrollAreaViewport` is a tab stop with a keyboard contract — arrows move one
- * density row, PageUp/PageDown a viewport, Home/End the ends — but its handler
- * stands down unless the focus is its own, so the **window's** delivery path is
- * the thing to measure: a traversal has to land on the stop before any key can
- * move it, a chord has to stay the platform's, and a field inside has to keep
- * its arrows. The offscreen suite reaches the same contract through
- * `runtime.keyDown(elementId, …)`, which names the target and so proves none of
- * that (README §`keyboard-scroll-lifecycle`).
- *
- * The fixture (`keyboard-scroll.ts`) sizes both regions and predicts each
- * offset; the checks assert the value the renderer holds after the key.
- */
 const KeyboardScrollProbe = (): ReactNode => (
   <PrimitiveThemeProvider theme={palettes.dark}>
     <KeyboardScrollStage />
   </PrimitiveThemeProvider>
 );
 
-/** A focusable, unfilled control: the tab stop on either side of a region. */
 const KeyboardScrollStop = ({
   testId,
   label,
@@ -10937,7 +9812,6 @@ const keyboardScrollSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     const verticalPage = VERTICAL_VIEWPORT.height;
     const horizontalPage = HORIZONTAL_VIEWPORT.width;
 
-    /** The offset the renderer holds for one region. */
     const offsetOf = (
       id: string,
     ): Effect.Effect<
@@ -10951,12 +9825,6 @@ const keyboardScrollSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         );
       });
 
-    /**
-     * Presses one key and holds the renderer's answer to the prediction.
-     *
-     * The renderer moves the scroller; the fixture only says where the move
-     * should end, so a drifted contract fails on the window's own value.
-     */
     const moved = (
       id: string,
       action: ScrollAction,
@@ -10977,8 +9845,6 @@ const keyboardScrollSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         );
       });
 
-    // The traversal is the only route a window has into the region: a key aimed
-    // at an element that is not focused cannot scroll it.
     yield* ctx.host.focusElement(before);
     yield* ctx.expectEqual(
       "the control before the region takes the focus",
@@ -11007,8 +9873,6 @@ const keyboardScrollSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* moved(vertical, "up", "y", -2 * line, verticalPage, VERTICAL_MAX);
     yield* moved(vertical, "pagedown", "y", -line, verticalPage, VERTICAL_MAX);
 
-    // A chord belongs to the platform: `Cmd+Home` is a document shortcut, not a
-    // scroll, so the region keeps the offset it had.
     yield* ctx.host.key("cmd-home");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectNear(
@@ -11033,7 +9897,7 @@ const keyboardScrollSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       verticalPage,
       VERTICAL_MAX,
     );
-    // A third page asks for more than the content has: the runtime clamps it.
+
     yield* moved(
       vertical,
       "pagedown",
@@ -11058,9 +9922,6 @@ const keyboardScrollSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* moved(vertical, "up", "y", 0, verticalPage, VERTICAL_MAX);
     yield* moved(vertical, "pageup", "y", 0, verticalPage, VERTICAL_MAX);
 
-    // A field inside the region keeps its keys: the viewport scrolls only while
-    // the focus is its own. A press starts the platform's text session, which a
-    // programmatic focus does not (README §`text-input`).
     yield* ctx.host.click(field);
     yield* ctx.expectEqual(
       "the field inside the region takes the focus",
@@ -11083,8 +9944,6 @@ const keyboardScrollSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       0,
     );
 
-    // A sideways region answers the horizontal keys and pages by its width; a
-    // vertical key is not its own, so it moves nothing.
     yield* ctx.host.focusElement(horizontal);
     yield* ctx.expectEqual(
       "a native focus reaches the sideways region",
@@ -11120,7 +9979,6 @@ const keyboardScrollSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* moved(horizontal, "home", "x", 0, horizontalPage, HORIZONTAL_MAX);
 
-    // A region with `focusable={false}` is no tab stop and answers no keys.
     yield* ctx.host.focusElement(horizontal);
     yield* ctx.host.focusNext();
     yield* ctx.expectEqual(
@@ -11138,17 +9996,6 @@ const keyboardScrollSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("keyboard-scroll");
   });
 
-/**
- * A scroller inside a scroller: the page a pane's list sits in.
- *
- * A dock pane, a dialog body and a settings form all put a scroller inside
- * another one, so the wheel has a routing decision to make: does the inner
- * scroller keep it while it can move, does the outer one take it when the inner
- * reaches its end, and does the inner's event reach an ancestor's `onScroll`
- * handler? The fixture's geometry (`nested-scroll.ts`) puts the inner scroller
- * wholly inside the page and the page-only wheel on a filler row the list does
- * not cover, so each wheel can only be aimed at the scroller it names.
- */
 const NestedScrollProbe = (): ReactNode => {
   const theme = useTheme();
   const [inner, setInner] = useState<Smoke.Offset>({ x: 0, y: 0 });
@@ -11356,7 +10203,6 @@ const nestedScrollSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.waitFor("nested-inner-row-0");
     yield* Effect.sleep(SETTLE);
 
-    /** A scroller's own offset; `NaN` while it has no scroll handle. */
     const offsetOf = (
       testId: string,
     ): Effect.Effect<Smoke.Offset, Smoke.SmokeHostError> =>
@@ -11376,9 +10222,6 @@ const nestedScrollSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.expectEqual("the page starts at the top", outerOffset.y, 0);
 
-    // The geometry the two wheels rest on: the inner is wholly inside the
-    // outer's viewport, and the filler row the page-only wheel aims at starts
-    // below the inner, so that wheel cannot land on the list.
     const outerBox = yield* paintedBox(ctx, "nested-outer");
     const innerBox = yield* paintedBox(ctx, "nested-inner");
     const fillerBox = yield* paintedBox(ctx, `nested-filler-${OUTER_ONLY_ROW}`);
@@ -11396,7 +10239,6 @@ const nestedScrollSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // One wheel over the inner list: the measured routing question.
     yield* ctx.host.wheel("nested-inner", 0, INNER_STEP);
     yield* Effect.sleep(SETTLE);
     const innerMoved = yield* offsetOf("nested-inner");
@@ -11419,7 +10261,6 @@ const nestedScrollSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       `outer=x0 y${INNER_STEP} events=1`,
     );
 
-    // The one wheel that moves a single scroller: aimed below the list.
     yield* ctx.host.wheel(`nested-filler-${OUTER_ONLY_ROW}`, 0, -INNER_STEP);
     yield* Effect.sleep(SETTLE);
     const pageBack = yield* offsetOf("nested-outer");
@@ -11436,8 +10277,6 @@ const nestedScrollSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // At the inner's end the page still takes the whole delta: each scroller
-    // clamps against its own content, not the other's.
     yield* ctx.host.wheel("nested-inner", 0, -100000);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectNear(
@@ -11464,8 +10303,6 @@ const nestedScrollSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       `outer=x0 y${OUTER_MAX} events=3`,
     );
 
-    // The same question for the pane a dock actually ships: a virtual list,
-    // which is a native scroll host rather than an `overflow: "scroll"` box.
     yield* ctx.host.waitFor("nested-list-row-0");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -11500,21 +10337,12 @@ const nestedScrollSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("nested-scroll");
   });
 
-/**
- * Whether an open modal contains the wheel.
- *
- * Every reading is a scroller's own offset, captured by `scrollOffset`, plus the
- * page's readout of the wheels its `onScroll` heard: a page scroller that moved
- * without hearing anything would be a paint the probe cannot explain, and a page
- * that heard a wheel aimed at the modal would be the leak this measures.
- */
 const modalScrollSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor(MODAL_SCROLL_IDS.opener);
     yield* ctx.host.waitFor(MODAL_SCROLL_IDS.page);
     yield* Effect.sleep(SETTLE);
 
-    /** A scroller's own offset; `NaN` while it has no scroll handle. */
     const offsetOf = (
       testId: string,
     ): Effect.Effect<Smoke.Offset, Smoke.SmokeHostError> =>
@@ -11525,10 +10353,6 @@ const modalScrollSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         })),
       );
 
-    // ── The page is a scroller the window really moves ───────────
-    // The wheel is aimed at a page row rather than at the page box: a row is
-    // narrow, so its centre is left of the centred modal later on, which is the
-    // point the veil covers.
     const pageBox = yield* paintedBox(ctx, MODAL_SCROLL_IDS.page);
     yield* ctx.expectEqual(
       "the page paints the viewport its rows scroll in",
@@ -11577,12 +10401,10 @@ const modalScrollSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       pageReadout({ x: 0, y: 0, events: 2 }, pageBox.height),
     );
 
-    // ── The modal opens over the page ────────────────────────────
     yield* ctx.host.focusElement(MODAL_SCROLL_IDS.opener);
     yield* ctx.host.click(MODAL_SCROLL_IDS.opener);
     yield* settlePainted(ctx, MODAL_SCROLL_IDS.dialog);
-    // The surface travels in on its entry level; a box read on the mount's
-    // frame names the journey rather than the resting box.
+
     yield* Effect.sleep(Duration.millis(400));
     yield* ctx.expectEqual(
       "the open modal takes the focus",
@@ -11627,7 +10449,6 @@ const modalScrollSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // ── A wheel on the veil, outside the surface, moves nothing ───────
     yield* ctx.host.wheel("page-row-10", 0, MODAL_WHEEL);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -11646,7 +10467,6 @@ const modalScrollSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       pageReadout({ x: 0, y: 0, events: 2 }, pageBox.height),
     );
 
-    // ── A wheel inside the modal moves the modal, not the page ────────
     yield* ctx.host.wheel("dialog-row-5", 0, MODAL_WHEEL);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectNear(
@@ -11671,7 +10491,6 @@ const modalScrollSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       dialogReadout({ x: 0, y: MODAL_WHEEL, events: 1 }),
     );
 
-    // ── Past the end the modal clamps; the page still does not follow ─────
     yield* ctx.host.wheel(MODAL_SCROLL_IDS.dialog, 0, MODAL_WHEEL * 100);
     yield* Effect.sleep(SETTLE);
     const clamped = (yield* offsetOf(MODAL_SCROLL_IDS.dialog)).y;
@@ -11707,7 +10526,6 @@ const modalScrollSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("modal-scroll");
 
-    // ── Dismissed, the page is exactly where the reader left it ─────────
     yield* ctx.host.key("escape");
     yield* ctx.expectEqual(
       "Escape dismisses the modal",
@@ -11737,16 +10555,8 @@ const modalScrollSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/** The split probe's container width, inside the window. */
 const SPLIT_CONTAINER = 500;
 
-/**
- * A two-pane split whose divider is the resize handle.
- *
- * The pane widths are the split's own state; the readout is the caller's copy of
- * each `onResize`, so a drag that repaints the pane but never reaches the caller
- * fails separately from one that does not move at all.
- */
 const SplitPaneProbe = (): ReactNode => {
   const theme = useTheme();
   const [size, setSize] = useState(320);
@@ -11848,8 +10658,6 @@ const splitSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // Every drag stays inside the window: a pointer that leaves it stops
-    // delivering moves, which would measure the OS rather than the split.
     yield* ctx.host.drag("split-divider", 80, 0);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -11896,8 +10704,6 @@ const splitSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
 
     yield* ctx.host.capture("split-resized");
 
-    // The keyboard half. A divider reachable only by pointer is not operable,
-    // and the ring is the cue that tells a keyboard reader where the keys go.
     const ring = yield* ctx.expectSome(
       "the theme names a ring colour",
       Option.fromNullishOr(Pixels.hexToRgba(palettes.dark.colors.ring)),
@@ -11996,21 +10802,6 @@ const splitSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("split-keyboard");
   });
 
-/**
- * The shipped `@gpuixui/dock` `SplitPane`, not a probe-local copy.
- *
- * `split-pane-lifecycle` measures the runtime rules a divider must honour; this
- * probe measures that the component the library actually ships composes them —
- * the controlled `size`, the painted pane, the Tab stop, the ring and the
- * arrow/Home/End steps. A local split would keep the feasibility measurement
- * green while the shipped component drifted.
- *
- * The pointer half is **blocked by the component**, not by the runtime: a press
- * on the shipped divider focuses nothing and reports no resize, because its
- * absolutely positioned highlight layer takes the hit test. That is recorded for
- * the dock owner in `.agents/slop/TODO.md` (`Divider`'s pointer path) and the probe measures
- * the keyboard contract until it lands.
- */
 const DockSplitProbe = (): ReactNode => {
   const theme = useTheme();
   const [size, setSize] = useState(320);
@@ -12118,7 +10909,6 @@ const dockSplitSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // The ring is the cue that tells a keyboard reader where the keys go.
     const ring = yield* ctx.expectSome(
       "the theme names a ring colour",
       Option.fromNullishOr(Pixels.hexToRgba(palettes.dark.colors.ring)),
@@ -12206,18 +10996,10 @@ const dockSplitSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("dock-split-keyboard");
   });
 
-/** The virtual list probe's row height and count, and its viewport. */
 const VLIST_ROWS = 5000;
 const VLIST_ROW_HEIGHT = 32;
 const VLIST_VIEWPORT = 280;
 
-/**
- * A `<virtual-list>` of 5 000 rows in a 280px viewport.
- *
- * The retained tree holds all 5 000 children; the runtime builds and paints only
- * those near the viewport, so the check is the painted text, never the child
- * count. `onVisibleRange` is the event a table needs to know where it is.
- */
 const VirtualListProbe = (): ReactNode => {
   const theme = useTheme();
   const [first, setFirst] = useState(-1);
@@ -12289,7 +11071,6 @@ const VirtualListProbe = (): ReactNode => {
   );
 };
 
-/** The `row <n>` lines the window actually painted. */
 const paintedRows = (lines: ReadonlyArray<string>): number =>
   Arr.length(Arr.filter(lines, (line) => Str.startsWith("row ")(line)));
 
@@ -12321,8 +11102,6 @@ const virtualListSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "first=-1 last=-1 reports=0",
     );
 
-    // A `<virtual-list>` reports no painted bounds of its own, so the wheel is
-    // aimed at the frame it fills; the hit test still lands on the list.
     yield* ctx.host.wheel("vlist-frame", 0, -400);
     yield* Effect.sleep(Duration.millis(300));
     const scrolled = yield* ctx.host.paintedText();
@@ -12344,8 +11123,6 @@ const virtualListSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("vlist-scrolled");
 
-    // A second scroll's report carries the range the first one reached: the
-    // event lags one scroll, so a table cannot read the current window from it.
     yield* ctx.host.wheel("vlist-frame", 0, -400);
     yield* Effect.sleep(Duration.millis(300));
     const secondReport = yield* ctx.host.text("vlist-range");
@@ -12360,7 +11137,6 @@ const virtualListSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // Past the start clamps back to the first row.
     yield* ctx.host.wheel("vlist-frame", 0, 100000);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -12370,13 +11146,6 @@ const virtualListSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/**
- * One paginated list with a loading void at the edge `direction` names.
- *
- * `correct` applies `loadingRowRestore` after the commit; the twin without it
- * lets the runtime keep whatever row it anchored, which is the behaviour the
- * probe measures against.
- */
 const LoadingRowList = ({
   testId,
   prefix,
@@ -12410,7 +11179,7 @@ const LoadingRowList = ({
           (anchor) => ({ elementId, anchor }),
         ),
     );
-    // The reader's place, decided before the commit and applied after it.
+
     const arrival = Option.flatMap(target, ({ elementId, anchor }) =>
       Option.map(
         loadingRowRestore({
@@ -12423,9 +11192,7 @@ const LoadingRowList = ({
         (scroll) => ({ elementId, scroll }),
       ),
     );
-    // Commit the splice **synchronously** before queueing the scroll: the
-    // runtime applies a queued list scroll on the next render, and a scroll
-    // queued before the splice lands would name rows in the old child list.
+
     flushSync(() => setPage(page + 1));
     if (!correct) return;
     Option.match(arrival, {
@@ -12511,14 +11278,6 @@ const LoadingRowList = ({
   );
 };
 
-/**
- * The loading-row correction, measured on both edges of a paginated history.
- *
- * Four lists, identical geometry, in two pairs (top void and bottom void): the
- * left pair is left to the runtime, the right pair re-anchors. The reader waits
- * in the void, a page arrives, and the probe asserts the pixel the message they
- * were reading keeps — or loses.
- */
 const LoadingRowProbe = (): ReactNode => {
   const theme = useTheme();
   return (
@@ -12607,30 +11366,16 @@ const LoadingRowProbe = (): ReactNode => {
   );
 };
 
-/**
- * The `loading-row-correction` steps: the same arrival on both edges, once left
- * to the runtime and once re-anchored by the app.
- *
- * Every expected number comes from `loading-row.ts`, so the probe cannot drift
- * from the rule its unit test guards.
- */
 const loadingRowSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
-    /** The painted box of `testId`, or `None` when the row is not painted. */
     const boxOf = (testId: string) =>
       Effect.map(ctx.host.bounds(testId), Option.fromNullishOr);
-    /** The window y of `testId`'s top edge, with the check that names it missing. */
+
     const topOf = (label: string, testId: string) =>
       Effect.flatMap(boxOf(testId), (box) =>
         Effect.map(ctx.expectSome(label, box), (bounds) => bounds.y),
       );
-    /**
-     * A row's y relative to its list's frame.
-     *
-     * The renderer reports window coordinates, and the four lists sit below the
-     * probe's caption, so an absolute `y` would assert the layout of the probe
-     * instead of the list's own placement.
-     */
+
     const yIn =
       (origin: number) =>
       (
@@ -12648,7 +11393,7 @@ const loadingRowSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         Effect.map(ctx.host.listAnchor(testId), Option.fromNullishOr),
         (anchor) => ctx.expectSome(label, anchor),
       );
-    /** A row that paints no pixel inside its list's frame: above or below it. */
+
     const offScreenIn =
       (origin: number) =>
       (
@@ -12671,7 +11416,7 @@ const loadingRowSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
             true,
           ),
         );
-    /** Presses a list's loader and waits past the commit and the splice. */
+
     const load = (testId: string) =>
       Effect.gen(function* () {
         yield* ctx.host.click(`${testId}-load`);
@@ -12685,8 +11430,7 @@ const loadingRowSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     const newerLast = NEWER_FIRST + MESSAGE_ROWS - 1;
 
     yield* ctx.host.waitFor(`${topNaive}-row-${OLDER_FIRST}`);
-    // `waitFor` answers from the automation tree, which exists a frame before
-    // the paint: `bounds` is a painted value, so the four frames need one.
+
     yield* Effect.sleep(Duration.millis(300));
 
     const topNaiveTop = yield* topOf(
@@ -12713,8 +11457,6 @@ const loadingRowSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     const bottomNaiveOff = offScreenIn(bottomNaiveTop);
     const topFixedOff = offScreenIn(topFixedTop);
 
-    // 1. Premise: while the page is in flight the void IS the list's anchor,
-    //    and the message the reader is reading sits one void height below it.
     const restAnchor = yield* anchorOf(
       "the top list reports its anchor",
       topNaive,
@@ -12755,12 +11497,9 @@ const loadingRowSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // 2. The same page arrives in both top lists.
     yield* load(topNaive);
     yield* load(topFixed);
 
-    // 3. Left to the runtime, the void stays put and the page takes the
-    //    reader's screen: this is the defect the correction exists for.
     yield* ctx.expectEqual(
       "the naive list still anchors the void",
       (yield* anchorOf("the naive list reports its anchor", topNaive))
@@ -12781,8 +11520,6 @@ const loadingRowSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       `${topNaive}-row-${OLDER_FIRST}`,
     );
 
-    // 4. Re-anchored, the page fills the void's old extent and the message the
-    //    reader was on does not move a pixel.
     const corrected = yield* anchorOf(
       "the re-anchored list reports its anchor",
       topFixed,
@@ -12816,9 +11553,6 @@ const loadingRowSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       `pages=1 corrected=1 guarded=0 request=${1 + PAGE_ROWS}:-${EDGE_HEIGHT}`,
     );
 
-    // 5. A second page, with the reader already past the void: the anchor is a
-    //    message row, so the runtime's own index shift holds the screen and the
-    //    app must NOT correct again.
     yield* load(topFixed);
     yield* ctx.expectNear(
       "a second page leaves the reader's message still",
@@ -12853,9 +11587,6 @@ const loadingRowSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "pages=1 corrected=0 guarded=0 request=none",
     );
 
-    // 6. The bottom edge: a bottom-aligned list resting at its end reports the
-    //    at-end sentinel, and its trailing void's top edge is one viewport less
-    //    a void below the top.
     const endAnchor = yield* anchorOf(
       "the bottom list reports its anchor",
       bottomNaive,
@@ -12881,8 +11612,6 @@ const loadingRowSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // 7. Left to the runtime, the sentinel follows the new end and the reader
-    //    jumps: the message they were on leaves the screen.
     yield* load(bottomNaive);
     yield* ctx.expectEqual(
       "the naive append follows the sentinel to the new row count",
@@ -12904,8 +11633,6 @@ const loadingRowSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // 8. Re-anchored, the page's first row takes the void's old top edge and
-    //    the row above the void keeps its pixel.
     yield* load(bottomFixed);
     const appended = yield* anchorOf(
       "the re-anchored bottom list reports its anchor",
@@ -12940,8 +11667,6 @@ const loadingRowSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       `pages=1 corrected=1 guarded=0 request=${MESSAGE_ROWS}:-${VOID_TOP}`,
     );
 
-    // 9. Return to the end and load again: the sentinel rule applies a second
-    //    time, so the correction is not a one-shot.
     yield* ctx.host.wheel(`${bottomFixed}-frame`, 0, -100000);
     yield* Effect.sleep(Duration.millis(250));
     yield* ctx.expectEqual(
@@ -12987,15 +11712,8 @@ const loadingRowSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("loading-row-corrected");
   });
 
-/** The fixed pane the resize probe lays its flexible region against. */
 const RESIZE_SIDEBAR = 120;
 
-/**
- * A `key=value` field out of a readout, or `-1` when the key is absent.
- *
- * A missing key must never read as `0`: the probe asserts that a width changed,
- * and `0` is a plausible stale width.
- */
 const readoutNumber = (readout: string, key: string): number =>
   Option.getOrElse(
     pipe(
@@ -13006,29 +11724,6 @@ const readoutNumber = (readout: string, key: string): number =>
     () => -1,
   );
 
-/**
- * `window-resize-reflow` — the window an app is laid out in changes, and both
- * channels a panel has to it report the change.
- *
- * A workspace is resized by its user, not only by a sibling pane: a split's
- * `max` is the caller's number, and a sidebar, inspector or dock that re-clamps
- * only on `onLayout` still needs the window's own size to pass as that number.
- * Nothing had measured either channel. The renderer's `getWindowSize` is
- * documented as having once answered a hardcoded 800x600, and `useWindowSize()`
- * samples it every 100ms — no probe had read either against a real layout.
- *
- * The probe lays a 120px sidebar beside a flexible centre that fills the row,
- * then zooms the window through the only lever the binding exposes. A window
- * open at 900x520 is a user frame, so the platform's zoom takes it to its
- * standard frame and calling it again restores the user frame; the probe waits
- * for each frame before asserting, because the hook polls and the zoom animates.
- *
- * What it measures: the renderer's size is the box the layout occupies (the
- * sidebar plus centre equal it, so a constant would fail); the app's
- * `useWindowSize()` reports the same pair; zoom changes the size, the flexible
- * pane reflows to it and `onLayout` reports the new width; and the restore puts
- * both back.
- */
 const WindowResizeProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -13096,21 +11791,12 @@ const WindowResizeProbe = (): ReactNode => {
 
 const windowResizeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
-    /** The app's own read of the window, as its readout prints it. */
     const appSize = () =>
       Effect.map(ctx.host.text("resize-window-readout"), (readout) => ({
         width: readoutNumber(readout, "w"),
         height: readoutNumber(readout, "h"),
       }));
-    /**
-     * The app's read once its hook has sampled the window.
-     *
-     * `useWindowSize()` samples the renderer every 100ms, so the mount's first
-     * frame can carry the hook's placeholder. The opening checks are about the
-     * number the app reports, not about how soon its first sample landed, so
-     * they wait for a positive pair before comparing — a hook that never
-     * samples still fails, on the placeholder it settled on.
-     */
+
     const settledAppSize = () =>
       Effect.map(
         settleUntil(
@@ -13123,19 +11809,13 @@ const windowResizeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
           height: readoutNumber(readout, "h"),
         }),
       );
-    /** The centre pane's `onLayout` count and last reported width. */
+
     const centreReport = () =>
       Effect.map(ctx.host.text("resize-centre-readout"), (readout) => ({
         width: readoutNumber(readout, "w"),
         reports: readoutNumber(readout, "reports"),
       }));
-    /**
-     * The centre's report once its first layout pass has run.
-     *
-     * A fresh mount reports `reports=0` until the runtime lays the row out, and
-     * the frame that carries the report depends on the box's load; reading it
-     * on the mount's first frame measured `w=0` against a painted 780.
-     */
+
     const settledCentreReport = () =>
       Effect.map(
         settleUntil(
@@ -13147,21 +11827,13 @@ const windowResizeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
           reports: readoutNumber(readout, "reports"),
         }),
       );
-    /** The centre pane's painted box. */
+
     const centreBounds = () =>
       Effect.flatMap(
         Effect.map(ctx.host.bounds("resize-centre"), Option.fromNullishOr),
         (bounds) => ctx.expectSome("the centre pane painted", bounds),
       );
-    /**
-     * The window's size after a zoom has settled in **both** channels.
-     *
-     * `zoomWindow` is animated and the app's hook polls every 100ms, so a single
-     * frame after the call proves neither. The helper samples until the
-     * renderer's box changed and `useWindowSize` names it, then returns the
-     * renderer's size; a timeout returns what it last read so the assertion
-     * reports the number the app actually shows.
-     */
+
     const settledSize = (previous: Smoke.Size) => {
       const poll = (
         tries: number,
@@ -13180,7 +11852,6 @@ const windowResizeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       return poll(12);
     };
 
-    // 1. The renderer's size is a real box and the app reads the same one.
     const size = yield* ctx.host.windowSize();
     const app = yield* settledAppSize();
     yield* ctx.expectEqual(
@@ -13199,8 +11870,6 @@ const windowResizeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       Math.round(size.height),
     );
 
-    // 2. That number is the box the layout occupies, not a constant: the row
-    //    fills it and the flexible pane takes what the sidebar leaves.
     const centre = yield* centreBounds();
     yield* ctx.expectNear(
       "the sidebar plus the centre fill the window's width",
@@ -13215,8 +11884,6 @@ const windowResizeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // 3. Zoom changes the window. The app's hook follows it, and the flexible
-    //    pane reflows without the app writing a width.
     const reportsBefore = (yield* centreReport()).reports;
     yield* ctx.host.zoomWindow();
     const zoomed = yield* settledSize(size);
@@ -13251,9 +11918,6 @@ const windowResizeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("window-zoomed");
 
-    // 4. Zoom back: the window returns to the size it opened at, and so does
-    //    the layout. The probe leaves the window as it found it for the probes
-    //    that ran before it and for the next run.
     yield* ctx.host.zoomWindow();
     const restored = yield* settledSize(zoomed);
     yield* ctx.expectNear(
@@ -13278,7 +11942,6 @@ const windowResizeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("window-restored");
   });
 
-/** The app-level shortcut probe: a palette toggled by the window's own key handler. */
 const WindowKeyProbe = (): ReactNode => {
   const theme = useTheme();
   const [open, setOpen] = useState(false);
@@ -13406,8 +12069,6 @@ const windowKeySteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "open=false last=escape",
     );
 
-    // The shortcut belongs to the window, so moving the focus to a control with
-    // no key handler must not take it away.
     yield* ctx.host.click("shortcut-other");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -13427,23 +12088,14 @@ const windowKeySteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/** The gap the select's list opens with, measured back from the paint. */
 const SELECT_GAP = 6;
 
-/** One option the probe's selects offer. */
 interface ProbeOption {
   readonly value: string;
   readonly label: string;
   readonly disabled?: boolean;
 }
 
-/**
- * The options every select in the probe offers.
- *
- * `Archived` is disabled and comes last on purpose: an arrow that starts on
- * `Monthly` has to wrap past it to reach `Daily`, so the skip cannot be
- * explained by the list simply ending.
- */
 const SELECT_OPTIONS: ReadonlyArray<ProbeOption> = [
   { value: "daily", label: "Daily" },
   { value: "weekly", label: "Weekly" },
@@ -13451,7 +12103,6 @@ const SELECT_OPTIONS: ReadonlyArray<ProbeOption> = [
   { value: "archived", label: "Archived", disabled: true },
 ];
 
-/** One select, wired to a readout that prints what React received. */
 const ProbeSelect = ({
   testId,
   disabled = false,
@@ -13535,18 +12186,6 @@ const ProbeSelect = ({
   );
 };
 
-/**
- * The runtime's own `Select` in a window.
- *
- * The list is the runtime's, not the library's: it paints in an anchored layer,
- * takes the focus, moves a highlight over the enabled rows and dismisses on
- * Escape or an outside press. The shipped primitive is a themed wrapper around
- * these parts and passes only a **root** `testId`, so a probe built on the
- * wrapper could not address the trigger or a row. The parts mounted here are
- * the ones the wrapper composes, and the measurement is of the behaviour both
- * share — the claim in `.agents/slop/COMPONENTS.md` that open state, positioning and
- * dismissal "are the runtime's".
- */
 const SelectProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -13595,9 +12234,7 @@ const SelectProbe = (): ReactNode => {
       >
         {`value=${value} changes=${changes}`}
       </text>
-      {/* The shipped wrapper, addressed the way an automation test has to
-          address it: the root paints only its width, so the trigger and the
-          data-driven rows are the locators (`triggerTestId`/`itemTestId`). */}
+      {}
       <PrimitiveThemeProvider theme={palettes.dark}>
         <PrimitiveSelect
           label="Shipped cadence"
@@ -13631,8 +12268,7 @@ const SelectProbe = (): ReactNode => {
           options={SELECT_OPTIONS}
         />
       </div>
-      {/* Top-right: a press outside the list has to land on something that is
-          not the list, and nothing the list opens over can cover this corner. */}
+      {}
       <div
         style={{
           position: "absolute",
@@ -13679,14 +12315,13 @@ const SelectProbe = (): ReactNode => {
 
 const selectSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
-    /** Whether `testId` is absent from the window's tree. */
     const painted = (
       testId: string,
     ): Effect.Effect<boolean, Smoke.SmokeHostError> =>
       Effect.map(ctx.host.bounds(testId), (bounds) =>
         Option.isSome(Option.fromNullishOr(bounds)),
       );
-    /** Opens the enabled select and waits one paint. */
+
     const open = Effect.flatMap(ctx.host.click("select-trigger"), () =>
       Effect.sleep(SETTLE),
     );
@@ -13708,7 +12343,6 @@ const selectSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       false,
     );
 
-    // The press: the list paints in the runtime's layer, below its trigger.
     yield* open;
     const trigger = yield* paintedBox(ctx, "select-trigger");
     const list = yield* paintedBox(ctx, "select-list");
@@ -13741,7 +12375,6 @@ const selectSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("select-open");
 
-    // A pointer selects a row, and the trigger repaints with its label.
     yield* ctx.host.click("select-row-weekly");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -13761,8 +12394,6 @@ const selectSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("select-picked");
 
-    // The keyboard path: the list opens on the selected row, one arrow moves the
-    // highlight off it, and Enter selects the row the highlight landed on.
     yield* open;
     yield* ctx.host.key("down");
     yield* Effect.sleep(SETTLE);
@@ -13774,7 +12405,6 @@ const selectSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "value=monthly changes=2",
     );
 
-    // From the last enabled row, the next arrow wraps past the disabled one.
     yield* open;
     yield* ctx.host.key("down");
     yield* Effect.sleep(SETTLE);
@@ -13786,7 +12416,6 @@ const selectSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "value=daily changes=3",
     );
 
-    // Escape closes without choosing, and gives the focus back.
     yield* open;
     yield* ctx.host.key("escape");
     yield* Effect.sleep(SETTLE);
@@ -13806,7 +12435,6 @@ const selectSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "select-trigger",
     );
 
-    // An outside press closes it too, and reaches the control it landed on.
     yield* open;
     yield* ctx.host.click("select-elsewhere");
     yield* Effect.sleep(SETTLE);
@@ -13826,7 +12454,6 @@ const selectSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "value=daily changes=3",
     );
 
-    // A disabled row paints and refuses the choice; the list stays open.
     yield* open;
     yield* ctx.host.click("select-row-archived");
     yield* Effect.sleep(SETTLE);
@@ -13843,7 +12470,6 @@ const selectSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.key("escape");
     yield* Effect.sleep(SETTLE);
 
-    // The trigger toggles its own list closed.
     yield* open;
     yield* ctx.host.click("select-trigger");
     yield* Effect.sleep(SETTLE);
@@ -13853,7 +12479,6 @@ const selectSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       false,
     );
 
-    // A disabled select refuses the press entirely.
     yield* ctx.host.click("select-disabled-trigger");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -13867,9 +12492,6 @@ const selectSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "Daily",
     );
 
-    // The shipped wrapper half: `triggerTestId` and `itemTestId` are what make a
-    // Select driveable from automation at all, so these checks address the
-    // library's own control rather than the runtime parts.
     yield* ctx.expectContains(
       "the shipped trigger paints its selected label",
       yield* ctx.host.text("shipped-trigger"),
@@ -13910,8 +12532,6 @@ const selectSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       false,
     );
 
-    // The keyboard path is still the runtime's: the wrapper must not intercept
-    // it. Opening lands on the selected row, so one arrow reaches the next.
     yield* ctx.host.click("shipped-trigger");
     yield* Effect.sleep(SETTLE);
     yield* ctx.host.key("down");
@@ -13940,23 +12560,10 @@ const selectSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/**
- * The clipboard in a window: whether the platform's own copy and paste reach a
- * shipped field, and whether the application can see the keys at all.
- *
- * The runtime publishes no clipboard API — no write, no read — so a "copy"
- * action that must reach the OS can only be the platform's text-input action.
- * The probe types into nothing, selects with `cmd-a`, copies with `cmd-c` and
- * pastes into a second field with `cmd-v`, so the value the second field reports
- * through `onChange` is the system clipboard's, round-tripped by GPUI itself.
- * It writes **its own marker** to the clipboard and never reads what was there.
- */
 const ClipboardProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
-  // A marker unique to this mount: a previous run leaves its own text on the
-  // system clipboard, so a fixed string could pass a paste check without the
-  // copy having run at all.
+
   const [source, setSource] = useState(
     () => `gpuix clipboard ${Math.random().toString(36).slice(2, 8)}`,
   );
@@ -14059,8 +12666,7 @@ const ClipboardProbe = (): ReactNode => {
 const clipboardSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor("clipboard-source");
-    // The window handler is registered from an effect, so the first frame can
-    // paint before it is in place.
+
     yield* Effect.sleep(SETTLE);
     const marker = yield* ctx.host.text("clipboard-source-value");
     yield* ctx.expectContains(
@@ -14074,7 +12680,6 @@ const clipboardSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "",
     );
 
-    // Select all and copy in the source, then paste into the empty target.
     yield* ctx.host.click("clipboard-source");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -14109,7 +12714,6 @@ const clipboardSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("clipboard-pasted");
 
-    // Cut it back out: the platform's own cut must reach `onChange` too.
     yield* ctx.host.key("cmd-a");
     yield* ctx.host.key("cmd-x");
     yield* Effect.sleep(SETTLE);
@@ -14118,9 +12722,7 @@ const clipboardSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       yield* ctx.host.text("clipboard-target-value"),
       "",
     );
-    // The control: a cmd key reaches the window handler from a focusable control
-    // that has no key handler of its own, so the empty log below cannot be a
-    // broken registration.
+
     yield* ctx.host.click("clipboard-other");
     yield* ctx.host.key("cmd-k");
     yield* Effect.sleep(SETTLE);
@@ -14137,19 +12739,6 @@ const clipboardSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/**
- * A one-time code pasted in a window.
- *
- * `OTPField` claims a pasted code arrives as one multi-character `onChange`
- * because the runtime publishes no paste event, and nothing had measured that
- * claim in a window — the capability record says the field's paste is
- * unverified. The probe copies a marker from a shipped `Input` with the
- * platform's own select-all and copy, pastes it into a shipped `OTPField` with
- * `cmd-v`, and reads the value the caller receives: six cells filled from the
- * cell that took the paste, one completion, and the focus in the last cell. A
- * longer paste is truncated, pasting into a full code is not a second
- * completion, and pasting into the third cell rewrites from there.
- */
 const OtpPasteProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -14254,14 +12843,12 @@ const otpPasteSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       otpPasteReadout({ value: "", completes: 0, edits: 0 }),
     );
 
-    // Copy the six-character marker with the platform's own keys.
     yield* ctx.host.click(OTP_PASTE_SOURCE);
     yield* Effect.sleep(SETTLE);
     yield* ctx.host.key("cmd-a");
     yield* ctx.host.key("cmd-c");
     yield* Effect.sleep(SETTLE);
 
-    // Paste it into the first cell.
     yield* ctx.host.click(otpPasteCellId(0));
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -14288,7 +12875,6 @@ const otpPasteSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       otpPasteCellId(OTP_PASTE_LENGTH - 1),
     );
 
-    // Copy a nine-character marker and paste it over the full code.
     yield* ctx.host.click(OTP_PASTE_LONGER);
     yield* Effect.sleep(SETTLE);
     yield* ctx.host.key("cmd-a");
@@ -14316,7 +12902,6 @@ const otpPasteSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       otpPasteCellId(OTP_PASTE_LENGTH - 1),
     );
 
-    // Paste over the third cell: the run fills forward and keeps the first two.
     yield* ctx.host.click(otpPasteCellId(2));
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -14341,16 +12926,6 @@ const otpPasteSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("otp-pasted");
   });
 
-/**
- * The shipped `OTPField`'s key contract in a window.
- *
- * The field's header says the native text editor consumes Left/Right/Home/End/
- * Backspace on key **down**, so its own navigation runs on key **up**, and that a
- * Backspace whose native edit already emptied a cell must not clear the cell
- * before it too. Both were measured in the offscreen renderer; a window
- * dispatches keys differently, so the probe types a code into the shipped field,
- * logs both channels and asserts the focus, the code and the guard.
- */
 const OtpKeysProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -14453,7 +13028,6 @@ const otpKeysSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "down= up=",
     );
 
-    // Type a two-character code: each edit moves the focus to the next cell.
     yield* ctx.host.click(otpKeysCellId(0));
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -14486,8 +13060,6 @@ const otpKeysSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       otpKeysCellId(2),
     );
 
-    // An arrow on key down alone must not move the field: the native editor
-    // consumes it and the field's navigation is the key-up contract.
     yield* ctx.host.key("left");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -14508,7 +13080,6 @@ const otpKeysSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "up=left",
     );
 
-    // A real press is a down and an up: one move per pair, not two.
     yield* ctx.host.key("left");
     yield* ctx.host.keyUp("left");
     yield* Effect.sleep(SETTLE);
@@ -14518,7 +13089,6 @@ const otpKeysSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       otpKeysCellId(0),
     );
 
-    // Home and End are the same key-up contract.
     yield* ctx.host.key("end");
     yield* ctx.host.keyUp("end");
     yield* Effect.sleep(SETTLE);
@@ -14536,7 +13106,6 @@ const otpKeysSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       otpKeysCellId(0),
     );
 
-    // Move onto the second cell before pressing Backspace there.
     yield* ctx.host.key("right");
     yield* ctx.host.keyUp("right");
     yield* Effect.sleep(SETTLE);
@@ -14546,11 +13115,6 @@ const otpKeysSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       otpKeysCellId(1),
     );
 
-    // A window's automation sends a named key down but no text edit: a
-    // printable character is inserted, while Backspace produces no `onChange`,
-    // so the platform's native delete cannot be driven from this harness. The
-    // field then refuses to delete twice: the cell is filled, so its key-up
-    // handler leaves the code alone.
     yield* ctx.host.key("backspace");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -14576,8 +13140,6 @@ const otpKeysSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       otpKeysCellId(1),
     );
 
-    // The empty cell is where the key-up owns the delete: a press there clears
-    // the cell before it and moves onto the cleared cell.
     yield* ctx.host.key("right");
     yield* ctx.host.keyUp("right");
     yield* Effect.sleep(SETTLE);
@@ -14602,37 +13164,16 @@ const otpKeysSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("otp-keys");
   });
 
-/** The line the selection probe selects: a word a failure can name. */
 const SELECTION_LINE = "hello live selection world";
 
-/** The chrome line: the default `Text` must keep a drag from selecting it. */
 const SELECTION_CHROME = "chrome must not select";
 
-/**
- * The wash the probe asks for, in a colour no role paints.
- *
- * A capture is device-scaled, so the probe counts a colour rather than reading a
- * point: an opaque green behind the selected run is the one pixel value the drag
- * can produce and nothing else can.
- */
 const SELECTION_WASH = "#00FF00FF";
 
-/** The probe's theme: the base palette with a measurable selection wash. */
 const selectionTheme = extendTheme(palettes.dark, {
   colors: { selection: SELECTION_WASH },
 });
 
-/**
- * Selection in a window, on its **paint** and on what the renderer reports.
- *
- * The headless `text-selection` scenario drives the renderer's own
- * `dragSelect`, because the offscreen renderer registers selection listeners
- * during paint — so "a drag selects" was never measured with a pointer. This
- * probe drags with the automation protocol (a real press, eight moves and a
- * release) and asks two separate questions: does the wash paint, and does
- * `getSelectedText` report the run? A component that copies a selected log line
- * needs both answers, and they turn out to differ.
- */
 const SelectionProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -14683,7 +13224,6 @@ const SelectionProbe = (): ReactNode => {
 
 const selectionSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
-    /** How many pixels of the capture under `name` paint the probe's wash. */
     const washPixels = (
       name: string,
       wash: Pixels.Rgba,
@@ -14711,7 +13251,6 @@ const selectionSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       0,
     );
 
-    // A real pointer drag from the middle of the line past its right edge.
     yield* ctx.host.drag("live-selectable-line", 240, 0);
     yield* Effect.sleep(SETTLE);
     yield* ctx.host.capture("selection-dragged");
@@ -14730,8 +13269,6 @@ const selectionSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "world",
     );
 
-    // Can a user take the selection with them? `cmd-c` from a selected text run
-    // is the copy path a log viewer or a code block would need.
     yield* ctx.host.key("cmd-c");
     yield* Effect.sleep(SETTLE);
     yield* ctx.host.click("live-selection-field");
@@ -14750,8 +13287,6 @@ const selectionSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "world",
     );
 
-    // Clearing unpaints it, which is the third direction: the same capture,
-    // after one call.
     yield* ctx.host.clearSelection();
     yield* Effect.sleep(SETTLE);
     yield* ctx.host.capture("selection-cleared");
@@ -14761,7 +13296,6 @@ const selectionSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       0,
     );
 
-    // The opt-out: the same drag over the default node paints no wash.
     yield* ctx.host.drag("live-chrome-line", 240, 0);
     yield* Effect.sleep(SETTLE);
     yield* ctx.host.capture("selection-chrome");
@@ -14772,17 +13306,6 @@ const selectionSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/**
- * The window's selection event, on the app that owns the root.
- *
- * `selection-lifecycle` proves the wash and `getSelectedText`; neither tells a
- * toolbar that the reader picked a run. That is
- * `render(<App/>, { onSelectionChange })` — the only route the runtime
- * publishes for a window-level selection change — so the probe *is* the app: it
- * records every change through the runtime's own seam, paints the count and the
- * last run, and the checks read them back after a real drag, a clear, and a drag
- * over a line that opted out.
- */
 const WindowSelectionProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -14830,14 +13353,11 @@ const WindowSelectionProbe = (): ReactNode => {
 
 const windowSelectionSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
-    /** The count the painted readout carries, or a failed check. */
     const fires = (caption: string, readout: string) =>
       ctx.expectSome(caption, firesOf(readout));
 
     yield* ctx.host.waitFor(SELECTION_EVENT_READOUT);
-    // A clear before the reader has selected anything publishes whatever the
-    // runtime thinks an empty change is; taking it as the baseline measures the
-    // gesture below rather than assuming the runtime's bookkeeping.
+
     yield* ctx.host.clearSelection();
     yield* Effect.sleep(SETTLE);
     const baseline = yield* fires(
@@ -14869,8 +13389,6 @@ const windowSelectionSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       selected,
     );
 
-    // Clearing is the other half of the contract: an app that only hears the
-    // first change keeps showing a toolbar for a selection that is gone.
     yield* ctx.host.clearSelection();
     yield* Effect.sleep(SETTLE);
     const cleared = yield* ctx.host.text(SELECTION_EVENT_READOUT);
@@ -14886,8 +13404,6 @@ const windowSelectionSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "last=none",
     );
 
-    // The opt-out: a drag over chrome is not a selection change, so the app must
-    // not be told one happened.
     yield* ctx.host.drag("window-selection-chrome", 240, 0);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -14900,14 +13416,6 @@ const windowSelectionSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/**
- * One focusable tree row.
- *
- * The row owns the focus and the keyboard; the disclosure marker is a pointer
- * target only, so opening a directory never adds a second tab stop per row.
- * Its element id is registered by ref: `focusElement` takes a native id, and a
- * row inside a `<virtual-list>` mounts and unmounts as the window moves.
- */
 const TreeRow = ({
   node,
   open,
@@ -14985,14 +13493,6 @@ const TreeRow = ({
   );
 };
 
-/**
- * A virtualized file tree: one `<virtual-list>` child per visible node.
- *
- * The keyboard model is the tree's own: arrows move native focus between rows
- * through the renderer (`focusElement`), Right opens a directory then enters it,
- * Left collapses or returns to the parent. A row only exists while it is near
- * the viewport, so the ids are kept in a ref keyed by node id.
- */
 const VirtualTreeProbe = (): ReactNode => {
   const theme = useTheme();
   const renderer = useGpuix().renderer;
@@ -15023,7 +13523,6 @@ const VirtualTreeProbe = (): ReactNode => {
         : Arr.append(current, node.id),
     );
 
-  /** Moves the roving focus by `delta` visible rows, if the row exists. */
   const step = (node: TreeNode, delta: number): void => {
     Option.match(
       Option.flatMap(
@@ -15141,7 +13640,6 @@ const VirtualTreeProbe = (): ReactNode => {
   );
 };
 
-/** A row line the window painted: the tree's labels, never its readout. */
 const paintedTreeRows = (lines: ReadonlyArray<string>): number =>
   Arr.length(
     Arr.filter(
@@ -15152,7 +13650,6 @@ const paintedTreeRows = (lines: ReadonlyArray<string>): number =>
 
 const virtualTreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
-    /** The focused row's testId, asserted against the expected one. */
     const expectFocused = (
       label: string,
       testId: string,
@@ -15164,8 +13661,6 @@ const virtualTreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.waitFor("tree-list");
     yield* Effect.sleep(SETTLE);
 
-    // 1. Collapsed, the tree is its forty root directories — and only a window
-    //    of those is painted.
     yield* ctx.expectEqual(
       "a collapsed tree paints one row per directory",
       yield* ctx.host.text("tree-readout"),
@@ -15183,7 +13678,6 @@ const virtualTreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       false,
     );
 
-    // 2. A press takes native focus, which is what every arrow needs.
     yield* ctx.host.click("tree-row-dir-000");
     yield* Effect.sleep(SETTLE);
     yield* expectFocused(
@@ -15191,8 +13685,6 @@ const virtualTreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "tree-row-dir-000",
     );
 
-    // 3. Right on a collapsed directory opens it in place: the focus stays on
-    //    the directory while ninety-nine files join the flattened rows.
     yield* ctx.host.key("right");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectContains(
@@ -15205,7 +13697,6 @@ const virtualTreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "tree-row-dir-000",
     );
 
-    // 4. A depth-1 row indents its label by one step.
     const openRows = visibleRows(["dir-000"]);
     const directoryRow = yield* ctx.expectSome(
       "the fixture has a directory row to measure",
@@ -15230,7 +13721,6 @@ const virtualTreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // 5. A second Right enters the first child; Left returns to the parent.
     yield* ctx.host.key("right");
     yield* Effect.sleep(SETTLE);
     yield* expectFocused(
@@ -15244,7 +13734,6 @@ const virtualTreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "tree-row-dir-000",
     );
 
-    // 6. Left on an open directory closes it; the rows below move back up.
     yield* ctx.host.key("left");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectContains(
@@ -15253,7 +13742,6 @@ const virtualTreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "visible=40 expanded=0",
     );
 
-    // 7. Down and Up move the roving focus row by row.
     yield* ctx.host.key("down");
     yield* Effect.sleep(SETTLE);
     yield* expectFocused(
@@ -15264,7 +13752,6 @@ const virtualTreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* Effect.sleep(SETTLE);
     yield* expectFocused("Up moves the focus back", "tree-row-dir-000");
 
-    // 8. A file is a leaf: Right neither opens nor moves.
     yield* ctx.host.click("tree-toggle-dir-000");
     yield* Effect.sleep(SETTLE);
     yield* ctx.host.click("tree-row-file-dir-000/000");
@@ -15281,7 +13768,6 @@ const virtualTreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "tree-row-file-dir-000/000",
     );
 
-    // 9. Expanded whole, the tree is 4 000 rows and still paints a window.
     yield* ctx.host.click("tree-expand-all");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectContains(
@@ -15303,9 +13789,6 @@ const virtualTreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       false,
     );
 
-    // 10. Reveal by index: the path a file tree takes to a deep node, with no
-    //     wheel at all. A pixel offset would be wrong while heights are
-    //     estimates, so the renderer's own anchor is the evidence.
     const reportsBefore = yield* ctx.host.text("tree-reports");
     yield* ctx.host.scrollToItem("tree-list", TREE_REVEAL_INDEX);
     yield* Effect.sleep(Duration.millis(300));
@@ -15354,7 +13837,6 @@ const virtualTreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       reportsBefore,
     );
 
-    // 11. A revealed row is addressable and focusable like any other.
     yield* ctx.host.click("tree-row-dir-030");
     yield* Effect.sleep(SETTLE);
     yield* expectFocused(
@@ -15363,24 +13845,12 @@ const virtualTreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/**
- * Two opaque fills counted in the frame: the clipped card's and the portalled
- * card's. A paint report lists laid-out glyphs, a capture lists what a reader
- * sees, and only the capture can tell a clipped box from a painted one.
- */
 const CLIPPED_FILL = "#FF00FF";
 const CONTROL_FILL = "#00FFFF";
 const PORTAL_FILL = "#00FF00";
 
-/**
- * The context a portalled card reads back.
- *
- * A portal renders into another host element but stays in the caller's React
- * tree, so a theme, a locale or an app store has to survive the move.
- */
 const PortalContext = createContext("no-context");
 
-/** The card a detached tab or a dialog would move into its own layer. */
 const PortalCard = ({
   onPress,
   typed,
@@ -15463,14 +13933,6 @@ const PortalCard = ({
   );
 };
 
-/**
- * `createPortal` in a window: the published escape hatch an overlay or a
- * detached tab needs when its own ancestor clips.
- *
- * The probe puts one card beyond a clipped box's edge (laid out, not painted)
- * and the same card through a portal into a sibling layer (painted), then
- * measures context, pointer input and keys across the portal boundary.
- */
 const PortalProbe = (): ReactNode => {
   const theme = useTheme();
   const [layer, setLayer] = useState<PublicInstance | null>(null);
@@ -15595,9 +14057,6 @@ const portalSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.waitFor("portal-card");
     yield* Effect.sleep(SETTLE);
 
-    // 1. The clipped ancestor lays the sibling out and paints none of it; the
-    //    same content through the portal paints — the whole reason a detached
-    //    tab or an overlay moves into its own layer.
     const clip = yield* ctx.expectSome(
       "the clipping box painted",
       Option.fromNullishOr(yield* ctx.host.bounds("portal-clip")),
@@ -15645,7 +14104,6 @@ const portalSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 2. It paints where its target is, not where the caller is.
     const layer = yield* ctx.expectSome(
       "the portal target painted",
       Option.fromNullishOr(yield* ctx.host.bounds("portal-layer")),
@@ -15660,14 +14118,12 @@ const portalSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 3. The portal keeps the caller's React context across the host boundary.
     yield* ctx.expectEqual(
       "the portalled card reads the caller's context",
       yield* ctx.host.text("portal-context"),
       "ctx=portal-context",
     );
 
-    // 4. Pointer input reaches portalled content.
     yield* ctx.host.click("portal-action");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectContains(
@@ -15676,7 +14132,6 @@ const portalSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "presses=1",
     );
 
-    // 5. So do native focus and keys: the field is not in the caller's subtree.
     yield* ctx.host.click("portal-field");
     yield* Effect.sleep(SETTLE);
     yield* ctx.host.key("h");
@@ -15688,7 +14143,6 @@ const portalSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "typed=hi",
     );
 
-    // 6. Removing the portal unpaints it and drops it from the tree.
     yield* ctx.host.capture("portal-attached");
     yield* ctx.host.click("portal-toggle");
     yield* Effect.sleep(SETTLE);
@@ -15705,7 +14159,6 @@ const portalSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       false,
     );
 
-    // 7. And it can be attached again: a tab moved out and back.
     yield* ctx.host.click("portal-toggle");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -15716,13 +14169,6 @@ const portalSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("portal-reattached");
   });
 
-/**
- * One table header cell that sorts by a press.
- *
- * It is the press target itself rather than a row above the table: a header that
- * only responds to a control beside it measures nothing about a table, and the
- * probe's press is hit-tested on the cell's painted centre.
- */
 const TableHeaderCell = ({
   testId,
   label,
@@ -15767,17 +14213,6 @@ const TableHeaderCell = ({
   );
 };
 
-/**
- * A Tier 3 table: a sortable header sibling above the row scroller, inside one
- * horizontal scroller.
- *
- * The composition is the one the headless `data-grid-fixed-header` and
- * `table-select-sort` scenarios measured. What a window adds is that a press is
- * hit-tested rather than a handler invoked, a wheel is aimed by geometry, and a
- * key only reaches the element the press actually focused. Order and selection
- * are keyed by **record**, so a sort cannot leave the highlight on a different
- * row.
- */
 const TableProbe = (): ReactNode => {
   const theme = useTheme();
   const windowSize = useWindowSize();
@@ -15811,7 +14246,6 @@ const TableProbe = (): ReactNode => {
     if (elementId !== undefined) renderer?.focusElement?.(elementId);
   };
 
-  /** Moves selection and focus together, as a table's roving focus does. */
   const step = (row: TableRow, delta: number): void =>
     Option.match(
       Option.flatMap(
@@ -15995,14 +14429,6 @@ const TableProbe = (): ReactNode => {
   );
 };
 
-/**
- * The table probe's checks.
- *
- * A press is a hit test in a window: the locator aims the element's painted
- * centre, so a header cell that is covered, clipped or misaligned sorts nothing.
- * The readout names the order and the selected **record**, which is what makes
- * "the selection survived the sort" a check rather than a coincidence.
- */
 const tableLifecycleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor("table-readout");
@@ -16022,7 +14448,7 @@ const tableLifecycleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
           Option.fromNullishOr(yield* ctx.host.scrollOffset(testId)),
         );
       });
-    /** The focus id as a readout reads it: `none` rather than a null. */
+
     const focusOf = Effect.map(ctx.host.focused(), (id) =>
       Option.getOrElse(Option.fromNullishOr(id), () => "none"),
     );
@@ -16033,8 +14459,6 @@ const tableLifecycleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "rows=60 sorted=name-asc selected=none",
     );
 
-    // The header is a sibling of the row scroller, so it cannot scroll with the
-    // rows: the first row starts where the header ends.
     const header = yield* paintedBox(ctx, "table-header");
     const first = yield* paintedBox(ctx, "table-row-0");
     yield* ctx.expectNear(
@@ -16044,7 +14468,6 @@ const tableLifecycleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // 1. A press selects the row it landed on, and that row holds the focus.
     yield* ctx.host.click("table-row-3");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectContains(
@@ -16058,7 +14481,6 @@ const tableLifecycleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "table-row-3",
     );
 
-    // 2. An arrow key reaches the focused row and roves both focus and selection.
     yield* ctx.host.key("down");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectContains(
@@ -16072,7 +14494,6 @@ const tableLifecycleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "table-row-4",
     );
 
-    // 3. A press on the size header sorts by the column it hit, not by the other.
     yield* ctx.host.click("table-header-size");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectContains(
@@ -16091,7 +14512,6 @@ const tableLifecycleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "selected=r4",
     );
 
-    // 4. The same header again flips the direction.
     yield* ctx.host.click("table-header-size");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectContains(
@@ -16105,7 +14525,6 @@ const tableLifecycleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "Item 004",
     );
 
-    // 5. A wheel over the rows scrolls them under a header that does not move.
     const headerBefore = yield* paintedBox(ctx, "table-header");
     const rowBefore = yield* paintedBox(ctx, "table-row-5");
     yield* ctx.host.wheel("table-body", 0, -100);
@@ -16127,7 +14546,6 @@ const tableLifecycleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       2,
     );
 
-    // 6. The header is outside the row scroller, so a wheel over it scrolls nothing.
     yield* ctx.host.wheel("table-header", 0, -100);
     yield* Effect.sleep(SETTLE);
     const afterHeaderWheel = yield* offsetOf("table-body");
@@ -16138,7 +14556,6 @@ const tableLifecycleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // 7. One horizontal scroller carries the header and the cells together.
     const headerCellBefore = yield* paintedBox(ctx, "table-header-size");
     const sizeCellBefore = yield* paintedBox(ctx, "table-size-5");
     yield* ctx.host.wheel("table-header", -60, 0);
@@ -16170,7 +14587,6 @@ const tableLifecycleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       sizeCellAfter.x,
     );
 
-    // 8. The rows stop at the content's end.
     yield* ctx.host.wheel("table-body", 0, -10_000);
     yield* Effect.sleep(SETTLE);
     const clamped = yield* offsetOf("table-body");
@@ -16183,28 +14599,16 @@ const tableLifecycleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("table-sorted");
   });
 
-/** The frozen-column probe's geometry: two panes, one row height. */
 const FROZEN_ROWS = 60;
 const FROZEN_ROW_HEIGHT = 28;
 const FROZEN_WIDTH = 120;
 const FROZEN_BODY_WIDTH = 240;
 const FROZEN_VIEWPORT = 240;
 const FROZEN_CELL_WIDTH = 200;
-/** `rows × height - viewport`: the offset both panes clamp at. */
+
 const FROZEN_MAX = FROZEN_ROWS * FROZEN_ROW_HEIGHT - FROZEN_VIEWPORT;
 const FROZEN_ROW_INDEXES = Arr.range(0, FROZEN_ROWS - 1);
 
-/**
- * A frozen first column beside a grid, in a window.
- *
- * The runtime has no `position: "sticky"`, so a frozen column is two vertical
- * scrollers that must move as one: each `onScrollChange` mirrors its `y` into
- * the other through `renderer.scrollTo`, guarded by a ref because a programmatic
- * scroll reports its own change inside the call. The headless
- * `data-grid-frozen-column` scenario measured the arithmetic; this probe asks
- * whether the mirror holds in a window, where the wheel is hit-tested and a
- * press selects through the painted cell.
- */
 const FrozenColumnProbe = (): ReactNode => {
   const theme = useTheme();
   const windowSize = useWindowSize();
@@ -16219,8 +14623,7 @@ const FrozenColumnProbe = (): ReactNode => {
     (event: EventPayload): void => {
       const elementId = (target === "frozen" ? frozen : body).current?.id;
       const y = event.scrollY;
-      // The programmatic scroll paints synchronously, so the target's own change
-      // arrives inside this call; the flag stops it mirroring back.
+
       if (elementId == null || y == null || syncing.current) return;
       syncing.current = true;
       renderer?.scrollTo?.(elementId, 0, y);
@@ -16337,11 +14740,6 @@ const FrozenColumnProbe = (): ReactNode => {
   );
 };
 
-/**
- * The frozen column's checks: both panes follow either wheel, the row under the
- * reader lines up across them, the frozen column ignores a horizontal pan, and a
- * frozen cell selects the row for the grid.
- */
 const frozenColumnSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor("frozen-selected");
@@ -16371,7 +14769,6 @@ const frozenColumnSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       ),
     );
 
-    // 1. Both panes start at the top, and the first row lines up across them.
     yield* ctx.expectEqual(
       "the frozen column starts at the top",
       (yield* offsetOf("frozen")).y,
@@ -16389,7 +14786,6 @@ const frozenColumnSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // 2. A wheel over the grid moves both panes.
     yield* ctx.host.wheel("frozen-body", 0, -300);
     yield* Effect.sleep(SETTLE);
     const bodyAfterGrid = yield* offsetOf("frozen-body");
@@ -16406,7 +14802,6 @@ const frozenColumnSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // 3. A wheel over the frozen column moves both back: the mirror is two-way.
     yield* ctx.host.wheel("frozen", 0, -300);
     yield* Effect.sleep(SETTLE);
     const frozenAfterBoth = yield* offsetOf("frozen");
@@ -16423,7 +14818,6 @@ const frozenColumnSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // 4. The row the reader is looking at lines up across the panes.
     const rows = yield* paintedRows;
     const row = yield* ctx.expectSome(
       "a row inside the scrolled window is painted",
@@ -16436,7 +14830,6 @@ const frozenColumnSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // 5. A horizontal wheel pans the grid's cells and leaves the frozen column.
     const frozenX = yield* xOf(`frozen-row-${row}`);
     const bodyX = yield* xOf(`frozen-body-row-${row}`);
     yield* ctx.host.wheel("frozen-body", -200, 0);
@@ -16460,7 +14853,6 @@ const frozenColumnSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // 6. A frozen cell selects the row for the whole grid.
     yield* ctx.host.click(`frozen-row-${row}`);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -16470,7 +14862,6 @@ const frozenColumnSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("frozen-column");
 
-    // 7. A huge wheel clamps both panes at the same end.
     yield* ctx.host.wheel("frozen-body", 0, -10_000);
     yield* Effect.sleep(SETTLE);
     const bodyEnd = yield* offsetOf("frozen-body");
@@ -16488,17 +14879,6 @@ const frozenColumnSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/**
- * `dock-focus-lifecycle` — what a keyboard reaches inside a nested dock.
- *
- * Tier 4's **keyboard navigation** is the one capability with no measurement:
- * a dock is a rail, a collapsible sidebar and a pane inside one layout, and the
- * questions a plan needs answered are which controls a Tab traversal visits and
- * in what order, what a collapsed sidebar's controls do to that traversal, and
- * what a key pressed in the pane's field does to the rail. The fixture is
- * composed by hand — the shipped `Tabs` already owns roving focus
- * (`tabs-lifecycle`), and this is the layer above it.
- */
 const DockFocusProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -16584,9 +14964,6 @@ const DockFocusProbe = (): ReactNode => {
             <div
               key={action}
               testId={dockActionId(action)}
-              // The guard a dock owes: a control in a closed pane leaves the
-              // traversal. `new` keeps its stop on purpose — the probe measures
-              // the runtime with it.
               tabIndex={sidebarOpen || action !== DOCK_GUARDED_ACTION ? 0 : -1}
               role="button"
               onClick={() => setActions((count) => count + 1)}
@@ -16695,18 +15072,13 @@ const DockFocusProbe = (): ReactNode => {
   );
 };
 
-/**
- * The dock's checks: the traversal's order, a closed sidebar's unguarded
- * control still being reached while its guarded one is skipped, the rail
- * stepping focus with its panes, and a field keeping its own arrows.
- */
 const dockFocusSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor("dock-probe");
     yield* Effect.sleep(SETTLE);
 
     const readout = () => ctx.host.text("dock-readout");
-    /** An element's painted width; an unpainted one is zero. */
+
     const widthOf = (testId: string) =>
       Effect.map(ctx.host.bounds(testId), (bounds) =>
         Option.match(Option.fromNullishOr(bounds), {
@@ -16714,7 +15086,7 @@ const dockFocusSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
           onSome: (value) => value.width,
         }),
       );
-    /** Press Tab `count` times, reading the focus each press left behind. */
+
     const tabThrough = (count: number) =>
       Effect.forEach(
         Arr.range(1, count),
@@ -16728,7 +15100,6 @@ const dockFocusSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "tab=explorer changes=0 sidebar=open",
     );
 
-    // 1. The open dock's traversal, from the toggle through to the status bar.
     yield* ctx.host.focusElement(DOCK_TOGGLE);
     yield* ctx.expectEqual(
       "the sidebar toggle takes the focus",
@@ -16743,7 +15114,6 @@ const dockFocusSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       Arr.join(Arr.append(Arr.drop(openStops, 1), DOCK_TOGGLE), " > "),
     );
 
-    // 2. A collapsed sidebar paints no width...
     yield* ctx.host.click(DOCK_TOGGLE);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectContains(
@@ -16758,8 +15128,6 @@ const dockFocusSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       0.5,
     );
 
-    // 3. ...but the control without a guard keeps its stop, which is the rule
-    //    a dock has to apply itself: the runtime does not skip it.
     yield* ctx.host.focusElement(DOCK_TOGGLE);
     yield* Effect.sleep(SETTLE);
     yield* ctx.host.key("tab");
@@ -16789,7 +15157,6 @@ const dockFocusSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "actions=0",
     );
 
-    // 4. Programmatic focus still lands in the hidden sidebar.
     yield* ctx.host.focusElement(dockActionId("new"));
     yield* ctx.expectEqual(
       "the runtime focuses a control the app never shows",
@@ -16797,7 +15164,6 @@ const dockFocusSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       dockActionId("new"),
     );
 
-    // 5. Reopening restores the guarded stop.
     yield* ctx.host.click(DOCK_TOGGLE);
     yield* Effect.sleep(SETTLE);
     yield* ctx.host.focusElement(DOCK_TOGGLE);
@@ -16809,7 +15175,6 @@ const dockFocusSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       dockActionId("settings"),
     );
 
-    // 6. A rail step moves real focus and swaps the pane.
     yield* ctx.host.focusElement(dockRailId("explorer"));
     yield* ctx.host.key("right");
     yield* Effect.sleep(SETTLE);
@@ -16835,7 +15200,6 @@ const dockFocusSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       Option.fromNullishOr(yield* ctx.host.bounds(dockFieldId("output"))),
     );
 
-    // 7. The pane's field is the rail's next stop.
     yield* ctx.host.key("tab");
     yield* ctx.expectEqual(
       "Tab from the rail reaches the pane's field",
@@ -16843,7 +15207,6 @@ const dockFocusSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       dockFieldId("output"),
     );
 
-    // 8. An arrow in the field belongs to the field, not the rail.
     yield* ctx.host.key("left");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -16857,7 +15220,6 @@ const dockFocusSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "tab=output changes=1",
     );
 
-    // 9. Shift+Tab walks back out, and the rail steps back with it.
     yield* ctx.host.key("shift-tab");
     yield* ctx.expectEqual(
       "Shift+Tab returns to the rail",
@@ -16883,7 +15245,6 @@ const dockFocusSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       dockFieldId("explorer"),
     );
 
-    // 10. The rail wraps in the direction it was given.
     yield* ctx.host.focusElement(dockRailId("explorer"));
     yield* ctx.host.key("left");
     yield* Effect.sleep(SETTLE);
@@ -16900,16 +15261,6 @@ const dockFocusSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("dock-focus");
   });
 
-/**
- * `header-menu-lifecycle` — a column menu anchored **inside a scrolled header**.
- *
- * Tier 3's column-configuration row is `?`, and the half that decides whether
- * it is buildable is the overlay: the trigger sits in a horizontally scrolled
- * header, whose offset is a paint-level value. The probe opens the shipped
- * `DropdownMenu` from that trigger, then wheels the header and asks whether the
- * painted panel moved with its anchor, dismisses it and reopens it by keyboard,
- * and hides a column from the menu.
- */
 const HeaderMenuProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -17034,11 +15385,6 @@ const HeaderMenuProbe = (): ReactNode => {
   );
 };
 
-/**
- * The menu's checks: it opens under its anchor inside the scroller, the panel
- * follows (or does not follow) the header's wheel, Escape returns the focus,
- * and the first item hides a column without moving the anchor.
- */
 const headerMenuSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor("header-probe");
@@ -17053,7 +15399,6 @@ const headerMenuSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "hidden=none changes=0",
     );
 
-    // 1. The trigger's cell is the first column, then the header's own x.
     const nameCell = yield* box(headerCellId("name"));
     yield* ctx.expectNear(
       "the trigger cell starts where the name column ends",
@@ -17063,7 +15408,6 @@ const headerMenuSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     const trigger = yield* box(HEADER_TRIGGER);
 
-    // 2. A press opens the menu under its anchor.
     yield* ctx.host.click(HEADER_TRIGGER);
     yield* Effect.sleep(SETTLE);
     const menu = yield* box("header-menu");
@@ -17079,7 +15423,6 @@ const headerMenuSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       2,
     );
 
-    // 3. Wheel the header and read where the panel went.
     yield* ctx.host.wheel(HEADER_FRAME, -100, 0);
     yield* Effect.sleep(SETTLE);
     const triggerAfter = yield* box(HEADER_TRIGGER);
@@ -17097,7 +15440,6 @@ const headerMenuSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       2,
     );
 
-    // 4. Escape dismisses it and returns the focus.
     yield* ctx.host.key("escape");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -17111,7 +15453,6 @@ const headerMenuSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       HEADER_TRIGGER,
     );
 
-    // 5. Keyboard-open it and hide the last column from the first item.
     yield* ctx.host.wheel(HEADER_FRAME, 100, 0);
     yield* ctx.host.focusElement(HEADER_TRIGGER);
     yield* ctx.host.key("enter");
@@ -17140,17 +15481,12 @@ const headerMenuSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // 6. The select closes the surface on its exit tween. A press sent during
-    //    that tween is dismissed by the layer it is closing, so the probe waits
-    //    for the menu to be gone before it reopens it — the measured shape of a
-    //    one-shot read here was `a press still opens the menu …  got false`.
     yield* ctx.expectEqual(
       "selecting a column dismisses the menu",
       yield* settleGone(ctx, "header-menu"),
       true,
     );
 
-    // 7. A press on the trigger still opens the menu after the relayout.
     yield* ctx.host.click(HEADER_TRIGGER);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -17162,14 +15498,6 @@ const headerMenuSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("header-menu");
   });
 
-/**
- * One painted box in a window that is otherwise left to the window server.
- *
- * The paint is deliberately sparse: every pixel the app does not cover is the
- * backdrop under test, so the probe's own chrome would become the measurement.
- * The root carries no background for the same reason, and the children are
- * absolute because an absolute element resolves against its direct parent.
- */
 const BackdropProbe = (): ReactNode => {
   const { background } = useWindowFacts();
   const window = useWindowSize();
@@ -17225,9 +15553,6 @@ const backdropSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("backdrop");
 
-    // A window is captured at its display's scale, so the fixture's logical
-    // points are converted rather than assumed: a hardcoded 2 would read the
-    // wrong pixel on a 1x display.
     const frame = yield* ctx.host.pixels("backdrop");
     const size = yield* ctx.host.windowSize();
     const scale = yield* ctx.expectSome(
@@ -17263,10 +15588,6 @@ const backdropSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/**
- * The chart probe: the same three-bar plot drawn into a pixel buffer, painted
- * again from a second buffer when the data changes, and pushed as SVG bytes.
- */
 const ChartProbe = (): ReactNode => {
   const theme = useTheme();
   const bufferImage = useRef<ImgInstance>(null);
@@ -17277,8 +15598,6 @@ const ChartProbe = (): ReactNode => {
   const [plotWidth, setPlotWidth] = useState<number>(PLOT_SIZE.width);
   const [svgStatus, setSvgStatus] = useState("pending");
 
-  // The translucent plot is a second layer over the first: one buffer for the
-  // mark beneath, one for the half-alpha series over it.
   useLayoutEffect(() => {
     alphaBase.current?.setImagePixels(
       PLOT.width,
@@ -17292,8 +15611,6 @@ const ChartProbe = (): ReactNode => {
     );
   }, []);
 
-  // The pixels must be on the element before the frame that paints it, and a
-  // re-push has to be readable as the frame the data changed in.
   useLayoutEffect(() => {
     const instance = bufferImage.current;
     if (instance === null) return;
@@ -17307,9 +15624,7 @@ const ChartProbe = (): ReactNode => {
   useLayoutEffect(() => {
     const instance = svgImage.current;
     if (instance === null) return;
-    // A layout effect is the boundary: the native decoder is an imperative call
-    // that may throw, and there is no Effect runtime inside a render, so the
-    // outcome is captured as the readout the probe asserts on.
+
     const decoded = Effect.try(() => instance.setImage(Buffer.from(PLOT_SVG)));
     setSvgStatus(
       Effect.runSync(
@@ -17425,11 +15740,9 @@ const ChartProbe = (): ReactNode => {
   );
 };
 
-/** How many pixels of one decoded capture paint `colour` exactly. */
 const chartCount = (frame: Pixels.Pixels, colour: Rgb): number =>
   Pixels.countColour(frame, new Pixels.Rgba({ ...colour, a: 0xff }));
 
-/** One buffer pixel read out of the capture, named by the colour it landed on. */
 const chartSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor("chart-buffer");
@@ -17465,8 +15778,6 @@ const chartSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     const absent = (captured: Pixels.Pixels, colour: Rgb, label: string) =>
       ctx.expectEqual(label, chartCount(captured, colour), 0);
 
-    // 1. A buffer keeps its own per-pixel colours: the route a chart with more
-    //    than one series needs, which a tinted `<svg>` cannot take.
     const buffer = yield* box("chart-buffer");
     yield* box("chart-svg");
     yield* Effect.forEach(
@@ -17481,17 +15792,12 @@ const chartSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       describeColour(new Pixels.Rgba({ ...SERIES[0], a: 0xff })),
     );
 
-    // 2. A margin pixel is the card behind the plot, so the element composites
-    //    its transparency instead of painting an opaque square.
     yield* ctx.expectEqual(
       "the plot's transparent margin shows the surface behind it",
       sample(buffer, MARGIN_PIXEL),
       describeColour(new Pixels.Rgba({ ...PLOT_BACKING, a: 0xff })),
     );
 
-    // 2b. A half-alpha mark over another mark: the layer a stacked series
-    //     paints, read where it covers the opaque mark, where it covers the
-    //     card, and against an opaque pixel of the same colour.
     const base = yield* box("chart-alpha-base");
     const over = yield* box("chart-alpha-over");
     yield* ctx.expectEqual(
@@ -17525,8 +15831,6 @@ const chartSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       describeColour(new Pixels.Rgba({ ...ALPHA_OVER, a: 0xff })),
     );
 
-    // 3. `setImage` decodes SVG bytes: the vector route, with every fill its
-    //    own colour rather than one mask tint.
     yield* ctx.expectEqual(
       "the svg bytes reached the element",
       yield* ctx.host.text("chart-svg-status"),
@@ -17539,8 +15843,6 @@ const chartSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       { concurrency: 1 },
     );
 
-    // 4. New data replaces the frame: a chart that only ever painted once would
-    //    be a screenshot.
     yield* ctx.host.click("chart-next");
     yield* ctx.expectEqual(
       "the probe is on the frame the press produced",
@@ -17573,8 +15875,6 @@ const chartSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       { concurrency: 1 },
     );
 
-    // 5. A resize scales the buffer with its box: a chart in a split pane is
-    //    laid out again without the app re-drawing its pixels.
     const barOf = (captured: Pixels.Pixels, colour: Rgb) =>
       ctx.expectSome(
         `the ${hexOf(colour)} bar has a painted bound`,
@@ -17624,19 +15924,6 @@ const chartSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/**
- * The shipped charts, in a window: one plot, more than one tint.
- *
- * The package draws a chart as one `<svg>` per series, because a single
- * `<svg source>` is one tinted mask (`chart-raster`). The behaviour suite reads
- * the markup; this view is the paint — two series' colours counted in one
- * plot's crop, a stack read from its floor, a ring's slices, a sparkline in the
- * colour the caller named, and a changed value repainting the bar it grew.
- *
- * It composes the **shipped** chart parts, not a copy of them; the example the
- * docs quote is `chart.example.tsx`, and its fixed 560-wide column is taller
- * than this window.
- */
 const ChartSurfaceProbe = (): ReactNode => {
   const theme = useTheme();
   const [frame, setFrame] = useState(1);
@@ -17742,14 +16029,6 @@ const ChartSurfaceProbe = (): ReactNode => {
   );
 };
 
-/**
- * What the shipped charts paint in a window.
- *
- * A mark is read out of the plot's own crop, so a tint that leaks into the
- * legend or the page cannot stand in for the series. The first check is the
- * route itself: **two colours inside one plot** is what a single-mask chart
- * cannot do, and every later check assumes it.
- */
 const chartSurfaceSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor(chartSurfacePart(CHART_SURFACE_BARS, "plot"));
@@ -17826,8 +16105,6 @@ const chartSurfaceSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         { onNone: () => "outside the capture", onSome: describeColour },
       );
 
-    // The palette is the theme's own, read from the probe rather than restated,
-    // so a brand's categorical scale is measured too.
     const paletteText = yield* ctx.host.text(CHART_SURFACE_PALETTE);
     const palette = yield* Effect.forEach(
       paletteText.slice("palette=".length).split(","),
@@ -17852,7 +16129,6 @@ const chartSurfaceSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "background",
     );
 
-    // 1. The route: one plot, two series, two tints.
     const bars = yield* box(chartSurfacePart(CHART_SURFACE_BARS, "plot"));
     yield* ctx.expectEqual(
       "the bars plot paints the first series' tint",
@@ -17875,8 +16151,6 @@ const chartSurfaceSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       describeColour(solid(paintSecond)),
     );
 
-    // 2. The marks sit inside the labelled plot: the axis and category labels
-    //    are text beside it, so a bar past the last slot would be outside them.
     yield* ctx.expectEqual(
       "the axis prints its ceiling",
       yield* ctx.host.text(
@@ -17905,8 +16179,6 @@ const chartSurfaceSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       describeColour(solid(paintFirst)),
     );
 
-    // 3. A stacked bar is two paints in one slot: the floor series and the one
-    //    above it, read where each really is.
     const stacked = yield* box(chartSurfacePart(CHART_SURFACE_STACKED, "plot"));
     yield* ctx.expectEqual(
       "the stack's floor series reads its colour",
@@ -17919,9 +16191,6 @@ const chartSurfaceSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       describeColour(solid(paintSecond)),
     );
 
-    // 4. A ring paints one segment per non-empty datum. The zero source is not
-    //    a slice: none of the ring's pixels carry its colour, while its image
-    //    stays in the tree so a reader hears the datum's own value.
     const donut = yield* box(chartSurfacePart(CHART_SURFACE_DONUT, "plot"));
     yield* ctx.expectEqual(
       "the ring paints its first slice",
@@ -17974,12 +16243,11 @@ const chartSurfaceSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 5. A sparkline is one image in the colour the caller named.
     const spark = yield* colourOf(
       (yield* ctx.host.text(CHART_SURFACE_SPARK)).slice("spark=".length),
       "sparkline",
     );
-    // A sparkline has no separate plot part: it is one image in one box.
+
     const sparkPlot = yield* box(CHART_SURFACE_SPARKLINE);
     yield* ctx.expectEqual(
       "the sparkline paints its own colour",
@@ -17987,8 +16255,6 @@ const chartSurfaceSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 6. A changed value repaints the mark: the first bar grows into a point it
-    //    did not reach, and the surface behind the bar shows through before.
     yield* ctx.expectEqual(
       "before the press the growth point is the surface behind the plot",
       sample(frame, bars, CHART_SURFACE_POINTS.barsGrowth),
@@ -18018,19 +16284,6 @@ const chartSurfaceSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/**
- * The document-route probe: what the charts and the diagram paint in a window.
- *
- * The charts' marks travel as **one SVG document** on an `<img>`'s `src`,
- * which the runtime decodes itself, so one element carries every series' own
- * colour. The offscreen renderer reads markup, not pixels, so only a real
- * frame can answer the question the route exists to answer: **do two series
- * paint two colours inside one plot?**
- *
- * The `Diagram` is here for the same reason — it is the other surface that
- * travels the document route, and a diagram that drew nothing would be a
- * component nobody noticed.
- */
 const ChartDocumentProbe = (): ReactNode => {
   const theme = useTheme();
   const palette = seriesColors(theme);
@@ -18078,8 +16331,7 @@ const ChartDocumentProbe = (): ReactNode => {
         {readout(CHART_DOCUMENT_KIND, "kind=flowchart")}
         {readout(
           CHART_DOCUMENT_COLOURS,
-          // The four colours the drawing paints in: the node's text, its
-          // edge, its fill and its border.
+
           `diagram=${theme.colors.foreground},${theme.colors.borderStrong ?? theme.colors.border},${theme.colors.muted},${theme.colors.accent}`,
         )}
         {readout(CHART_DOCUMENT_GROUND, `ground=${theme.colors.background}`)}
@@ -18088,20 +16340,10 @@ const ChartDocumentProbe = (): ReactNode => {
   );
 };
 
-/**
- * What the document route paints in a window.
- *
- * A mark is read out of the plot's own crop, so a tint that leaks into the
- * legend or the page cannot stand in for the series. The first check is the
- * route itself: **two colours inside one plot** is what a single-mask chart
- * cannot do, and every later check assumes it.
- */
 const chartDocumentSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor(chartSurfacePart(CHART_DOCUMENT_BARS, "plot"));
-    // The diagram paints in its own image, so the probe waits for **that**
-    // too: the chart's plot can be there before the diagram's bytes have
-    // been decoded, and a capture taken then would show a blank drawing.
+
     yield* ctx.host.waitFor(`${CHART_DOCUMENT_DIAGRAM}-drawing`);
     yield* Effect.sleep(SETTLE);
     yield* ctx.host.capture("chart-document");
@@ -18176,8 +16418,6 @@ const chartDocumentSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         { onNone: () => "outside the capture", onSome: describeColour },
       );
 
-    // The palette is the theme's own, read from the probe rather than restated,
-    // so a brand's categorical scale is measured too.
     const paletteText = yield* ctx.host.text(CHART_DOCUMENT_PALETTE);
     const palette = yield* Effect.forEach(
       paletteText.slice("palette=".length).split(","),
@@ -18196,8 +16436,6 @@ const chartDocumentSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
 
     const plot = yield* box(chartSurfacePart(CHART_DOCUMENT_BARS, "plot"));
 
-    // The route itself: **two colours inside one plot**. A chart painted as
-    // one tinted mask per series could not do this in one element.
     const firstCount = countIn(frame, plot, solid(paintFirst));
     const secondCount = countIn(frame, plot, solid(paintSecond));
     yield* ctx.expectEqual(
@@ -18211,15 +16449,12 @@ const chartDocumentSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // The two colours are **different**, so the plot holds two tints rather
-    // than one drawn twice.
     yield* ctx.expectEqual(
       "the two series paint two different colours",
       describeColour(solid(paintFirst)) !== describeColour(solid(paintSecond)),
       true,
     );
 
-    // And the marks land where the geometry says they do.
     yield* ctx.expectEqual(
       "the first series' bar paints its own colour",
       sample(frame, plot, CHART_DOCUMENT_POINTS.revenue),
@@ -18231,18 +16466,13 @@ const chartDocumentSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       describeColour(solid(paintSecond)),
     );
 
-    // The diagram travels the same route, so it paints too. A diagram that
-    // drew nothing would be a component nobody noticed. The drawing paints in
-    // the **theme's** own roles — Pele's palette is baked in — so the probe
-    // samples those, read from the probe rather than restated.
     const coloursText = yield* ctx.host.text(CHART_DOCUMENT_COLOURS);
     const diagramColours = yield* Effect.forEach(
       coloursText.slice("diagram=".length).split(","),
       (hex, index) => colourOf(hex, `diagram ${index + 1}`),
       { concurrency: 1 },
     );
-    // The **drawing** is the element that paints, so it is the element the
-    // probe samples: the root div is the column the drawing sits in.
+
     const diagram = yield* box(`${CHART_DOCUMENT_DIAGRAM}-drawing`);
     const painted = Arr.reduce(
       diagramColours,
@@ -18256,10 +16486,6 @@ const chartDocumentSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/**
- * The window-chrome probe: where the app's own layout starts, and what the
- * window reports as its safe area.
- */
 const WindowChromeProbe = (): ReactNode => {
   const theme = useTheme();
   const facts = useWindowFacts();
@@ -18269,8 +16495,6 @@ const WindowChromeProbe = (): ReactNode => {
     Option.none(),
   );
 
-  // The renderer's own answer, read at mount: the hook samples every 100ms, so
-  // the two channels are a fact about the app rather than the same read twice.
   useLayoutEffect(() => {
     setInsets(Option.fromNullishOr(renderer?.getWindowInsets?.()));
   }, [renderer]);
@@ -18337,7 +16561,6 @@ const WindowChromeProbe = (): ReactNode => {
   );
 };
 
-/** Where the app's own layout starts, and what the window reports as its safe area. */
 const windowChromeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor("chrome-top-bar");
@@ -18365,17 +16588,12 @@ const windowChromeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     const effective = yield* edgesOf("chrome-renderer-effective");
     const hookSafe = yield* edgesOf("chrome-hook-safe");
 
-    // 1. The app channel and the renderer answer for the same window: the hook
-    //    samples every 100ms, so a mismatch is a lag, and the poll above is what
-    //    a consumer's own inset code has to survive.
     yield* ctx.expectEqual(
       "the app channel reports the renderer's safe area",
       formatEdges(hookSafe),
       formatEdges(safe),
     );
 
-    // 2. With no text session there is no keyboard inset, and the effective
-    //    edges are the safe area itself — the composite an app insets by.
     yield* ctx.expectEqual(
       "the keyboard inset is empty without a text session",
       formatEdges(ime),
@@ -18387,8 +16605,6 @@ const windowChromeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       formatEdges(safe),
     );
 
-    // 3. A bar painted at `top: effective.top` starts exactly there, so the
-    //    number a toolbar insets by is the number the app is given.
     const safeBar = yield* ctx.expectSome(
       "the inset bar painted",
       Option.fromNullishOr(yield* ctx.host.bounds("chrome-safe-bar")),
@@ -18400,8 +16616,6 @@ const windowChromeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // 4. The app's layout starts at the capture's top edge, so the window's
-    //    chrome is the app's to paint over — not something the runtime reserves.
     yield* ctx.host.capture("chrome");
     const frame = yield* ctx.host.pixels("chrome");
     const size = yield* ctx.host.windowSize();
@@ -18427,10 +16641,6 @@ const windowChromeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       describeColour(new Pixels.Rgba({ ...SAFE_FILL, a: 0xff })),
     );
 
-    // 5. The safe area is the one the window reports, not a titlebar band: in
-    //    both modes it is empty on this host, so a toolbar that draws under a
-    //    transparent titlebar reserves its own inset — there is no reported
-    //    number to read it from.
     yield* ctx.expectEqual(
       `${chrome}: the safe area the window reports`,
       formatEdges(safe),
@@ -18438,16 +16648,6 @@ const windowChromeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/**
- * A workspace arrangement after a restore: the fixed panes, the document rail
- * and the inspector, built from the layout the app hands back.
- *
- * The split is the shipped `SplitPane` in its caller-owned mode, because a
- * restored arrangement cannot reach a component's internal width — the app
- * passes the width and takes every drag through `onResize`. The inspector
- * applies the saved scroll once, on its first layout, since a programmatic
- * scroll before the content is measured would clamp to zero.
- */
 const WorkspaceView = ({
   layout,
   onChange,
@@ -18584,21 +16784,6 @@ const WorkspaceView = ({
   );
 };
 
-/**
- * `workspace-restore` — a dock's arrangement survives a re-mount.
- *
- * Tier 4's **persistent panel state** is app-owned: the runtime publishes no
- * storage, so the app writes a layout as a string, decodes it at the boundary
- * and hands it back. Nothing had measured that the second half paints: whether
- * a pane given a restored width paints that box (and the layout pass reports
- * it), whether the chosen document mounts, and whether a saved scroll offset
- * lands where it was. The probe changes the arrangement with controls rather
- * than a drag — the drags are measured by `split-pane-lifecycle` and
- * `dock-focus-lifecycle` — so the restore is the only variable. A corrupt
- * string and one outside the pane's bounds are steps of the same run: the first
- * falls back to the default, the second is clamped, so the boundary is measured
- * in both directions.
- */
 const WorkspaceRestoreProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -18739,7 +16924,7 @@ const workspaceRestoreSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* Effect.sleep(SETTLE);
 
     const readout = () => ctx.host.text(WORKSPACE_IDS.readout);
-    /** An element's painted width; an unpainted one is `-1`. */
+
     const widthOf = (testId: string) =>
       Effect.map(ctx.host.bounds(testId), (bounds) =>
         Option.match(Option.fromNullishOr(bounds), {
@@ -18752,7 +16937,7 @@ const workspaceRestoreSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         Effect.map(ctx.host.bounds(testId), Option.fromNullishOr),
         (bounds) => ctx.expectSome(`${testId} painted`, bounds),
       );
-    /** The inspector's painted scroll offset; `NaN` when it reports none. */
+
     const scrollY = () =>
       Effect.map(ctx.host.scrollOffset(WORKSPACE_IDS.inspector), (offset) =>
         Option.match(Option.fromNullishOr(offset), {
@@ -18760,7 +16945,7 @@ const workspaceRestoreSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
           onSome: (value) => value.y,
         }),
       );
-    /** The readout once it names `expected`, or whatever it last read. */
+
     const settledReadout = (expected: string) => {
       const poll = (
         tries: number,
@@ -18773,7 +16958,7 @@ const workspaceRestoreSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         });
       return poll(50);
     };
-    /** The inspector offset once it reaches `expected`, or its last value. */
+
     const settledScroll = (
       expected: number,
     ): Effect.Effect<number, Smoke.SmokeHostError> => {
@@ -18788,7 +16973,7 @@ const workspaceRestoreSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         });
       return poll(50);
     };
-    /** The document pane's layout report once it reaches `expected`, or its last value. */
+
     const settledLayoutWidth = (
       expected: number,
     ): Effect.Effect<number, Smoke.SmokeHostError> => {
@@ -18807,7 +16992,6 @@ const workspaceRestoreSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       return poll(50);
     };
 
-    // 1. The default arrangement, and the row it is laid out in.
     const row = yield* boxOf(WORKSPACE_IDS.row);
     yield* ctx.expectContains(
       "the workspace opens at the default arrangement",
@@ -18846,7 +17030,6 @@ const workspaceRestoreSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       0,
     );
 
-    // 2. Change every persisted field.
     yield* ctx.host.click(WORKSPACE_IDS.toggle);
     yield* Effect.forEach(
       Arr.range(1, 4),
@@ -18892,7 +17075,6 @@ const workspaceRestoreSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("workspace-changed");
 
-    // 3. Save: the string is the arrangement the window is showing.
     yield* ctx.host.click(WORKSPACE_IDS.save);
     yield* Effect.sleep(SETTLE);
     const stored = yield* ctx.expectSome(
@@ -18911,7 +17093,6 @@ const workspaceRestoreSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       [0, WORKSPACE_DOCUMENT.max, "output", 120].join(","),
     );
 
-    // 4. Restore re-mounts the workspace from that string.
     yield* ctx.host.click(WORKSPACE_IDS.restore);
     const restored = yield* settledReadout("mount=2");
     yield* Effect.sleep(SETTLE);
@@ -18957,7 +17138,6 @@ const workspaceRestoreSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("workspace-restored");
 
-    // 5. A string that is not a layout opens the default arrangement.
     yield* ctx.host.click(WORKSPACE_IDS.corrupt);
     const fallback = yield* settledReadout("mount=3");
     yield* Effect.sleep(SETTLE);
@@ -18991,7 +17171,6 @@ const workspaceRestoreSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("workspace-default");
 
-    // 6. A stored width outside the bounds is clamped to the window's own.
     yield* ctx.host.click(WORKSPACE_IDS.clamp);
     const clamped = yield* settledReadout("mount=4");
     yield* Effect.sleep(SETTLE);
@@ -19015,20 +17194,6 @@ const workspaceRestoreSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("workspace-clamped");
   });
 
-/**
- * The window's theme switch: the provider's value changes and the frame follows.
- *
- * A window's renderer reports no style, so the theme gallery's style-report
- * proof cannot run here. What a window adds is the paint and the layout: the
- * page and card are sampled out of the captured frame, and the `md` control's
- * height is read from `bounds`, which is where a density change has to show. The
- * palette cycle is the shell's own; the platform cycle covers every look the
- * tokens table ships.
- *
- * The high-contrast palette is the measured rule: `applyStyle` reserves its
- * colours while still applying a look's density, so switching the platform with
- * that palette selected must move the control and leave the page's fill alone.
- */
 const ThemeSwitchProbe = (): ReactNode => {
   const [palette, setPalette] = useState<PaletteId>("dark");
   const [platform, setPlatform] = useState<PlatformName>("default");
@@ -19140,13 +17305,6 @@ const themeSwitchSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     const page = yield* boxOf("theme-page");
     const card = yield* boxOf("theme-card");
 
-    /**
-     * Captures `name`, samples `pointOf` its box and settles on `expected`.
-     *
-     * Each attempt writes the same capture, so a software paint that lands a
-     * frame late costs a retry instead of a false failure; the assertion then
-     * prints both colours.
-     */
     const sample = (
       label: string,
       name: string,
@@ -19196,7 +17354,6 @@ const themeSwitchSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         return control.height;
       });
 
-    // ── The shell's opening frame ───────────────────────────────────────────
     const dark = themeFor("dark", "default");
     yield* readoutIs("dark", "default");
     const darkPage = yield* sample(
@@ -19215,7 +17372,6 @@ const themeSwitchSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     const darkHeight = yield* heightOf("dark", dark);
 
-    // ── A palette press repaints, and leaves density alone ──────────────────
     yield* ctx.host.click("theme-palette-next");
     const light = themeFor("light", "default");
     yield* readoutIs("light", "default");
@@ -19245,7 +17401,6 @@ const themeSwitchSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       darkHeight,
     );
 
-    // ── The high-contrast palette is a third page ───────────────────────────
     yield* ctx.host.click("theme-palette-next");
     const high = themeFor("high", "default");
     yield* readoutIs("high", "default");
@@ -19270,7 +17425,6 @@ const themeSwitchSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     const highHeight = yield* heightOf("high", high);
 
-    // ── A platform press re-lays the control out ────────────────────────────
     yield* ctx.host.click("theme-platform-next");
     const darwin = themeFor("high", "darwin");
     yield* readoutIs("high", "darwin");
@@ -19293,7 +17447,6 @@ const themeSwitchSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       false,
     );
 
-    // ── Every look in the cycle moves the density to its own preset ─────────
     yield* ctx.host.click("theme-platform-next");
     const linux = themeFor("high", "linux");
     yield* readoutIs("high", "linux");
@@ -19322,7 +17475,6 @@ const themeSwitchSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       highHeight,
     );
 
-    // ── The palette cycle closes on the frame it opened on ──────────────────
     yield* ctx.host.click("theme-palette-next");
     const darkAgain = themeFor("dark", "default");
     yield* readoutIs("dark", "default");
@@ -19358,15 +17510,6 @@ const themeSwitchSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/**
- * The shipped `Dialog` holding the shipped `Popover` holding the shipped
- * `DropdownMenu` — the three-level stack the shared dismiss layer exists for.
- *
- * Every surface is controlled by the fixture (`nestedFlow`), so a dismissal the
- * stack resolves reaches React and the readout prints which surface each
- * keystroke landed on. A skipped surface is the claim under test: one Escape
- * must close the menu **only**, the next the popover, the last the dialog.
- */
 const NestedOverlayProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -19424,8 +17567,7 @@ const NestedOverlayProbe = (): ReactNode => {
                 A popover inside a dialog, and a menu inside that.
               </DialogDescription>
             </DialogHeader>
-            {/* A press target inside the dialog and outside both floating
-                surfaces: the pointer half's "outside" press lands here. */}
+            {}
             <div
               testId={NESTED_OUTSIDE}
               style={{ height: 32, backgroundColor: theme.colors.muted }}
@@ -19474,25 +17616,6 @@ const NestedOverlayProbe = (): ReactNode => {
   );
 };
 
-/**
- * Drives one Escape at a time through a three-level overlay stack, and reads
- * which surface it landed on.
- *
- * The claim under test is the one `internal/dismiss-layer.ts` is written for: a
- * keystroke bubbles through every enclosing surface, and only the deepest one
- * may consume it. A missing guard closes the menu **and** the popover **and**
- * the dialog on one Escape, which no single-surface probe can see. The stack is
- * three shipped components, so the measurement is also the one a consumer
- * composition gets.
- *
- * The pointer half of the same rule is **not** asserted here: measured on
- * 0.11.0 (2026-10-22), one press outside the popover and the menu raised both
- * surfaces' `onMouseDownOutside`, and the app saw the menu closed **twice**
- * (`closes=1,1,3`, `dismissed=menu,popover,dialog,menu,menu`) because the guard
- * keys the gesture on the payload's identity and the runtime builds one payload
- * per handler. That is a defect in the component package, filed as an interlock
- * row in `.agents/slop/TODO.md`; this probe will carry the press checks when it is fixed.
- */
 const nestedOverlaySteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor(NESTED_OPENER);
@@ -19507,7 +17630,6 @@ const nestedOverlaySteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    /** Focuses an app control, presses it and waits for `painted` to arrive. */
     const press = (testId: string, painted: string) =>
       Effect.gen(function* () {
         yield* ctx.host.focusElement(testId);
@@ -19566,9 +17688,7 @@ const nestedOverlaySteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       ].every(Boolean),
       true,
     );
-    // Measured, not assumed: a standalone menu leaves a pointer open's focus on
-    // its trigger, while this one's surface takes it — so one arrow is what a
-    // reader needs before Enter can activate a row.
+
     yield* ctx.expectEqual(
       "a pointer-opened menu nested in a popover takes the surface's focus",
       yield* focusedAfterPaint(ctx),
@@ -19587,8 +17707,6 @@ const nestedOverlaySteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("nested-open");
 
-    // One Escape, one surface: the keystroke reaches all three handlers, and
-    // only the deepest layer may consume it.
     yield* ctx.host.key("escape");
     yield* ctx.expectEqual(
       "Escape unpaints the menu only",
@@ -19649,9 +17767,6 @@ const nestedOverlaySteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("nested-dismissed");
 
-    // The pointer half. A press outside the floating surfaces raises **every**
-    // enclosing surface's `onMouseDownOutside`, and the stack must still dismiss
-    // exactly one of them: a gesture guard, not a handler guard.
     yield* press(NESTED_OPENER, NESTED_DIALOG);
     yield* press(NESTED_POPOVER_TRIGGER, NESTED_POPOVER_PANEL);
     yield* press(NESTED_MENU_TRIGGER, NESTED_MENU_PANEL);
@@ -19661,7 +17776,6 @@ const nestedOverlaySteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "dialog=open popover=open menu=open opens=2,2,2 closes=1,1,1 dismissed=menu,popover,dialog",
     );
 
-    // One press, outside the popover and the menu: only the menu may close.
     yield* ctx.host.click(NESTED_OUTSIDE);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -19679,7 +17793,6 @@ const nestedOverlaySteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // A second press is a new gesture, so the next surface goes.
     yield* ctx.host.click(NESTED_OUTSIDE);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -19696,8 +17809,6 @@ const nestedOverlaySteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // A press outside the dialog closes the last surface; the veil is what the
-    // pointer lands on, which is exactly the dialog's own outside press.
     yield* ctx.host.click(NESTED_OPENER);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -19718,24 +17829,12 @@ const nestedOverlaySteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("nested-pointer-dismissed");
   });
 
-/**
- * The editable-code composition: one source painted twice, the left box under a
- * transparent field and the right with no field at all.
- *
- * The pair is the instrument. Both boxes are the same size with the same code,
- * the same metrics and the same fill, so a pixel-for-pixel comparison of the two
- * regions reports exactly what the field painted: nothing while its ink is
- * transparent, its own glyphs while the control's ink is on. Nothing else in the
- * window is inside either region, and the readout prints counts rather than the
- * value, so the probe's own text cannot be mistaken for the code's.
- */
 const EditorOverlayProbe = (): ReactNode => {
   const theme = useTheme();
   const renderer = useGpuix().renderer;
   const [value, setValue] = useState(OVERLAY_SOURCE);
   const [ink, setInk] = useState<OverlayInk>("transparent");
-  // A text field's caret is drawn for an active window; automation drives a
-  // window that may never have taken the OS focus, so the probe asks for it.
+
   useLayoutEffect(() => {
     renderer?.activateWindow?.();
   }, [renderer]);
@@ -19787,8 +17886,7 @@ const EditorOverlayProbe = (): ReactNode => {
         >
           <text style={{ color: theme.colors.foreground }}>Hide it</text>
         </Pressable>
-        {/* A focus sink: a press here takes the focus off the field, which is
-            what a capture of the resting overlay needs. */}
+        {}
         <Pressable testId="overlay-neutral" onClick={() => undefined}>
           <text style={{ color: theme.colors.foreground }}>Focus here</text>
         </Pressable>
@@ -19814,8 +17912,7 @@ const EditorOverlayProbe = (): ReactNode => {
           {stack(OVERLAY_SOURCE, "overlay-reference-code")}
         </div>
       </div>
-      {/* A plain, opaque field: the control that shows the caret reading is the
-          runtime's, not this composition's. */}
+      {}
       <div
         testId="caret-box"
         style={{ width: 200, height: 60, backgroundColor: theme.colors.card }}
@@ -19838,7 +17935,6 @@ const EditorOverlayProbe = (): ReactNode => {
   );
 };
 
-/** The logical box `testId` paints, failing by name when it paints none. */
 const paintedRegion = (
   ctx: Smoke.AsyncSmokeContext,
   testId: string,
@@ -19855,7 +17951,6 @@ const paintedRegion = (
     return overlayRegion(box, scale);
   });
 
-/** One region of a capture, failing (rather than measuring nothing) when absent. */
 const cropped = (
   frame: Pixels.Pixels,
   region: Pixels.PixelRegion,
@@ -19873,7 +17968,6 @@ const cropped = (
       ),
   });
 
-/** The two editor boxes of one capture, and how many pixels the field added. */
 const editorPaint = (
   ctx: Smoke.AsyncSmokeContext,
   name: string,
@@ -19889,7 +17983,6 @@ const editorPaint = (
     );
   });
 
-/** The device-scaled regions the probe compares, read once from the first frame. */
 interface EditorRegions {
   readonly overlay: Pixels.PixelRegion;
   readonly reference: Pixels.PixelRegion;
@@ -19911,13 +18004,6 @@ const editorOverlaySteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       caret: yield* paintedRegion(ctx, "caret-box", scale),
     };
 
-    /**
-     * Waits for the readout to name the field's ink before a capture.
-     *
-     * The ink is React state, so a screenshot taken on the click's own frame
-     * shows the previous state — the first run of this probe read the control as
-     * an unpainted field for exactly that reason.
-     */
     const settleInk = (ink: OverlayInk) =>
       Effect.gen(function* () {
         const text = yield* settleUntil(
@@ -19931,8 +18017,6 @@ const editorOverlaySteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         );
       });
 
-    // 1. At rest the field holds the same source the reference paints, and its
-    //    ink is transparent: every pixel of the comparison must be the code's.
     yield* settleInk("transparent");
     yield* ctx.expectEqual(
       "a transparent field paints nothing over the code beneath it",
@@ -19949,9 +18033,6 @@ const editorOverlaySteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 2. The negative control: the same comparison with the field's own ink on.
-    //    A field that painted nothing at all would make check 1 pass trivially,
-    //    so this is what makes it a measurement.
     yield* ctx.host.click("overlay-ink-visible");
     yield* settleInk("visible");
     yield* ctx.host.capture("editor-overlay-control");
@@ -19969,10 +18050,6 @@ const editorOverlaySteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       0,
     );
 
-    // 3. The caret. A field with no caret is not an editor, so the claim is
-    //    measured on a plain opaque field as well as the transparent one: the
-    //    ink is on, the glyphs are therefore identical on both sides of the
-    //    focus, and five frames are sampled because a caret blinks.
     yield* ctx.host.capture("editor-overlay-caret-before");
     const caretInk = yield* themeColour(ctx, "inputForeground");
     const caretBefore = yield* cropped(
@@ -20020,8 +18097,6 @@ const editorOverlaySteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       0,
     );
 
-    // 4. Typing lands in the app's state; with the field's ink still transparent,
-    //    the overlay's code layer is the only thing that can repaint to the edit.
     yield* ctx.host.focusElement("overlay-input");
     yield* ctx.expectEqual(
       "the focus enters the transparent field",
@@ -20050,9 +18125,6 @@ const editorOverlaySteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 5. A file longer than the frame: the offset an app would mirror into the
-    //    code view. The field is grown past its own box with real keyboard input,
-    //    then asked where its content sits.
     yield* ctx.host.focusElement("overlay-input");
     yield* Effect.forEach(
       Arr.range(1, OVERLAY_ENTER_COUNT),
@@ -20071,23 +18143,6 @@ const editorOverlaySteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/**
- * `multi-pane-editor` — two files in one split, and the text session between
- * them.
- *
- * Tier 4's **multi-pane editing layouts** row is composition, and the
- * composition has one interaction that nothing had measured: a window has a
- * single platform text session, so a press must move it from one pane's field to
- * the other without either buffer changing, and the splitter between them must
- * resize the panes without changing a buffer. The divider is itself a control —
- * the shipped `SplitPane`'s `role="separator"` tab stop, which
- * `split-pane-lifecycle` measures — so the drag's press parks the session on the
- * divider and a press on a pane returns it; the probe drives exactly that: type
- * in one pane, press the other and type there, drag the divider, press the pane
- * again, then close and reopen a pane. The closed pane keeps its buffer in the
- * app, which is what makes a dock's `close` a layout change rather than data
- * loss.
- */
 const MultiPaneEditorProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -20226,7 +18281,6 @@ const multiPaneSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         Option.isSome(Option.fromNullishOr(bounds)),
       );
 
-    // 1. Both panes paint, side by side, and the divider is the whole gap.
     yield* ctx.expectEqual(
       "the layout opens with both buffers and the initial split",
       yield* readout(),
@@ -20267,7 +18321,6 @@ const multiPaneSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // 2. A press enters one pane's field, and typing reaches only that buffer.
     yield* ctx.host.click(leftInput);
     yield* ctx.expectEqual(
       "a press enters the left pane's field",
@@ -20288,7 +18341,6 @@ const multiPaneSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       ),
     );
 
-    // 3. A press in the other pane moves the one text session.
     yield* ctx.host.click(rightInput);
     yield* ctx.expectEqual(
       "a press moves the text session to the right pane",
@@ -20304,10 +18356,6 @@ const multiPaneSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       multiPaneReadout(leftTyped, rightTyped, "both", MULTI_PANE.initial),
     );
 
-    // 4. The splitter resizes the panes and keeps both buffers. The divider is
-    //    a `role="separator"` control (`split-pane-lifecycle` measures its tab
-    //    stop and ring), so the drag's press parks the one text session on the
-    //    divider; a press on a pane returns it, and no buffer moved.
     const dragged = dragWidth(MULTI_PANE.initial, 60);
     yield* ctx.host.drag("mp-divider", 60, 0);
     yield* Effect.sleep(SETTLE);
@@ -20342,7 +18390,6 @@ const multiPaneSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       multiPaneReadout(leftTyped, rightResized, "both", dragged),
     );
 
-    // 5. Both bounds clamp, and the other editor stays painted at the widest one.
     yield* ctx.host.drag("mp-divider", 200, 0);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -20365,8 +18412,6 @@ const multiPaneSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("multi-pane-split");
 
-    // 6. Closing a pane is a layout change: its buffer stays in the app and the
-    //    survivor takes the row.
     yield* ctx.host.click(MULTI_PANE_IDS.close);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -20387,7 +18432,6 @@ const multiPaneSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("multi-pane-closed");
 
-    // 7. Reopening restores both panes at the width they held, with both buffers.
     yield* ctx.host.click(MULTI_PANE_IDS.reopen);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -20412,19 +18456,6 @@ const multiPaneSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("multi-pane-reopened");
   });
 
-/**
- * `table-filter-lifecycle` — the rules around a grid's filter control.
- *
- * Tier 3's **filtering controls** row is `div` + `<input>`, so the runtime cannot
- * refuse the control; what a data grid has to get right is what happens to the
- * rows, the selection and the focus while the set changes under them. The probe
- * types a literal query into a field above 120 rows, watches the painted set
- * narrow, and measures the three decisions a grid owns: a selection survives only
- * while its record does, the field keeps the text session while rows come and
- * go, and a new set opens at the top. Arrow steps then walk the filtered order
- * (`Item 1` → `Item 10`), not the numeric index, and a clear keeps a selection
- * the full set still holds.
- */
 const TableFilterProbe = (): ReactNode => {
   const theme = useTheme();
   const renderer = useGpuix().renderer;
@@ -20438,7 +18469,6 @@ const TableFilterProbe = (): ReactNode => {
   const [offset, setOffset] = useState(0);
   const rows = filterRows(query);
 
-  /** Applies a query: the selection follows the set, and the new set opens at the top. */
   const apply = (next: string) => {
     setQuery(next);
     setSelected((current) => keepSelection(current, filterRows(next)));
@@ -20468,7 +18498,6 @@ const TableFilterProbe = (): ReactNode => {
     });
   };
 
-  /** Registers a row's native id, so a step can move the real focus to it. */
   const registerRow = (index: number) => (instance: PublicInstance | null) => {
     rowIds.current =
       instance === null
@@ -20604,7 +18633,6 @@ const tableFilterSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     const readout = () => ctx.host.text(FILTER_IDS.readout);
     const everyRow = filterRows("");
 
-    // 1. The table opens unfiltered, at its own row height.
     yield* ctx.expectEqual(
       "the grid opens with every row and no filter",
       yield* readout(),
@@ -20618,7 +18646,6 @@ const tableFilterSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // 2. A press selects the record and focuses the row it hit.
     yield* ctx.host.click(FILTER_IDS.row(1));
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -20632,7 +18659,6 @@ const tableFilterSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       FILTER_IDS.row(1),
     );
 
-    // 3. Typing filters; the field keeps the session and a visible selection stays.
     yield* ctx.host.click(FILTER_IDS.field);
     yield* ctx.host.key("1");
     yield* Effect.sleep(SETTLE);
@@ -20648,7 +18674,6 @@ const tableFilterSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       FILTER_IDS.field,
     );
 
-    // 4. A selection the narrower set hides is cleared, not kept invisible.
     yield* ctx.host.key("2");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -20657,7 +18682,6 @@ const tableFilterSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       filterReadout("12", filterRows("12"), Option.none(), 0),
     );
 
-    // 5. No match is an empty state, and the filtered-out row paints nothing.
     yield* ctx.host.key("z");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -20680,7 +18704,6 @@ const tableFilterSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 6. Clearing restores the set and parks the session in the field.
     yield* ctx.host.click(FILTER_IDS.clear);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -20694,7 +18717,6 @@ const tableFilterSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       FILTER_IDS.field,
     );
 
-    // 7. A new set opens at the top, even when the reader was scrolled away.
     yield* ctx.host.wheel(FILTER_IDS.list, 0, -200);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectContains(
@@ -20718,7 +18740,6 @@ const tableFilterSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       0,
     );
 
-    // 8. Arrows walk the filtered order, with the focus and the selection together.
     yield* ctx.host.click(FILTER_IDS.row(1));
     yield* Effect.sleep(SETTLE);
     yield* ctx.host.key("down");
@@ -20734,7 +18755,6 @@ const tableFilterSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       FILTER_IDS.row(10),
     );
 
-    // 9. Clearing keeps a selection the full set still holds.
     yield* ctx.host.click(FILTER_IDS.clear);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -20745,17 +18765,6 @@ const tableFilterSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("table-filtered");
   });
 
-/**
- * A grid whose columns can be hidden, restored and moved, in a window.
- *
- * Tier 3's **column configuration** row is `grid tracks + a menu`, and what a
- * menu owes its grid is the consequence: the content width follows the visible
- * set, every later column shifts by the hidden one's width, a horizontal offset
- * left past the new end is clamped after the new layout, and the header and its
- * cells read one column list. The rows live in one scroller with the header, so
- * the horizontal pan and the vertical scroll are the runtime's own; the clamp is
- * the app's, because a shrinking scroller keeps the offset it had.
- */
 const TableColumnsProbe = (): ReactNode => {
   const theme = useTheme();
   const grid = useRef<PublicInstance | null>(null);
@@ -20961,7 +18970,6 @@ const tableColumnsSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         Option.isNone(Option.fromNullishOr(found)),
       );
 
-    // 1. Every column opens in its configured order, at the width it defines.
     yield* ctx.expectEqual(
       "the grid opens with every column in its configured order",
       yield* readout(),
@@ -20981,7 +18989,6 @@ const tableColumnsSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 2. A press selects a record, and the cell that took it holds the focus.
     yield* ctx.host.click(COLUMN_IDS.cell(3, "name"));
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -20995,7 +19002,6 @@ const tableColumnsSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       COLUMN_IDS.cell(3, "name"),
     );
 
-    // 3. The rows scroll under the header; the offset is the runtime's own.
     yield* ctx.host.wheel(COLUMN_IDS.grid, 0, -200);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectNear(
@@ -21005,7 +19011,6 @@ const tableColumnsSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       2,
     );
 
-    // 4. Hiding a column takes its width out and shifts every later column.
     const ownerBefore = yield* paintedBox(ctx, COLUMN_IDS.header("owner"));
     yield* ctx.host.click(COLUMN_IDS.hide("status"));
     yield* Effect.sleep(SETTLE);
@@ -21043,9 +19048,7 @@ const tableColumnsSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       -200,
       2,
     );
-    // Row 9 is inside the viewport at this offset: a press resolves at the
-    // element's painted centre, and a row scrolled out of the window would land
-    // on whatever paints there instead.
+
     yield* ctx.host.click(COLUMN_IDS.cell(9, "owner"));
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectContains(
@@ -21054,7 +19057,6 @@ const tableColumnsSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "selected=r9",
     );
 
-    // 5. The grid pans to the end of the content it has now.
     yield* ctx.host.wheel(COLUMN_IDS.grid, -10_000, 0);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectNear(
@@ -21071,7 +19073,6 @@ const tableColumnsSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       2,
     );
 
-    // 6. A second hide shrinks the content under an offset left past its end.
     yield* ctx.host.click(COLUMN_IDS.hide("owner"));
     yield* Effect.sleep(SETTLE);
     const narrower = visibleColumns(hidden, ["owner"]);
@@ -21095,8 +19096,6 @@ const tableColumnsSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       2,
     );
 
-    // 7. Restoring a column re-grows the content and paints it where its widths
-    //    put it, with the offset the reader left.
     yield* ctx.host.click(COLUMN_IDS.hide("status"));
     yield* ctx.host.click(COLUMN_IDS.hide("owner"));
     yield* Effect.sleep(SETTLE);
@@ -21117,7 +19116,6 @@ const tableColumnsSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       2,
     );
 
-    // 8. A column move changes the order, not the width.
     yield* ctx.host.click(COLUMN_IDS.move("owner"));
     yield* Effect.sleep(SETTLE);
     const moved = moveColumn(COLUMN_ORDER, "owner", 1);
@@ -21143,20 +19141,6 @@ const tableColumnsSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("table-columns");
   });
 
-/**
- * A generated pattern field's `<svg>` in a real window.
- *
- * Plan 600's `hexagon` and `topography` are one generated `<path>` in a view
- * box, sized by the element — and nothing had measured that this route paints.
- * The probe mounts five shapes with disjoint tints, so one capture answers each
- * question: a stroked square (is the path scaled from its view box, stroke
- * included?), a band drawn past the view box (is it clipped at the view box's
- * edge?), the same band in a 3:1 box and in a 1:2 box (which axis decides the
- * scale, and what happens to the line's weight?), and a twenty-subpath comb
- * (does the whole generated path paint, or a prefix?). A press then gives the
- * square a different aspect ratio: the path is laid out again at the new width,
- * and the square content area it is painted in overflows the shorter box.
- */
 const SvgPatternProbe = (): ReactNode => {
   const theme = useTheme();
   const [resized, setResized] = useState(false);
@@ -21244,7 +19228,6 @@ const SvgPatternProbe = (): ReactNode => {
   );
 };
 
-/** The ink one shape's tint paints, in the window's logical points. */
 const patternInk = (
   ctx: Smoke.AsyncSmokeContext,
   frame: Pixels.Pixels,
@@ -21265,7 +19248,6 @@ const patternInk = (
     (region) => logicalRegion(region, scale),
   );
 
-/** How many of the comb's strokes paint their own tint at their centre. */
 const combPainted = (
   frame: Pixels.Pixels,
   scale: number,
@@ -21302,7 +19284,6 @@ const svgPatternSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     const ink = (shape: PatternShape) =>
       patternInk(ctx, frame, scale, shape, "first");
 
-    // 1. A generated path is scaled from its view box, stroke and all.
     const square = yield* paintedBox(ctx, PATTERN_IDS.square);
     yield* ctx.expectEqual(
       "the readout names the box the probe opened in",
@@ -21335,8 +19316,6 @@ const svgPatternSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       3,
     );
 
-    // 2. A path drawn past the view box is clipped at the view box's edge: the
-    //    band reaches both edges and paints nothing outside them.
     const overhang = yield* paintedBox(ctx, PATTERN_IDS.overhang);
     const overhangInk = yield* ink("overhang");
     yield* ctx.expectNear(
@@ -21364,9 +19343,6 @@ const svgPatternSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       2,
     );
 
-    // 3. A view box in a wider box: the width alone decides the scale, so the
-    //    band spans all 300 points rather than the 100 a fitted view box paints,
-    //    and its 10-unit stroke paints 30 points thick.
     const wide = yield* paintedBox(ctx, PATTERN_IDS.wide);
     const wideInk = yield* ink("wide");
     yield* ctx.expectNear(
@@ -21388,9 +19364,6 @@ const svgPatternSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       4,
     );
 
-    // 3b. The same band in a box twice as tall as it is wide: the height is not
-    //     consulted, so the band still spans the 100-point width and keeps a
-    //     10-point stroke instead of taking the height's 2× scale.
     const tall = yield* paintedBox(ctx, PATTERN_IDS.tall);
     const tallInk = yield* ink("tall");
     yield* ctx.expectNear(
@@ -21412,7 +19385,6 @@ const svgPatternSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       3,
     );
 
-    // 4. Every subpath of the generated path paints, not its prefix.
     const comb = yield* paintedBox(ctx, PATTERN_IDS.comb);
     yield* ctx.expectEqual(
       "every subpath of a generated path paints",
@@ -21420,10 +19392,6 @@ const svgPatternSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       COMB.strokes,
     );
 
-    // 5. The same view box in a 3:1 box: the path is laid out again at the new
-    //    width, and the content area grows with it — a square 300-point area,
-    //    which the element's 100-point box does not clip, so the pattern paints
-    //    above and below the box it was given.
     yield* ctx.host.click(PATTERN_IDS.resize);
     yield* settleUntil(
       ctx.host.text(PATTERN_IDS.readout),
@@ -21474,7 +19442,6 @@ const svgPatternSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/** The preview half of the inspector workspace: the object at its own size. */
 const InspectorPreview = ({
   object,
 }: {
@@ -21527,7 +19494,6 @@ const InspectorPreview = ({
   );
 };
 
-/** The inspector half: a toolbar, a metric, one editor and the property rows. */
 const InspectorPanel = ({
   object,
   onChange,
@@ -21735,7 +19701,6 @@ const inspectorSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         }),
       );
 
-    // 1. The object is read by its preview, its key-value table and its metric.
     yield* ctx.expectEqual(
       "the inspector opens on the object it holds",
       yield* readout(),
@@ -21770,8 +19735,6 @@ const inspectorSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // 2. The two panes are one group: the divider is the gap, and neither pane
-    //    leaves the group its split gives them.
     const left = yield* paintedBox(ctx, "inspector-split-pane-a");
     const right = yield* paintedBox(ctx, "inspector-split-pane-b");
     const divider = yield* paintedBox(ctx, "inspector-split-divider");
@@ -21801,7 +19764,6 @@ const inspectorSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // 3. A data toolbar is one row, above the properties it acts on.
     const wide = yield* paintedBox(ctx, INSPECTOR_IDS.wide);
     const reset = yield* paintedBox(ctx, INSPECTOR_IDS.reset);
     const firstRow = yield* paintedBox(ctx, INSPECTOR_IDS.labelCell("name"));
@@ -21817,7 +19779,6 @@ const inspectorSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 4. Every key-value row keeps its two columns, so the table reads down.
     const labelName = yield* paintedBox(ctx, INSPECTOR_IDS.labelCell("name"));
     const labelSize = yield* paintedBox(ctx, INSPECTOR_IDS.labelCell("size"));
     const valueName = yield* paintedBox(ctx, INSPECTOR_IDS.valueCell("name"));
@@ -21841,8 +19802,6 @@ const inspectorSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // 5. The property editor edits the object every other view reads, and the
-    //    key it types stays in its own field.
     yield* ctx.host.click(INSPECTOR_IDS.tagField);
     yield* ctx.host.key("a");
     yield* ctx.host.key("b");
@@ -21869,7 +19828,6 @@ const inspectorSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       INSPECTOR_IDS.tagField,
     );
 
-    // 6. A toolbar action moves the size in all three views at once.
     yield* ctx.host.click(INSPECTOR_IDS.wide);
     yield* Effect.sleep(SETTLE);
     const widened = widen(tagged);
@@ -21902,7 +19860,6 @@ const inspectorSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       metricReadout(widened),
     );
 
-    // 7. Reset restores the size and keeps the edit the reader made.
     yield* ctx.host.click(INSPECTOR_IDS.reset);
     yield* Effect.sleep(SETTLE);
     const restored = resetSize(widened);
@@ -21919,8 +19876,6 @@ const inspectorSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // 8. The inspector owns its scroller: its wheel moves the properties and
-    //    leaves the pane beside it where it was.
     const inspectorBefore = yield* paintedBox(ctx, "inspector-split-pane-b");
     const captionBefore = yield* paintedBox(ctx, INSPECTOR_IDS.previewCaption);
     yield* ctx.host.wheel(INSPECTOR_IDS.scroll, 0, -200);
@@ -21957,13 +19912,6 @@ const inspectorSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("inspector");
   });
 
-/**
- * One measured box: the fixed width a table cell gives its label, and the clip
- * a cell has to declare for a run to stop at its edge.
- *
- * `lineClamp` is a box prop because the runtime's clamp is a text style on the
- * container, so the probe measures both places a component can put it.
- */
 const TruncationBox = ({
   testId,
   clip = true,
@@ -21995,7 +19943,6 @@ const TruncationBox = ({
   );
 };
 
-/** A row of boxes, so six measurements fit one window. */
 const TruncationRow = ({
   children,
 }: {
@@ -22016,17 +19963,6 @@ const TruncationRow = ({
   );
 };
 
-/**
- * What a window paints for a line that does not fit.
- *
- * Tier 3 and 4 keep their labels on one line — a table cell, a tab, a tree row,
- * a list title — and the capability record called truncation supported because
- * `StyleDesc` declares the fields. No probe had painted one, so this view asks
- * the questions a component needs answered: does the run stop at the box, is the
- * cut marked with an ellipsis or does the last glyph get sliced, does
- * `ellipsis-start` keep the tail instead, and where does `lineClamp` have to be
- * written for a paragraph to be cut at two lines.
- */
 const TruncationProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -22143,13 +20079,6 @@ const truncationSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     const ink = palettes.dark.colors.foreground;
 
-    /**
-     * The box a fixture element painted, and what its run measures there.
-     *
-     * `bleed` widens the read past the box so a run that escapes is measured
-     * rather than clipped by the reader's own crop — the answer the clip
-     * question depends on.
-     */
     const read = (id: string, bleed = 0) =>
       Effect.gen(function* () {
         const box = yield* ctx.expectSome(
@@ -22168,16 +20097,8 @@ const truncationSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         return { box, measured };
       });
 
-    /**
-     * Whether an end paints a mark rather than a whole glyph.
-     *
-     * A capital stem inks dozens of pixels in the upper half of its line; an
-     * ellipsis inks a handful near the baseline. The comparison is against the
-     * same end of the unmarked run, so the font and the box cancel out.
-     */
     const marked = (end: number, whole: number): boolean => end * 3 < whole;
 
-    // 1. A clip with no mark: the run ends at the box and slices the glyph.
     const plain = yield* read(TRUNCATION_IDS.plain, TRUNCATION_BLEED);
     yield* ctx.expectEqual(
       "a clipped run keeps one line",
@@ -22201,7 +20122,6 @@ const truncationSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       false,
     );
 
-    // 2. The same box with `textOverflow`: the ellipsis stands where the tail was.
     const ellipsis = yield* read(TRUNCATION_IDS.ellipsis, TRUNCATION_BLEED);
     yield* ctx.expectEqual(
       "an ellipsized run keeps one line",
@@ -22224,7 +20144,6 @@ const truncationSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 3. `ellipsis-start` marks the other end.
     const start = yield* read(TRUNCATION_IDS.start, TRUNCATION_BLEED);
     yield* ctx.expectEqual(
       "an ellipsis-start run marks its head",
@@ -22237,7 +20156,6 @@ const truncationSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       false,
     );
 
-    // 4. A `<text>` that carries the clip itself, without a wrapping cell.
     const own = yield* read(TRUNCATION_IDS.own, TRUNCATION_BLEED);
     yield* ctx.expectNear(
       "a text element that clips itself is its box's width",
@@ -22256,7 +20174,6 @@ const truncationSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 4b. The shipped `Text`: the props the library publishes, not raw styles.
     const shipped = yield* read(TRUNCATION_IDS.shipped, TRUNCATION_BLEED);
     yield* ctx.expectEqual(
       "the shipped Text's truncate prop keeps one line",
@@ -22269,7 +20186,6 @@ const truncationSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 5. The clamp: where a paragraph is asked for two lines, and what paints.
     const wrapped = yield* read(TRUNCATION_IDS.wrapped);
     const clamp = yield* read(TRUNCATION_IDS.clamp);
     const clampBox = yield* read(TRUNCATION_IDS.clampBox);
@@ -22324,7 +20240,6 @@ const truncationSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 6. No clip declared: the run paints past the box it was given.
     const bleed = yield* read(TRUNCATION_IDS.bleed, TRUNCATION_BLEED);
     yield* ctx.expectEqual(
       "an unclipped box lets the run paint past its edge",
@@ -22342,18 +20257,6 @@ const truncationSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/**
- * The vertical slider, painted in a window.
- *
- * `Slider`/`RangeSlider` grew an `orientation` axis on the offscreen renderer's
- * reading alone (`runtime/value.runtime.test.tsx`): the parts turned onto the
- * other axis and the track mirrors them because the runtime has no
- * `column-reverse`. Nothing had painted one, so the layout under a real window
- * and the pointer path — which the window delivers as `event.y` — were still the
- * renderer's claim. The probe mounts both a single slider and a range on a
- * 200-point track, one pressed at its centre and dragged to a quarter from the
- * floor, and reads the value plus the thumb's paint.
- */
 const VerticalSliderProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -22462,7 +20365,6 @@ const verticalSliderSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     const rangeTrack = yield* paintedBox(ctx, VERTICAL_SLIDER_IDS.range);
     const rangeRail = yield* paintedBox(ctx, VERTICAL_SLIDER_IDS.rangeRail);
 
-    /** Captures the window and returns the frame the checks read. */
     const captured = (name: string) =>
       Effect.gen(function* () {
         yield* ctx.host.capture(name);
@@ -22475,9 +20377,6 @@ const verticalSliderSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       captureScale(first, window),
     );
 
-    // 1. The box is the horizontal one turned onto its other side: the caller
-    //    supplies the length, the control's own height becomes the width, and
-    //    half a thumb is reserved at each end so a thumb at an end is centred.
     yield* ctx.expectEqual(
       "the vertical track takes the caller's height",
       track.height,
@@ -22506,8 +20405,6 @@ const verticalSliderSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // 2. At rest the value is the floor, and the paint says so: a track that
-    //    packed its parts from the ceiling would put the thumb at the top.
     yield* ctx.expectEqual(
       "the slider starts at the floor",
       yield* ctx.host.text(VERTICAL_SLIDER_IDS.readout),
@@ -22524,8 +20421,6 @@ const verticalSliderSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // 3. A press at the track's centre is half the value, because the usable
-    //    span is the rail and the pointer maps from the bottom.
     yield* ctx.host.click(VERTICAL_SLIDER_IDS.slider);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectContains(
@@ -22545,8 +20440,6 @@ const verticalSliderSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // 4. Drag from that centre to a quarter from the floor. The delta is the
-    //    rail's own arithmetic, so a wrong inset cannot hide in a round number.
     const quarter = thumbCentreAt(rail, VERTICAL_FRACTION);
     yield* ctx.host.drag(
       VERTICAL_SLIDER_IDS.slider,
@@ -22584,8 +20477,6 @@ const verticalSliderSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 5. A drag that leaves the box keeps following, clamps at the ceiling, and
-    //    stops on the release: a move afterwards leaves the value where it was.
     yield* ctx.host.drag(VERTICAL_SLIDER_IDS.slider, 0, -(track.height + 100));
     yield* Effect.sleep(SETTLE);
     const atTop = yield* ctx.host.text(VERTICAL_SLIDER_IDS.readout);
@@ -22613,8 +20504,6 @@ const verticalSliderSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // 6. The range is the same axis with two ends: a press at the centre grabs
-    //    the nearer end (a tie at 50 goes to the start), and only that end moves.
     yield* ctx.expectEqual(
       "the range starts where the caller set it",
       yield* ctx.host.text(VERTICAL_SLIDER_IDS.rangeReadout),
@@ -22640,17 +20529,12 @@ const verticalSliderSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "range=25-90 ",
     );
 
-    // The two thumbs paint `input` inside one rail: their bound's top and
-    // bottom are the upper and lower ends of the two, which is where the axis
-    // says they are.
     const rangeFrame = yield* captured("slider-vertical-range");
     const rangeInk = yield* ctx.expectSome(
       "the range's thumbs paint their fill",
       inkBounds(rangeFrame, rangeTrack, scale, theme.colors.input),
     );
-    // Both thumbs paint `input` inside one rail, so the union's top and bottom
-    // are the outer halves of the two; the single thumb's painted height is the
-    // half each centre is measured from.
+
     const inkHalf = floorInk.height / 2;
     yield* ctx.expectNear(
       "the range's lower thumb is centred on its value",
@@ -22666,14 +20550,6 @@ const verticalSliderSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/**
- * The library's `Box` page tells a consumer to pass a dashed border, a per-side
- * width and a per-corner radius through `style`, and the capability record calls
- * a two-stop gradient supported; every one of them is declared in `StyleDesc`
- * and none had been painted in a window. A dashed edge is proved against the
- * solid edge of the same geometry, because "fewer border pixels than a solid
- * band" is a measurement where a dash pattern would be a guess.
- */
 const BoxPaintProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -22779,14 +20655,12 @@ const boxPaintSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         );
       });
 
-    /** The colour the capture paints at a logical point. */
     const at = (point: PaintPoint) =>
       ctx.expectSome(
         "the sampled point is inside the capture",
         colourAt(frame, point, scale),
       );
 
-    // 1. A solid edge and a dashed one of the same geometry.
     const solid = yield* boxOf(BOX_PAINT_IDS.solid);
     const dashed = yield* boxOf(BOX_PAINT_IDS.dashed);
     const solidPaint = yield* ctx.expectSome(
@@ -22809,7 +20683,6 @@ const boxPaintSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 2. One rounded corner, the other square.
     const corners = yield* boxOf(BOX_PAINT_IDS.corners);
     const cut = yield* at({ x: corners.x + 2, y: corners.y + 2 });
     const square = yield* at({
@@ -22827,7 +20700,6 @@ const boxPaintSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 3. A per-side width paints only the side it names.
     const sides = yield* boxOf(BOX_PAINT_IDS.sides);
     const topEdge = yield* at({
       x: sides.x + sides.width / 2,
@@ -22857,7 +20729,6 @@ const boxPaintSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 4. A two-stop gradient grades across its box.
     const gradient = yield* boxOf(BOX_PAINT_IDS.gradient);
     const middle = gradient.y + gradient.height / 2;
     const left = yield* at(pointAcross(gradient, 0.1, middle));
@@ -22879,16 +20750,6 @@ const boxPaintSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/**
- * What `aspectRatio` actually fills.
- *
- * The field is documented as "width divided by height, applied to whichever axis
- * is not definite" and every proof of it is an offscreen style report. A window
- * reports no style, so the fixture mounts one box per answer a component needs:
- * a definite width, a definite height, a portrait ratio, both dimensions
- * definite, and a child that inherits one definite axis from its container's
- * stretch — one column and one row.
- */
 const AspectRatioProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -23000,8 +20861,6 @@ const aspectRatioSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       discard: true,
     });
 
-    // A stretched child is the composition a card or a thumbnail uses: the
-    // container's axis is definite before the ratio derives the other.
     const column = yield* boxOf(ASPECT_IDS.column);
     const columnParent = yield* boxOf(ASPECT_IDS.columnParent);
     yield* ctx.expectNear(
@@ -23020,17 +20879,6 @@ const aspectRatioSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/**
- * The flex sizing rules a split pane, a table column and a truncating label
- * rest on, painted in a window.
- *
- * `@gpuixui/tw` compiles `flex-1` to `{ flexGrow: 1, flexShrink: 1, flexBasis:
- * 0 }`, `shrink-0` to `{ flexShrink: 0 }`, and every row of the library leans on
- * one of them — but no probe painted a grow, a shrink, a basis or an automatic
- * minimum. The fixture mounts each rule as one row whose widths are derived from
- * `flex-sizing.ts`, so the arithmetic under test is the same arithmetic the
- * README prints.
- */
 const FlexSizingProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -23071,11 +20919,7 @@ const FlexSizingProbe = (): ReactNode => {
       }}
     />
   );
-  /**
-   * A grower with `flexBasis: 0` (what `flex-1` compiles to), and its
-   * content-sized twin that omits the basis — two declarations, because a style
-   * key that is absent is not a value.
-   */
+
   const grower = (id: string, content?: number) => (
     <div
       testId={id}
@@ -23225,8 +21069,7 @@ const FlexSizingProbe = (): ReactNode => {
 const flexSizingSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor(FLEX_IDS.growFill);
-    // The evidence frame: every row of the table above in one paint, so a
-    // reader can check the widths against the picture.
+
     yield* ctx.host.capture("flex-sizing");
     const boxOf = (id: string) =>
       Effect.gen(function* () {
@@ -23236,8 +21079,6 @@ const flexSizingSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         );
       });
 
-    // One check per box, so the printed count is the table's size plus the
-    // row comparisons below rather than a number written by hand.
     yield* Effect.forEach(
       FLEX_WIDTH_CASES,
       (expectation) =>
@@ -23253,8 +21094,6 @@ const flexSizingSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       { concurrency: 1, discard: true },
     );
 
-    // The grower ends exactly at the row's right edge: a grower that took its
-    // content plus the leftover would leave the row short.
     const growRow = yield* boxOf(FLEX_IDS.growRow);
     const growFill = yield* boxOf(FLEX_IDS.growFill);
     yield* ctx.expectNear(
@@ -23264,8 +21103,6 @@ const flexSizingSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // An item that may not shrink keeps the width it asked for and paints past
-    // its row, which is the overflow a fixed pane or a column relies on.
     const noShrinkRow = yield* boxOf(FLEX_IDS.noShrinkRow);
     const noShrinkItem = yield* boxOf(FLEX_IDS.noShrinkItem);
     yield* ctx.expectEqual(
@@ -23274,9 +21111,6 @@ const flexSizingSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // The floor rows read their own content: the automatic minimum holds the
-    // item at its child's width, and `minWidth: 0` lets the row shrink it while
-    // the child keeps painting past the item's edge.
     const floorItem = yield* boxOf(FLEX_IDS.floorItem);
     const floorContent = yield* boxOf(FLEX_IDS.floorContent);
     const liftedItem = yield* boxOf(FLEX_IDS.liftedItem);
@@ -23310,17 +21144,6 @@ const flexSizingSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/**
- * The native scrollbar thumb a `ScrollArea` paints, and the strip it moves on.
- *
- * `scrollbarColor` and `scrollbarWidth` are the runtime's own knobs, and the
- * shipped `ScrollArea` sets both from the theme — but the offscreen suite only
- * reads the style it passes, so what a consumer actually sees at rest, after a
- * wheel, at the clamp and under the pointer was unmeasured. The fixture
- * (`scrollbar.ts`) derives the binding's thumb rule, and the probe holds two
- * scrollers to their tint and thickness, the shipped default to the theme's
- * role, and a scroller whose content fits to **no thumb at all**.
- */
 const ScrollbarProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -23339,12 +21162,7 @@ const ScrollbarProbe = (): ReactNode => {
     alignItems: "flex-start" as const,
     gap: theme.spacing.lg,
   };
-  /**
-   * One scroller: every case mounts the shipped `ScrollArea`, and the two knobs
-   * are passed only when the fixture names one, so the default case really is
-   * the library's default paint. A horizontal case asks the same rule on the
-   * other axis, whose content is a strip rather than a column.
-   */
+
   const scroller = (scroller: ScrollbarCase) => (
     <ScrollArea
       key={scroller.id}
@@ -23410,8 +21228,7 @@ const ScrollbarProbe = (): ReactNode => {
 const scrollbarSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor(SCROLLBAR_IDS.probe);
-    // The resting frame: every scroller in one paint, plus the swatch that names
-    // the theme's own thumb colour.
+
     yield* ctx.host.capture("scrollbar");
     const frame = yield* ctx.host.pixels("scrollbar");
     const window = yield* ctx.host.windowSize();
@@ -23420,7 +21237,6 @@ const scrollbarSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       captureScale(frame, window),
     );
 
-    /** The capture pixels a logical box covers. */
     const regionOf = (box: Smoke.Bounds): Pixels.PixelRegion =>
       new Pixels.PixelRegion({
         x: Math.round(box.x * scale),
@@ -23428,20 +21244,15 @@ const scrollbarSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         width: Math.round(box.width * scale),
         height: Math.round(box.height * scale),
       });
-    /**
-     * A capture read as the logical pixels the rule is written in. The rounded
-     * caps hide half a pixel at each end from an exact-colour read, so a length
-     * is asserted against whole logical pixels with a one-pixel allowance —
-     * measured, not assumed: a thumb the rule paints 26 px long reads 25.
-     */
+
     const logical = (pixels: number): number => pixels / scale;
-    /** The part of a frame one box covers, or `None` when it is off the frame. */
+
     const cropIn = (
       source: Pixels.Pixels,
       box: Smoke.Bounds,
     ): Option.Option<Pixels.Pixels> =>
       Option.fromNullishOr(Pixels.crop(source, regionOf(box)));
-    /** How many pixels of `colour` a box paints, or `-1` when it is off frame. */
+
     const countIn = (
       source: Pixels.Pixels,
       box: Smoke.Bounds,
@@ -23451,7 +21262,7 @@ const scrollbarSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         onNone: () => -1,
         onSome: (crop) => Pixels.countColour(crop, colour),
       });
-    /** The box a colour paints inside `box`, or `None` when it paints none. */
+
     const thumbIn = (
       source: Pixels.Pixels,
       box: Smoke.Bounds,
@@ -23461,8 +21272,6 @@ const scrollbarSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         Option.fromNullishOr(Pixels.boundsOfColour(crop, colour)),
       );
 
-    // The swatch is the theme's `scrollbar` role, so the shipped default's paint
-    // is compared with a colour this frame measured rather than a remembered one.
     const swatch = yield* paintedBox(ctx, SCROLLBAR_IDS.swatch);
     const swatchColour = yield* ctx.expectSome(
       "the swatch paints the theme's scrollbar role",
@@ -23472,7 +21281,7 @@ const scrollbarSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         scale,
       ),
     );
-    /** The tint a case asks for, or the theme's role when it names none. */
+
     const tintOf = (tint: Option.Option<string>): Effect.Effect<Pixels.Rgba> =>
       Option.match(tint, {
         onNone: () => Effect.succeed(swatchColour),
@@ -23484,9 +21293,6 @@ const scrollbarSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
           }),
       });
 
-    // Every mounted scroller: its box, its content's box, and the content
-    // keeping the viewport's cross axis — a thumb laid out in a gutter would
-    // narrow a vertical scroller's content and shorten a horizontal one's.
     const mounted = yield* Effect.forEach(
       SCROLLBAR_VIEWPORTS,
       (scroller) =>
@@ -23515,11 +21321,6 @@ const scrollbarSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         onSome: Effect.succeed,
       });
 
-    // The resting thumb, per case: the tint paints, flush at the trailing edge,
-    // at the track's start, at the thickness asked for and the length the
-    // content gives it. A horizontal thumb swaps the two coordinates, and the
-    // expectations are read the same way rather than through one shared helper,
-    // so a read that forgot the axis could not agree with itself.
     yield* Effect.forEach(
       SCROLLBAR_THUMBS,
       (thumb) =>
@@ -23561,8 +21362,6 @@ const scrollbarSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       { concurrency: 1, discard: true },
     );
 
-    // The control: content that fits paints no thumb, so the affordance is not a
-    // decoration every scroller wears.
     const shortViewport = yield* viewportOf(SCROLLBAR_SHORT.id);
     const shortTint = yield* tintOf(SCROLLBAR_SHORT.tint);
     yield* ctx.expectEqual(
@@ -23571,8 +21370,6 @@ const scrollbarSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       0,
     );
 
-    // The thumb is confined to its own scroller: the tint's paint in the frame is
-    // the tint's paint in the box, so nothing bled into a neighbour.
     yield* Effect.forEach(
       SCROLLBAR_TINTED_THUMBS,
       (thumb) =>
@@ -23604,8 +21401,6 @@ const scrollbarSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       0,
     );
 
-    // One wheel down and one past the end: the offset the renderer holds, and
-    // the box the rule says the thumb paints at that offset.
     yield* Effect.forEach(
       SCROLLBAR_STOPS,
       (stop) =>
@@ -23643,8 +21438,6 @@ const scrollbarSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       { concurrency: 1, discard: true },
     );
 
-    // The other axis: a sideways wheel moves the offset and the thumb along the
-    // width, so the same rule has to transpose rather than only apply to height.
     const horizontal = yield* viewportOf(SCROLLBAR_HORIZONTAL.id);
     const horizontalColour = yield* tintOf(SCROLLBAR_HORIZONTAL.tint);
     const sideways = yield* Option.match(SCROLLBAR_HORIZONTAL_STOP, {
@@ -23685,8 +21478,6 @@ const scrollbarSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // The pointer does not appear or fade the thumb: hovering leaves the same
-    // paint in the same place.
     yield* ctx.host.hover(SCROLLBAR_IDS.tinted);
     yield* Effect.sleep(SETTLE);
     yield* ctx.host.capture("scrollbar-hover");
@@ -23703,7 +21494,6 @@ const scrollbarSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       2,
     );
 
-    // Back to the top: the thumb returns to the start of its track.
     yield* ctx.host.wheel(SCROLLBAR_IDS.tinted, 0, 100_000);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -23724,17 +21514,7 @@ const scrollbarSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
   });
-/**
- * Whether a `ScrollArea` with `axis="both"` paints **both** thumbs.
- *
- * `scrollbar-thumb` asked the thumb rule one axis at a time, as every shipped
- * scroller is built. A log pane or an editor scroller overflows both ways, and
- * the runtime paints the thumb itself — so whether a two-axis scroller gets two
- * affordances or one cannot be answered by a recipe, only by a window. The
- * fixture (`scrollbar-both.ts`) derives both bands from the same rule; this
- * probe reads each band's own corner-free strip, so a vertical thumb cannot be
- * mistaken for a short horizontal one.
- */
+
 const ScrollbarBothProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -23753,10 +21533,7 @@ const ScrollbarBothProbe = (): ReactNode => {
     alignItems: "flex-start" as const,
     gap: theme.spacing.lg,
   };
-  /**
-   * One scroller: both axes on, the caller's tint and thickness, and content
-   * that either overflows both ways or fits inside the box on both.
-   */
+
   const scroller = (
     id: string,
     contentId: string,
@@ -23827,10 +21604,6 @@ const scrollbarBothSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       Option.fromNullishOr(Pixels.hexToRgba(BOTH_FILL)),
     );
 
-    /**
-     * One band of a scroller, as capture pixels. The band is the strip the
-     * axis's thumb owes and stops before the corner the two thumbs share.
-     */
     const bandCrop = (
       source: Pixels.Pixels,
       origin: Smoke.Bounds,
@@ -23847,7 +21620,7 @@ const scrollbarBothSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
           }),
         ),
       );
-    /** The box the tint paints inside a band, in the band's own pixels. */
+
     const tintIn = (
       source: Pixels.Pixels,
       origin: Smoke.Bounds,
@@ -23856,7 +21629,7 @@ const scrollbarBothSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       Option.flatMap(bandCrop(source, origin, band), (crop) =>
         Option.fromNullishOr(Pixels.boundsOfColour(crop, tint)),
       );
-    /** How many pixels of the tint a band paints, or `-1` when it is off frame. */
+
     const countIn = (
       source: Pixels.Pixels,
       origin: Smoke.Bounds,
@@ -23867,8 +21640,6 @@ const scrollbarBothSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         onSome: (crop) => Pixels.countColour(crop, tint),
       });
 
-    // Each axis's own band: a thumb paints there, as long as the content gives
-    // it, starting where the offset puts it, and filling the strip it is owed.
     yield* Effect.forEach(
       BOTH_THUMBS,
       (thumb: BothThumb) =>
@@ -23900,8 +21671,6 @@ const scrollbarBothSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       { concurrency: 1, discard: true },
     );
 
-    // The thumb is painted over the content rather than in a gutter: the content
-    // fill reaches the strip the vertical thumb occupies.
     const beside = yield* colourAtPoint(
       ctx,
       frame,
@@ -23918,8 +21687,6 @@ const scrollbarBothSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       false,
     );
 
-    // The control: content that fits inside the box on both axes paints no
-    // thumb at all, so a thumb is the overflow's consequence.
     const shortThumb = Arr.reduce(
       BOTH_AXES,
       0,
@@ -23931,9 +21698,6 @@ const scrollbarBothSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       0,
     );
 
-    // Each wheel: the offset on both axes, and the thumb on the wheel's own
-    // axis following it. The left/right move is the half a one-thumb
-    // implementation cannot answer.
     yield* Effect.forEach(
       BOTH_STOPS,
       (stop, index) =>
@@ -23983,20 +21747,6 @@ const scrollbarBothSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/**
- * Whether the **shipped** `Collapsible` measures its body in a window.
- *
- * `motion-geometry` measured the runtime's `motion` on a raw box. A disclosure
- * section is the other way round: `<AutoHeight>` is told the height its
- * **content** reports through `onLayout`, so whether a section opens at all
- * depends on a layout pass no renderer can stand in for. This probe drives the
- * component the way a reader does, then reads the box that settles, the body
- * inside it, and the unmount after the collapse.
- *
- * The body is grown while the section is closed: the reveal unmounts its
- * subtree then, so the next open has to measure the height on screen instead of
- * reusing the number it closed with.
- */
 const CollapsibleProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -24013,9 +21763,9 @@ const CollapsibleProbe = (): ReactNode => {
     flexDirection: "column" as const,
     gap: theme.spacing.lg,
   };
-  /** The box one section is laid out in: the width a reveal must not animate. */
+
   const section = { width: COLLAPSE_WIDTH };
-  /** A body of one fixed height, so the reveal's target is a number. */
+
   const body = (testId: string, bodyHeight: number) => (
     <div
       testId={testId}
@@ -24058,7 +21808,7 @@ const CollapsibleProbe = (): ReactNode => {
           <CollapsibleTrigger testId={COLLAPSE_IDS.trigger}>
             {label("Reveal the body")}
           </CollapsibleTrigger>
-          {/* The padding is dropped so the settled height is the body's own. */}
+          {}
           <CollapsibleContent testId={COLLAPSE_IDS.clip} className="p-0 gap-0">
             {body(COLLAPSE_IDS.body, height)}
           </CollapsibleContent>
@@ -24097,12 +21847,9 @@ const CollapsibleProbe = (): ReactNode => {
 const collapsibleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor(COLLAPSE_IDS.trigger);
-    // A capture stalls the animation clock, so a run that starts right after
-    // one misses the mount tween's frames. The section that starts open is
-    // settling while this wait runs, which is why its read comes after it.
+
     yield* Effect.sleep(Duration.millis(400));
 
-    /** A box field, `NaN` while the element paints nothing. */
     const field = (testId: string, name: "width" | "height") =>
       Effect.map(ctx.host.bounds(testId), (bounds) =>
         Option.match(Option.fromNullishOr(bounds), {
@@ -24111,7 +21858,6 @@ const collapsibleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         }),
       );
 
-    /** The readout once it names `expected`, which a press reports by a frame. */
     const readout = (expected: string) =>
       settleUntil(ctx.host.text(COLLAPSE_IDS.readout), (line) =>
         line.includes(expected),
@@ -24123,8 +21869,6 @@ const collapsibleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         yield* ctx.expectContains(`${label} reports its state`, line, expected);
       });
 
-    // A closed reveal is unmounted, not a zero-high box: the subtree (and the
-    // box that holds it) leaves the tree, so nothing inside it keeps running.
     yield* expectState(
       "a section that starts closed",
       collapseReadout(COLLAPSE_REST),
@@ -24146,8 +21890,6 @@ const collapsibleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // The mount path: a section that starts open measures its body without a
-    // press, so `defaultOpen` is a real reveal rather than a painted box.
     const mountedClip = yield* settleNumber(
       field(COLLAPSE_IDS.initialClip, "height"),
     );
@@ -24171,9 +21913,6 @@ const collapsibleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // The presses, and the grow between the second and third: the body changes
-    // while the section is closed, so the reveal has nothing mounted to measure
-    // until it opens again.
     yield* Effect.forEach(
       COLLAPSE_PRESSES,
       (press: CollapsePress, index) =>
@@ -24228,24 +21967,9 @@ const collapsibleSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       { concurrency: 1, discard: true },
     );
 
-    // Captures come last: a screenshot stalls the animation clock, so one taken
-    // between a press and its reads makes the next run complete in one frame.
     yield* ctx.host.capture("collapse-open");
   });
 
-/**
- * Whether the **runtime's** scrollbar thumb takes a drag — it does not.
- *
- * The thumb is painted by the runtime inside the scroller, on a `canvas` with
- * no hitbox, so it is not a node a probe can name: the press is aimed from the
- * scroller's own centre at the strip the rule `scrollbar.ts` measured. A
- * pointer user either has this gesture or has only the wheel and the keys, and
- * no recipe can add it.
- *
- * The sibling handle is the control: the **same** drag on an element that
- * listens to `onMouseDown`/`onMouseMove` runs its eight moves, so a thumb that
- * does not move is the runtime's overlay, not a harness that cannot drag.
- */
 const ScrollbarDragProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -24347,7 +22071,6 @@ const scrollbarDragSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       Option.fromNullishOr(Pixels.hexToRgba(DRAG_TINT)),
     );
 
-    /** The offset the renderer reports, failing by name if it reports none. */
     const offsetRead = (label: string) =>
       Effect.gen(function* () {
         return yield* ctx.expectSome(
@@ -24356,7 +22079,6 @@ const scrollbarDragSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         );
       });
 
-    /** The thumb the right-hand strip paints, in the strip's own pixels. */
     const thumbIn = (
       source: Pixels.Pixels,
     ): Option.Option<Pixels.PixelRegion> =>
@@ -24375,8 +22097,6 @@ const scrollbarDragSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         (crop) => Option.fromNullishOr(Pixels.boundsOfColour(crop, tint)),
       );
 
-    // At rest: nothing has moved, and the thumb is where the rule puts it —
-    // which is also the place the drag below aims at.
     const rest = yield* offsetRead("at rest");
     yield* ctx.expectNear("the scroller starts at the top", rest.y, 0, 1);
     yield* ctx.expectNear("the scroller starts at the left", rest.x, 0, 1);
@@ -24397,7 +22117,6 @@ const scrollbarDragSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // The thumb drag: the press lands on the thumb's own centre and travels.
     yield* ctx.host.drag(DRAG_IDS.scroller, 0, DRAG_BY, {
       offset: DRAG_GRAB,
     });
@@ -24416,7 +22135,6 @@ const scrollbarDragSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // The track below it: a browser pages on that press, the overlay takes none.
     yield* ctx.host.drag(DRAG_IDS.scroller, 0, DRAG_BY, {
       offset: DRAG_TRACK_GRAB,
     });
@@ -24429,7 +22147,6 @@ const scrollbarDragSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // The control: the same drag on an element that listens for it.
     yield* ctx.expectContains(
       "the handle starts with no moves",
       yield* ctx.host.text(DRAG_IDS.readout),
@@ -24443,7 +22160,6 @@ const scrollbarDragSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "moves=8",
     );
 
-    // The wheel is the path that works, so the scroller is not inert.
     yield* ctx.host.wheel(DRAG_IDS.scroller, 0, DRAG_WHEEL);
     yield* Effect.sleep(SETTLE);
     const wheeled = yield* offsetRead("after the wheel");
@@ -24473,16 +22189,6 @@ const scrollbarDragSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/**
- * What box an `<img>` paints, and what a style can make it paint.
- *
- * An image is the one element whose intrinsic ratio the runtime owns: GPUI
- * fills the element's own `aspect_ratio` from the decoded bitmap once it loads,
- * and the runtime hands the element the declared width ÷ height only when both
- * dimensions are definite pixels. A thumbnail, a preview card or a crop area
- * composes around which one wins, and a window's layout report is the only
- * place to read it.
- */
 const ImageBoxProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -24541,9 +22247,7 @@ const ImageBoxProbe = (): ReactNode => {
 const imageBoxSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor(IMAGE_BOX_IDS.ratio);
-    // A bitmap arrives after the first layout, so each box is read once it has
-    // a size and that size holds; a poll bounded at ~2 s still fails on the
-    // value it settled on.
+
     const settled = (id: string) =>
       Effect.gen(function* () {
         const read = Effect.map(ctx.host.bounds(id), Option.fromNullishOr);
@@ -24603,18 +22307,6 @@ const imageBoxSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/**
- * Where a bitmap's pixels land in a box of a different ratio.
- *
- * `image-box` measured the box an `<img>` paints; this measures the paint
- * **inside** it. The fixture's bitmap is 40×20 with three unequal bands, so
- * every mode answers with a different placement: `fill` stretches the bands
- * across the box, `contain` letterboxes the same run, `cover` crops the outer
- * bands, and `scaleDown`/`none` keep the bitmap's own size — one centred, the
- * other anchored at the box's origin. The page is read at each edge the bitmap
- * does not reach, and the last sample clips a `borderRadius` circle so the
- * corner it removes is a measurement rather than a claim.
- */
 const ImageFitProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -24767,8 +22459,6 @@ const imageFitSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       { concurrency: 1, discard: true },
     );
 
-    // The rounded case: the clip removes the corner, leaves the top middle and
-    // the centre, and the box it clips is the same square.
     const rounded = yield* ctx.expectSome(
       "the fixture declares a rounded case",
       roundCase,
@@ -24793,18 +22483,6 @@ const imageFitSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/**
- * What a `boxShadow` paints, one property per box.
- *
- * The library's whole elevation contract is this one `StyleDesc` field: a card,
- * a popover, a menu and a dialog separate from the page with the theme's
- * `elevation` level, and the capability record called `boxShadow` supported
- * because the field exists. So the fixture asks the runtime for each claim in
- * turn — an offset, a blur, a spread, an inset and its outset twin of the same
- * geometry, a two-entry list, a colour the parser cannot read, and the shipped
- * resting and deepest levels on the page they lift — and the reads sample points
- * whose distance is a constant.
- */
 const ElevationProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -24932,14 +22610,12 @@ const elevationSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         );
       });
 
-    /** The colour the capture paints at a logical point. */
     const at = (point: PaintPoint) =>
       ctx.expectSome(
         "the sampled point is inside the capture",
         colourAt(frame, point, scale),
       );
 
-    // 1. An offset shadow paints a band below its box, and nothing above it.
     const offset = yield* boxOf(ELEVATION_IDS.offset);
     const offsetPoints = aroundBox(offset, ELEVATION_NEAR);
     const offsetAbove = aroundBox(offset, ELEVATION_INSIDE);
@@ -24980,7 +22656,6 @@ const elevationSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // The band it covers is the shadow's colour and nothing else.
     const band = {
       x: offset.x + 1,
       y: offset.y + offset.height + 1,
@@ -24997,7 +22672,6 @@ const elevationSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       Math.round(band.width * band.height * scale * scale),
     );
 
-    // 2. A blur reaches past the edge and fades with distance.
     const blur = yield* boxOf(ELEVATION_IDS.blur);
     const blurPoints = aroundBox(blur, 0);
     const blurNear = yield* at({
@@ -25028,7 +22702,6 @@ const elevationSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 3. A spread paints every side the offset alone leaves bare.
     const spread = yield* boxOf(ELEVATION_IDS.spread);
     const spreadPoints = aroundBox(spread, ELEVATION_INSIDE);
     const spreadAbove = yield* at({
@@ -25059,8 +22732,6 @@ const elevationSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 4. Inset paints on the inside of the same geometry the outset paints on
-    //    the outside of — the pair is the measurement.
     const inset = yield* boxOf(ELEVATION_IDS.inset);
     const insetPoints = aroundBox(inset, ELEVATION_INSIDE);
     const insetInside = yield* at({
@@ -25112,7 +22783,6 @@ const elevationSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 5. A list paints every entry, one on each side.
     const stacked = yield* boxOf(ELEVATION_IDS.stacked);
     const stackedPoints = aroundBox(stacked, ELEVATION_NEAR);
     const stackedAbove = yield* at({
@@ -25134,7 +22804,6 @@ const elevationSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 6. A colour the parser cannot read paints no shadow at all.
     const unreadable = yield* boxOf(ELEVATION_IDS.unreadable);
     const unreadablePoints = aroundBox(unreadable, ELEVATION_NEAR);
     const unreadableBelow = yield* at({
@@ -25147,7 +22816,6 @@ const elevationSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 7. The shipped levels reach the glass, and the deepest reaches further.
     const resting = yield* boxOf(ELEVATION_IDS.resting);
     const deepest = yield* boxOf(ELEVATION_IDS.deepest);
     const restingFar = yield* at({
@@ -25178,11 +22846,6 @@ const elevationSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/**
- * What `opacity` paints: one share per box, a parent that fades the ink its child
- * paints, and a shadow under a faded box. The checks are the orderings a fade
- * owes rather than exact bytes, because the runtime composites in its own space.
- */
 const OpacityProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -25207,7 +22870,7 @@ const OpacityProbe = (): ReactNode => {
     backgroundColor: OPACITY_FILL,
     opacity,
   });
-  /** A box at `opacity` holding a full-colour line, so a parent's share reaches it. */
+
   const withInk = (testId: string, inkId: string, opacity: number) => (
     <div testId={testId} style={box(opacity)}>
       <text
@@ -25293,7 +22956,6 @@ const opacitySteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         colourAt(frame, point, scale),
       );
 
-    /** The middle of a box, which no child ink covers. */
     const middleOf = (id: string) =>
       Effect.gen(function* () {
         const painted = yield* boxOf(id);
@@ -25303,7 +22965,6 @@ const opacitySteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         });
       });
 
-    // 1. The two ends: a share of one is the fill, a share of zero is the page.
     const opaque = yield* middleOf(OPACITY_IDS.full);
     const hidden = yield* middleOf(OPACITY_IDS.hidden);
     yield* ctx.expectEqual(
@@ -25317,7 +22978,6 @@ const opacitySteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 2. A share mixes the fill with the page, in the share's direction.
     const half = yield* middleOf(OPACITY_IDS.half);
     const quarter = yield* middleOf(OPACITY_IDS.quarter);
     yield* ctx.expectEqual(
@@ -25331,7 +22991,6 @@ const opacitySteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 3. A share above one is not a brighter colour: it is the fill.
     const clamped = yield* middleOf(OPACITY_IDS.clamped);
     yield* ctx.expectEqual(
       "an opacity above one paints the fill at full strength",
@@ -25339,7 +22998,6 @@ const opacitySteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 4. A parent's share reaches the ink its child paints.
     const exactParent = yield* boxOf(OPACITY_IDS.exactParent);
     const fadedParent = yield* boxOf(OPACITY_IDS.fadedParent);
     const exactInk = yield* ctx.expectSome(
@@ -25361,7 +23019,6 @@ const opacitySteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       0,
     );
 
-    // 5. A shadow under a faded box fades with it, and stays a shadow.
     const shadow = yield* boxOf(OPACITY_IDS.shadow);
     const shade = yield* at({
       x: shadow.x + shadow.width / 2,
@@ -25379,19 +23036,6 @@ const opacitySteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/**
- * `movable-tabs-lifecycle` — a tab dragged between two strips, and stepped by a
- * keyboard.
- *
- * Tier 4's **detachable / movable tabs** row is `partial` because the binding
- * opens one window per process; the half a window can prove is the move inside
- * it. `workspace-tab-drag` measured the state arithmetic in a `TestRenderer`;
- * this probe asks what a real pointer and a real key do to it: whether the tab
- * keeps the pointer after it leaves its own strip, whether a drop resolves from
- * the group the pointer is actually over (not a distance heuristic), and what a
- * move costs the panel — it changes parent, so the draft has to live above the
- * strips and the focus has to be restored by the app.
- */
 const MovableTabsProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -25412,7 +23056,6 @@ const MovableTabsProbe = (): ReactNode => {
   >(Option.none());
   const pendingFocus = useRef<Option.Option<string>>(Option.none());
 
-  /** A move changes the tab's parent, so its element is new: focus it here. */
   useLayoutEffect(() => {
     const pending = pendingFocus.current;
     if (Option.isNone(pending)) return;
@@ -25427,13 +23070,6 @@ const MovableTabsProbe = (): ReactNode => {
     setMoves((count) => count + 1);
   }, []);
 
-  /**
-   * Apply the release over the last point the pointer reported.
-   *
-   * The group comes from the painted boxes, so the gap between the strips and
-   * the space below them are misses rather than guesses; the slot comes from
-   * the tab centres inside the destination strip.
-   */
   const drop = useCallback(() => {
     const carried = pressed.current;
     const at = trail.current;
@@ -25459,7 +23095,6 @@ const MovableTabsProbe = (): ReactNode => {
     });
   }, [commit]);
 
-  /** A pointer that never moves a tab is a press, not a move: `trail` stays empty. */
   const press = useCallback((tab: string) => {
     pressed.current = Option.some(tab);
     trail.current = Option.none();
@@ -25470,7 +23105,6 @@ const MovableTabsProbe = (): ReactNode => {
     trail.current = Option.some({ x: event.x ?? 0, y: event.y ?? 0 });
   }, []);
 
-  /** A press selects a tab without moving it; the panel follows the selection. */
   const select = useCallback((tab: string) => {
     Option.match(groupOf(layoutRef.current, tab), {
       onNone: () => {},
@@ -25488,7 +23122,6 @@ const MovableTabsProbe = (): ReactNode => {
     });
   }, []);
 
-  /** One keyboard step inside the tab's own strip; it selects the tab it moved. */
   const step = useCallback(
     (tab: string, delta: -1 | 1) => {
       commit(stepMovableTab(layoutRef.current, tab, delta));
@@ -25702,7 +23335,7 @@ const movableTabsSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       Effect.flatMap(ctx.host.bounds(id), (box) =>
         ctx.expectSome(`${id} paints`, Option.fromNullishOr(box)),
       );
-    /** Drag a tab so the pointer is released at a window point. */
+
     const dragTabTo = (tab: string, x: number, y: number) =>
       Effect.gen(function* () {
         const from = yield* painted(tabId(tab));
@@ -25714,7 +23347,6 @@ const movableTabsSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         yield* Effect.sleep(SETTLE);
       });
 
-    // 1. Two strips on one row, separated by the dock's whole gap.
     const left = yield* painted(groupBoxId("left"));
     const right = yield* painted(groupBoxId("right"));
     yield* ctx.expectNear("the two strips sit on one row", right.y, left.y, 1);
@@ -25730,7 +23362,6 @@ const movableTabsSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       `${tabReadout(TAB_GROUP_INITIAL)} moves=0 misses=0`,
     );
 
-    // 2. A press selects a tab and mounts its panel.
     yield* ctx.host.click(tabId("bravo"));
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectContains(
@@ -25745,7 +23376,6 @@ const movableTabsSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       ),
     );
 
-    // 3. The panel's draft is the app's data, not the panel element's.
     yield* ctx.host.click(panelFieldId("bravo"));
     yield* ctx.host.key("a");
     yield* ctx.host.key("b");
@@ -25757,7 +23387,6 @@ const movableTabsSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "draft=bravo:abc",
     );
 
-    // 4. Drag the tab out of its strip and drop it at the other strip's start.
     const rightStrip = yield* painted(stripId("right"));
     yield* dragTabTo(
       "bravo",
@@ -25807,7 +23436,6 @@ const movableTabsSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       tabId("bravo"),
     );
 
-    // 5. Cmd+Shift+Right steps the focused tab inside its strip and keeps focus.
     yield* ctx.host.focusElement(tabId("bravo"));
     yield* ctx.host.key("cmd-shift-right");
     yield* Effect.sleep(SETTLE);
@@ -25822,7 +23450,6 @@ const movableTabsSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       tabId("bravo"),
     );
 
-    // 6. The end of the strip is the end of the travel: no wrap, no second move.
     yield* ctx.host.key("cmd-shift-right");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectContains(
@@ -25845,7 +23472,6 @@ const movableTabsSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "right=delta,bravo,echo selected=bravo",
     );
 
-    // 7. A release below both strips is a miss, not a drop on the nearer one.
     const carried = yield* painted(tabId("echo"));
     yield* ctx.host.drag(
       tabId("echo"),
@@ -25864,7 +23490,6 @@ const movableTabsSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "left=alpha,charlie selected=charlie | right=delta,bravo,echo",
     );
 
-    // 8. A tab moves back the other way, into the slot it was dropped on.
     const charlie = yield* painted(tabId("charlie"));
     yield* dragTabTo("echo", charlie.x + 2, charlie.y + charlie.height / 2);
     yield* ctx.expectContains(
@@ -25880,18 +23505,6 @@ const movableTabsSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("movable-tabs");
   });
 
-/**
- * The chord a desktop list selects with: `shift` extends from the row the
- * reader last chose, `cmd` toggles one record, `cmd-shift` adds the range, and
- * a plain press replaces the set.
- *
- * The runtime reports the held modifiers on the click event and the automation
- * protocol takes them, but `AsyncSmokeHost` had no verb that holds one, so no
- * probe had ever measured a modifier press. The readout prints the four flags
- * the payload carried, so the probe reads the event rather than assuming the
- * chord arrived, and the selection's paint is counted from the frame because a
- * window reports no style.
- */
 const ModifierSelectProbe = (): ReactNode => {
   const theme = useTheme();
   const [selection, setSelection] = useState<RowSelection>(emptySelection);
@@ -26004,7 +23617,6 @@ const modifierSelectSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     const cmd = "cmd:true,ctrl:false,alt:false,shift:false";
     const both = "cmd:true,ctrl:false,alt:false,shift:true";
 
-    /** The readout after a press: the state the chord leaves and the payload it sent. */
     const expected = (
       chosen: string,
       anchor: string,
@@ -26014,14 +23626,12 @@ const modifierSelectSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     ): string =>
       `selected=${chosen} anchor=${anchor} mods=${chord} flags=${flags} click=1 presses=${presses}`;
 
-    // 1. A list opens with nothing chosen and no press delivered.
     yield* ctx.expectEqual(
       "the list opens with nothing chosen and no press delivered",
       yield* readout(),
       "selected=none anchor=none mods=none flags=none click=none presses=0",
     );
 
-    // 2. A plain press is a set of one, and it anchors the next range.
     yield* ctx.host.click(MODIFIER_SELECT_IDS.row(3));
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -26035,7 +23645,6 @@ const modifierSelectSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       MODIFIER_SELECT_IDS.row(3),
     );
 
-    // 3. Shift extends the range from the anchor, not from the pressed row.
     yield* ctx.host.clickWith(MODIFIER_SELECT_IDS.row(6), ["shift"]);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -26044,7 +23653,6 @@ const modifierSelectSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       expected("3,4,5,6", "3", "shift", shift, 2),
     );
 
-    // 4. The same chord re-ranges backwards; the anchor does not move.
     yield* ctx.host.clickWith(MODIFIER_SELECT_IDS.row(1), ["shift"]);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -26053,7 +23661,6 @@ const modifierSelectSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       expected("1,2,3", "3", "shift", shift, 3),
     );
 
-    // 5. Cmd adds one record and becomes the new anchor.
     yield* ctx.host.clickWith(MODIFIER_SELECT_IDS.row(5), ["cmd"]);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -26067,7 +23674,6 @@ const modifierSelectSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       MODIFIER_SELECT_IDS.row(5),
     );
 
-    // 6. The same chord again removes it, because a toggle is a toggle.
     yield* ctx.host.clickWith(MODIFIER_SELECT_IDS.row(5), ["cmd"]);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -26076,7 +23682,6 @@ const modifierSelectSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       expected("1,2,3", "5", "cmd", cmd, 5),
     );
 
-    // 7. A toggle inside the set removes and re-adds one record.
     yield* ctx.host.clickWith(MODIFIER_SELECT_IDS.row(3), ["cmd"]);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -26092,7 +23697,6 @@ const modifierSelectSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       expected("1,2,3", "3", "cmd", cmd, 7),
     );
 
-    // 8. A plain press replaces the whole set, so the next range starts there.
     yield* ctx.host.click(MODIFIER_SELECT_IDS.row(4));
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -26108,7 +23712,6 @@ const modifierSelectSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       expected("4,5,6,7", "4", "shift", shift, 9),
     );
 
-    // 9. Cmd-shift adds the range to the set instead of replacing it.
     yield* ctx.host.clickWith(MODIFIER_SELECT_IDS.row(2), ["cmd", "shift"]);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -26117,8 +23720,6 @@ const modifierSelectSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       expected("2,3,4,5,6,7", "4", "cmd-shift", both, 10),
     );
 
-    // 10. The paint follows the set: the chosen rows wear the selected fill and
-    //     the rows outside it do not.
     yield* ctx.host.hover(MODIFIER_SELECT_IDS.caption);
     yield* Effect.sleep(SETTLE);
     yield* ctx.host.capture("modifier-select");
@@ -26132,7 +23733,7 @@ const modifierSelectSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "the theme names the selected fill",
       Option.fromNullishOr(Pixels.hexToRgba(theme.colors.selected)),
     );
-    /** The capture pixels a logical box covers. */
+
     const regionOf = (box: Smoke.Bounds): Pixels.PixelRegion =>
       new Pixels.PixelRegion({
         x: Math.round(box.x * scale),
@@ -26161,9 +23762,6 @@ const modifierSelectSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       0,
     );
 
-    // 11. The harness cannot synthesize a double press: the second press on the
-    //     same row still reports one click, so a caller who needs a double
-    //     press drives it with a key instead.
     yield* ctx.host.click(MODIFIER_SELECT_IDS.row(6));
     yield* Effect.sleep(SETTLE);
     yield* ctx.host.click(MODIFIER_SELECT_IDS.row(6));
@@ -26175,15 +23773,6 @@ const modifierSelectSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/**
- * Whether the runtime shapes and mirrors a right-to-left string by itself.
- *
- * The samples are controlled: each run ends in a capital `T` after short
- * letters, so the end its crossbar reaches is the one thing the layouts
- * disagree about. The Latin run is the reader's own control — its order is not
- * in question — and the Arabic pair holds the same four letters with and
- * without non-joiners.
- */
 const RtlTextProbe = (): ReactNode => {
   const theme = useTheme();
   const sample = {
@@ -26264,7 +23853,6 @@ const rtlTextSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     const ink = palettes.dark.colors.foreground;
 
-    /** The box a sample painted and the ink height at each end of it. */
     const read = (id: string) =>
       Effect.gen(function* () {
         const box = yield* ctx.expectSome(
@@ -26278,7 +23866,6 @@ const rtlTextSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         return ends;
       });
 
-    // 1. The reader's control: a Latin run whose order is not in question.
     const latin = yield* read(RTL_IDS.latin);
     yield* ctx.expectEqual(
       "a Latin run puts its capital T at the right, so the reader can see the end",
@@ -26286,8 +23873,6 @@ const rtlTextSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "ltr",
     );
 
-    // 2. The Hebrew run differs only in script; a right-to-left paragraph puts
-    //    the same neutral at its visual left.
     const hebrew = yield* read(RTL_IDS.hebrew);
     yield* ctx.expectEqual(
       "a Hebrew run's capital T lands on the left, so the runtime lays it out right to left",
@@ -26295,8 +23880,6 @@ const rtlTextSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "rtl",
     );
 
-    // 3. The same Hebrew run in an LTR paragraph: the crossbar moves back, so
-    //    the previous reading was the text's direction, not a right-aligned box.
     const hebrewLtr = yield* read(RTL_IDS.hebrewLtr);
     yield* ctx.expectEqual(
       "the same Hebrew run behind a Latin letter puts its capital T on the right",
@@ -26304,7 +23887,6 @@ const rtlTextSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "ltr",
     );
 
-    // 4. The Arabic pair: only the join controls differ.
     const joinedBox = yield* ctx.expectSome(
       "the joined Arabic run reports its box",
       Option.fromNullishOr(yield* ctx.host.bounds(RTL_IDS.arabicJoined)),
@@ -26333,13 +23915,10 @@ const rtlTextSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/** The width every syntax block takes, so two blocks sit in one row. */
 const SYNTAX_BLOCK_WIDTH = 400;
 
-/** The block's own padding; a code host paints no surface of its own. */
 const SYNTAX_BLOCK_PADDING = 10;
 
-/** The chrome a code host leaves to its caller: fill, edge, corner, padding. */
 const syntaxBlockStyle = (palette: Theme): StyleDesc => ({
   width: SYNTAX_BLOCK_WIDTH,
   paddingTop: SYNTAX_BLOCK_PADDING,
@@ -26353,15 +23932,6 @@ const syntaxBlockStyle = (palette: Theme): StyleDesc => ({
   color: palette.colors.inputForeground,
 });
 
-/**
- * The seam's host object with no token palette named, so the runtime's own
- * syntax colours paint.
- *
- * This is the honest control, not a hand-built runtime theme: the host still
- * receives the shipped metrics, fonts and surface roles, so the two blocks are
- * laid out identically and only `syntax` is absent — the state of a caller who
- * builds a theme object without `syntaxColors`.
- */
 const runtimeSyntaxTheme = (
   palette: Theme,
 ): Omit<NativeTextTheme, "syntax"> => {
@@ -26369,7 +23939,6 @@ const runtimeSyntaxTheme = (
   return host;
 };
 
-/** One code host: the probe's source, painted with or without a palette. */
 const SyntaxBlock = ({
   id,
   palette,
@@ -26392,15 +23961,6 @@ const SyntaxBlock = ({
   />
 );
 
-/**
- * What colour a code host's highlighted glyphs actually paint.
- *
- * The token package ships a palette and `nativeTextTheme` hands it over, but a
- * host object carrying the field is a source read: the runtime owns the
- * tokenizer and the paint. So one source is painted three times — with the
- * light palette, with the dark palette, and with the same dark host minus
- * `syntax` — and each block's own box is counted in the captured frame.
- */
 const SyntaxPaletteProbe = (): ReactNode => {
   const theme = useTheme();
   return (
@@ -26465,7 +24025,6 @@ const syntaxPaletteSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       captureScale(frame, window),
     );
 
-    /** How many pixels in a block's own box paint one colour. */
     const inkOf = (id: string, hex: string, tolerance = 0) =>
       Effect.gen(function* () {
         const box = yield* paintedBox(ctx, id);
@@ -26479,8 +24038,6 @@ const syntaxPaletteSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     const dark = yield* paintedBox(ctx, SYNTAX_IDS.dark);
     const runtime = yield* paintedBox(ctx, SYNTAX_IDS.runtime);
 
-    // 1. Each palette reaches the glyphs it names: the light block paints the
-    //    light keyword and the dark block the dark one.
     yield* ctx.expectEqual(
       "the light block paints the light palette's keyword",
       isPainted(yield* inkOf(SYNTAX_IDS.light, LIGHT_KEYWORD)),
@@ -26492,9 +24049,6 @@ const syntaxPaletteSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 2. The palette travels with the host: neither block paints the other's
-    //    keyword, so the colour is the object it was handed rather than a shared
-    //    runtime default that happened to match one of them.
     yield* ctx.expectEqual(
       "the light block paints none of the dark palette's keyword",
       yield* inkOf(SYNTAX_IDS.light, DARK_KEYWORD),
@@ -26506,8 +24060,6 @@ const syntaxPaletteSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       0,
     );
 
-    // 3. The control: the same host without `syntax` paints the runtime's own
-    //    palette, which is the fallback the token group exists to replace.
     yield* ctx.expectEqual(
       "a host handed no palette paints none of the shipped keyword",
       yield* inkOf(SYNTAX_IDS.runtime, DARK_KEYWORD),
@@ -26525,16 +24077,12 @@ const syntaxPaletteSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 4. The control is laid out like the block it is compared with, so the
-    //    absent colour is the palette and not a different source or size.
     yield* ctx.expectEqual(
       "the unthemed block is laid out like the dark one",
       `${runtime.width}x${runtime.height}`,
       `${dark.width}x${dark.height}`,
     );
 
-    // 5. Every block paints its source: an absent keyword would otherwise read
-    //    as a clean negative.
     yield* Effect.forEach(
       [
         {
@@ -26566,7 +24114,6 @@ const syntaxPaletteSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/** One fenced document, on the fill its own theme paints, or handed no theme. */
 const FenceBlock = ({
   id,
   theme,
@@ -26587,16 +24134,6 @@ const FenceBlock = ({
   </div>
 );
 
-/**
- * The surface a fenced code block paints, and the keyword the palette puts on
- * it.
- *
- * The token package derives both washes and reads the palette on the composite,
- * but until the fence itself is painted that is a source read. Three blocks
- * share one source — the base dark theme, the macOS dark look and a host
- * handed no theme — and each one's own box is counted, so a fill or a keyword
- * painted elsewhere on the page cannot stand in for the block being measured.
- */
 const MarkdownFenceProbe = (): ReactNode => {
   const theme = useTheme();
   return (
@@ -26674,7 +24211,6 @@ const markdownFenceSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     const platform = yield* paintedBox(ctx, MARKDOWN_FENCE_IDS.platform);
     const runtime = yield* paintedBox(ctx, MARKDOWN_FENCE_IDS.runtime);
 
-    /** How many pixels in a block's own box paint one colour. */
     const inkOf = (id: string, hex: string, tolerance = 0) =>
       Effect.gen(function* () {
         const box = yield* paintedBox(ctx, id);
@@ -26717,9 +24253,6 @@ const markdownFenceSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       `markdown-fence: base=${baseBody}/${baseFill} ${base.width}x${base.height} strip=${baseStrip}/${baseStripe} keyword=${fenceKeyword(fenceBaseTheme)}/${baseKeyword} platform=${platformBody}/${platformFill} ${platform.width}x${platform.height} strip=${platformStrip}/${platformStripe} keyword=${fenceKeyword(fencePlatformTheme)}/${platformKeyword}`,
     );
 
-    // 1. The fence is a surface: both washes the token seam derives are the
-    //    fills a window paints, and the strip is a band above the body rather
-    //    than the whole block.
     yield* ctx.expectEqual(
       "the base fence paints the body fill its seam derives",
       baseFill >= FENCE_BODY_FLOOR,
@@ -26741,8 +24274,6 @@ const markdownFenceSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 2. The keyword the palette names is the ink on that composite, for both
-    //    shipped themes, and each clears the floor its own contract asks.
     yield* ctx.expectEqual(
       "the base fence paints its palette's keyword",
       isPainted(baseKeyword),
@@ -26764,8 +24295,6 @@ const markdownFenceSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 3. The platform look moved the keyword onto its own table without
-    //    touching the identity's: neither block paints the other's ink.
     yield* ctx.expectEqual(
       "the platform palette is a different keyword from the base one",
       fenceKeyword(fencePlatformTheme) !== fenceKeyword(fenceBaseTheme),
@@ -26782,9 +24311,6 @@ const markdownFenceSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       0,
     );
 
-    // 4. The strip is a second wash over the body, not a boundary: the rule
-    //    the runtime draws carries it, and the two dark pages measure 1.057:1
-    //    and 1.053:1, so the probe refuses a fill that became an edge.
     yield* ctx.expectEqual(
       "the base strip is a second wash over the body, not a boundary",
       stripIsSecondWash(fenceBaseTheme),
@@ -26796,8 +24322,6 @@ const markdownFenceSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 5. The control: a host handed no theme paints the runtime's own palette,
-    //    on a surface of its own.
     const runtimeInk = yield* ctx.expectSome(
       `${MARKDOWN_FENCE_IDS.runtime} is inside the capture`,
       countInkOn(
@@ -26840,10 +24364,6 @@ const markdownFenceSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 6. The two themed blocks share one source, one width and one code scale,
-    //    so a colour that differs is the palette and not a different layout;
-    //    the control keeps the runtime's own metrics, which is why its height
-    //    is not the shipped one.
     yield* ctx.expectEqual(
       "the two themed fences share one box",
       `${base.width}x${base.height}`,
@@ -26856,7 +24376,6 @@ const markdownFenceSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/** The block every find-highlight sample paints: one card face, one line. */
 const findWashStyle = (theme: Theme): StyleDesc => ({
   display: "flex",
   alignItems: "center",
@@ -26868,15 +24387,6 @@ const findWashStyle = (theme: Theme): StyleDesc => ({
   borderRadius: theme.radius.md,
 });
 
-/**
- * What colour a window paints behind a find's match.
- *
- * Three blocks hold the same line, and the line holds the query once: the
- * theme's resting wash, the theme's active wash, and a control handed no
- * colour, which the runtime paints from its own accent. Each block's own box is
- * read out of the capture, so a wash painted elsewhere on the page cannot stand
- * in for the one being measured.
- */
 const FindHighlightProbe = (): ReactNode => {
   const theme = useTheme();
   const highlight = findHighlight(theme);
@@ -26942,7 +24452,6 @@ const findHighlightSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     const ink = theme.colors.foreground;
     const highlight = findHighlight(theme);
 
-    /** The wash a block paints, refusing a crop that was never read. */
     const washOf = (id: string) =>
       Effect.gen(function* () {
         const box = yield* paintedBox(ctx, id);
@@ -26960,8 +24469,6 @@ const findHighlightSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       `find-highlight: rest=${rest.read.hex}/${rest.read.count} active=${active.read.hex}/${active.read.count} runtime=${runtime.read.hex}/${runtime.read.count} theme=${wash.rest}/${wash.active}`,
     );
 
-    // 1. Each block paints the composite its state names, and the
-    //    resting match is not the active one.
     yield* ctx.expectEqual(
       "the resting block paints the theme's resting wash",
       nearColour(rest.read.hex, wash.rest),
@@ -26978,8 +24485,6 @@ const findHighlightSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       false,
     );
 
-    // 2. A block paints one state, so the two cannot be confused for each
-    //    other by counting the same hex twice.
     yield* ctx.expectEqual(
       "the resting block paints no active wash",
       nearColour(rest.read.hex, wash.active),
@@ -26991,7 +24496,6 @@ const findHighlightSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       false,
     );
 
-    // 3. The wash is a real area rather than a stray antialiased edge.
     yield* ctx.expectEqual(
       "the resting wash covers the match",
       isWashPainted(rest.read.count),
@@ -27003,9 +24507,6 @@ const findHighlightSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 4. The control: a host handed no colour paints the runtime's own accent,
-    //    which is neither of the theme's washes — the fallback the token
-    //    package exists to replace.
     yield* ctx.expectEqual(
       "an unthemed host paints none of the theme's resting wash",
       nearColour(runtime.read.hex, wash.rest),
@@ -27022,8 +24523,6 @@ const findHighlightSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 5. The three blocks are laid out alike, so a difference is the colour
-    //    handed over rather than a block that moved or resized.
     yield* ctx.expectEqual(
       "the three blocks measure the same box",
       Arr.join(
@@ -27036,8 +24535,6 @@ const findHighlightSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "520x44,520x44,520x44",
     );
 
-    // 6. Every block paints its line: a missing line would read as a clean
-    //    negative on the colour reads above.
     yield* Effect.forEach(
       [FIND_IDS.rest, FIND_IDS.active, FIND_IDS.runtime],
       (id) =>
@@ -27048,8 +24545,6 @@ const findHighlightSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       { concurrency: 1 },
     );
 
-    // The wash the token contract measured is the one the frame carries: the
-    // resting composite keeps the marked text at the theme's body floor.
     yield* ctx.expectEqual(
       "the resting composite is the one the token contract measures",
       nearColour(rest.read.hex, paintedWash(strip, highlight.color)),
@@ -27057,16 +24552,13 @@ const findHighlightSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/** How many cases the left column holds; the rest go right so the frame fits a window. */
 const PRESS_LEFT_COUNT = Math.ceil(PRESS_CASES.length / 2);
 
-/** The width of a composite row, and its height, so a press misses the cell when aimed at the row. */
 const PRESS_ROW_WIDTH = 320;
 const PRESS_ROW_HEIGHT = 34;
-/** The width of the cell pinned to a row's trailing edge. */
+
 const PRESS_CELL_WIDTH = 80;
 
-/** The style a row paints: a card face with a hairline under it. */
 const pressRowStyle = (theme: Theme): StyleDesc => ({
   display: "flex",
   flexDirection: "row",
@@ -27082,13 +24574,6 @@ const pressRowStyle = (theme: Theme): StyleDesc => ({
   ...keyboardFocusRing(theme),
 });
 
-/**
- * The style a case's inner element paints.
- *
- * `filled` is the case's variable: the runtime inserts a mouse hitbox for an
- * element that paints a background, and that hitbox is the boundary a press
- * stops at, so the same child with and without a fill measures two routes.
- */
 const pressCellStyle = (theme: Theme, filled: boolean): StyleDesc => ({
   display: "flex",
   alignItems: "center",
@@ -27103,7 +24588,6 @@ const pressCellStyle = (theme: Theme, filled: boolean): StyleDesc => ({
   ...(filled ? { backgroundColor: theme.colors.muted } : {}),
 });
 
-/** The row-level handlers a case owns, so a spread stays typed. */
 interface PressRowHandlers {
   readonly onClick?: () => void;
   readonly onMouseDown?: () => void;
@@ -27112,14 +24596,6 @@ interface PressRowHandlers {
   readonly onKeyDown?: () => void;
 }
 
-/**
- * One nesting: what the row holds at the point the probe presses.
- *
- * The cases are the shapes a Tier 3 row composes — a label, an inert box, a
- * trailing control, a control that steps aside, a drag row, a context-menu row
- * and an editable cell — so the measured route is the one a table or a tree
- * inherits rather than a synthetic pair.
- */
 const PressRoutingProbe = (): ReactNode => {
   const theme = useTheme();
   const [hits, setHits] = useState<ReadonlyArray<string>>([]);
@@ -27128,7 +24604,6 @@ const PressRoutingProbe = (): ReactNode => {
   const hit = (name: string) => () =>
     setHits((previous) => Arr.append(previous, name));
 
-  /** The inner element a case is measured through. */
   const cellOf = (entry: PressCase): ReactNode => {
     const id = pressCellId(entry.id);
     const filled = pressCellStyle(theme, true);
@@ -27212,7 +24687,6 @@ const PressRoutingProbe = (): ReactNode => {
     );
   };
 
-  /** The handlers a case's row itself owns. */
   const rowHandlers = (id: Nesting): PressRowHandlers =>
     Match.value(id).pipe(
       Match.when("drag-row", () => ({
@@ -27350,15 +24824,12 @@ const pressRoutingSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         );
       });
 
-    // 1. The frame opens with an empty log, so every route below is the press's.
     yield* ctx.expectEqual(
       "the frame opens with an empty log",
       yield* readout(),
       formatHits([]),
     );
 
-    // 2. A label that paints no fill is transparent to the press; the same label
-    // with a fill is the boundary the press stops at.
     yield* clear();
     yield* press(pressCellId("text-unfilled"));
     yield* assertRoute("text-unfilled");
@@ -27367,13 +24838,10 @@ const pressRoutingSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* press(pressCellId("text-filled"));
     yield* assertRoute("text-filled");
 
-    // 3. A filled child with no handlers.
     yield* clear();
     yield* press(pressCellId("div-filled"));
     yield* assertRoute("div-filled");
 
-    // 4. A control child: filled, it is the only handler; unfilled, the row's
-    // painted surface is still inside the hover walk, so both run.
     yield* clear();
     yield* press(pressCellId("control-filled"));
     yield* assertRoute("control-filled");
@@ -27382,8 +24850,6 @@ const pressRoutingSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* press(pressCellId("control-unfilled"));
     yield* assertRoute("control-unfilled");
 
-    // The row stays pressable where the control is not: its own painted surface
-    // runs its handler and nothing else.
     yield* clear();
     yield* press(pressRowId("control-filled"));
     yield* ctx.expectEqual(
@@ -27392,27 +24858,20 @@ const pressRoutingSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       formatHits(["row-click"]),
     );
 
-    // 5. The workaround: a *drawing* told to ignore the pointer lets the row
-    // take the press, but a control that keeps a focus hitbox is still reached.
     yield* clear();
     yield* press(pressCellId("inert-control"));
     yield* assertRoute("inert-control");
 
-    // 6. A row that owns a drag does not hear a press on a filled control in it,
-    // so the row's capture is not armed by a press the cell takes.
     yield* clear();
     yield* press(pressCellId("drag-row"));
     yield* assertRoute("drag-row");
 
-    // 7. A row's context menu does not hear a right press on a filled child.
     yield* clear();
     yield* Effect.flatMap(ctx.host.rightClick(pressCellId("aux-row")), () =>
       Effect.sleep(SETTLE),
     );
     yield* assertRoute("aux-row");
 
-    // 8. A field inside the row: the field takes the focus and keeps what is
-    // typed, while the row's key handler still hears the key.
     yield* clear();
     yield* press(pressCellId("field-cell"));
     yield* ctx.expectEqual(
@@ -27429,8 +24888,6 @@ const pressRoutingSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "field=a",
     );
 
-    // 9. A press on a field also runs the row it sits in, so an editable cell is
-    // selected by the press that starts the edit.
     yield* clear();
     yield* press(pressCellId("field-in-row"));
     yield* assertRoute("field-in-row");
@@ -27443,10 +24900,6 @@ const pressRoutingSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("press-routing");
   });
 
-/**
- * A selectable row's `trailing` slot: the shipped `Badge`, the same badge
- * declaring `pointerEvents: "none"`, and a plain `<text>`.
- */
 const ListRowPressProbe = (): ReactNode => {
   const theme = useTheme();
   const [selected, setSelected] = useState("");
@@ -27602,30 +25055,6 @@ const listRowPressSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("list-row-press");
   });
 
-/**
- * The shipped `Button`'s **activation contract**, driven through every input a
- * reader has: a pointer press, Enter's press and release, Space's press and
- * release.
- *
- * The rule is the platform's — Enter on the press, Space on the release, never
- * twice — and until this probe it rested on a pure decision function plus a
- * `TestRenderer`. A window is a different delivery path: the automation sends a
- * key **down** with no release (`AsyncSmokeHost.keyUp` exists because of that),
- * so a control that waited for a release without the release ever arriving would
- * be dead in a real window and green in every headless suite.
- *
- * Two consumer-facing facts fall out of the same readout:
- *
- * - a pointer press runs the caller's host `onClick` **and** `onActivate`, while
- *   a key reaches `onActivate` alone — the mapping plan `160` owes when the
- *   components' stand-in hands its `onClick` over;
- * - the activation carries the press point, because the payload is the runtime's
- *   own click and a ripple is born where the pointer was.
- *
- * The disabled and busy buttons count activations nobody may receive, and the
- * traversal proves the half each keeps: a disabled button leaves the tab order
- * and stays addressable from code, a busy one keeps its stop.
- */
 const ButtonActivationProbe = (): ReactNode => {
   const theme = useTheme();
   const [host, setHost] = useState(0);
@@ -27725,7 +25154,6 @@ const ButtonActivationProbe = (): ReactNode => {
   );
 };
 
-/** The gesture a route names, sent as the window's own input. */
 const sendGesture = (
   ctx: Smoke.AsyncSmokeContext,
   gesture: ButtonGesture,
@@ -27745,7 +25173,7 @@ const buttonActivationSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
 
     const activation = () => ctx.host.text(BUTTON_READOUT);
     const refusals = () => ctx.host.text(BUTTON_REFUSAL_READOUT);
-    /** The number the readout prints for `field`, as a settled value. */
+
     const numberIn = (field: string) =>
       settleNumber(
         Effect.flatMap(activation(), (text) =>
@@ -27761,9 +25189,6 @@ const buttonActivationSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       formatActivation({ host: 0, activates: 0, last: "none" }),
     );
 
-    // 1. Every gesture, in the order the fixture's table names them. Each row
-    // asserts the counters *and* the kind, so a press that activates a row early
-    // or a release that activates twice names its gesture.
     const box = yield* paintedBox(ctx, BUTTON_ENABLED);
     yield* Effect.forEach(
       BUTTON_ROUTES,
@@ -27780,8 +25205,6 @@ const buttonActivationSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       { concurrency: 1 },
     );
 
-    // 2. The pointer activation carries the press point: the payload is the
-    // runtime's click, so the point is the centre of the painted box.
     yield* ctx.expectNear(
       "the pointer activation carries the press point's x",
       yield* numberIn("x"),
@@ -27795,8 +25218,6 @@ const buttonActivationSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // 3. A disabled button refuses the pointer and both keys, and the native
-    // focus still lands on it, because code may focus a control it disabled.
     yield* ctx.host.click(BUTTON_DISABLED);
     yield* Effect.sleep(SETTLE);
     yield* ctx.host.focusElement(BUTTON_DISABLED);
@@ -27816,7 +25237,6 @@ const buttonActivationSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       formatRefusals({ disabled: 0, busy: 0 }),
     );
 
-    // 4. A busy button refuses the same four inputs and stays focusable.
     yield* ctx.host.click(BUTTON_BUSY);
     yield* Effect.sleep(SETTLE);
     yield* ctx.host.focusElement(BUTTON_BUSY);
@@ -27841,8 +25261,6 @@ const buttonActivationSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       formatCounts(buttonRoute("space-release")),
     );
 
-    // 5. The tab order: a traversal skips the disabled stop and reaches the
-    // busy one, so `tabIndex: -1` and `0` are the difference a reader feels.
     yield* ctx.host.focusElement(
       yield* ctx.expectSome(
         "the tab order names its first stop",
@@ -27867,23 +25285,6 @@ const buttonActivationSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("button-activation");
   });
 
-/**
- * The shipped `DatePicker`, driven by a reader's own keys in a real window.
- *
- * The component's key contract is proved offscreen against a `TestRenderer`,
- * where the key is delivered to the grid's `onKeyDown` directly. A window is a
- * different path in three ways: the key lands on the **focused day cell** and
- * has to reach the grid above it, the runtime moves focus only when component
- * code calls `focusElement`, and the cell a move lands on is a `tabIndex` -1
- * `div` inside an anchored surface that a `Popover` owns. The probe therefore
- * reads the focused cell's `testId` after every key rather than the component's
- * state, and the app's `onValueChange` is the second record — a navigation that
- * silently chose a day would move it.
- *
- * The field is controlled by the probe (the app owns the value), `today` is
- * pinned so the grid is deterministic, and both bounds sit inside the month so
- * the month controls and the last week's clamp are measurable.
- */
 const DatePickerProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -27945,11 +25346,7 @@ const DatePickerProbe = (): ReactNode => {
             After the field
           </text>
         </Pressable>
-        {/*
-          A second instance that is never given a day: the first open of an empty
-          picker is the only place its "nothing chosen" anchor shows, and a
-          reopened instance would inherit the day the first one held.
-        */}
+        {}
         <DatePicker
           today={DATE_PICKER_TODAY}
           min={DATE_PICKER_MIN}
@@ -27978,9 +25375,6 @@ const datePickerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     const readout = () => ctx.host.text(DATE_PICKER_READOUT);
     const month = () => ctx.host.text(DATE_PICKER_MONTH);
 
-    // The surface's box paints before its calendar does: an anchored popover
-    // mounts the wrapper, measures it and then lays the content out, so the
-    // month header is the part that says the grid exists.
     const open = () =>
       Effect.gen(function* () {
         yield* ctx.host.click(DATE_PICKER_TRIGGER);
@@ -27988,7 +25382,6 @@ const datePickerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         yield* Effect.sleep(SETTLE);
       });
 
-    // The closed field: the day the app holds, no surface, no change.
     yield* ctx.expectEqual(
       "the field starts on the day the app holds",
       yield* ctx.host.text(DATE_PICKER_TRIGGER),
@@ -28005,8 +25398,6 @@ const datePickerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       formatDatePickerReadout({ value: DATE_PICKER_TODAY, changes: 0 }),
     );
 
-    // The open surface: the month of the day the picker calls today, and the
-    // focus on a day cell rather than on the surface itself.
     yield* open();
     yield* ctx.expectEqual(
       "a press opens the month of the day the picker calls today",
@@ -28019,9 +25410,6 @@ const datePickerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       datePickerCell(DATE_PICKER_TODAY),
     );
 
-    // The measured route, from the fixture's cumulative table. A key that does
-    // not reach the grid leaves the focus on the previous cell, which names the
-    // gesture rather than the component.
     yield* Effect.forEach(
       DATE_PICKER_ROUTES,
       (route) =>
@@ -28035,7 +25423,7 @@ const datePickerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         }),
       { concurrency: 1 },
     );
-    // Navigation moves the focus, never the value.
+
     yield* ctx.expectEqual(
       "moving the focus chooses nothing",
       yield* readout(),
@@ -28043,8 +25431,6 @@ const datePickerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("date-picker-open");
 
-    // Enter chooses the focused cell, the way the platform's radio-like grid
-    // does: the surface goes, the trigger repaints and the focus returns.
     yield* ctx.host.key("enter");
     yield* ctx.expectEqual(
       "Enter chooses the focused day and dismisses the surface",
@@ -28068,8 +25454,6 @@ const datePickerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("date-picker-chosen");
 
-    // A second open anchors on the chosen day, and the page keys clamp against
-    // the bounds instead of stepping onto an unavailable day.
     yield* open();
     yield* ctx.expectEqual(
       "a reopened picker anchors on the chosen day",
@@ -28110,8 +25494,6 @@ const datePickerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       DATE_PICKER_TRIGGER,
     );
 
-    // Clear is the other close path, and it reports the absence rather than a
-    // value: the trigger is a placeholder again and the focus is on it.
     yield* open();
     yield* ctx.host.click(DATE_PICKER_CLEAR);
     yield* ctx.expectEqual(
@@ -28136,8 +25518,6 @@ const datePickerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("date-picker-cleared");
 
-    // A cleared picker anchors on the day it calls today, the anchor it
-    // documents: the open effect hands the focus effect the anchor it just set.
     yield* open();
     yield* ctx.expectEqual(
       "a cleared picker reopens on the day it calls today",
@@ -28145,8 +25525,6 @@ const datePickerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       datePickerCell(DATE_PICKER_TODAY),
     );
 
-    // A day past the last bound is painted and refuses the press: the surface
-    // stays and the value does not move.
     yield* ctx.host.click(datePickerCell(DATE_PICKER_UNAVAILABLE));
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -28162,8 +25540,6 @@ const datePickerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.key("escape");
     yield* settleGone(ctx, DATE_PICKER_CONTENT);
 
-    // The empty instance's first open. It is a second mount, so its anchor is
-    // measured rather than inherited from the driven picker.
     yield* ctx.host.click(DATE_PICKER_EMPTY_TRIGGER);
     yield* ctx.host.waitFor(DATE_PICKER_MONTH);
     yield* Effect.sleep(SETTLE);
@@ -28189,8 +25565,6 @@ const datePickerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       DATE_PICKER_EMPTY_TRIGGER,
     );
 
-    // Both bounds sit inside March 2026, so neither neighbour month holds a
-    // selectable day: the control is disabled at the bound's month.
     yield* open();
     yield* ctx.host.click(DATE_PICKER_NEXT);
     yield* Effect.sleep(SETTLE);
@@ -28199,12 +25573,7 @@ const datePickerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       yield* month(),
       DATE_PICKER_MONTH_LABEL,
     );
-    // The press itself: a disabled control leaves the Tab order but the runtime
-    // still focuses the element a pointer pressed, so the reader's place is the
-    // control they just refused (`button-activation-lifecycle` measured the same
-    // focus rule on a disabled `Button`). The nav row answers the movement keys
-    // the grid does, so the arrow takes the calendar on and pulls the focus back
-    // to the day it lands on.
+
     yield* ctx.expectEqual(
       "a refused month control leaves the surface open",
       yield* settlePainted(ctx, DATE_PICKER_CONTENT),
@@ -28226,8 +25595,7 @@ const datePickerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       yield* readout(),
       formatDatePickerReadout({ value: null, changes: 2 }),
     );
-    // Escape is the dismiss stack's, not the grid's, so it still closes and
-    // returns the focus; the next open restores a day cell.
+
     yield* ctx.host.key("escape");
     yield* ctx.expectEqual(
       "the surface still closes after a refused press",
@@ -28249,17 +25617,6 @@ const datePickerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* settleGone(ctx, DATE_PICKER_CONTENT);
   });
 
-/**
- * The shipped `@gpuixui/data` files table, driven in a real window.
- *
- * The example is mounted from the package's registry rather than rebuilt, so the
- * probe measures the screen a consumer copies. The window adds what the offscreen
- * `data-table-core` scenario cannot: a press focuses the row the runtime hit, a
- * row's `focusElement` call has to follow the committed `tabIndex` (the rule the
- * example's `useLayoutEffect` documents), a header press and its menu live in the
- * same anchored layer a window hit-tests, and the `TableColumnDivider` drag is a
- * pointer path with eight moves rather than a synthesised one.
- */
 const DataTableProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -28315,9 +25672,6 @@ const dataTableSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // A press chooses the record it hit, paints the selection wash and takes the
-    // focus: the example moves focus after the `tabIndex` commit, and a window is
-    // where that ordering matters.
     yield* ctx.host.click(dataTableRow(2));
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -28337,9 +25691,7 @@ const dataTableSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       yield* focusedAfterPaint(ctx),
       dataTableRow(2),
     );
-    // The live host reports no style, so the wash is counted in a capture: the
-    // row width's worth of the theme's `selected` role cannot come from anything
-    // else on the screen.
+
     const wash = yield* ctx.expectSome(
       "the theme names a selected wash",
       Option.fromNullishOr(Pixels.hexToRgba(palettes.dark.colors.selected)),
@@ -28351,11 +25703,6 @@ const dataTableSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // Arrows walk the painted records and move the real focus with them, because
-    // `focusElement` refuses an element still outside the tab order. The poll
-    // waits for the focus to **leave** the row the key was sent to, then the
-    // check names where it landed, so a swallowed key cannot pass by reading the
-    // row it started on.
     const step = (key: "down" | "up", from: number, to: number) =>
       Effect.gen(function* () {
         yield* ctx.host.key(key);
@@ -28374,8 +25721,6 @@ const dataTableSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* step("down", 2, 3);
     yield* step("up", 3, 2);
 
-    // A chorded press toggles the record under it — the modifier flags arrive on
-    // the window's click event, not only in a `TestRenderer`.
     yield* ctx.host.clickWith(dataTableRow(5), ["cmd"]);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -28396,16 +25741,6 @@ const dataTableSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       dataTableRow(5),
     );
 
-    // The header sorts by the column it hit, and the selection is kept by record
-    // rather than by position.
-    //
-    // A press is delivered natively and its re-render commits on a later frame,
-    // so each press **waits for the order it produces** instead of sleeping a
-    // fixed 120ms: on a loaded box the first press's commit outlived the sleep
-    // and the second press landed before it, which read `name-asc` where
-    // `name-desc` was expected (measured 2026-10-24). A press that is genuinely
-    // lost still fails here — the poll is bounded and reports the token it
-    // settled on.
     const pressSort = (expected: string) =>
       Effect.gen(function* () {
         yield* ctx.host.click(DATA_TABLE_NAME_SORT);
@@ -28438,8 +25773,6 @@ const dataTableSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // The fixed header: a wheel over the body moves the rows under a header that
-    // keeps its painted place.
     yield* ctx.host.wheel(DATA_TABLE_BODY, 0, -300);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectContains(
@@ -28467,8 +25800,6 @@ const dataTableSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // The shipped column menu, opened from a trigger inside the header: it is a
-    // real `DropdownMenu`, so Escape dismisses it and returns the focus.
     yield* ctx.host.click(DATA_TABLE_COLUMNS);
     yield* ctx.host.waitFor(dataTableColumnToggle("status"));
     yield* Effect.sleep(SETTLE);
@@ -28531,7 +25862,6 @@ const dataTableSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // Reset restores the declared columns, in the declared order and widths.
     yield* ctx.host.click(DATA_TABLE_COLUMN_RESET);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectContains(
@@ -28545,17 +25875,12 @@ const dataTableSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       `content=${DATA_TABLE_CONTENT_WIDTH}`,
     );
 
-    // A leaving surface keeps its shield for the exit tween and takes the press
-    // meant for the page behind it (`presence`), so the drag waits until the
-    // menu the reset closed is actually gone rather than racing its fade.
     yield* ctx.expectEqual(
       "the reset's menu is gone before the divider takes a press",
       yield* settleGone(ctx, dataTableColumnToggle("status")),
       true,
     );
 
-    // The shipped divider's drag: eight moves, the column's own clamp, and the
-    // header and every cell on the width it reports.
     yield* ctx.host.drag(DATA_TABLE_DIVIDER, DATA_TABLE_DRAG, 0);
     yield* Effect.sleep(SETTLE);
     const width = DATA_TABLE_NAME_WIDTH + DATA_TABLE_DRAG;
@@ -28583,9 +25908,6 @@ const dataTableSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("data-table-resized");
 
-    // The filter last: it narrows the painted set and releases the selection it
-    // hides in the same commit, and a query that widens again revives the
-    // records the controller still holds — the retention `useTable` documents.
     yield* ctx.host.click(DATA_TABLE_FILTER);
     yield* ctx.host.key("001");
     yield* Effect.sleep(SETTLE);
@@ -28618,12 +25940,7 @@ const dataTableSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       ),
       true,
     );
-    // A query the whole set matches brings every record back — typed over the
-    // narrowed text with the field's own select-all — and it brings the chosen
-    // records with it: `useTable` retains the store and only hides what the
-    // query releases, so widening the set paints the choice again. That is the
-    // rule a grid reading this page must know before it clears a filter in an
-    // effect expecting the release to be permanent.
+
     yield* ctx.host.key("cmd-a");
     yield* ctx.host.key("file");
     yield* Effect.sleep(SETTLE);
@@ -28640,19 +25957,6 @@ const dataTableSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("data-table-filtered");
   });
 
-/**
- * The shipped `@gpuixui/data` virtualized table, driven in a real window.
- *
- * Tier 3's *Virtualized tables* row says the window is app state, and the
- * runtime's `<virtual-list>` in `itemCount` mode is the mechanism. The offscreen
- * `data-table-core` scenario mounts the plain table and the `virtual-list-*`
- * probes drive the runtime's list itself; nothing had mounted `VirtualTable`,
- * where a reveal moves the app's window **before** it scrolls, a programmatic
- * reveal reports no range event, and the reported range lags the paint by one
- * gesture. The probe mounts the example from the package's registry and asserts
- * its own readout, so the row, window and reveal arithmetic are the shipped
- * screen's.
- */
 const VirtualTableProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -28710,9 +26014,6 @@ const virtualTableSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       false,
     );
 
-    // One gesture moves the paint one window: the range event names the window
-    // the reader left, not the one now painted — the lag the component's header
-    // documents.
     yield* ctx.host.wheel(virtualTableRow(1), 0, -300);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -28746,9 +26047,6 @@ const virtualTableSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // A gesture larger than the mounted window still travels: the list clamps
-    // its scroll to the content it was given, and the app's window follows the
-    // anchor the runtime reports.
     yield* ctx.host.wheel(virtualTableRow(9), 0, -3000);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -28777,9 +26075,6 @@ const virtualTableSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       false,
     );
 
-    // The reveal is the only way to a row the scroll has never mounted: the app
-    // moves its window in the same render and then scrolls, and a programmatic
-    // reveal reports no range event at all.
     yield* ctx.host.click(VIRTUAL_TABLE_REVEAL);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -28803,8 +26098,6 @@ const virtualTableSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       }),
     );
 
-    // A press chooses the record it hit. The window then moves away and the
-    // reveal brings it back: the choice is kept by record, not by position.
     yield* ctx.host.click(virtualTableRow(905));
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -28843,13 +26136,6 @@ const virtualTableSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("virtual-table-revealed");
 
-    // The filter narrows the set while the window sits past its end. A scroll
-    // offset belongs to the set it was measured against, so the window commits
-    // the narrowed set's clamp in the same render: records the set no longer
-    // holds leave the tree, and the tail still fills the viewport. Without the
-    // clamp the core lands the stale offset on the new content's end and mounts
-    // five rows in a nine-row viewport, so half the table goes blank until the
-    // next wheel.
     yield* ctx.host.click(VIRTUAL_TABLE_FILTER);
     yield* ctx.host.key("0");
     yield* ctx.host.key("1");
@@ -28917,17 +26203,6 @@ const virtualTableSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/**
- * The shipped `@gpuixui/data` workspace tree, driven in a real window.
- *
- * Tier 3's *Tree views* row rests on the offscreen `data-tree-core` scenario,
- * where a key is synthesised into the row's handler. The tree's contract is
- * about **native focus**: one tab stop that follows the cursor, a `focusElement`
- * call made after the row's `tabIndex` commits, and a type-ahead buffer fed by
- * the keys the focused row receives. The probe mounts the example from the
- * package's registry and reads the focused row's `testId` after every gesture, so
- * a key that never reached the row names the gesture rather than the component.
- */
 const DataTreeProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -28991,9 +26266,6 @@ const dataTreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "none",
     );
 
-    // A press on an **open** folder closes it, and the runtime hands the press's
-    // focus to the row: the tree's one tab stop and the focused element agree
-    // from the first gesture.
     yield* ctx.host.click(dataTreeRow("src"));
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -29012,8 +26284,6 @@ const dataTreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       false,
     );
 
-    // Right opens the closed branch, then steps into it: the first press opens,
-    // the second moves the cursor, and the row's `tabIndex` commit comes first.
     yield* ctx.host.key("right");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -29039,8 +26309,6 @@ const dataTreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       dataTreeRow("components"),
     );
 
-    // Down walks the visible rows in paint order — past a closed branch's hidden
-    // children — and Left leaves a branch for its parent.
     yield* ctx.host.key("down");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -29061,7 +26329,6 @@ const dataTreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       state(DATA_TREE_ROWS_OPEN, "src"),
     );
 
-    // Type-ahead is the third way to move the cursor, and it moves the focus too.
     yield* ctx.host.key("p");
     yield* ctx.host.key("a");
     yield* Effect.sleep(SETTLE);
@@ -29076,10 +26343,6 @@ const dataTreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       dataTreeRow("package.json"),
     );
 
-    // The reveal is the app's action, not the tree's key handler: it opens the
-    // path and moves the cursor, and the tree follows the **committed** cursor,
-    // so the revealed row takes the focus after its subtree mounts — the shape
-    // a search hit or a "show this file" command needs.
     yield* ctx.host.click(DATA_TREE_REVEAL);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -29099,9 +26362,6 @@ const dataTreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture("data-tree-revealed");
 
-    // The two batch actions change the row set without touching the cursor: the
-    // active key survives even while its row is hidden, which is what the
-    // readout prints.
     yield* ctx.host.click(DATA_TREE_COLLAPSE);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -29124,27 +26384,6 @@ const dataTreeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("data-tree-expanded");
   });
 
-/**
- * A grid whose first column is drag-resized in a real window.
- *
- * Tier 3's **Resizable columns** row cites only the headless
- * `table-column-resize` scenario, where the pointer is synthesised. A reader's
- * drag differs in the way `SplitPane` documents: a window delivers the press and
- * every move before React commits the press's render, so the press is a **ref**,
- * and the drag survives leaving the divider's own 6px box only because the
- * divider listens to both `onMouseDown` and `onMouseMove` (the rule
- * `pointer-capture` measured). The rows beside the dragged column are the reason
- * the measurement matters: a width the header and the cells do not share is a
- * table that drifts.
- *
- * The divider is a control, not a decoration, so it is a tab stop with the split
- * pane's key contract — arrows move it a step, clamped through `keySize` — and
- * announces its width through `aria-valuetext` (the runtime has no
- * `aria-valuenow`).
- *
- * The divider under the grid keeps only the `onMouseMove` half: it is the
- * negative control, and a drag on it must move nothing.
- */
 const ColumnResizeProbe = (): ReactNode => {
   const theme = useTheme();
   const press = useRef(
@@ -29404,7 +26643,6 @@ const columnResizeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         }),
       );
 
-    // 1. The grid opens at the width the fixture declares.
     const opened = {
       width: COLUMN_RESIZE.name,
       control: COLUMN_RESIZE.control,
@@ -29432,7 +26670,6 @@ const columnResizeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 2. The divider keeps the whole drag, past its own 6px box.
     yield* ctx.host.drag(COLUMN_RESIZE_IDS.divider, 60, 0);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -29470,8 +26707,6 @@ const columnResizeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // 3. The release ends the gesture: a move over the divider after it resizes
-    //    nothing, however far the pointer is from where the press began.
     yield* ctx.host.hover(COLUMN_RESIZE_IDS.divider);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -29485,7 +26720,6 @@ const columnResizeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       }),
     );
 
-    // 4. A drag past the floor clamps, and the header paints the clamp.
     yield* ctx.host.drag(COLUMN_RESIZE_IDS.divider, -150, 0);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -29505,8 +26739,6 @@ const columnResizeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // 5. A second drag starts from the width its own press saw, not the last
-    //    gesture's start.
     yield* ctx.host.drag(COLUMN_RESIZE_IDS.divider, 30, 0);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -29520,7 +26752,6 @@ const columnResizeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       }),
     );
 
-    // 6. The widened grid still pans in one scroller, header and cells together.
     yield* ctx.host.wheel(COLUMN_RESIZE_IDS.grid, -20, 0);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectNear(
@@ -29536,7 +26767,6 @@ const columnResizeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       pannedHeader.x,
     );
 
-    // 7. The divider is a control: a key resizes it too.
     yield* ctx.host.focusElement(COLUMN_RESIZE_IDS.divider);
     yield* ctx.host.key("right");
     yield* Effect.sleep(SETTLE);
@@ -29557,8 +26787,6 @@ const columnResizeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // 8. The negative control: a divider with only the move half keeps none of
-    //    the drag, so its column never changes width.
     yield* ctx.host.drag(COLUMN_RESIZE_IDS.controlDivider, 60, 0);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -29581,16 +26809,6 @@ const columnResizeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("column-resize");
   });
 
-/**
- * The roving-focus grid a data grid, a tree or a toolbar builds.
- *
- * One cell carries `tabIndex: 0` — the app's remembered cell — and every other
- * cell carries `-1`, so the widget is one stop in the traversal. An arrow key
- * arrives at the focused cell's own handler, the app moves real focus with
- * `renderer.focusElement`, and the remembered cell becomes the one Tab enters
- * at. A press activates a cell and moves the memory there, so a reader who
- * leaves and returns lands where they were.
- */
 const GridFocusProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -29612,7 +26830,6 @@ const GridFocusProbe = (): ReactNode => {
     borderRadius: theme.radius.sm,
   };
 
-  /** Keeps the cell's native id, the handle `focusElement` takes. */
   const register = useCallback(
     (index: number, instance: PublicInstance | null) => {
       const kept = Arr.filter(
@@ -29627,7 +26844,6 @@ const GridFocusProbe = (): ReactNode => {
     [],
   );
 
-  /** Moves real focus to a cell and remembers it, the app's half of the model. */
   const moveTo = useCallback(
     (index: number) => {
       Option.match(
@@ -29782,7 +26998,6 @@ const gridFocusSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       GRID_FOCUS_IDS.before,
     );
 
-    // 1. One tab stop: the traversal enters at the cell the app remembers.
     yield* enterFromBefore;
     yield* focusCell(
       "Tab enters the grid at its remembered cell, not the first cell",
@@ -29790,7 +27005,6 @@ const gridFocusSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       0,
     );
 
-    // 2. Arrows move real focus, and the roving stop follows the move.
     yield* ctx.host.key("right");
     yield* focusCell("Right moves focus one cell along the row", 0, 1);
     yield* ctx.expectContains(
@@ -29803,7 +27017,6 @@ const gridFocusSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.key("right");
     yield* focusCell("Right clamps at the row's end", 0, 2);
 
-    // 3. The vertical axis and the row's ends.
     yield* ctx.host.key("down");
     yield* focusCell("Down moves focus one cell down", 1, 2);
     yield* ctx.host.key("home");
@@ -29815,7 +27028,6 @@ const gridFocusSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.key("up");
     yield* focusCell("Up clamps at the grid's top edge", 0, 2);
 
-    // 4. Tab leaves after one press, and a press moves the remembered cell.
     yield* ctx.host.key("tab");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -29840,9 +27052,6 @@ const gridFocusSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* enterFromBefore;
     yield* focusCell("the pressed cell is where Tab re-enters", 2, 1);
 
-    // 5. A cell that is not a tab stop is still reachable by the app — and it
-    //    keeps a place in the traversal, ordered *before* the zero-index stops,
-    //    so a Tab from it lands on the control before the grid.
     yield* ctx.host.focusElement(cell(2, 2));
     yield* Effect.sleep(SETTLE);
     yield* focusCell(
@@ -29858,7 +27067,6 @@ const gridFocusSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       GRID_FOCUS_IDS.before,
     );
 
-    // The remembered stop itself leaves forwards and backwards, one press each.
     yield* enterFromBefore;
     yield* focusCell("the remembered stop is reachable again", 2, 1);
     yield* ctx.host.key("shift-tab");
@@ -29872,15 +27080,6 @@ const gridFocusSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.capture("grid-focus");
   });
 
-/**
- * One window following the desktop's palette.
- *
- * The view is the consumer's whole wiring: `watchSystemTheme` polls the decoder
- * (module state here; a platform file in a real app), its `onChange` is the
- * state the `ThemeProvider` wears, and the surface below paints the palette's
- * page and accent so a capture can read the repaint. The mount count is taken
- * once, lazily, so a re-apply that remounted the tree would show up as `2`.
- */
 const SystemThemeSurface = (): ReactNode => {
   const theme = useTheme();
   const [mounts] = useState(recordMount);
@@ -29955,8 +27154,6 @@ const systemThemeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
 
     yield* ctx.host.waitFor(SYSTEM_THEME_IDS.probe);
 
-    // 1. The first read applies before anything else: the desktop's page is on
-    //    screen with no press and no restart.
     yield* ctx.expectEqual(
       "the first read applies the desktop's page",
       yield* settled(NIGHT_PAGE),
@@ -29964,8 +27161,6 @@ const systemThemeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     const mounts = yield* ctx.host.text(SYSTEM_THEME_IDS.mounts);
 
-    // 2. The paint, not only the readout: the page and the accent box carry the
-    //    palette's own colours. One capture sets the device scale for the rest.
     yield* ctx.host.capture("system-theme-night");
     const night = yield* ctx.host.pixels("system-theme-night");
     const size = yield* ctx.host.windowSize();
@@ -29984,8 +27179,6 @@ const systemThemeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       expected(NIGHT_SWATCH),
     );
 
-    // 3. The desktop changes its theme — `omarchy-theme-set` writes the file,
-    //    the poll reads it and the window follows, with the tree already there.
     yield* Effect.sync(() => setSystemPalette(paperPalette));
     yield* ctx.expectEqual(
       "a changed palette re-applies without a restart",
@@ -30025,7 +27218,6 @@ const systemThemeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "differ",
     );
 
-    // 4. The file goes away: the window returns to the application's own theme.
     yield* Effect.sync(clearSystemPalette);
     yield* ctx.expectEqual(
       "a deleted desktop theme returns the window to the application's theme",
@@ -30048,7 +27240,6 @@ const systemThemeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* Effect.sync(resetSystemPalette);
   });
 
-/** One calibration line at a known size, painted in the strip's own role. */
 const DocumentTypeCalibration = ({
   testId,
   size,
@@ -30073,14 +27264,6 @@ const DocumentTypeCalibration = ({
   </text>
 );
 
-/**
- * Three document hosts in one theme whose code and caption roles are
- * unmistakable, each beside the plain host the runtime's own numbers paint.
- *
- * `<code>` paints no surface, so its ink is read against the page; a `<markdown>`
- * fenced card does paint washes, so its language strip is read by the exact
- * `mutedForeground` glyph pixels instead.
- */
 const DocumentTypeProbe = (): ReactNode => {
   const theme = DOCUMENT_TYPE_THEME;
   return (
@@ -30193,7 +27376,6 @@ const documentTypeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       Option.fromNullishOr(Pixels.hexToRgba(theme.colors.background)),
     );
 
-    /** The part of the capture one host paints, or `None` before it paints. */
     const cropOf = (
       testId: string,
     ): Effect.Effect<Option.Option<Pixels.Pixels>, Smoke.SmokeHostError> =>
@@ -30214,7 +27396,6 @@ const documentTypeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         );
       });
 
-    /** A host's height in logical pixels, or `-1` when it paints nothing. */
     const heightOf = (
       testId: string,
     ): Effect.Effect<number, Smoke.SmokeHostError> =>
@@ -30225,7 +27406,6 @@ const documentTypeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         }),
       );
 
-    /** The first ink band's height, or `-1` when the crop paints nothing. */
     const inkHeight = (
       crop: Option.Option<Pixels.Pixels>,
       reference: Pixels.Rgba,
@@ -30240,7 +27420,6 @@ const documentTypeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         () => -1,
       );
 
-    /** The first band of the language strip, or `-1` high. */
     const stripHeight = (crop: Option.Option<Pixels.Pixels>): number =>
       Option.getOrElse(
         Option.map(
@@ -30263,31 +27442,24 @@ const documentTypeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       DOCUMENT_TYPE_IDS.headerRuntimeCalibration,
     );
 
-    // 1. The block's glyph is the size the theme names. A painted `<text>` at
-    //    the same size and family is the reference, so a host that ignores the
-    //    metric cannot pass by painting a different font.
     yield* ctx.expectEqual(
       "the themed block's glyph is the size the theme names",
       inkHeight(codeThemed, page),
       inkHeight(codeCalibration, page),
     );
 
-    // 2. A host handed no theme paints the runtime's own 12.5.
     yield* ctx.expectEqual(
       "a host handed no theme paints the runtime's own code size",
       inkHeight(codePlain, page),
       inkHeight(codeRuntime, page),
     );
 
-    // 3. The two are visibly different.
     yield* ctx.expectEqual(
       "the theme's code size is the larger of the two paints",
       inkHeight(codeThemed, page) > inkHeight(codePlain, page),
       true,
     );
 
-    // 4. The block's lines advance by the leading the seam handed over, which
-    //    the host's own box states (two rows of the role's line height).
     const themedHeight = yield* heightOf(DOCUMENT_TYPE_IDS.codeThemed);
     const plainHeight = yield* heightOf(DOCUMENT_TYPE_IDS.codePlain);
     yield* ctx.expectEqual(
@@ -30301,8 +27473,6 @@ const documentTypeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       2 * RUNTIME_CODE_LEADING,
     );
 
-    // 5. A diff's four changed rows advance by `diffLineHeight`; the headers
-    //    are the same height in both hosts, so the gain is the rows alone.
     const diffThemed = yield* heightOf(DOCUMENT_TYPE_IDS.diffThemed);
     const diffPlain = yield* heightOf(DOCUMENT_TYPE_IDS.diffPlain);
     yield* ctx.expectEqual(
@@ -30311,8 +27481,6 @@ const documentTypeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       DIFF_LEADING_GAIN,
     );
 
-    // 6. The language strip is painted at the caption role the seam hands it,
-    //    and a host with no theme paints the runtime's own 11.
     const themedStrip = stripHeight(markdownThemed);
     const plainStrip = stripHeight(markdownPlain);
     yield* ctx.expectEqual(
@@ -30332,7 +27500,6 @@ const documentTypeSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
   });
 
-/** The bodies, one per registry id; `Record` makes a missing body a compile error. */
 export const liveProbeBodies: Record<LiveProbeId, LiveProbeBody> = {
   "focus-visible": {
     id: "focus-visible",

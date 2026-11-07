@@ -1,13 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Toggle example: a canvas toolbar.
- *
- * Modes, not settings — grid and snapping change what the next drag does, so
- * they are a group of toggles with one tab stop; the preview is a single mode
- * outside the group, because it changes what the canvas paints rather than
- * joining the tool cluster.
- */
-
 import { useState, type ReactElement } from "react";
 import * as Arr from "effect/Array";
 import {
@@ -20,14 +11,12 @@ import {
   type GroupOption,
 } from "../src/index.js";
 
-/** The toolbar's modes; only the lock is unavailable at rest. */
 const MODES: ReadonlyArray<GroupOption> = [
   { value: "grid", label: "Grid" },
   { value: "snap", label: "Snap to grid" },
   { value: "lock", label: "Lock layer", disabled: true },
 ];
 
-/** Canvas toolbar: a group of modes, a standalone mode, and an unavailable one. */
 export const ToggleExample = (): ReactElement => {
   const [modes, setModes] = useState<ReadonlyArray<string>>(["grid"]);
   const [preview, setPreview] = useState(true);

@@ -1,25 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * A workspace file tree: open a folder, walk the rows from the keyboard and
- * jump to a row by typing its name.
- *
- * This is the whole composition a consumer copies. The controller holds the
- * expansion set and the cursor; `TreeView` paints the rows and owns the tab stop,
- * the key contract and the type-ahead buffer:
- *
- * - **one tab stop**: the row the cursor stands on, so the arrows move real
- *   native focus instead of mounting a stop per row;
- * - **Right** opens a closed branch or steps into an open one, **Left** closes
- *   it or steps out to the parent, and **Enter** or **Space** flip it;
- * - a **press** on a folder opens it and reports the row, exactly like a press
- *   on a file, which is what lets one handler serve both;
- * - **Reveal** opens the path to a deep node and moves the cursor to it, the
- *   shape a search hit or a "show this file" action needs.
- *
- * The readout paints the visible count and the active row, so a behaviour suite
- * can read the cursor without reaching into the component.
- */
-
 import { Button } from "@gpuixui/primitives/button";
 import * as Option from "effect/Option";
 import { TreeView, useExpandedRows } from "../src/index.js";
@@ -35,7 +14,6 @@ const file = (name: string, children?: ReadonlyArray<FileNode>): FileNode => ({
   ...(children === undefined ? {} : { children }),
 });
 
-/** A workspace small enough to read and deep enough to walk. */
 const workspace: ReadonlyArray<FileNode> = [
   file("src", [
     file("components", [
@@ -53,7 +31,6 @@ const childrenOf = (node: FileNode): ReadonlyArray<FileNode> =>
   node.children ?? [];
 const labelOf = (node: FileNode): string => node.name;
 
-/** The tree and the readout that proves what it did. */
 export const TreeExample = () => {
   const theme = useTheme();
   const tree = useExpandedRows({

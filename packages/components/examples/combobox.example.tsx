@@ -1,14 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Combobox example: assigning a reviewer and labelling a task.
- *
- * The single picker closes on select and shows one name; the multi picker stays
- * open and reports an ordered array; the third picker creates a reviewer from a
- * query nobody matches; the fourth is fed by a simulated remote search, so it
- * turns the local ranking off and shows what each query asked for. All use the
- * same option shape and ranking from `combobox/logic.ts`.
- */
-
 import { useState } from "react";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -46,11 +36,6 @@ const tags: Readonly<Record<string, ReadonlyArray<string>>> = {
   alan: ["research", "cryptography"],
 };
 
-/**
- * What a remote search would answer. The tags are the point: a result matched
- * on `engineering` does not contain the query in its label, which is why the
- * picker hands the rows over with `shouldFilter={false}`.
- */
 const searchReviewers = (query: string): ReadonlyArray<ComboboxOption> => {
   const needle = Str.toLowerCase(Str.trim(query));
   if (Str.isEmpty(needle)) return reviewers;
@@ -62,7 +47,6 @@ const searchReviewers = (query: string): ReadonlyArray<ComboboxOption> => {
   );
 };
 
-/** One picker composed from the parts; both cards use the same shape. */
 const Picker = ({
   label,
   multiple,
@@ -97,7 +81,6 @@ const Picker = ({
   </Combobox>
 );
 
-/** Two comboboxes: one value, then several, plus a creatable one. */
 export const ComboboxExample = () => {
   const theme = useTheme();
   const [reviewer, setReviewer] = useState<string | null>(null);
@@ -110,7 +93,6 @@ export const ComboboxExample = () => {
   const [lastQuery, setLastQuery] = useState("");
   const [remotePick, setRemotePick] = useState<string | null>(null);
 
-  /** The create contract: add the option, then select it. */
   const createReviewer = (query: string): void => {
     setPeople((current) =>
       current.some((option) => option.value === query)

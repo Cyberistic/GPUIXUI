@@ -1,19 +1,9 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Bubbles example: a launch panel under a rising field.
- *
- * Composition, not a gallery: the field's real job is behind content — a
- * preparation panel whose copy still owns the words — and the quiet strip shows
- * the same field under the reduced preference, which is the one decision the
- * field leaves to the application.
- */
-
 import { Bubbles } from "../src/bubbles.js";
 import { Card } from "@gpuixui/components/card";
 import { textStyle, useTheme } from "@gpuixui/components/authoring";
 import { MotionProvider } from "@gpuixui/components/motion";
 
-/** The field fills the box it is given, so the example bounds it with insets. */
 const fill = {
   position: "absolute" as const,
   top: 0,
@@ -22,7 +12,6 @@ const fill = {
   left: 0,
 };
 
-/** A rising field behind a preparation panel, and the same field stilled. */
 export const BubblesExample = () => {
   const theme = useTheme();
 
@@ -84,7 +73,7 @@ export const BubblesExample = () => {
         >
           <MotionProvider preference="reduced">
             <div style={fill}>
-              {/* The caller's colour: an accent field rather than the page's. */}
+              {}
               <Bubbles count={14} seed={3} color={theme.colors.accent} />
             </div>
           </MotionProvider>

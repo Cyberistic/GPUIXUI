@@ -1,16 +1,3 @@
-/**
- * Browser preview for the OTPField page.
- *
- * An OTP field is one contiguous code held in single-character cells, and the
- * drawing runs the primitive's **own** rules (`@gpuixui/primitives/core`) rather
- * than re-deriving them: a typed character advances, a pasted code fills
- * forward from the cell it landed in, and Backspace on an empty cell clears the
- * one before it. A preview that only appended to the cell under the caret
- * showed a field nobody ships.
- *
- * The Code tab shows the native usage.
- */
-
 import { useRef, useState } from "react";
 import * as Option from "effect/Option";
 import {
@@ -43,13 +30,12 @@ const Cell = ({
 export const OTPFieldDemo = ({
   showInvalid = true,
 }: {
-  /** Whether the refused code is drawn beside the working field. */
   readonly showInvalid?: boolean;
 } = {}) => {
   const [code, setCode] = useState("48");
   const cells = otpCells(code, CODE_LENGTH);
   const inputs = useRef<Array<HTMLInputElement | null>>([]);
-  /** Whether this key's own edit already cleared the cell, so Backspace clears one. */
+
   const emptied = useRef(false);
 
   const apply = (edit: OtpEdit) => {

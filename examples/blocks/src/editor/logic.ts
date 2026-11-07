@@ -1,9 +1,3 @@
-/**
- * The editor's syntax paint: one line in, tokens out. The line is split on
- * whitespace and punctuation, then each piece is named by what it is; a `//`
- * tail is one comment token. The tokens join back to the line, which is the
- * test's round-trip.
- */
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Str from "effect/String";

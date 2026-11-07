@@ -1,17 +1,3 @@
-/**
- * Holds the system-palette follow the `system-theme-follow` probe drives, and
- * the claims its README section prints.
- *
- * The probe's subject is the half `@gpuixui/tokens` cannot measure by itself:
- * `paletteToTokens` is pure and `watchSystemTheme`'s poll is arithmetic, but
- * "the window repaints and keeps its tree" is a paint claim. The fixture below
- * derives every expected colour from the same mapping the view applies, so a
- * palette or mapper change cannot leave the probe asserting an old colour, and
- * the state the poll reads is driven through its own setters here.
- *
- * `node:fs` is deliberate, as in `registry.test.ts`: this checks the
- * repository's own probe and prose, not a runtime path.
- */
 import { readFileSync } from "node:fs";
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
@@ -53,7 +39,6 @@ const scenarios = readFileSync(
   "utf8",
 );
 
-/** The `systemThemeSteps` effect, bounded by the first declaration after it. */
 const steps = (() => {
   const start = scenarios.indexOf("const systemThemeSteps");
   if (start === -1) return "";
@@ -70,8 +55,6 @@ const steps = (() => {
 
 describe("the palette the probe follows", () => {
   it("maps each desktop theme to the page and accent the view paints", () => {
-    // Derived through the mapping the window applies, so this is the fixture's
-    // guarantee and not a second table of hexes.
     expect(followedTheme(nightPalette).colors.background).toBe("#1B1B1F");
     expect(followedTheme(nightPalette).colors.primary).toBe("#B49CFF");
     expect(followedTheme(paperPalette).colors.background).toBe("#F4F1EA");
@@ -88,8 +71,6 @@ describe("the palette the probe follows", () => {
   });
 
   it("returns to the application's own theme when there is no palette", () => {
-    // The deleted-file case: the base theme the probe mounts with, not a
-    // built-in guessed from the empty palette.
     expect(BASE_PAGE).toBe(baseTheme.colors.background);
     expect(BASE_SWATCH).toBe(baseTheme.colors.primary);
     expect(pageOf(Option.none())).toBe(baseTheme.colors.background);
@@ -112,9 +93,6 @@ describe("the desktop the poll reads", () => {
   });
 
   it("polls faster than a reader can mistake the run for a restart", () => {
-    // The window's check is "the same window after a change", so the interval
-    // must be short enough that a settle poll sees the change; the seam's own
-    // documented poll is seconds because a desktop theme changes by hand.
     expect(SYSTEM_THEME_POLL_MS).toBeGreaterThan(0);
     expect(SYSTEM_THEME_POLL_MS).toBeLessThanOrEqual(50);
   });
@@ -193,9 +171,6 @@ describe("the system-theme probe's record", () => {
   });
 
   it("prints the measured rules and the limit", () => {
-    // The one claim the probe cannot make: this host is macOS, so the
-    // platform's file is the consumer's decoder and Omarchy itself is not run.
-    // Prose wraps, so the sentences are read from one flat line.
     const flat = readme.replace(/\s+/g, " ");
     expect(flat).toContain("without a restart");
     expect(flat).toContain("not remounted");

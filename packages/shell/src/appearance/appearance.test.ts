@@ -1,12 +1,3 @@
-/**
- * The Mac's appearance, read and turned into a theme edit (plan 723).
- *
- * Bugs guarded: `defaults` prints nothing for an unset key, so Light mode (no
- * `AppleInterfaceStyle`) must read as light rather than as a failed read; the
- * accent integers are AppKit's own order, so a swapped row repaints every
- * button the wrong hue; and an accent fill must keep a readable ink.
- */
-
 import { darkTheme, lightTheme, contrastRatio } from "@gpuixui/tokens";
 import { Effect, Layer } from "effect";
 import * as Option from "effect/Option";
@@ -20,7 +11,6 @@ import {
   type SystemAppearance,
 } from "./logic.js";
 
-/** A spawner whose `defaults read` answers from a table, keyed by the key. */
 const defaults = (answers: Readonly<Record<string, string>>) =>
   Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, {
     ...ChildProcessSpawner.make(() => Effect.die("only `string` is read")),

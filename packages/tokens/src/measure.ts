@@ -1,43 +1,9 @@
-/**
- * The colour dialect the measurement contracts read.
- *
- * The renderer paints CSS Color 4 — `isPaintableColor` — and a contrast ratio, a
- * blend or an OKLab distance needs channels rather than a name. This module is
- * the one seam that turns a painted value into channels: hex in every length the
- * runtime accepts, the 148 CSS named colours plus `transparent`, and the
- * functional families whose channels resolve by arithmetic on sRGB
- * (`rgb`/`hsl`/`hwb`/`hsv` with an optional alpha). A brand written the way a
- * design tool exports it is measured rather than refused.
- *
- * The perceptual spaces (`lab`, `lch`, `oklab`, `oklch`) and a **relative**
- * colour (`rgb(from …)`) are reported unmeasurable rather than approximated:
- * they resolve through a colour-space conversion this package does not guess at,
- * and a ratio computed from an approximation is worse than an honest absence —
- * the gate then names the pair instead of passing a colour nobody verified.
- *
- * The two tables a value is looked up in are read through their **own entries**,
- * so a key the prototype chain answers for — `constructor`, `__proto__` — is not
- * a colour. Without that rule the paint check and this seam disagree: a role
- * written as one passed `invalidColorRoles` while no channels resolved for it.
- */
-
-/** A colour as the contracts read it: six-digit channels and an optional share. */
 export interface MeasuredColour {
-  /** The channels, as `#RRGGBB` in upper case. */
   readonly rgb: string;
-  /**
-   * The alpha byte, when the value carries a share below full opacity. A byte of
-   * `FF` is no share — `#FFFFFFff` is `#FFFFFF` — so it is not reported here.
-   */
+
   readonly alpha?: string;
 }
 
-/**
- * The CSS named colours, as the channels the renderer paints, plus
- * `transparent` (which is `#00000000`). This is the set `isPaintableColor`
- * accepts by name, so the paint check and the measurement one cannot disagree
- * about a name.
- */
 export const namedColours: Readonly<Record<string, string>> = {
   aliceblue: "F0F8FF",
   antiquewhite: "FAEBD7",
@@ -190,42 +156,14 @@ export const namedColours: Readonly<Record<string, string>> = {
   transparent: "00000000",
 };
 
-/**
- * One of this module's tables read at an authored key.
- *
- * The tables are plain objects, so a key they do not carry can still answer
- * through the prototype chain: `constructor` is `Object.prototype`'s, and a
- * value written as one would pass the paint check while nothing resolves to
- * channels. Only the table's own entries are colours.
- */
 const entry = <Value>(
   table: Readonly<Record<string, Value>>,
   key: string,
 ): Value | undefined => (Object.hasOwn(table, key) ? table[key] : undefined);
 
-/**
- * Whether `value` is a named colour the runtime paints, case-insensitively.
- *
- * The table is read through its own entries: a key the prototype chain answers
- * for — `constructor`, `__proto__` — is not a named colour, so the paint check
- * and {@link measuredColour} cannot disagree about one.
- *
- * @example
- * ```ts
- * isNamedColour("RebeccaPurple"); // true
- * isNamedColour("notacolour"); // false
- * isNamedColour("constructor"); // false — an inherited key, not a colour
- * ```
- */
 export const isNamedColour = (value: string): boolean =>
   entry(namedColours, value.trim().toLowerCase()) !== undefined;
 
-/**
- * The functional colour families the runtime's parser reads. The eight this
- * module measures are the ones whose channels are sRGB arithmetic; the four
- * perceptual spaces are in this list because the renderer paints them while the
- * contracts report them unmeasurable.
- */
 export const colourFunctions: ReadonlySet<string> = new Set([
   "rgb",
   "rgba",
@@ -246,7 +184,6 @@ const decimal = /^[+-]?(?:\d+\.?\d*|\.\d+)$/;
 const huePattern = /^([+-]?(?:\d+\.?\d*|\.\d+))(deg|grad|rad|turn)?$/;
 const functionPattern = /^([a-z]+)\s*\(([\s\S]*)\)$/i;
 
-/** A shorthand digit names a byte: `f` is `ff`. */
 const widen = (digits: string): string =>
   digits.length > 4
     ? digits
@@ -270,14 +207,12 @@ const fromHex = (value: string): MeasuredColour | undefined => {
 const clamp = (value: number, low: number, high: number): number =>
   Math.min(Math.max(value, low), high);
 
-/** An sRGB channel as the byte the batch serialises. */
 const byte = (channel: number): string =>
   Math.round(clamp(channel, 0, 255))
     .toString(16)
     .padStart(2, "0")
     .toUpperCase();
 
-/** A numeric channel with its unit: `50%` is a share of the family's scale. */
 interface Amount {
   readonly value: number;
   readonly percent: boolean;
@@ -291,7 +226,6 @@ const amount = (text: string): Amount | undefined => {
     : undefined;
 };
 
-/** An angle in degrees: a bare number is degrees, and the units are CSS's. */
 const degrees = (text: string): number | undefined => {
   const [, value = "", unit = "deg"] =
     huePattern.exec(text.toLowerCase()) ?? [];
@@ -306,7 +240,6 @@ const degrees = (text: string): number | undefined => {
 
 const share = (text: string): number | undefined => amount(text)?.value;
 
-/** An `rgb()` channel: a percentage of 255, or the number itself. */
 const level = (text: string): number | undefined => {
   const channel = amount(text);
   if (channel === undefined) {
@@ -315,7 +248,6 @@ const level = (text: string): number | undefined => {
   return channel.percent ? (channel.value * 255) / 100 : channel.value;
 };
 
-/** The alpha token as the byte a theme carries, or `FF` when the value is opaque. */
 const alphaByte = (text: string): string | undefined => {
   const channel = amount(text);
   if (channel === undefined) {
@@ -324,7 +256,6 @@ const alphaByte = (text: string): string | undefined => {
   return byte((channel.percent ? channel.value / 100 : channel.value) * 255);
 };
 
-/** The green channel of an `hsl()` colour, the classic hue interpolation. */
 const hueChannel = (base: number, span: number, offset: number): number => {
   const wrapped = ((offset % 1) + 1) % 1;
   if (wrapped < 1 / 6) {
@@ -336,7 +267,6 @@ const hueChannel = (base: number, span: number, offset: number): number => {
   return wrapped < 2 / 3 ? base + (span - base) * (2 / 3 - wrapped) * 6 : base;
 };
 
-/** A pure hue for `hwb()`: full saturation at the mid lightness. */
 const pureHue = (hue: number): readonly [number, number, number] => {
   const base = 0;
   const span = 1;
@@ -347,7 +277,6 @@ const pureHue = (hue: number): readonly [number, number, number] => {
   ];
 };
 
-/** HSV's chroma triangle: the six sectors of the hue circle. */
 const sectorRgb = (
   hue: number,
   chroma: number,
@@ -419,11 +348,6 @@ interface Channels {
   readonly alpha?: string;
 }
 
-/**
- * The channel tokens of a functional colour, with the alpha token split off.
- * Commas and whitespace are the two CSS separators, and a `/` names the alpha
- * explicitly; four comma/space separators make the fourth value the alpha.
- */
 const splitChannels = (args: string): Channels | undefined => {
   const parts = args.split("/");
   if (parts.length > 2) {
@@ -449,7 +373,6 @@ type Family = (
   alpha: string | undefined,
 ) => MeasuredColour | undefined;
 
-/** Build a measured colour from three channels and an optional alpha token. */
 const measured = (
   channels: readonly [number, number, number],
   alpha: string | undefined,
@@ -518,29 +441,6 @@ const fromFunction = (
     : family(channels.values, alpha);
 };
 
-/**
- * A colour's channels and share, or `undefined` when the contracts cannot
- * resolve it.
- *
- * The value is `unknown` because a theme can come back from a store: JSON has
- * no `undefined`, so a role that was absent when the theme was written returns
- * `null`, and a hand-authored export can hand back a number or an inherited
- * member where a colour should be. A value that is not a string is
- * **unmeasurable**, the same answer this seam gives a perceptual space and the
- * one `isPaintableColor` gives a value the renderer cannot paint — a report,
- * never a `TypeError` from the contract that was asked to check it.
- *
- * @example
- * ```ts
- * measuredColour("#fff"); // { rgb: "#FFFFFF" }
- * measuredColour("ffffff80"); // { rgb: "#FFFFFF", alpha: "80" }
- * measuredColour("rebeccapurple"); // { rgb: "#663399" }
- * measuredColour("hsl(120 100% 50%)"); // { rgb: "#00FF00" }
- * measuredColour("oklch(0.62 0.26 29.2)"); // undefined — a perceptual space
- * measuredColour(null); // undefined — a value a store wrote for an absent one
- * measuredColour("constructor"); // undefined — an inherited key, not a colour
- * ```
- */
 export const measuredColour = (value: unknown): MeasuredColour | undefined => {
   if (typeof value !== "string") {
     return undefined;
@@ -560,21 +460,6 @@ export const measuredColour = (value: unknown): MeasuredColour | undefined => {
   return fromFunction(family.toLowerCase(), args);
 };
 
-/**
- * The channels of an opaque colour, or `undefined` for a translucent one — whose
- * contrast depends on the surface behind it, so a single ratio would be a guess.
- * A fully opaque alpha byte is opaque, and a value no colour grammar reads —
- * including a stored `null` — is unmeasurable rather than a throw, the rule
- * {@link measuredColour} states.
- *
- * @example
- * ```ts
- * opaqueRgb("#fff"); // "#FFFFFF"
- * opaqueRgb("rgb(255 0 0)"); // "#FF0000"
- * opaqueRgb("#ffffff80"); // undefined
- * opaqueRgb(null); // undefined
- * ```
- */
 export const opaqueRgb = (value: unknown): string | undefined => {
   const measured = measuredColour(value);
   return measured !== undefined && measured.alpha === undefined

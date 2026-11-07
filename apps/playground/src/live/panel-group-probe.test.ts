@@ -1,18 +1,3 @@
-/**
- * Holds `panel-group-lifecycle` to the component and the arithmetic it claims.
- *
- * The gap this guards: the shipped `@gpuixui/dock` `PanelGroup` had only an
- * offscreen measurement, while the Tier 4 row's window evidence was a
- * hand-composed split. If this probe is rewritten around a local pane, the name
- * and the README would claim the library's group while measuring the fixture.
- *
- * The derivation is the headless fixture's, so the two lanes cannot disagree
- * about a fraction or a step. The printed check count is derived from the probe's
- * own assertion sites, so a check added without the README sentence fails here.
- *
- * `node:fs` is deliberate, as in the other live fixtures: this reads the
- * repository's own component, probe and prose, never a runtime path.
- */
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
@@ -44,7 +29,6 @@ const probe = read("./panel-group-probe.tsx");
 const component = read("../../../../packages/dock/src/panel-group.tsx");
 const readme = read("../../README.md");
 
-/** The probe's README section, so a value printed elsewhere cannot pass. */
 const section = (() => {
   const heading = "### `panel-group-lifecycle` — measured on 0.11.0 here";
   const start = readme.indexOf(heading);
@@ -73,8 +57,6 @@ describe("the shipped panel group", () => {
   });
 
   it("derives the blank share a collapse leaves from the box it measured", () => {
-    // The headless run measured a 62-point header; the live probe derives the
-    // strip from whatever the window paints, so this case holds the rule.
     const shares = collapsedShares(PANEL_GROUP_WIDTH, "sidebar", 62);
     expect(shares.freed).toBeCloseTo(566, 6);
     expect(shares.expanded).toBeCloseTo(0.8 * 566, 6);

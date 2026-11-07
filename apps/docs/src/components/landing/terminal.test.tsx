@@ -4,17 +4,6 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { Terminal } from "./terminal";
 
-/**
- * The terminal moment, held to its shape.
- *
- * The block types the documented command and then opens the editor **inside
- * the same frame** — a second window beside the terminal would claim the app
- * runs in a GUI, which is the opposite of what the section says. The cases hold
- * one frame, the documented command and guide link, and the editor controls
- * that prove the file tree and sidebar are real: file presses, tabs and a
- * collapse toggle.
- */
-
 const read = (path: string): string =>
   readFileSync(fileURLToPath(new URL(path, import.meta.url)), "utf8");
 
@@ -29,7 +18,7 @@ describe("the terminal moment", () => {
   it("mounts one frame, not a terminal beside an editor", () => {
     expect(count(/class="landing-term"/g)).toBe(1);
     expect(count(/class="landing-editor"/g)).toBe(1);
-    // The editor is inside the terminal's markup, so the frame is one window.
+
     expect(markup.indexOf('class="landing-term"')).toBeLessThan(
       markup.indexOf('class="landing-editor"'),
     );
@@ -54,8 +43,7 @@ describe("the terminal moment", () => {
   it("makes the file tree and the sidebar real controls", () => {
     expect(markup).toContain("landing-term-tree");
     expect(count(/class="gx-filetree"/g)).toBeGreaterThan(0);
-    // The tree logic is the package's, but the explorer keeps VS Code's chrome:
-    // no demo scene (border, dot field, 40px padding) around it.
+
     expect(markup).not.toContain("gx-base gx-demo landing-term-tree");
     expect(markup).toContain(">Explorer<");
     expect(markup).toContain("landing-vscode-ts");
@@ -63,7 +51,7 @@ describe("the terminal moment", () => {
     expect(markup).toContain('aria-label="Collapse sidebar"');
     expect(markup).toContain('aria-expanded="true"');
     expect(markup).toContain('data-sidebar="true"');
-    // One tab per file, each a role=tab that switches the buffer.
+
     for (const name of ["page.tsx", "button.tsx", "theme.ts"]) {
       expect(markup).toContain(`>${name}<`);
       expect(markup).toContain(`data-reorder-tab="${name}"`);

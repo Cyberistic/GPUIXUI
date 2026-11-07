@@ -1,18 +1,3 @@
-/**
- * `OTPField` in the real GPUix runtime.
- *
- * The runtime facts this suite proves are the ones the element tree cannot: a
- * code can be typed into the native inputs and reaches `onChange` as one
- * contiguous string, focus follows the character into the next cell, arrows and
- * Backspace move it, and every cell is a named text input inside a named group.
- *
- * **Not proven here:** a real clipboard paste. `@gpuix/native` 0.11.0 exposes no
- * `onPaste` and the `TestRenderer` has no clipboard simulation, so the paste
- * branch is proven only as a pure rule (`core/otp.test.ts`: a multi-character
- * edit fills forward) and is documented as unverified in the docs page. It is
- * not faked with a keyboard sequence.
- */
-
 import type { ReactNode } from "react";
 import { expect, it } from "vitest";
 import * as Arr from "effect/Array";
@@ -24,7 +9,6 @@ import { Stack } from "../src/components/Stack.js";
 import { a11yNode, a11yValueOf, type Runtime } from "./harness.js";
 import { Surface, openWindow, testTheme } from "./fixture.js";
 
-/** The reported values, in order. */
 const recorder = (): {
   readonly values: ReadonlyArray<string>;
   readonly complete: ReadonlyArray<string>;
@@ -60,7 +44,6 @@ const mount = async (node: ReactNode): Promise<Runtime> => {
   return runtime;
 };
 
-/** The native inputs the field painted. */
 const cells = (runtime: Runtime): ReadonlyArray<TestElement> =>
   Arr.filter(runtime.all(), (element) => element.type === "input");
 
@@ -86,9 +69,6 @@ it("fills the code one key at a time and completes once", async () => {
 });
 
 it("does not complete again when an edit leaves a full code full", async () => {
-  // The bug guarded: `onComplete` fired whenever the new value was `length`
-  // long, so replacing a digit of a finished code reported a second completion
-  // and a form that verifies on it submitted twice.
   const field = recorder();
   const runtime = await mount(
     <OTPField
@@ -147,13 +127,6 @@ it("reports Enter as a submit and leaves the code alone", async () => {
 });
 
 it("paints a stored code that is not text as an empty field a reader can still fill", async () => {
-  // The bug guarded: a code is content a form record carries, and a
-  // verification code is numeric often enough that the record keeps it as a
-  // number. Read raw, the field called `Str.replace` on that value during its
-  // first paint and threw `self.replace is not a function`, which unmounted the
-  // whole screen. Only text is a code, so the stored shape paints the empty
-  // field an omitted value means — and the first key still lands.
-  // The cast is the storage boundary: the record wrote the code as a number.
   const stored = { defaultValue: 123456, value: 123456 } as unknown as {
     readonly defaultValue?: string;
     readonly value?: string;
@@ -168,8 +141,7 @@ it("paints a stored code that is not text as an empty field a reader can still f
     />,
   );
   expect(cells(runtime)).toHaveLength(6);
-  // An empty cell announces no value at all, which is what a reader must hear
-  // for a code the record could not describe.
+
   expect(a11yValueOf(runtime.a11y(), { role: "TextInput" })).toStrictEqual(
     Option.none(),
   );
@@ -177,8 +149,6 @@ it("paints a stored code that is not text as an empty field a reader can still f
   runtime.type("1");
   expect(lastValue(editable.values)).toBe("1");
 
-  // The controlled shape is the same read: the field paints no code rather
-  // than throwing, and the owner's next value still reaches it.
   const controlled = await mount(
     <OTPField testId="otp" label="Verification code" value={stored.value} />,
   );
@@ -189,12 +159,6 @@ it("paints a stored code that is not text as an empty field a reader can still f
 });
 
 it("draws the documented six cells for a stored length that is not a number", async () => {
-  // The bug guarded: a cell count is a setting saved beside the form, and a
-  // record can keep it as text. Read through `otpLength` alone, a stored `"2"`
-  // painted **one** cell and called the code complete on its first character —
-  // a verifier handed a one-character code. Only a real number is a count, so
-  // the stored shape paints the documented six and completes at six.
-  // The cast is the storage boundary: the record wrote the count as text.
   const stored = { length: "2" } as unknown as { readonly length?: number };
   const field = recorder();
   const runtime = await mount(
@@ -252,8 +216,7 @@ it("deletes only one character when Backspace empties a filled cell", async () =
   );
   runtime.keyDown("otp-cell-3", "backspace");
   runtime.keyUp("otp-cell-3", "backspace");
-  // The bug guarded: the native delete already emptied cell 3, and treating the
-  // key-up as "Backspace in an empty cell" would delete cell 2 as well.
+
   expect(lastValue(field.values)).toBe("12");
   expect(focusedId(runtime)).toBe("otp-cell-3");
 });
@@ -297,8 +260,6 @@ it("paints the destructive border on every cell when invalid", async () => {
 });
 
 it("declares the keyboard ring on every cell and paints no shadow ring", async () => {
-  // The runtime paints `focusVisible` only on the cell holding the caret; a
-  // shadow ring merged per focused cell is the workaround this replaced.
   const runtime = await mount(
     <OTPField testId="otp" label="Verification code" defaultValue="12" />,
   );
@@ -381,17 +342,12 @@ it("is one tab stop, on the cell the code has reached", async () => {
   runtime.click("before");
   runtime.focusNext();
   expect(focusedId(runtime)).toBe("otp-cell-3");
-  // The next Tab leaves the group instead of walking the other three cells.
+
   runtime.focusNext();
   expect(focusedId(runtime)).toBe("after");
 });
 
 it("keeps its tab stop when the field shortens under a focused cell", async () => {
-  // The bug guarded: `length` is a prop, so a field that shrinks (6 -> 4) while
-  // its last cell held focus kept the stale index. The stop was written only on
-  // that cell, which no longer existed, and every remaining cell painted
-  // `tabIndex: -1` — Tab skipped the field entirely. The code is full, so the
-  // cell it has reached is the new last one.
   const runtime = await openWindow();
   const field = (length: number): ReactNode => (
     <Surface>

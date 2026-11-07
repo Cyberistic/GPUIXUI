@@ -1,19 +1,3 @@
-/**
- * DatePicker behaviour, in the real GPUix renderer: the trigger's shadcn labels,
- * the calendar it now delegates to, and the range mode that calendar added.
- *
- * The bugs these guard: a popover that opens without focusing a day; a selection
- * that reports a `DateTime` or a locale string instead of the ISO day; a
- * controlled value that changes without the consumer; arrow keys that move the
- * highlight without moving real focus; PageDown that changes the selected day;
- * Escape that does not return focus to the trigger; a selected day painted
- * from a constant instead of the theme; a click on an out-of-range day producing
- * a value; arrow keys walking past `min`/`max`; the month controls browsing past
- * the bound; a picked day that cannot be cleared from the surface; Clear
- * appearing without a value or without `clearable`; and a picker the caller
- * disables while its calendar is open still selecting a day or clearing.
- */
-
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
 import {
@@ -80,7 +64,6 @@ const open = (picker: ReturnType<typeof renderComponent>): void => {
   clickCentreOf(picker, "date-picker-trigger");
 };
 
-/** A span picker: two months, the same fixed today, and the ISO-pair value. */
 const RangePicker = ({
   value,
   defaultValue,
@@ -226,7 +209,6 @@ describe("DatePicker", () => {
     picker.renderer.simulateKeystrokes("down");
     expect(focusedTestId(picker)).toEqual(Option.some("date-day-2026-10-25"));
 
-    // 25 October 2026 is a Sunday; Monday-first week is 19–25.
     picker.renderer.simulateKeystrokes("home");
     expect(focusedTestId(picker)).toEqual(Option.some("date-day-2026-10-19"));
 
@@ -405,10 +387,6 @@ describe("DatePicker", () => {
   });
 
   it("anchors an empty calendar on the day it calls today", () => {
-    // The bug: the open effect set the anchor and the same commit's focus effect
-    // read the *previous* state, so an empty picker focused the first of the
-    // month while the component documents today (`date-picker-lifecycle` read
-    // `date-day-2026-03-01` against the anchor's `-11`).
     const picker = renderComponent(<Picker />);
     open(picker);
 
@@ -419,11 +397,6 @@ describe("DatePicker", () => {
   });
 
   it("keeps the calendar's keys working from a month control", () => {
-    // The bug: the grid owned `onKeyDown`, and the month controls are its
-    // siblings, so a key delivered to a month button never reached the calendar.
-    // The runtime focuses the element a pointer pressed even when it is
-    // disabled (`date-picker-lifecycle` measured `date-next` holding the focus
-    // at its bound), so every later arrow moved nothing.
     const picker = renderComponent(
       <Picker defaultValue="2026-10-17" min="2026-10-01" max="2026-10-31" />,
     );
@@ -510,7 +483,6 @@ describe("DatePicker", () => {
       <RangePicker onValueChange={onValueChange} />,
     );
 
-    // The placeholder is shadcn's, and range mode opens on two months.
     expect(picker.renderer.getAllText()).toContain("Pick a date");
     open(picker);
     expect(picker.renderer.findByText("October 2026")).toBeDefined();
@@ -521,7 +493,7 @@ describe("DatePicker", () => {
       from: "2026-10-20",
       to: null,
     });
-    // The first press keeps the surface open: the span is not complete.
+
     expect(picker.renderer.findByTestId("date-picker-content")).toBeDefined();
     expect(
       picker.renderer.findByTestId("date-day-2026-10-20")?.style

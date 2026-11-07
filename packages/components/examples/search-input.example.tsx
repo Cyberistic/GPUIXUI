@@ -1,12 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * SearchInput example: filter a file list as you type.
- *
- * The field owns the text and reports every keystroke; the list is derived from
- * that query. There is no debounce in the component — a real query would debounce
- * the consumer's effect, which this in-memory example does not need.
- */
-
 import * as Arr from "effect/Array";
 import * as Str from "effect/String";
 import { useState } from "react";
@@ -23,7 +15,6 @@ const files: ReadonlyArray<string> = [
   "components/examples/list.example.tsx",
 ];
 
-/** A filterable file list. */
 export const SearchInputExample = () => {
   const theme = useTheme();
   const [query, setQuery] = useState("");

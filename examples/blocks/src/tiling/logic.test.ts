@@ -1,6 +1,3 @@
-/**
- * The tiling desktop's focus order and palette decoding.
- */
 import { describe, expect, it } from "vitest";
 import { paletteNames } from "./data.js";
 import { nextFocus, paletteTheme, titleOf } from "./logic.js";

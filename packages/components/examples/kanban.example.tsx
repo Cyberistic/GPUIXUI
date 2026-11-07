@@ -1,3 +1,4 @@
+/** @jsxImportSource @gpuix/react */
 import * as Arr from "effect/Array";
 import { Text } from "@gpuixui/primitives";
 import { useState } from "react";

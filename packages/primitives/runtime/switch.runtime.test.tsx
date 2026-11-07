@@ -1,18 +1,3 @@
-/**
- * `Switch`'s slide in the real GPUix runtime.
- *
- * The bug this suite guards: the thumb was positioned by the track's
- * `justifyContent`, which the runtime cannot animate, so the knob jumped. It is
- * now an absolutely positioned child placed by its `left` inset, and the
- * component hands that value to `motion` as the animation target.
- *
- * Only a running frame can show the difference: the declared element tree says
- * "animate to 14", and this measures that the paint has not reached the far
- * offset before the motion clock moves (a frame may already have advanced it a
- * fraction under load) and is exactly there after it. It also pins the geometry
- * the slide depends on — the knob stays inside the pill in both states.
- */
-
 import { expect, it } from "vitest";
 import * as Option from "effect/Option";
 import { lightTheme, platformTheme } from "@gpuixui/tokens";
@@ -28,12 +13,6 @@ import {
 import type { Bounds, Runtime } from "./harness.js";
 import { Surface, openWindow, testTheme } from "./fixture.js";
 
-/**
- * The track inside the switch's press target.
- *
- * The `testId` addresses the target — the element with the role, the focus and
- * the ring — and the track is the first child it draws.
- */
 const trackElement = (runtime: Runtime) => {
   const target = Option.getOrElse(runtime.element("s"), () =>
     expect.fail("the runtime retained no switch"),
@@ -46,13 +25,11 @@ const trackElement = (runtime: Runtime) => {
   );
 };
 
-/** The track's painted box, failing when it painted none. */
 const trackOf = (runtime: Runtime): Bounds =>
   Option.getOrElse(runtime.boundsOfId(trackElement(runtime).id), () =>
     expect.fail("the switch painted no track"),
   );
 
-/** The thumb's painted box: the track's only painted child. */
 const thumbOf = (runtime: Runtime): Bounds => {
   const thumb = trackElement(runtime).children[0];
   return Option.getOrElse(
@@ -72,17 +49,13 @@ it("slides the thumb to the far edge when the state changes", async () => {
   );
   const rest = thumbOf(runtime);
   const travel = switchThumbTravel(spec, testTheme);
-  // `left` is measured from the padding box while the authored inset is from
-  // the track's outer edge, so the painted offset is the inset itself.
+
   const inset = switchThumbInset(spec, testTheme);
   expect(rest.x).toBe(trackOf(runtime).x + inset);
 
   runtime.click("s");
   runtime.flush();
-  // The click commits the new motion target. The animation may already have
-  // advanced a fraction of a pixel by the time the frame is read under load, so
-  // the property is "has not arrived", not "exactly at rest" — an instant jump
-  // (no motion) paints the far edge in this very frame and fails here.
+
   const afterClick = thumbOf(runtime).x;
   expect(afterClick).toBeGreaterThanOrEqual(rest.x);
   expect(afterClick).toBeLessThan(rest.x + travel);
@@ -120,8 +93,7 @@ it("keeps the knob's gap to each edge equal in both states", async () => {
   runtime.renderer.clockFastForward(300);
   runtime.flush();
   expect(inside()).toBe(true);
-  // The checked knob mirrors the resting one: the same edge gap, on the other
-  // side. A travel computed without the borders leaves them unequal.
+
   expect(gaps()).toEqual([rest[1], rest[0]]);
   expect(rest[0]).toBe(switchThumbInset(spec, testTheme));
 });
@@ -137,9 +109,7 @@ it("centres the knob between the track's top and bottom edges", async () => {
   const thumb = thumbOf(runtime);
   const top = thumb.y - track.y;
   const bottom = track.y + track.height - (thumb.y + thumb.height);
-  // `top` is measured from the padding box exactly as `left` is, so the painted
-  // gap includes the border on each side: a top computed on the border box
-  // leaves the knob one border-width high and the bottom gap too small.
+
   const box = switchBox(spec.size, testTheme);
   const centred =
     testTheme.borderWidth.thin + (box.height - box.border * 2 - box.knob) / 2;
@@ -148,12 +118,6 @@ it("centres the knob between the track's top and bottom edges", async () => {
 });
 
 it("eases the thumb between its two resting places, not as an arriving surface", async () => {
-  // The bug this guards: the slide carried its own literal
-  // `{ duration: 0.15, ease: "easeOut" }`, the *arrival* curve, while a knob
-  // moving from one resting place to the other is the timing table's
-  // `standard` phase (`easeInOut`). At half the window a between-states
-  // movement has travelled half the distance; the arrival curve has already
-  // covered ~0.69 of it.
   const runtime = await openWindow();
   runtime.render(
     <Surface>
@@ -175,12 +139,6 @@ it("eases the thumb between its two resting places, not as an arriving surface",
 });
 
 it("lands the thumb at once under the provider's reduced preference", async () => {
-  // The bug guarded: every animated primitive defaulted its own `reducedMotion`
-  // to false, so an app that wrapped its tree in the library's one
-  // `MotionProvider` still animated a switch unless it repeated the flag on
-  // every instance. This switch is given no prop at all; the first case in the
-  // file is the negative control, where the same click-frame read is still
-  // short of the far edge.
   const runtime = await openWindow();
   runtime.render(
     <Surface>
@@ -199,11 +157,6 @@ it("lands the thumb at once under the provider's reduced preference", async () =
 });
 
 it("paints the edge a platform switch declares", async () => {
-  // The bug guarded: the seam decoded a declared switch table and rebuilt it
-  // from the three fills, dropping `edge`. Windows' off track is `transparent`
-  // with a 1px rim, so the window painted a white knob on nothing — the whole
-  // control vanished — and macOS's rim shadow went with it. `core/selection`
-  // pins both styles; this reads the style the window actually applied.
   const runtime = await openWindow();
   runtime.render(
     <Surface theme={platformTheme(lightTheme, "win32")}>
@@ -219,8 +172,7 @@ it("paints the edge a platform switch declares", async () => {
       <Switch testId="s" label="Airplane mode" />
     </Surface>,
   );
-  // The runtime states every shadow field, so the expectation names the ones
-  // the edge paints and lets the renderer fill the rest (`inset: false`).
+
   expect(trackElement(runtime).style["boxShadow"]).toMatchObject({
     offsetX: 0,
     offsetY: 0,

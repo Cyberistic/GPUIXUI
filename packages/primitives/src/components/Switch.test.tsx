@@ -1,13 +1,3 @@
-/**
- * `Switch` — the element tree the runtime receives.
- *
- * The bug this suite guards is the one a part split can reintroduce: the thumb
- * is a real second region, so a caller's glyph lives inside it — and GPUI
- * hit-tests to the deepest element, so a glyph without the `pointerEvents:
- * "none"` guard silently swallows the press that toggles the switch (measured
- * for the filled thumb in `runtime/controls.runtime.test.tsx`).
- */
-
 import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
@@ -41,11 +31,9 @@ const checked = (value: boolean): ValueState<boolean> =>
   initValueState(Option.some(value), false);
 const customGlyph = <Icon name="sun" color="red" size={8} />;
 
-/** The track a switch draws inside its press target. */
 const trackOf = (element: ReactElement): ReactElement =>
   elementChildren(element)[0] ?? expect.fail("the switch drew no track");
 
-/** The thumb a switch draws: target → track → the part's context → the knob. */
 const thumbOf = (element: ReactElement): ReactElement => {
   const provider =
     elementChildren(trackOf(element))[0] ??
@@ -55,10 +43,6 @@ const thumbOf = (element: ReactElement): ReactElement => {
   );
 };
 
-/**
- * The thumb is a `motion.div`, so its props are the component's rather than a
- * host's: read the `style` it passes down, which is what the runtime paints.
- */
 const styleOf = (element: ReactElement): Record<string, unknown> =>
   expectSome(
     Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))(
@@ -73,7 +57,6 @@ const numberAt = (element: ReactElement, name: string): number =>
     ),
   );
 
-/** The `left` the thumb animates to, from the motion description. */
 const animatedLeft = (element: ReactElement): number =>
   expectSome(
     Schema.decodeUnknownOption(Schema.Struct({ left: Schema.Number }))(
@@ -83,10 +66,6 @@ const animatedLeft = (element: ReactElement): number =>
 
 describe("Switch", () => {
   it("draws a size name the scale does not carry at the default size", () => {
-    // The bug guarded: the pill's box and the thumb's travel are derived from
-    // the control size, and a stored size name the scale no longer carries
-    // resolved to no width or height class — a switch with no track, while its
-    // 24px press band stayed behind.
     const stored = renderSwitch(
       { size: "xl" as ControlSize },
       testTheme,
@@ -110,9 +89,6 @@ describe("Switch", () => {
   });
 
   it("paints an accent name the table does not carry as the brand", () => {
-    // The bug guarded: a stored accent reached `SELECTION_ROLE[name]` in the
-    // track recipe and threw on its first slot, so a saved settings row's
-    // switch emptied the window instead of painting the brand it defaults to.
     const stored = renderSwitch(
       { accent: "brand" as SelectionAccent },
       testTheme,
@@ -181,10 +157,6 @@ it("hands a style callback the live state and lets its result win", () => {
 });
 
 it("reserves the pressable floor around the track and keeps it out of the press", () => {
-  // The track is one icon-height tall (16px at `md`) and was its own press
-  // target — under WCAG 2.2 SC 2.5.8's 24px floor. The target grows around it,
-  // the track takes `pointerEvents: "none"` so a press anywhere activates once,
-  // and the ring stays on the element that holds focus.
   const element = renderSwitch({}, testTheme, checked(false), idle, vi.fn());
   expect(expectSome(hostStyleRecord(element))["minHeight"]).toBe(
     targetSize.minimum,
@@ -207,11 +179,6 @@ describe("SwitchThumb", () => {
   });
 
   it("declares the slide: one left inset, animated between the two positions", () => {
-    // The bug this guards: the thumb was positioned by the track's
-    // `justifyContent`, which the runtime cannot animate, so the knob jumped.
-    // Its position is now a `left` inset, and the motion target is that same
-    // number — a target that drifted from the paint would land the knob off the
-    // track's edge.
     const off = thumbOf(
       renderSwitch({}, testTheme, checked(false), idle, vi.fn()),
     );
@@ -246,10 +213,6 @@ describe("SwitchThumb", () => {
   });
 
   it("lands the thumb instead of sliding it when motion is off", () => {
-    // The bug guarded: the slide ran for every reader, because the runtime
-    // exposes no reduced-motion preference and nothing passed one down. The
-    // positions are still two, so the state is still visible — only the travel
-    // between them is gone.
     const thumb = (reducedMotion: boolean): ReactElement =>
       thumbOf(
         renderSwitch(
@@ -301,9 +264,6 @@ describe("SwitchThumb", () => {
 
 describe("a switch's address and help", () => {
   it("hands its element the caller's ref, id, layout and help", () => {
-    // Bug guarded: the track was reachable only by `testId`, and a `Label`'s
-    // description reached nobody — 0.11.0 has no `aria-describedby`, so the
-    // control has to carry the words itself.
     const ref = vi.fn();
     const layout = vi.fn();
     const element = renderSwitch(
@@ -343,11 +303,6 @@ describe("a switch's address and help", () => {
   });
 
   it("forwards a tooltip trigger's pointer pair and description", () => {
-    // Bug guarded: a setting in a toolbar is described by a tip, and GPUix's
-    // `TooltipTrigger asChild` merges its handlers into the child element while
-    // the runtime delivers a hover only to the element that registered the
-    // listener — so a switch without the pair opened the tip on focus but never
-    // on hover, and its text stopped at the component.
     const entered = vi.fn();
     const left = vi.fn();
     const element = renderSwitch(
@@ -374,8 +329,6 @@ describe("a switch's address and help", () => {
   });
 
   it("keeps its own help over a tooltip's description", () => {
-    // Both channels publish `aria-description`; the visible help a settings
-    // writer chose is the words the reader needs, so it wins.
     const element = renderSwitch(
       {
         description: "Sends a digest every morning.",
@@ -392,15 +345,6 @@ describe("a switch's address and help", () => {
   });
 });
 
-/**
- * The Apple platform's switch.
- *
- * The bug this guards: a theme whose style declares the platform's own switch
- * (Apple's green on, grey off) still drew the library's icon-derived pill, so
- * macOS shipped a 28×16 accent toggle in a theme that names a 38×22 native one.
- * The paint and the box come from the one declaration, and the knob's travel
- * stays the track width less the knob and its two insets.
- */
 describe("Switch under the Apple platform", () => {
   const apple = platformTheme(themes.light, "darwin");
 
@@ -434,7 +378,7 @@ describe("Switch under the Apple platform", () => {
     expect(
       expectSome(hostStyleString(trackOf(element), "backgroundColor")),
     ).toBe(apple.switch?.on);
-    // 38 − 20 − 1 = 17, the same one-point inset at the far end.
+
     expect(animatedLeft(thumb)).toBe(17);
   });
 });

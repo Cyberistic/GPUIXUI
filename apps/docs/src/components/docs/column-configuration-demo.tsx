@@ -19,19 +19,6 @@ import * as Option from "effect/Option";
 import * as Result from "effect/Result";
 import { useState, type KeyboardEvent } from "react";
 
-/**
- * Browser preview for the Column configuration page.
- *
- * `ColumnMenu` and the table parts are GPUix hosts, so the page cannot mount
- * them and this drawing is a labelled approximation. The configuration is the
- * package's: `toggleColumn` and `moveColumn` own the order and visibility,
- * `resizeWidthByKey` owns the keyboard step and its bounds, and
- * `contentWidth`/`hiddenColumns` own the readout. The header and every row read
- * the same `visibleColumns` list, so the drawing cannot paint a cell under the
- * wrong heading.
- */
-
-/** One file the configured table lists. */
 export interface ColumnFile {
   readonly id: string;
   readonly name: string;
@@ -40,7 +27,6 @@ export interface ColumnFile {
   readonly updated: string;
 }
 
-/** The rows the table draws. */
 export const COLUMN_FILES: ReadonlyArray<ColumnFile> = [
   {
     id: "brand",
@@ -65,7 +51,6 @@ export const COLUMN_FILES: ReadonlyArray<ColumnFile> = [
   },
 ];
 
-/** The columns the table opens with, in paint order. */
 export const COLUMN_DEFS: ReadonlyArray<ColumnDef> = [
   { id: "name", label: "Name", width: 220, minWidth: 120 },
   { id: "status", label: "Status", width: 120 },
@@ -73,7 +58,6 @@ export const COLUMN_DEFS: ReadonlyArray<ColumnDef> = [
   { id: "updated", label: "Updated", width: 140 },
 ];
 
-/** A row's cell for a column. */
 export const columnValue = (file: ColumnFile, id: string): string => {
   if (id === "status") return file.status;
   if (id === "size") return file.size;
@@ -81,21 +65,17 @@ export const columnValue = (file: ColumnFile, id: string): string => {
   return file.name;
 };
 
-/** The column list the drawing opens with. */
 export const openingColumns = (): ColumnState => initialColumns(COLUMN_DEFS);
 
-/** Hide or show one column, the way the menu's checkbox does. */
 export const toggledColumn = (state: ColumnState, id: string): ColumnState =>
   toggleColumn(state, id);
 
-/** Move one column one visible place, the way the menu's arrows do. */
 export const movedColumn = (
   state: ColumnState,
   id: string,
   delta: number,
 ): ColumnState => moveColumn(state, id, delta);
 
-/** The names a hidden column keeps in the readout: its label or its id. */
 export const hiddenNames = (state: ColumnState): ReadonlyArray<string> =>
   Arr.filterMap(hiddenColumns(state), (id) =>
     Option.match(
@@ -107,22 +87,9 @@ export const hiddenNames = (state: ColumnState): ReadonlyArray<string> =>
     ),
   );
 
-/**
- * Whether the menu can hide one more column.
- *
- * The last visible column stays: a grid with no track paints a header with no
- * cells, so the package disables that column's toggle rather than accepting a
- * press it refuses.
- */
 export const canHide = (state: ColumnState): boolean =>
   visibleColumns(state).length > 1;
 
-/**
- * The width a resize key produces for one column.
- *
- * The divider announces and steps the width the package clamps, so Home/End
- * name the column's own bounds and an arrow moves one `COLUMN_KEY_STEP`.
- */
 export const keyedWidth = (
   state: ColumnState,
   id: string,
@@ -142,14 +109,12 @@ export const keyedWidth = (
     },
   );
 
-/** The state a key press on one divider produces. */
 export const resizedColumn = (
   state: ColumnState,
   id: string,
   key: ColumnResizeKey,
 ): ColumnState => resizeColumn(state, id, keyedWidth(state, id, key));
 
-/** The arrow a browser keyboard event uses for a divider key. */
 const browserKey: Readonly<Record<string, ColumnResizeKey>> = {
   ArrowLeft: "left",
   ArrowRight: "right",
@@ -157,7 +122,6 @@ const browserKey: Readonly<Record<string, ColumnResizeKey>> = {
   End: "end",
 };
 
-/** The column configuration page's browser rendering. */
 export function ColumnConfigurationDemo() {
   const [state, setState] = useState<ColumnState>(openingColumns);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -326,7 +290,6 @@ export function ColumnConfigurationDemo() {
   );
 }
 
-/** The page's copyable native usage, shown in the preview's Code tab. */
 export const columnConfigurationDemoSource = `import {
   ColumnMenu,
   Table,

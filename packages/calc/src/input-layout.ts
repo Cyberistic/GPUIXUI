@@ -1,17 +1,3 @@
-/**
- * The Natural Display *input* layout.
- *
- * The entry is still a token list (that is what the parser and history replay
- * need), but it is rendered as structure: a `( … ) ÷ ( … )` fraction is a
- * stacked fraction, `√( … )` is a radical with a vinculum, and `^` makes a
- * superscript slot. The caret is a node in the same tree, so it lands inside
- * the numerator, denominator or exponent rather than after a flat string.
- *
- * `fractionTemplate` is the five tokens the `a/b` key inserts; its cursor starts
- * in the numerator, and `moveInInput` jumps straight from the numerator to the
- * denominator instead of stepping over the structural tokens.
- */
-
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { operator, OPEN, CLOSE, type InputToken } from "./input/token.js";
@@ -20,7 +6,6 @@ import type { MathNode } from "./layout.js";
 const text = (value: string): MathNode => ({ kind: "text", text: value });
 const caret: MathNode = { kind: "caret" };
 
-/** The five tokens the fraction key inserts, with the cursor after the first `(`. */
 export const fractionTemplate: ReadonlyArray<InputToken> = [
   OPEN,
   CLOSE,
@@ -29,7 +14,6 @@ export const fractionTemplate: ReadonlyArray<InputToken> = [
   CLOSE,
 ];
 
-/** The index a new fraction's cursor takes, relative to the insertion point. */
 export const FRACTION_CURSOR = 1;
 
 const matchingClose = (
@@ -144,7 +128,6 @@ const buildRow = (
   return { node: { kind: "row", items, align: "baseline" }, placed };
 };
 
-/** Combine `^` with the atom to its left into a superscript slot. */
 const withPowers = (
   items: ReadonlyArray<MathNode>,
 ): ReadonlyArray<MathNode> => {
@@ -174,7 +157,6 @@ const withPowers = (
   return walk(0, []);
 };
 
-/** The input layout for the entry, with the caret at `cursor`. */
 export const inputLayoutOf = (
   tokens: ReadonlyArray<InputToken>,
   cursor: number,
@@ -184,10 +166,6 @@ export const inputLayoutOf = (
   return { ...built.node, items: withPowers(built.node.items) };
 };
 
-/**
- * Move the caret one slot left/right. A fraction's numerator and denominator
- * are adjacent slots: the structural `) ÷ (` trio is skipped.
- */
 export const moveInInput = (
   tokens: ReadonlyArray<InputToken>,
   cursor: number,
@@ -213,7 +191,6 @@ export const moveInInput = (
   return Math.max(0, cursor - 1);
 };
 
-/** The flat text a history row can print, with the fraction template kept human. */
 export const templateText = (tokens: ReadonlyArray<InputToken>): string =>
   Arr.join(
     Arr.map(tokens, (token) => token.text),

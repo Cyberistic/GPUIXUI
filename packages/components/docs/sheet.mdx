@@ -69,13 +69,3 @@ blur the drawing carries has no native route (`StyleDesc` has no `filter`).
 | `SheetTitle` | `children` | `ReactNode` | — |
 | `SheetDescription` | `children` | `ReactNode` | — |
 | `SheetFooter` | `children` | `ReactNode` | — |
-
-## Notes
-- No swipe-to-dismiss and no snap points: the runtime has no drag host, so the
-  grabber cannot be dragged.
-- The slide is a numeric `left`/`top` offset of the surface's own span, not a
-  `transform`; the content keeps its layout because the box moves, not the flow.
-- The veil is an anchored element at window coordinates, not a portalled surface,
-  and it cannot blur the page: `StyleDesc` has no `filter`.
-- The surface rounds only the corners inside the window; the edge it opens from
-  stays flush.

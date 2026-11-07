@@ -1,8 +1,3 @@
-/**
- * An AppKit menu's highlight (plan 724). Bug guarded: on macOS a highlighted
- * menu row painted the web's grey `hover` wash; AppKit paints the accent with
- * the accent's ink — on a destructive row too — and follows the pointer.
- */
 import { lightTheme, platformTheme } from "@gpuixui/tokens";
 import { describe, expect, it } from "vitest";
 import { menuRowStyle } from "./item.js";
@@ -19,8 +14,6 @@ describe("an AppKit menu row", () => {
   });
 
   it("paints a highlighted destructive row in the accent's ink", () => {
-    // Red ink on the accent fill is a pair no floor measures; AppKit paints
-    // every highlighted row's text in the accent's own ink.
     expect(menuRowStyle(mac, { ...row, tone: "destructive" })?.color).toBe(
       mac.colors.primaryForeground,
     );

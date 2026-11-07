@@ -1,23 +1,3 @@
-/**
- * Prove the palette switch changes what a hydrated preview paints.
- *
- * A reader changes the palette by pressing a button: the press is React state,
- * so a capture of the markup proves nothing about it. This probe presses the
- * sidebar's **Palette** group on a curated component page and reads the
- * consequence off every preview surface — its `data-mode`, the `--background`
- * variable the bridge wrote, and the group's pressed position — then requires
- * the address bar to carry none of the switch's axes.
- *
- * It first presses **before** the page content hydrates, while the switch is
- * still disabled, and requires the press to be refused: a press in that window
- * used to move the group and the URL while every preview kept the server's
- * palette, and no later render recovered it.
- *
- * Run (a dev or preview server is already up):
- * `nub apps/docs/scripts/palette-switch-probe.ts`
- * `--url <url>`, `--timeout <ms>` (hydration budget), `--chrome <path>`.
- */
-
 import {
   platformNames,
   platformTheme,
@@ -29,16 +9,10 @@ import { findChrome, openChrome } from "./chrome-session.ts";
 import { firstReady, propsOfScript } from "./react-ready.ts";
 import { namesSwitchAxis } from "./platform-switch-probe.ts";
 
-/** The page a preview server serves, and the switch every docs page carries. */
 export const defaultUrl = "http://localhost:4175/components/button";
 
-/** The palette group's accessible name, and the two buttons it offers. */
 export const paletteGroup = "Preview palette";
 
-/**
- * What every preview surface reports at one instant: the palette and platform
- * it resolved, the page fill the bridge wrote, and the pressed button.
- */
 export interface Surface {
   readonly mode: string;
   readonly platform: string;
@@ -46,7 +20,6 @@ export interface Surface {
   readonly pressed: string;
 }
 
-/** Read the probe's one-line readout; `undefined` when it is not one. */
 export const parseSurface = (text: string): Surface | undefined => {
   const [mode, platform, background, pressed] = text.split("|");
   if (
@@ -59,17 +32,14 @@ export const parseSurface = (text: string): Surface | undefined => {
   return { mode, platform, background, pressed };
 };
 
-/** A platform the library names, or `undefined` for a value it does not. */
 export const platformOf = (value: string): PlatformName | undefined =>
   platformNames.find((name) => name === value);
 
-/** The page fill a mode paints on a platform, from the library's own tables. */
 export const expectedBackground = (
   mode: ThemeMode,
   platform: PlatformName,
 ): string => platformTheme(themes[mode], platform).colors.background;
 
-/** Every surface's state, as one line `parseSurface` reads. */
 const readSurfaces = `(() => {
   const surfaces = [...document.querySelectorAll(".gx-demo[data-mode]")];
   const first = surfaces[0];
@@ -85,23 +55,12 @@ const readSurfaces = `(() => {
   ].join("|");
 })()`;
 
-/** How many surfaces carry a palette, and how many carry `mode`. */
 const countSurfaces = (mode: string): string => `(() => {
   const all = document.querySelectorAll(".gx-demo[data-mode]");
   const lit = document.querySelectorAll('.gx-demo[data-mode="${mode}"]');
   return all.length + ":" + lit.length;
 })()`;
 
-/**
- * Whether the switch and the surface it measures are hydrated.
- *
- * The sidebar's group hydrates before the page's previews: a press inside that
- * window updates the group while the page's own hydration render lands
- * afterwards, so the surfaces keep the server's palette and the probe reads a
- * page a reader could not yet have clicked. The surface's props are the
- * precondition the measurement needs, not only the button's handler.
- */
-/** The first enabled copy of `label` whose press answers, painted first. */
 const readyButton = (label: string): string =>
   firstReady(
     `[aria-label="${paletteGroup}"] button`,
@@ -122,7 +81,6 @@ const ready = (label: string): string => `(() => {
   return matches.length === 0 ? "no-button" : "cold";
 })()`;
 
-/** Press the palette button a reader would press. */
 const press = (label: string): string => `(() => {
   const button = ${readyButton(label)};
   if (button === undefined) return "no-button";
@@ -130,7 +88,6 @@ const press = (label: string): string => `(() => {
   return "pressed";
 })()`;
 
-/** Poll `read` until `accept` holds, or the budget runs out. */
 const until = async (
   read: () => Promise<string>,
   accept: (value: string) => boolean,
@@ -145,7 +102,6 @@ const until = async (
   return accept(value) ? value : undefined;
 };
 
-/** Run the project. Returns the process exit code. */
 export const main = async (argv: ReadonlyArray<string>): Promise<number> => {
   const argument = (flag: string): string | undefined => {
     const index = argv.indexOf(flag);
@@ -184,9 +140,7 @@ export const main = async (argv: ReadonlyArray<string>): Promise<number> => {
         () => session.page.text(readSurfaces),
         (text) => {
           const surface = parseSurface(text);
-          // Both axes are in the same commit, so waiting for the pressed
-          // button keeps the read from pairing one platform with another's
-          // paint.
+
           return surface?.pressed === "Dark" && surface.mode === "dark";
         },
         budget,

@@ -1,15 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Feedback example: a metric card that is still loading.
- *
- * The three loading surfaces in their real roles — a skeleton for content that
- * has not arrived, a spinner for work in progress, and a tooltip that explains
- * a metric without occupying the card. The trigger is the icon action a reader
- * would reach for: `IconButton` forwards the trigger pair, so the tip opens on
- * hover — the window's only open path — and its text is the trigger's
- * description.
- */
-
 import { Icon } from "@gpuixui/icons";
 import type { ReactElement } from "react";
 import {
@@ -23,7 +12,6 @@ import {
   useTheme,
 } from "../src/index.js";
 
-/** A loading revenue card with a tooltip on the metric's definition. */
 export const FeedbackExample = (): ReactElement => {
   const theme = useTheme();
   return (

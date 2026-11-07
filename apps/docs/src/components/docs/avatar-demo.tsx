@@ -1,15 +1,3 @@
-/**
- * Browser previews for the Avatar page.
- *
- * The shipped avatar is a GPUix host tree: a disc that clips a picture (or the
- * initials derived from the name) and a presence dot on the rim. The preview
- * cannot mount it, so it draws the same shapes from the theme bridge and says
- * so. The rules that can be wrong — the initials, the roster's words and the
- * invite gate — live in `avatar-preview.ts` so a test can fail on them; this
- * file only renders them. The Code tab always shows the native usage, and the
- * team panel around the avatars is app composition, not a component.
- */
-
 import { avatarSize } from "@gpuixui/tokens";
 import { useState, type ReactNode } from "react";
 import {
@@ -29,7 +17,6 @@ import { usePlatform } from "./platform-toggle";
 const sizes = ["xs", "sm", "md", "lg"] as const;
 type Size = (typeof sizes)[number];
 
-/** A drawn portrait for the preview's picture path: a drawing, not a photo. */
 const portraitSrc = `data:image/svg+xml,${encodeURIComponent(
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" fill="#4F46E5"/><circle cx="16" cy="12" r="6" fill="#E0E7FF"/><path d="M4 32c0-7 5.4-12 12-12s12 5 12 12z" fill="#E0E7FF"/></svg>`,
 )}`;
@@ -41,13 +28,6 @@ interface DiscProps {
   readonly status?: Presence;
 }
 
-/**
- * One avatar: the disc, the fallback or the picture, and the dot.
- *
- * The root is `role="img"` named after the person and described by its
- * presence, and the disc's contents are presentational — the same one-node
- * contract the component documents.
- */
 const Disc = ({ name, src, size = "md", status }: DiscProps) => {
   const diameter = avatarSize[size];
   return (
@@ -83,7 +63,8 @@ const Disc = ({ name, src, size = "md", status }: DiscProps) => {
   );
 };
 
-/** A labelled run of discs, as the states preview prints them. */
+export const AvatarDisc = Disc;
+
 const Run = ({
   children,
   label,
@@ -97,7 +78,6 @@ const Run = ({
   </div>
 );
 
-/** The roster row: the avatar, the name, the role and the presence word. */
 const Row = ({ member }: { readonly member: RosterMember }) => (
   <li className="gx-avatar-roster-row">
     <Disc name={member.name} src={member.src} status={member.status} />
@@ -109,14 +89,6 @@ const Row = ({ member }: { readonly member: RosterMember }) => (
   </li>
 );
 
-/**
- * The interactive preview: a team panel with an online filter and an invite.
- *
- * The panel is app composition — the shipped `Avatar` draws the faces and
- * nothing else. The invite is refused for a blank or duplicate name because a
- * face keys on its name, and the sentence the panel prints for each refusal is
- * the model's.
- */
 export function AvatarWorkflowBody() {
   const [members, setMembers] = useState(initialMembers);
   const [onlineOnly, setOnlineOnly] = useState(false);
@@ -187,7 +159,6 @@ export function AvatarWorkflowBody() {
   );
 }
 
-/** The still preview: presence words, the four sizes and the fallback edges. */
 export function AvatarStatesBody() {
   const edgeNames = [
     "Grace Brewster Murray Hopper",
@@ -247,13 +218,11 @@ export function AvatarStatesBody() {
   );
 }
 
-/** The workflow on the platform switch's theme. */
 export const AvatarWorkflow = () => {
   const { look, platform } = usePlatform();
   return <AvatarWorkflowBody key={`${platform}-${look}`} />;
 };
 
-/** The states on the platform switch's theme. */
 export const AvatarStates = () => {
   const { look, platform } = usePlatform();
   return <AvatarStatesBody key={`${platform}-${look}`} />;

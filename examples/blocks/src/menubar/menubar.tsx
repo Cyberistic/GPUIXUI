@@ -1,11 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Menu bar — a menu-bar extra's popover (plan 729): a status header, a list of
- * toggles, a sync progress and a footer, on the `popover` material.
- *
- * It renders in its own small window until plans 702 (tray) and 706 (overlay
- * windows) let the runtime anchor it to a status item.
- */
 import {
   Button,
   Progress,

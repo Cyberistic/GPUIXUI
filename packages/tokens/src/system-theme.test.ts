@@ -1,19 +1,3 @@
-/**
- * The palette a desktop hands an application, and the theme it becomes.
- *
- * The bug this guards: a platform palette is not a theme. Transplanting its
- * colours role-for-role leaves every filled role carrying the palette's body
- * ink — reading, on a violet accent, at whatever the two happen to measure —
- * and it leaves a deleted theme file in place, so the window keeps wearing a
- * palette the desktop no longer has. A desktop's selection colour is a **fill**
- * rather than the wash the role is, so handing it over unchanged covers the page
- * it selects on. The mapper picks each on-colour by measuring the palette's own
- * inks, restates an opaque selection colour at the base theme's share, keeps
- * every role the palette does not name from the base theme, and names no colour
- * of its own; the watcher applies the first read at once and only re-applies a
- * palette that changed.
- */
-
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { auditTheme } from "./audit.js";
@@ -47,7 +31,6 @@ import {
 const read = (path: string): string =>
   readFileSync(new URL(path, import.meta.url), "utf8");
 
-/** A document's prose with its line breaks folded away. */
 const flat = (text: string): string => text.replace(/\s+/g, " ");
 
 const isBaseValue = (
@@ -58,12 +41,6 @@ const isBaseValue = (
   Object.values(base.colors).includes(value) ||
   Object.values(palette).some((entry) => entry === value);
 
-/**
- * A theme as a JSON store hands one back with its colour group truncated: JSON
- * has no `undefined`, so a group a theme never carried arrives as `null`. The
- * cast is the storage boundary; this package
- * ships no decoder by design, so the consumer's boundary owns the decode.
- */
 const storedTheme = (theme: Theme): Theme =>
   JSON.parse(JSON.stringify({ ...theme, colors: null })) as Theme;
 
@@ -89,14 +66,10 @@ describe("the palette a desktop hands over", () => {
     };
     const paleOnPaper = paletteToTokens(palePalette, lightTheme);
 
-    // A pale accent on a near-black page carries the page as its ink; the same
-    // accent on a paper page carries the paper's body ink instead. The chosen
-    // value is always one of the palette's own inks, never the base theme's.
     expect(night.colors.primaryForeground).toBe(nightPalette.background);
     expect(paper.colors.primaryForeground).toBe(paperPalette.background);
     expect(paleOnPaper.colors.primaryForeground).toBe(paperPalette.foreground);
 
-    // And it is the better of the two by measurement, which is the whole rule.
     const placedInk: ReadonlyArray<readonly [Theme, SystemPalette]> = [
       [night, nightPalette],
       [paper, paperPalette],
@@ -119,7 +92,6 @@ describe("the palette a desktop hands over", () => {
     const opaque: SystemPalette = { ...nightPalette, selection: "#B49CFF" };
     const night = paletteToTokens(opaque, darkTheme);
 
-    // The platform's hue, at the base theme's own share rather than its opacity.
     expect(night.colors.selection).toBe(
       alpha("#B49CFF", alphaOf(darkTheme.colors.selection)),
     );
@@ -127,11 +99,9 @@ describe("the palette a desktop hands over", () => {
       alphaOf(darkTheme.colors.selection),
       5,
     );
-    // The wash this rule exists for: the run keeps its own text role.
+
     expect(selectionFailures(night)).toEqual([]);
 
-    // The failure it prevents, built as the mapper used to: the same colour
-    // handed over unchanged covers the page it is drawn on.
     const handedOver = extendTheme(paletteToTokens(nightPalette, darkTheme), {
       colors: { selection: "#B49CFF" },
     });
@@ -144,13 +114,11 @@ describe("the palette a desktop hands over", () => {
     expect(legibility).toHaveLength(8);
     expect(onPage?.ratio).toBeCloseTo(1.81, 2);
 
-    // A share the palette states itself is its own decision.
     expect(
       paletteToTokens({ ...opaque, selection: "#B49CFF26" }, darkTheme).colors
         .selection,
     ).toBe("#B49CFF26");
 
-    // And the share is the base theme's, so a high-contrast brand keeps its own.
     const high = paletteToTokens(opaque, highContrastDarkTheme);
     expect(alphaOf(high.colors.selection)).toBeCloseTo(
       alphaOf(highContrastDarkTheme.colors.selection),
@@ -160,13 +128,6 @@ describe("the palette a desktop hands over", () => {
   });
 
   it("prints the paint the window measured, not only the poll", () => {
-    // The unit suite proves the mapping and the poll's arithmetic; the half a
-    // consumer relies on is the paint — a running window repaints without
-    // remounting and returns to its own theme when the desktop theme is
-    // deleted. The playground's `system-theme-follow` measures that, and the
-    // page used to send a reader to it as future work, so a proven follow read
-    // exactly like a planned one. Every value below is derived, and the probe's
-    // fixture must still carry the palettes the page prints.
     const catalogue = read("../../../docs/tokens.md");
     const readme = read("../README.md");
     const fixture = read("../../../apps/playground/src/live/system-theme.ts");
@@ -183,7 +144,6 @@ describe("the palette a desktop hands over", () => {
       expect(fixture).toContain(`accent: "${palette.accent}"`);
     });
 
-    // The three states the probe reads off the frame.
     const painted = [
       night.colors.background,
       night.colors.primary,
@@ -199,13 +159,11 @@ describe("the palette a desktop hands over", () => {
     [catalogue, readme].forEach((page) => {
       expect(page).toContain("system-theme-follow");
       expect(page).toContain(`${checks} checks`);
-      // The retracted promise: the paint was the playground's to record.
+
       expect(page).not.toContain("is the playground's to record");
       expect(page).not.toContain("the playground's to record");
     });
 
-    // The honest half stays: macOS host, the decoder is the consumer's, and
-    // `omarchy-theme-set` itself was not run.
     expect(catalogue).toContain("`omarchy-theme-set` is not run");
     expect(catalogue).toContain("mount count stays `1`");
   });
@@ -228,7 +186,6 @@ describe("the palette a desktop hands over", () => {
     );
     const readable = contrastRatio(night.colors.foreground, wash) ?? 0;
 
-    // The numbers the page prints are the ones the mapper's rule produces.
     const onPage = legibility.find(
       ({ background }) => background === "background",
     );
@@ -239,7 +196,7 @@ describe("the palette a desktop hands over", () => {
     expect(design).toContain("painted at the base theme's share");
     expect(readme).toContain(`${legibility.length} selection placements`);
     expect(readme).toContain(`${(onPage?.ratio ?? 0).toFixed(2)}:1`);
-    // The derived wash is the readable one, which is why the rule exists.
+
     expect(selectionFailures(night)).toEqual([]);
     expect(readable).toBeGreaterThan(7);
   });
@@ -248,9 +205,7 @@ describe("the palette a desktop hands over", () => {
     [
       nightPalette,
       paperPalette,
-      // A desktop's selection colour is opaque, so the mapper restates it at the
-      // base theme's share — the one value in the theme that is neither the
-      // palette's nor the base's, and the rule the "selection" case below holds.
+
       { ...nightPalette, selection: "#B49CFF" },
     ].forEach((palette) => {
       const theme = paletteToTokens(palette, lightTheme);
@@ -282,14 +237,6 @@ describe("the palette a desktop hands over", () => {
   });
 
   it("reads a colour a desktop left blank as one it does not name", () => {
-    // A palette is decoded at a boundary, so a cleared value arrives as `""` or
-    // whitespace rather than as a missing key — a TOML reader writes an empty
-    // value, a theme editor leaves the field empty. Read as a stated fill it
-    // erased the base's role **and** skipped the mapper's own measurement: a
-    // blank ink won `inkOn`'s comparison at 0:1, the merge then dropped it, and
-    // the fill kept the base's on-colour for the base's accent. Measured on the
-    // light base, a pale `#FFE08A` accent carried white at 1.29:1 while the
-    // base's own ink was there to measure.
     const pale = paletteToTokens(
       { background: "", foreground: "   ", accent: "#FFE08A" },
       lightTheme,
@@ -298,19 +245,16 @@ describe("the palette a desktop hands over", () => {
     expect(pale.colors.background).toBe(lightTheme.colors.background);
     expect(pale.colors.foreground).toBe(lightTheme.colors.foreground);
     expect(pale.colors.primary).toBe("#FFE08A");
-    // The ink is the base's own, chosen by measurement against the palette's
-    // accent — not the base's on-colour for the base's brand.
+
     expect(pale.colors.primaryForeground).toBe(lightTheme.colors.foreground);
     expect(
       contrastRatio(pale.colors.primaryForeground, "#FFE08A"),
     ).toBeGreaterThanOrEqual(contrastFloors.secondary);
-    // The answer the old read produced, kept as the negative control.
+
     expect(
       contrastRatio(lightTheme.colors.primaryForeground, "#FFE08A"),
     ).toBeLessThan(contrastFloors.secondary);
 
-    // A blank quiet strip keeps the base's strip **and** its ink: the palette's
-    // body ink was not measured against the fill the base paints.
     const quiet = paletteToTokens(
       { muted: "", foreground: "#101010" },
       lightTheme,
@@ -320,8 +264,6 @@ describe("the palette a desktop hands over", () => {
       lightTheme.colors.mutedForeground,
     );
 
-    // A blank error colour keeps the base's pair. With a black ink named, the
-    // old read handed the base's red that ink — 4.12:1, under the body floor.
     const error = paletteToTokens(
       { danger: " ", foreground: "#000000" },
       lightTheme,
@@ -334,14 +276,10 @@ describe("the palette a desktop hands over", () => {
       contrastRatio("#000000", lightTheme.colors.destructive),
     ).toBeLessThan(contrastFloors.secondary);
 
-    // A blank selection keeps the base's wash, and a border or page that names
-    // nothing keeps the base's role.
     const wash = paletteToTokens({ selection: "" }, darkTheme);
     expect(wash.colors.selection).toBe(darkTheme.colors.selection);
     expect(wash.colors.border).toBe(darkTheme.colors.border);
 
-    // The split the rule must not cross: a value the desktop **named** but the
-    // renderer cannot parse is handed over as written, for the gate to report.
     const typo = paletteToTokens(
       { accent: "brand", background: "#FFFFFF", foreground: "#000000" },
       lightTheme,
@@ -351,8 +289,6 @@ describe("the palette a desktop hands over", () => {
       { role: "primary", value: "brand" },
     ]);
 
-    // The rule is taught where a consumer plans a follow, and it is one read:
-    // the seam asks the boundary predicate rather than testing for blank itself.
     const catalogue = read("../../../docs/tokens.md");
     const design = read("../../../docs/design-system.md");
     const readme = read("../README.md");
@@ -367,7 +303,7 @@ describe("the palette a desktop hands over", () => {
     expect(flat(design)).toContain("left blank names no colour");
     expect(seam).toContain("namesColour(value)");
     expect(colour).toContain("export const namesColour");
-    // The retracted reading — a blank field is a fill the palette chose — is gone.
+
     [seam, readme, inventory].forEach((page) => {
       expect(page).not.toContain("states the empty one");
     });
@@ -388,32 +324,19 @@ describe("the palette a desktop hands over", () => {
   });
 
   it("takes a stated mode over the one a page's lightness implies", () => {
-    // A desktop that says `light` has answered the question its page only
-    // approximates — a mid-grey page is neither, and an inverted theme is a
-    // choice rather than a measurement error.
     expect(paletteMode({ background: "#000000", mode: "light" })).toBe("light");
     expect(paletteMode({ background: "#FFFFFF", mode: "dark" })).toBe("dark");
-    // A mode with no page is still an answer; nothing has to be measured.
+
     expect(paletteMode({ mode: "dark" })).toBe("dark");
   });
 
   it("reads a stated mode this release does not ship from the page", () => {
-    // The bug this guards: a `SystemPalette` is written by a consumer's decoder,
-    // so its `mode` is unknown input at that boundary. `paletteMode` returned the
-    // stated string unchanged and the documented call site hands it straight to
-    // `getTheme`, which refuses a mode it does not know — an upper-cased `Dark`
-    // threw out of `followPalette` instead of following the desktop's page. The
-    // field is typed as what the decoder wrote, so each value below is handed
-    // over as written rather than through a cast — `check-types` holds that:
-    // restoring `mode?: ThemeMode` fails on every one of these lines.
     expect(paletteMode({ ...nightPalette, mode: "Dark" })).toBe("dark");
     expect(paletteMode({ ...paperPalette, mode: "LIGHT" })).toBe("light");
-    // A key a store kept without a value is the absence it is, and the page still
-    // answers; a number is not a mode either.
+
     expect(paletteMode({ ...nightPalette, mode: null })).toBe("dark");
     expect(paletteMode({ ...paperPalette, mode: 7 })).toBe("light");
-    // No page to measure is no answer, so the caller's own default stands rather
-    // than a mode invented from a label nobody ships.
+
     expect(paletteMode({ accent: "#B49CFF", mode: "solar" })).toBeUndefined();
   });
 
@@ -423,17 +346,13 @@ describe("the palette a desktop hands over", () => {
     expect(followed.mode).toBe("dark");
     expect(followed.colors.background).toBe(nightPalette.background);
     expect(followed.name).toBe(darkTheme.name);
-    // A palette that only names the paper page and a stale label still gets the
-    // light base, which is what `paletteToTokens`' own default reads.
+
     expect(paletteToTokens({ ...paperPalette, mode: "DARK" }).mode).toBe(
       "light",
     );
   });
 
   it("teaches the fallback a stated mode name gets, on every page", () => {
-    // The substitution is a paint seam's, so a page that promises only "the mode
-    // the palette states" leaves a reader staring at `getTheme`'s refusal with no
-    // explanation. Every surface a consumer reads states the read.
     const catalogue = read("../../../docs/tokens.md");
     const design = read("../../../docs/design-system.md");
     const readme = read("../README.md");
@@ -450,14 +369,10 @@ describe("the palette a desktop hands over", () => {
     expect(flat(design)).toContain(
       "`paletteMode` reads a system palette's stated mode",
     );
-    // The field is the boundary's value, not a union the decoder has to assert:
-    // both pages a consumer reads say so where they print the seam.
+
     expect(flat(catalogue)).toContain("the value the decoder wrote");
     expect(flat(readme)).toContain("the value the decoder wrote");
 
-    // The poll's pace has the same kind of fallback, and the pages state it
-    // beside the pace they pass: `setInterval` honours 1 … 2 147 483 647 ms and
-    // reads every other delay as its 1 ms floor, so the range is the rule.
     [catalogue, readme, inventory].forEach((page) => {
       expect(flat(page)).toContain("systemThemePollMs");
       expect(flat(page)).toContain("1 ms floor");
@@ -472,7 +387,7 @@ describe("the palette a desktop hands over", () => {
     expect(followPalette(paperPalette).colors.background).toBe(
       paperPalette.background,
     );
-    // A palette that names no page has no mode to follow, so the default stands.
+
     expect(followPalette({ accent: "#B49CFF" }).mode).toBe("light");
   });
 
@@ -489,7 +404,6 @@ describe("the palette a desktop hands over", () => {
 });
 
 describe("following a palette", () => {
-  /** A watch over a palette the test can change, driven by a manual timer. */
   const clock = (initial?: SystemPalette) => {
     const manual = manualTimer();
     const applied: Array<Theme> = [];
@@ -528,12 +442,6 @@ describe("following a palette", () => {
   });
 
   it("re-applies a palette a reader rewrites in place, not only one it replaces", () => {
-    // A decoder can fill one palette it reuses: a parser with a module-level
-    // result, a watcher that clears and rewrites its record, a record a settings
-    // panel keeps. The poll compared the palette values it had delivered with
-    // the object the reader handed back, so the same reference was compared with
-    // itself — the field the reader had just rewritten matched and the window
-    // kept the theme it had, however many times the desktop moved.
     const manual = manualTimer();
     const applied: Array<Theme> = [];
     const palette = { ...nightPalette };
@@ -551,22 +459,16 @@ describe("following a palette", () => {
     expect(applied).toHaveLength(2);
     expect(applied[1]?.colors.primary).toBe("#7CC7B0");
 
-    // The field the first fix closed stays closed: an empty value differs from
-    // an absent one even when the object is the same one. A cleared field is
-    // the absence it is, so the delivered theme returns to the base's role
-    // instead of carrying a blank fill the renderer drops.
     palette.accent = "";
     manual.tick();
 
     expect(applied).toHaveLength(3);
     expect(applied[2]?.colors.primary).toBe(lightTheme.colors.primary);
 
-    // And a tick that rewrites nothing delivers nothing.
     manual.tick();
 
     expect(applied).toHaveLength(3);
 
-    // The pages a consumer plans a follow from state the same rule.
     const pages = [
       read("../../../docs/tokens.md"),
       read("../README.md"),
@@ -580,14 +482,6 @@ describe("following a palette", () => {
   });
 
   it("re-applies a field a decoder now reports as empty, not absent", () => {
-    // A palette is a set of values, not a joined string. The key the watch used
-    // to compare wrote an absent field as `""` and joined the fields with a
-    // separator, so a decoder that stopped omitting a colour and started
-    // reporting it empty — what a TOML or JSON reader writes for a cleared
-    // value — produced the key of the palette before it, and the window kept the
-    // theme it had. The two are different palettes, so the change is delivered;
-    // a cleared field names no colour, so the theme it resolves returns to the
-    // base's role rather than painting the blank value the renderer drops.
     const cleared = clock({ ...nightPalette, accent: undefined });
     cleared.change({ ...nightPalette, accent: "" });
     cleared.tick();
@@ -595,8 +489,6 @@ describe("following a palette", () => {
     expect(cleared.applied).toHaveLength(2);
     expect(cleared.applied[1]?.colors.primary).toBe(lightTheme.colors.primary);
 
-    // The reverse direction is the same change: a field omitted after it was
-    // reported empty falls back to the same base role.
     const omitted = clock({ ...nightPalette, accent: "" });
     omitted.change({ ...nightPalette, accent: undefined });
     omitted.tick();
@@ -604,8 +496,6 @@ describe("following a palette", () => {
     expect(omitted.applied).toHaveLength(2);
     expect(omitted.applied[1]?.colors.primary).toBe(lightTheme.colors.primary);
 
-    // Comparing values rather than one string keeps a re-read that allocates a
-    // new object with the same fields quiet.
     const reread = clock(nightPalette);
     reread.change({ ...nightPalette });
     reread.tick();
@@ -624,9 +514,6 @@ describe("following a palette", () => {
   });
 
   it("maps a palette onto the base its mode asks for", () => {
-    // A desktop switches its light and dark themes, not only their colours: the
-    // light page must land on the light base's surfaces, or the window wears a
-    // light page with dark cards and the gate reports the mix.
     const manual = manualTimer();
     const applied: Array<Theme> = [];
     let palette: SystemPalette = { ...nightPalette, mode: "dark" };
@@ -647,8 +534,6 @@ describe("following a palette", () => {
     expect(applied[1]?.colors.background).toBe(paperPalette.background);
     expect(applied[1]?.colors.card).toBe(lightTheme.colors.card);
 
-    // Without `baseFor` the watch keeps the base it started on, which is the
-    // documented default rather than a second guess at the palette's mode.
     const fixedManual = manualTimer();
     const fixed: Array<Theme> = [];
     let next: SystemPalette = { ...nightPalette, mode: "dark" };
@@ -679,10 +564,6 @@ describe("following a palette", () => {
   });
 
   it("offers a palette again when the change that delivered it threw", () => {
-    // The poll records a palette only once `onChange` has returned. A callback
-    // that throws is the caller's defect and is not swallowed — but it must not
-    // mark the change delivered, or the window keeps the previous theme until
-    // the desktop moves again.
     const manual = manualTimer();
     const applied: Array<Theme> = [];
     let palette: SystemPalette = nightPalette;
@@ -719,9 +600,6 @@ describe("following a palette", () => {
   });
 
   it("executes the documented call site, onto the base the palette's mode names", () => {
-    // A night palette on the light base is a dark page with white cards — the
-    // mix the seam's own note warns about — so the example hands the palette's
-    // mode to the base instead of keeping the one the call started on.
     const manual = manualTimer();
     const applied: Array<Theme> = [];
     let palette: SystemPalette | undefined = paperPalette;
@@ -745,11 +623,9 @@ describe("following a palette", () => {
     expect(applied[0]?.colors.background).toBe(paperPalette.background);
     expect(applied[1]?.colors.card).toBe(darkTheme.colors.card);
     expect(applied[1]?.colors.primary).toBe(nightPalette.accent);
-    // The deleted theme returns the caller's base, not the last palette's.
+
     expect(applied[2]).toBe(lightTheme);
 
-    // The example's own prose and both pages name the rule, so a reader copying
-    // the call site is not taught the fixed base the seam warns against.
     const example = read("./system-theme.example.ts");
     expect(example).toContain("baseFor: (palette)");
     expect(example).toContain("paletteMode(palette) ?? base.mode");
@@ -767,10 +643,6 @@ describe("following a palette", () => {
     const night = auditTheme(followPalette(nightPalette));
     const paper = auditTheme(followPalette(paperPalette));
 
-    // The mapper does not promise a shippable theme: the palette's own inks are
-    // chosen, but its single red still misses the ink floor on the base theme's
-    // surface, and the roles the palette does not name belong to that base and
-    // are measured on the palette's page.
     expect(night.passed).toBe(false);
     const ink = night.contrast.find(
       ({ foreground, background }) =>
@@ -781,15 +653,12 @@ describe("following a palette", () => {
     expect(mark?.ratio).toBeCloseTo(2.93, 1);
     expect(paper.decorative.length).toBeGreaterThan(0);
 
-    // The catalogue teaches the measured mix rather than a promise.
     const catalogue = read("../../../docs/tokens.md");
     expect(catalogue).toContain("4.39:1");
     expect(catalogue).toContain("2.93:1");
   });
 
   it("teaches that a change is recorded only once it was delivered", () => {
-    // A reader planning a follow has to know what a failed callback costs; the
-    // seam's doc, both pages and §11 state the same rule.
     const catalogue = read("../../../docs/tokens.md");
     const readme = read("../README.md");
     expect(catalogue).toContain("recorded once `onChange` returns");
@@ -808,12 +677,6 @@ describe("following a palette", () => {
   });
 
   it("watches every field the palette offers", () => {
-    // The poll compares the palette's fields, so a field the list forgot is one
-    // a reader can change without the window noticing: the watch compared the
-    // values it had, decided nothing had moved and kept the old theme. The table
-    // is a `Record<keyof SystemPalette, …>`, so a field added to the palette
-    // fails the compile until it is named here, and each one is then driven
-    // through the watch. `selection` is the field this caught.
     const pair: Record<keyof SystemPalette, readonly [string, string]> = {
       mode: ["dark", "light"],
       background: ["#101418", "#101419"],
@@ -842,7 +705,6 @@ describe("following a palette", () => {
       expect(applied, `${field} re-applies`).toHaveLength(2);
     });
 
-    // The other direction: a tick that reads the same palette applies nothing.
     const manual = manualTimer();
     const applied: Array<Theme> = [];
     watchSystemTheme({
@@ -857,11 +719,6 @@ describe("following a palette", () => {
   });
 
   it("reads an unusable poll pace as the documented one", () => {
-    // The pace is configuration as often as a literal — a settings row or an
-    // environment variable is a string before it is a number — and `setInterval`
-    // reads `NaN`, `0` and a negative delay as its 1 ms floor, so an unreadable
-    // pace read and decoded the platform's theme file a thousand times a second
-    // while the window looked correct.
     const paces: Array<number> = [];
     const timer: SystemThemeTimer = {
       poll: (every) => {
@@ -886,7 +743,6 @@ describe("following a palette", () => {
       systemThemePollMs,
     ]);
 
-    // A usable pace passes through unchanged, so a caller's own cadence stands.
     watchSystemTheme({
       read: () => nightPalette,
       base: darkTheme,
@@ -898,12 +754,6 @@ describe("following a palette", () => {
   });
 
   it("bounds a pace the platform's timer cannot honour, not only a value that is not a number", () => {
-    // `setInterval` honours 1 … 2 147 483 647 ms and silently runs every other
-    // delay at its 1 ms floor: `0.5` and `2 ** 31` both measured as a 1 ms
-    // interval in this runtime. The guard tested only `NaN`, `0` and a negative
-    // value, so a settings row that stored a pace in seconds (`0.5`) or a
-    // deliberately rare monthly cadence (`2 ** 31`) read and decoded the
-    // platform's theme file every millisecond while its window looked right.
     const paces: Array<number> = [];
     const timer: SystemThemeTimer = {
       poll: (every) => {
@@ -927,8 +777,6 @@ describe("following a palette", () => {
       systemThemePollMs,
     ]);
 
-    // Both ends of the platform's own range pass through unchanged, so the
-    // bound is the timer's rather than a narrower policy of this package's.
     [1, 2 ** 31 - 1].forEach((every) => {
       watchSystemTheme({
         read: () => nightPalette,
@@ -942,16 +790,6 @@ describe("following a palette", () => {
   });
 
   it("answers a base theme a store truncated, instead of reading nothing", () => {
-    // The bug this guards: both questions this seam asks its base — which ink
-    // reads on a filled role the palette names no ink for, and the share an
-    // opaque selection colour takes — read the base's colour group directly. A
-    // base restored from storage can have lost the whole group (JSON keeps
-    // `null` where a theme carried nothing), and `paletteToTokens` threw
-    // `TypeError: Cannot read properties of null (reading 'foreground')`; the
-    // follow below threw it on the tick that sets the window up.
-
-    // A white accent is the ink question's discriminator: the light identity
-    // answers its dark body ink, the dark identity its dark page.
     const fill = "#FFFFFF";
     const lightBased = paletteToTokens(
       { accent: fill },
@@ -966,12 +804,11 @@ describe("following a palette", () => {
     expect(darkBased.colors.primaryForeground).toBe(
       darkTheme.colors.background,
     );
-    // The base's own mode decides the fallback, not the library's default.
+
     expect(lightBased.colors.primaryForeground).not.toBe(
       darkBased.colors.primaryForeground,
     );
 
-    // The share is the identity's for the base's variant, too.
     const truncatedHigh = paletteToTokens(
       { selection: "#B49CFF" },
       storedTheme(highContrastDarkTheme),
@@ -981,8 +818,6 @@ describe("following a palette", () => {
       5,
     );
 
-    // A base whose own group survived still answers with its own numbers: its
-    // share wins over the identity's, and its ink is the one measured.
     const own = extendTheme(lightTheme, { colors: { selection: "#00000033" } });
     expect(
       paletteToTokens({ selection: "#B49CFF" }, own).colors.selection,
@@ -991,16 +826,11 @@ describe("following a palette", () => {
       paletteToTokens({ muted: "#EEEEEE" }, own).colors.mutedForeground,
     ).toBe(own.colors.foreground);
 
-    // Nothing is invented: a role neither the palette nor the two questions
-    // needed stays absent for the gate, rather than the mapper filling it in.
     expect(lightBased.colors.card).toBeUndefined();
     expect(auditTheme(lightBased).passed).toBe(false);
   });
 
   it("starts following a palette over a base a store truncated", () => {
-    // The reachable path: an application holds its brand theme, a store hands it
-    // back without the colour group, and the desktop's follow is the first thing
-    // that asks it a question. A throw here is the window setup, not a paint.
     const manual = manualTimer();
     const applied: Array<Theme> = [];
 
@@ -1020,9 +850,6 @@ describe("following a palette", () => {
   });
 
   it("teaches the base it reads a truncated theme through, on every page", () => {
-    // A base a consumer holds is a theme like any other, and the seam's two
-    // questions about it threw on a stored theme that lost its colour group.
-    // The pages a reader learns the mapping from have to say what answers then.
     const catalogue = read("../../../docs/tokens.md");
     const design = read("../../../docs/design-system.md");
     const readme = read("../README.md");
@@ -1035,8 +862,6 @@ describe("following a palette", () => {
       expect(page).toContain("themeColors");
     });
 
-    // The rule is the seam's, not only the page's: one helper answers both
-    // questions through the colour seam, and the mapper uses it.
     expect(seam).toContain("themeColors(base)");
     expect(seam).toContain("const roles = baseRoles(base)");
     expect(seam).toContain("inkOn(accent, inks, roles)");
@@ -1044,9 +869,6 @@ describe("following a palette", () => {
   });
 
   it("prints the case count its own suite runs", () => {
-    // The inventory row is the one place a reader sees how much this file holds,
-    // and it printed 22 while the suite had grown to 26. The count is read from
-    // the file itself, so a case added here moves the row or fails this one.
     const source = read("./system-theme.test.ts");
     const inventory = read("../../../.agents/slop/COMPONENTS.md");
     const cases = source

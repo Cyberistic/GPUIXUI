@@ -1,7 +1,3 @@
-/**
- * Drives live-app.mjs through the GPUix automation stdio protocol and reports
- * what works in a *live* window on darwin-x64 (0.5.1).
- */
 import { mkdirSync } from "node:fs";
 import { launch } from "@gpuix/react/automation";
 

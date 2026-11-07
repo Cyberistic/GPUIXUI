@@ -1,14 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Value controls example: a render-settings panel.
- *
- * The components in the roles they actually differ in — a continuous quality
- * slider with a formatted value, a vertical master level, a price range with two
- * ends, and a meter reporting a measurement. The sliders are controlled, so the
- * example shows the API a settings screen uses: the panel's own state is the
- * source of truth and the readout is derived from it.
- */
-
 import { useState, type ReactElement } from "react";
 import { Icon } from "@gpuixui/icons";
 import {
@@ -29,7 +19,6 @@ import {
   useTheme,
 } from "../src/index.js";
 
-/** A labelled row with the control's current value on the right. */
 const Row = ({
   title,
   value,
@@ -50,7 +39,6 @@ const Row = ({
   </Stack>
 );
 
-/** Render settings: one slider, one range, one meter. */
 export const ValueExample = (): ReactElement => {
   const theme = useTheme();
   const [quality, setQuality] = useState(62);

@@ -3,21 +3,6 @@ import { describe, expect, it } from "vitest";
 import { examples } from "./examples-data";
 import { sidebarPages } from "./sidebar-pages.test-util";
 
-/**
- * The examples page.
- *
- * It is the only place a reader can see every shipped example, and Fumadocs
- * silently omits a page that is not in the sidebar — nothing in the build
- * notices. So the page must exist with its frontmatter, mount the generated
- * registry instead of listing files, and sit under Reference before the API
- * reference.
- *
- * It also has to say how to run what it lists. It once said the components'
- * examples were "not mounted in the playground yet — that registry is a tracked
- * task in .agents/slop/TODO.md" long after `examples-mount` mounted all of them, so every
- * command below is resolved to the manifest or the scenario registry on disk.
- */
-
 const root = new URL("../../../../", import.meta.url);
 const read = (path: string): string =>
   readFileSync(new URL(path, root), "utf8");
@@ -33,7 +18,6 @@ const manifest = (path: string): Record<string, unknown> => {
   return parsed;
 };
 
-/** The body of a script a workspace manifest declares. */
 const scriptFor = (manifestPath: string, name: string): string | undefined => {
   const scripts = manifest(manifestPath).scripts;
   if (!isRecord(scripts)) return undefined;
@@ -60,8 +44,6 @@ describe("the examples page", () => {
   it("runs the components' examples through the scenario that mounts them", () => {
     const playground = manifest("apps/playground/package.json");
 
-    // The command's package filter, its build script and the entry point it
-    // runs are read from the app rather than retyped here.
     expect(page).toContain(`--filter ${String(playground.name)} build`);
     expect(scriptFor("apps/playground/package.json", "build")).toBeDefined();
     expect(scriptFor("apps/playground/package.json", "smoke")).toContain(
@@ -70,8 +52,6 @@ describe("the examples page", () => {
     expect(page).toContain("apps/playground/dist/smoke/run.js");
     expect(page).toContain("--only examples-mount");
 
-    // An id the registry does not carry, or one `index.ts` attaches no view to,
-    // makes the printed command a no-op.
     expect(read("apps/playground/src/scenarios/registry.ts")).toContain(
       'id: "examples-mount"',
     );
@@ -79,7 +59,6 @@ describe("the examples page", () => {
       '"examples-mount":',
     );
 
-    // The sentence this guard exists for.
     expect(page).not.toContain("not mounted");
   });
 
@@ -91,11 +70,6 @@ describe("the examples page", () => {
   });
 
   it("keeps the preview policy on the command the page prints", () => {
-    // The policy told a contributor the components' examples were "the
-    // copy-target for their pages and have no runtime registry yet — that is a
-    // tracked task", and kept saying it after `examples-mount` mounted all of
-    // them and after this page was corrected. The policy is read before a page
-    // is written, so it is held to the same registry as the page.
     const policy = read("docs/preview-strategy.md");
 
     expect(policy).not.toContain("no runtime registry");

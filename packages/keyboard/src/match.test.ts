@@ -1,11 +1,3 @@
-/**
- * Exact hotkey ↔ key-event matching.
- *
- * The bugs these guard: a modifier that leaks into a chord that did not name it
- * (`Mod+K` firing on `Mod+Shift+K`), a `mod` that aliases a deliberate `ctrl` on
- * macOS, and a chord matching the wrong key.
- */
-
 import { describe, expect, it } from "vitest";
 import type { EventPayload } from "@gpuix/react";
 import { match } from "./match.js";
@@ -67,8 +59,6 @@ describe("match", () => {
   });
 
   it("keeps a physical binding distinct from a logical one", () => {
-    // `Mod+[KeyS]` is a physical code; a GPUix event has no `code`, so it never
-    // matches, and it is not equal to the logical `Mod+S`.
     expect(match("Mod+[KeyS]", key("s", { cmd: true }), "darwin")).toBe(false);
     expect(match("Mod+S", key("s", { cmd: true }), "darwin")).toBe(true);
   });

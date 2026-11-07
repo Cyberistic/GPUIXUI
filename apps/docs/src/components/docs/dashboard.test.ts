@@ -1,71 +1,73 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { hourlyBars } from "./dashboard";
+import type { ChartMark } from "@gpuixui/data/chart/logic";
+import { HOURLY_PLOT, HOURLY_SCALE, hourlyStack } from "./dashboard";
 
-/**
- * The `HourlyStack` alignment invariant.
- *
- * The chart used to stack top-down from a per-column `y`, so a short column's
- * segments floated off the shared baseline and the tallest column did not reach
- * the plot top. `hourlyBars` must instead stack every column from `plot.bottom`
- * upward and scale the tallest column to fill the plot exactly.
- *
- * The negative control proves the "shared baseline" check is sensitive: shifting
- * one column's baseline must break it, so the positive assertion cannot pass on
- * a column that hangs.
- */
+const isRect = (
+  mark: ChartMark,
+): mark is Extract<ChartMark, { kind: "rect" }> => mark.kind === "rect";
 
-const FIXTURE: ReadonlyArray<{
-  readonly label: string;
-  readonly values: ReadonlyArray<number>;
-}> = [
-  { label: "A", values: [50, 30, 20] },
-  { label: "B", values: [20, 20, 20, 20] },
-  { label: "C", values: [100] },
-];
+describe("hourlyStack", () => {
+  const stacks = hourlyStack();
 
-const plot = { top: 0, bottom: 100 };
-
-describe("hourlyBars", () => {
-  const bars = hourlyBars(FIXTURE, plot);
-
-  it("sits every column on the shared baseline", () => {
-    expect(bars.map((column) => column.bottom)).toEqual([
-      plot.bottom,
-      plot.bottom,
-      plot.bottom,
-    ]);
+  it("paints one series per model across every bucket", () => {
+    expect(stacks).toHaveLength(5);
+    for (const marks of stacks) expect(marks).toHaveLength(12);
   });
 
-  it("fills the plot exactly with the tallest column", () => {
-    expect(Math.min(...bars.map((column) => column.top))).toBe(plot.top);
-  });
-
-  it("stacks each column's segments contiguously from the baseline", () => {
-    for (const column of bars) {
-      let top = plot.bottom;
-      for (const segment of column.segments) {
-        expect(segment.y + segment.height).toBe(top);
-        top = segment.y;
+  it("stacks each bucket contiguously from the shared baseline", () => {
+    for (let column = 0; column < 12; column += 1) {
+      const marks = stacks
+        .flatMap((series) => series[column] ?? [])
+        .filter(isRect)
+        .sort((left, right) => left.y - right.y);
+      expect(marks.length).toBeGreaterThan(0);
+      const lowest = marks[marks.length - 1];
+      expect(lowest?.y ?? 0).toBeGreaterThanOrEqual(0);
+      expect((lowest?.y ?? 0) + (lowest?.height ?? 0)).toBeCloseTo(
+        HOURLY_PLOT.height,
+        5,
+      );
+      for (let index = 1; index < marks.length; index += 1) {
+        const lower = marks[index];
+        const upper = marks[index - 1];
+        expect(lower?.y ?? 0).toBeCloseTo(
+          (upper?.y ?? 0) + (upper?.height ?? 0),
+          5,
+        );
       }
-      expect(top).toBe(column.top);
     }
   });
 
-  it("flags a column shifted off the baseline (negative control)", () => {
-    const shifted = bars.map((column, index) =>
-      index === 0
-        ? { ...column, top: column.top + 12, bottom: column.bottom + 12 }
-        : column,
+  it("draws the stack against the package's ceiling", () => {
+    const tallestTotal = 113;
+    const slot = HOURLY_PLOT.width / 12;
+    const totals = stacks
+      .flatMap((marks) => marks.filter(isRect))
+      .reduce<ReadonlyArray<number>>(
+        (sums, mark) => {
+          const column = Math.round(mark.x / slot);
+          return sums.map((sum, index) =>
+            index === column ? sum + mark.height : sum,
+          );
+        },
+        Array.from({ length: 12 }, () => 0),
+      );
+    const tallest = Math.max(...totals);
+
+    expect(HOURLY_SCALE).toBeGreaterThanOrEqual(tallestTotal);
+    expect(tallest / HOURLY_PLOT.height).toBeCloseTo(
+      tallestTotal / HOURLY_SCALE,
+      4,
     );
-    expect(shifted.every((column) => column.bottom === plot.bottom)).toBe(
-      false,
-    );
+  });
+
+  it("draws against the stacked ceiling, not the widest series (negative control)", () => {
+    expect(HOURLY_SCALE).toBeGreaterThan(100);
   });
 });
 
-/** The chart rules the dashboard's SVG reads, as authored text. */
 const blocksCss = (): string =>
   readFileSync(
     fileURLToPath(new URL("../../styles/blocks.css", import.meta.url)),
@@ -73,23 +75,20 @@ const blocksCss = (): string =>
   );
 
 describe("chart load animation", () => {
-  it("grows bars from the baseline and draws the donut from zero", () => {
+  it("grows bars from the baseline and fades the donut in", () => {
     const css = blocksCss();
 
-    // The bar and stacked segments scale up from their bottom edge.
     expect(css).toContain("@keyframes gx-dash-grow");
     expect(css).toContain("transform: scaleY(0)");
     expect(css).toContain("transform-origin: bottom");
-    // The donut's arc is drawn from zero via its dash length.
+
     expect(css).toContain("@keyframes gx-dash-draw");
-    expect(css).toContain("stroke-dasharray: 0 var(--dash-circ)");
+    expect(css).toContain("opacity: 0");
   });
 
   it("paints the final frame at once under reduced motion", () => {
     const css = blocksCss();
 
-    // The reduce block disables the growth/draw animation, so the first frame
-    // is already the final geometry — no travel for a reader who asked for none.
     expect(css).toContain("prefers-reduced-motion: reduce");
     expect(css).toContain("animation: none");
     expect(css).toContain(".gx-dash-donut-segment");

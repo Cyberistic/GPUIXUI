@@ -1,8 +1,3 @@
-/**
- * The syntax paint's round-trip: every token stream joins back to its line, so
- * a split that eats a space or a bracket shows up here rather than as a gap in
- * the editor. Plus the two openings the block depends on.
- */
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";

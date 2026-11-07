@@ -1,15 +1,3 @@
-/**
- * Avatar behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: a fallback that renders nothing instead of the
- * initials; a `src` that never reaches an image; a presence dot painted from a
- * constant, missing entirely, clipped away by the avatar's own disc, **or
- * painted in a role the token contract does not measure as a mark** (`warning`'s
- * solid fill is designed to carry near-black text and is 1.89:1 as a 10px dot on
- * the light card); a diameter that drifts from the token scale; and a lost
- * accessible name.
- */
-
 import { indicatorRoles } from "@gpuixui/tokens";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -23,7 +11,6 @@ import {
   type ComponentTestRoot,
 } from "../internal/test-root.js";
 
-/** Every presence state with the theme role its dot must paint. */
 const statusFills: ReadonlyArray<readonly [AvatarStatus, string]> = [
   ["online", darkTheme.colors.success],
   ["away", statusTone(darkTheme, "warning").foreground],
@@ -31,13 +18,11 @@ const statusFills: ReadonlyArray<readonly [AvatarStatus, string]> = [
   ["offline", darkTheme.colors.mutedForeground],
 ];
 
-/** Every size with its diameter, read from the same token scale as the component. */
 const diameters: ReadonlyArray<readonly [AvatarSize, number]> = Arr.map(
   ["xs", "sm", "md", "lg"] as const,
   (size) => [size, avatarSize[size]] as const,
 );
 
-/** The fill of every `div` in the tree, in tree order. */
 const backgrounds = (root: ComponentTestRoot): ReadonlyArray<unknown> =>
   Arr.map(
     root.renderer.findByType("div"),
@@ -82,9 +67,6 @@ describe("Avatar", () => {
   });
 
   it("names the avatar once, whatever paints inside it", () => {
-    // The root carries the name, so neither the initials nor the picture may
-    // publish a second node: a reader heard "AL" as its own label beside the
-    // name, and a picture doubled the image node.
     Arr.forEach(
       [
         <Avatar testId="avatar" name="Ada Lovelace" />,
@@ -109,8 +91,6 @@ describe("Avatar", () => {
   });
 
   it("announces the presence state beside the name", () => {
-    // A dot is colour-only information, so the state it paints is published as
-    // the avatar's description; without one it says nothing extra.
     const descriptions = Arr.map(
       [
         <Avatar testId="avatar" name="Ada" status="busy" />,
@@ -140,8 +120,6 @@ describe("Avatar", () => {
         <Avatar testId="avatar" name="Ada" status={status} />,
       );
 
-      // The root paints no fill of its own and the clipped disc paints the
-      // placeholder, so the dot is the third — and a missing dot shortens this.
       expect(backgrounds(avatar)).toEqual([
         undefined,
         darkTheme.colors.muted,
@@ -161,9 +139,6 @@ describe("Avatar", () => {
   });
 
   it("paints no dot for a status the union does not name", () => {
-    // A stored presence state from another release is not a name this union
-    // carries: the dot is optional content, so the honest answer is no dot and
-    // no announced state, not a thrown `Match.exhaustive` out of the render.
     const avatar = renderComponent(
       <Avatar testId="avatar" name="Ada" status={"unknown" as AvatarStatus} />,
     );
@@ -178,8 +153,6 @@ describe("Avatar", () => {
   });
 
   it("paints every dot in a role the token contract measures as a mark", () => {
-    // `warning`'s solid fill is a text surface, not a mark: it is absent from
-    // `indicatorRoles`, so a dot painted in it has no measured floor at all.
     const markColours = Arr.map(
       indicatorRoles,
       (role) => darkTheme.colors[role],
@@ -212,10 +185,6 @@ describe("Avatar", () => {
   });
 
   it("reads a stored size the scale does not carry as the default step", () => {
-    // `size` is a preference an app reads back, not a literal the compiler
-    // checked: the record once answered `undefined` and the fallback's font
-    // size became `NaN`, so the avatar painted a box with no side. The two
-    // prototype names prove the lookup is the scale's own keys, not `in`.
     Arr.forEach(["xl", "constructor", "hasOwnProperty"], (stored) => {
       const avatar = renderComponent(
         <Avatar testId="avatar" name="Ada" size={stored as AvatarSize} />,

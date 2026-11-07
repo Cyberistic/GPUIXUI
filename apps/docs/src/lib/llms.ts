@@ -3,38 +3,12 @@ import { servedPages } from "./curated-twins";
 import { absoluteUrl } from "./site";
 import { appName } from "./shared";
 
-/**
- * `/llms.txt`, the machine-readable index of the documentation.
- *
- * The site is written for a reader, and its sidebar is the map that reader
- * follows. An agent reading the site has no sidebar, so it needs one flat
- * document that names every page, groups it the way the sidebar groups it, and
- * says what the page is for. The list is derived from the mounted collections
- * for the same reason the sitemap is: a page added anywhere appears without a
- * docs edit.
- *
- * The two paragraphs above the list are the site's honesty rule in the form an
- * agent needs it: this is a browser app documenting a native library, so a
- * preview is not the component, and the inventory — not a page's existence —
- * is the status.
- */
-
-/** One page in the index: what the sidebar would show under its title. */
 export interface LlmsPage {
   readonly url: string;
   readonly title: string;
   readonly description?: string;
 }
 
-/**
- * The pages the site serves: the site's own first, then the packages', once per
- * address.
- *
- * A curated page keeps the URL of the package page it shadows, so the site's
- * copy is the one that survives — the same precedence the sitemap and the
- * search index use. A package page a curated page in another section replaces
- * is not served at all (`curated-twins.ts`), so it is dropped first.
- */
 export const servedPageList = <Page extends { readonly url: string }>(
   site: ReadonlyArray<Page>,
   packaged: ReadonlyArray<Page>,
@@ -48,13 +22,6 @@ export const servedPageList = <Page extends { readonly url: string }>(
   });
 };
 
-/**
- * The pages grouped by the sidebar's section, in the sidebar's order.
- *
- * Both machine documents print the same order, so an agent that knows where a
- * page sits in one knows where it sits in the other. A section no order names
- * still prints, after the ones that do.
- */
 export const orderedSections = <Page extends { readonly url: string }>(
   pages: ReadonlyArray<Page>,
 ): ReadonlyArray<readonly [string, ReadonlyArray<Page>]> => {
@@ -82,7 +49,6 @@ export const orderedSections = <Page extends { readonly url: string }>(
     );
 };
 
-/** The sidebar's sections, in the order the sidebar shows them. */
 export const llmsSectionOrder: ReadonlyArray<string> = [
   "Guide",
   "Docs",
@@ -96,16 +62,12 @@ export const llmsSectionOrder: ReadonlyArray<string> = [
   "Blocks",
 ];
 
-/** The site's own folders that are not a package's route, and their section. */
 const siteSections: ReadonlyArray<{ prefix: string; name: string }> = [
-  // The introduction reads before the catalogue, so a reader that only takes the
-  // first section still learns how to install and run the library.
   { prefix: "/getting-started", name: "Guide" },
   { prefix: "/blocks", name: "Blocks" },
   { prefix: "/workspace", name: "Workspace" },
   { prefix: "/platform", name: "Platform" },
-  // The diagrams sit beside the charts and the icons, so a reader looking for
-  // "the things this library draws" finds all three in one place.
+
   { prefix: "/graphics", name: "Graphics" },
 ];
 
@@ -117,18 +79,9 @@ const sectionRules = [
   ...siteSections,
 ];
 
-/** True when `url` is `prefix` or a page under it. */
 const under = (url: string, prefix: string): boolean =>
   url === prefix || url.startsWith(`${prefix}/`);
 
-/**
- * The section a page is listed under.
- *
- * The longest matching prefix wins, so a page under a package's route keeps
- * that package's section even when a shorter rule would also match. A page no
- * rule names — a new top-level folder — is a `Docs` page; `llms.test.ts` reads
- * the folders on disk and fails until such a folder has a section of its own.
- */
 export const sectionFor = (url: string): string => {
   const match = sectionRules
     .filter((rule) => under(url, rule.prefix))
@@ -136,7 +89,6 @@ export const sectionFor = (url: string): string => {
   return match?.name ?? "Docs";
 };
 
-/** One line may not carry a bare `]` in its label or a line break in its note. */
 const label = (title: string): string =>
   title.replaceAll("[", "\\[").replaceAll("]", "\\]");
 
@@ -145,18 +97,8 @@ const note = (description: string | undefined): string => {
   return text === undefined || text === "" ? "" : `: ${text}`;
 };
 
-/** The address of the whole documentation in one document. */
 export const llmsFullPath = "/llms-full.txt";
 
-/**
- * The document for these pages.
- *
- * `site` is the site's own collection and `packaged` the pages the packages
- * write. A curated page shadows the package page at the same URL, so the site's
- * copy is the one that survives — the same precedence the sitemap and the
- * search index use. A package page a curated page in another section replaces
- * is not served at all (`curated-twins.ts`), so it is not printed either.
- */
 export const llmsTxt = (
   site: ReadonlyArray<LlmsPage>,
   packaged: ReadonlyArray<LlmsPage>,
@@ -191,5 +133,4 @@ export const llmsTxt = (
   ].join("\n");
 };
 
-/** The content type a plain-text index is served with. */
 export const llmsContentType = "text/plain; charset=utf-8";

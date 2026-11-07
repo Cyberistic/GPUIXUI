@@ -1,11 +1,3 @@
-/**
- * Browser preview for the Box page.
- *
- * `Box` is a container, not a control, so the preview is a labelled diagram: a
- * dashed outline around each surface with a caption naming its tone and the
- * facts it declares. The Code tab shows the native usage.
- */
-
 const tones = [
   { tone: "card", label: "card" },
   { tone: "muted", label: "muted" },

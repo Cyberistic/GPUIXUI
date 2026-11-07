@@ -1,20 +1,3 @@
-/**
- * SlidingText in the real GPUix renderer.
- *
- * The bugs these guard: a clip box that does not clip (the outgoing and the
- * incoming value would paint together); a swap at the moment the value changes,
- * so the slide has nothing to travel; an entry that starts at rest, or travels
- * the wrong way; a travel measured from anything but the box's own width (the
- * runtime keeps insets as numbers, so a guessed distance is the wrong one); a
- * swap before the width is known reaching the runtime as `NaN`; a value that
- * keeps changing faster than one swap, which re-armed the swap timer and left
- * the clip empty; and a reduced run that still waits for the clock.
- *
- * The motion clock is paused for the frame readings, so the entering value's
- * offset is the declared edge rather than wherever real time had got. The swap
- * itself is a real timer between two tweens, so that half polls.
- */
-
 import type { TestElement } from "@gpuix/react/testing";
 import { describe, expect, it } from "vitest";
 import {
@@ -30,10 +13,8 @@ import { SlidingText } from "../sliding-text.js";
 
 const lineHeight = darkTheme.typography.body.lineHeight;
 
-/** The width the clip is given, so the travel is a known number. */
 const width = 200;
 
-/** A sliding value in a clip of `width` pixels. */
 const slide = (text: string, extra: { readonly back?: boolean } = {}) => (
   <SlidingText
     testId="slide"
@@ -43,16 +24,13 @@ const slide = (text: string, extra: { readonly back?: boolean } = {}) => (
   />
 );
 
-/** Every painted string: the value on screen. */
 const painted = (page: ReturnType<typeof renderComponent>): string =>
   page.renderer.getAllText().join("");
 
-/** The values the accessibility tree carries: what a reader is told. */
 const shown = (
   page: ReturnType<typeof renderComponent>,
 ): ReadonlyArray<string> => a11yNodes(page.renderer).map((node) => node.name);
 
-/** The value's host — the runtime paints a styled host and its run. */
 const host = (page: ReturnType<typeof renderComponent>): TestElement => {
   const found = page.renderer
     .findByType("text")
@@ -63,7 +41,6 @@ const host = (page: ReturnType<typeof renderComponent>): TestElement => {
   return found;
 };
 
-/** One element by test id, failing rather than casting. */
 const byTestId = (
   page: ReturnType<typeof renderComponent>,
   testId: string,
@@ -75,7 +52,6 @@ const byTestId = (
   return element;
 };
 
-/** Change the value and let the effect that starts the slide run. */
 const change = async (
   page: ReturnType<typeof renderComponent>,
   node: React.ReactNode,
@@ -85,7 +61,6 @@ const change = async (
   settle(page);
 };
 
-/** How far the value sits from the clip's left edge. */
 const offsetOf = (page: ReturnType<typeof renderComponent>): number => {
   const box = page.renderer.getElementBounds(byTestId(page, "slide").id);
   const value = page.renderer.getElementBounds(host(page).id);
@@ -178,7 +153,6 @@ describe("SlidingText", () => {
   it("fades in place before the box has reported its width", async () => {
     const page = renderComponent(slide("first"));
     try {
-      // No `settle`: the layout event that carries the width is never delivered.
       page.renderer.clockPause();
       page.rerender(slide("second"));
       await after(0);
@@ -217,7 +191,7 @@ describe("SlidingText", () => {
       page.renderer.clockFastForward(400);
       settle(page);
       expect(phases.at(-1)).toBe("rest");
-      // The resting phase has no entry frame left to restart from.
+
       expect(host(page).customProps?.motion).toMatchObject({
         initial: false,
         transition: { duration: 0 },
@@ -258,8 +232,6 @@ describe("SlidingText", () => {
 
       await waitFor(() => expect(painted(page)).toBe("third"));
 
-      // One value is mounted, not a queue: the superseded one never paints and
-      // the tree holds one name.
       const names = a11yNodes(page.renderer).map((node) => node.name);
       expect(names).toContain("third");
       expect(names).not.toContain("second");
@@ -270,12 +242,6 @@ describe("SlidingText", () => {
   });
 
   it("keeps swapping while the value keeps changing", async () => {
-    // The bug this guards: the swap timer was re-armed by every value that
-    // arrived mid-exit, so a value changing faster than one swap (a live
-    // counter) pushed the swap back indefinitely and the clip stayed empty —
-    // the outgoing value had left it and the pending one never replaced it.
-    // The window belongs to the exit the swap waits for, not to the newest
-    // value that replaces its pending one.
     const page = renderComponent(
       <SlidingText testId="slide" text="v1" level="notice" style={{ width }} />,
     );
@@ -292,11 +258,10 @@ describe("SlidingText", () => {
             style={{ width }}
           />,
         );
-        // Well inside the 250 ms exit half of the `notice` level.
+
         await after(60);
       }
-      // The exit the first change started has run by now, so a newer value is
-      // the one on screen even though the stream never stopped.
+
       await after(60);
       expect(shown(page)).not.toContain("v1");
       await waitFor(() => expect(shown(page)).toContain("v6"), 1_000);
@@ -307,9 +272,6 @@ describe("SlidingText", () => {
   });
 
   it("reports an empty value for a stored value that was not text", () => {
-    // The bug guarded: a value saved with a layout writes `null` for a string it
-    // never carried, and the swap state carried it into `state.text` — declared
-    // a `string`, so a caller's `style` callback that measures it throws.
     const reported: Array<string> = [];
     const page = renderComponent(
       <SlidingText

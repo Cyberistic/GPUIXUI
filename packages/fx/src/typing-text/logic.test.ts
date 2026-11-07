@@ -1,11 +1,3 @@
-/**
- * The typing reveal's rules, without a renderer.
- *
- * The bugs these guard: a `NaN` speed that schedules a timer forever, a
- * negative delay that waits until the process ends, and a reveal that slices an
- * emoji in half because it counted UTF-16 code units.
- */
-
 import { describe, expect, it } from "vitest";
 import {
   characters,

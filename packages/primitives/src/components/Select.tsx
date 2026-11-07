@@ -1,31 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * `Select` — one choice from a list, in a popover.
- *
- * GPUix 0.11.0 already ships a headless, shadcn-shaped Select (see `docs/gpuix-capabilities.md`),
- * so this is a **themed wrapper, not a reimplementation**: the trigger wears the
- * same field chrome as `Input`, the list is the popover surface, and an item's
- * paint comes from the state GPUix reports (`selected`, `highlighted`,
- * `disabled`). The open state, dismissal and arrow navigation stay GPUix's.
- *
- * The options are data rather than compound children because the trigger needs
- * their labels, and an option is a value, a label and a disabled flag: there is
- * no richer row content and no compound `SelectItem` escape hatch.
- *
- * **The choice is announced while the list is closed.** A trigger paints the
- * chosen label, and paint is not a value an assistive technology can read, so
- * the trigger carries that label in `aria-valuetext` — 0.11.0's value channel,
- * because a combobox publishes no value of its own. An unchosen select
- * announces nothing (a placeholder is not a choice) and a value no option names
- * announces nothing rather than a stale label. `Select` mirrors an uncontrolled
- * choice only to feed that announcement; the rows still read the runtime's own
- * per-row state.
- *
- * The resting appearance is a Tailwind recipe (`recipe/selectTriggerClass`,
- * `recipe/selectContentClass`, `recipe/selectItemClass`), compiled through
- * `@gpuixui/tw`.
- */
-
 import {
   Fragment,
   useCallback,
@@ -88,15 +61,8 @@ import {
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
-/** The trigger and item states GPUix reports; the style callbacks receive them. */
 export type { SelectItemState, SelectTriggerState };
 
-/**
- * A mutable seat for a native element, the shape React's own refs use.
- *
- * `renderSelect` is pure in its arguments, so it cannot create a ref; the
- * component creates one and the list and its rows share it.
- */
 export interface PublicInstanceHolder {
   readonly current: PublicInstance | null;
 }
@@ -107,41 +73,32 @@ export interface SelectOption {
   readonly disabled?: boolean;
 }
 
-/** A named run of options, painted under a caption and a rule. */
 export interface SelectOptionGroup {
   readonly label: string;
   readonly options: ReadonlyArray<SelectOption>;
 }
 
-/** One entry in the list: an option, or a named group of them. */
 export type SelectEntry = SelectOption | SelectOptionGroup;
 
-/** Whether an entry is a named group rather than one option. */
 export const isSelectGroup = (entry: SelectEntry): entry is SelectOptionGroup =>
   "options" in entry;
 
-/** An option a store wrote: it needs a text `value`, and its name says something. */
 const storedOption = (entry: unknown): Option.Option<SelectOption> => {
   if (!P.isObject(entry)) return Option.none();
   const value = storedText(entry["value"]);
   if (value === undefined) return Option.none();
   return Option.some({
     value,
-    // A missing label is absence, not a repetition of the value: a blank name
-    // is the package's documented rule (the row's content names it), so the
-    // reader does not invent copy the caller never wrote.
+
     label: storedText(entry["label"]) ?? "",
     disabled: entry["disabled"] === true,
   });
 };
 
-/** One entry a store wrote: an option, or a named group of options. */
 const storedEntry = (entry: unknown): Option.Option<SelectEntry> => {
   if (!P.isObject(entry) || !("options" in entry)) return storedOption(entry);
   const options = entry["options"];
-  // A group's list is stored with it; one that is not a list is a record this
-  // release cannot place, so the group is dropped rather than painted empty
-  // under a caption that names nothing.
+
   return Arr.isArray(options)
     ? Option.some({
         label: storedText(entry["label"]) ?? "",
@@ -150,38 +107,14 @@ const storedEntry = (entry: unknown): Option.Option<SelectEntry> => {
     : Option.none();
 };
 
-/**
- * The list a `Select` was given, read structurally.
- *
- * `options` is a saved list as often as a literal — a restored settings pane, a
- * picker in a record — and JSON keeps a list a record never set as `null`,
- * while a deleted record leaves `null` in the array. Read raw, the whole control
- * threw out of the render: `null` at `Arr.map`, and a `null` entry at its
- * `.value` or in `isSelectGroup`'s `in`. Only an array is a list now, and one
- * malformed entry is dropped rather than hiding the options beside it
- * (`core/stored.ts`).
- */
 export const selectEntries = (value: unknown): ReadonlyArray<SelectEntry> =>
   storedList(value, storedEntry);
 
-/** Every option in render order, with the groups flattened. */
 export const selectOptions = (entries: unknown): ReadonlyArray<SelectOption> =>
   Arr.flatMap(selectEntries(entries), (entry) =>
     isSelectGroup(entry) ? entry.options : [entry],
   );
 
-/**
- * The words a chosen value stands for, or `None`.
- *
- * A closed `Select` paints its choice inside the trigger, and paint is not a
- * value an assistive technology can read: 0.11.0 has no `aria-activedescendant`
- * and the runtime exposes no state for a combobox, so the trigger announces the
- * option's own label through `aria-valuetext` (the value channel the runtime
- * does publish). An unchosen select announces nothing — a placeholder is not a
- * choice — and a value no option names announces nothing rather than a stale
- * or invented label, because an option list loaded later can leave a stored
- * value behind.
- */
 export const selectValueLabel = (
   entries: unknown,
   value: Option.Option<string>,
@@ -201,70 +134,49 @@ export const selectValueLabel = (
 
 export interface SelectProps
   extends ValueChangeProps<string>, FieldHostProps, HelpProps {
-  /**
-   * The list: options, or named groups of them. A group's caption names the
-   * `Group` its rows sit in, so keep the names short and unique.
-   */
   readonly options: ReadonlyArray<SelectEntry>;
-  /** Controlled selection. Omit to let the select hold its own. */
+
   readonly value?: string;
   readonly defaultValue?: string;
-  /**
-   * The value the trigger announces — the mirror a parent keeps of an
-   * uncontrolled select's choice, so a closed trigger can say what it shows.
-   * The caller's mirror outranks `value` and `defaultValue`; without one the
-   * announcement follows `value ?? defaultValue`.
-   */
+
   readonly selectedValue?: string;
   readonly placeholder?: string;
   readonly disabled?: boolean;
-  /** Controlled open state of the list. Omit to let the Select hold its own. */
+
   readonly open?: boolean;
-  /** The list's initial state while `open` is omitted. */
+
   readonly defaultOpen?: boolean;
   readonly onOpenChange?: (open: boolean) => void;
-  /** Validation failed: the trigger's border takes the destructive role. */
+
   readonly invalid?: boolean;
-  /** Defaults to `md`. */
+
   readonly size?: ControlSize;
   readonly fullWidth?: boolean;
-  /** Which side the list opens on. GPUix picks when this is absent. */
+
   readonly side?: FloatingSide;
-  /** How the list is aligned against the trigger. GPUix picks when this is absent. */
+
   readonly align?: FloatingAlign;
-  /** Accessible name. The visible name goes in a `Label` beside it. */
+
   readonly label?: string;
-  /** Extra style on the wrapper, which paints nothing but its width. */
+
   readonly style?: StyleDesc;
-  /** Extra style for the trigger, resolved against its own live state. */
+
   readonly triggerStyle?: StateStyle<SelectTriggerState>;
-  /** Extra style for every option, resolved against that option's state. */
+
   readonly itemStyle?: StateStyle<SelectItemState>;
-  /**
-   * Stable locator for the root, which paints nothing but the wrapper's width.
-   * Press the control through `triggerTestId`: the root is not the trigger.
-   */
+
   readonly testId?: string;
-  /** Stable locator for the trigger, the element that opens the list. */
+
   readonly triggerTestId?: string;
-  /**
-   * Stable locator for an option row, derived from its value — rows are data,
-   * so one string cannot name them.
-   */
+
   readonly itemTestId?: (value: string) => string;
 }
 
-/**
- * The trigger's open affordance (plan 731). The web's select ends in a down
- * chevron; AppKit's pop-up button in the up/down pair on an accent capsule. It
- * is a picture, never the target: the press is the trigger's.
- */
 export const SelectIndicator = ({
   theme,
 }: {
   readonly theme: PrimitiveTheme;
 }) => {
-  // A role a stored theme lost paints no mark rather than the runtime's own.
   const capsule = colorRole(theme, "primary");
   const ink = colorRole(theme, "primaryForeground");
   const quiet = colorRole(theme, "mutedForeground");
@@ -292,11 +204,6 @@ export const SelectIndicator = ({
   );
 };
 
-/**
- * The trigger is the field chrome with the value pushed to the far edge. On an
- * AppKit theme it is a pop-up button instead: a raised face — the card fill and
- * the small lift — rather than a sunken field.
- */
 export const selectTriggerStyle = (
   spec: ControlSpec,
   theme: PrimitiveTheme,
@@ -318,9 +225,7 @@ export const selectTriggerStyle = (
         boxShadow: elevationShadow(theme, "sm"),
       });
     }
-    // GPUix's `SelectValue` paints its fallback inside the trigger, so the
-    // trigger's own colour is what a placeholder inherits. Without this an
-    // empty select paints its hint in the value role and reads as chosen.
+
     if (state.placeholder === true) {
       style = mergeStyle(style, { color: colorRole(theme, "placeholder") });
     }
@@ -334,30 +239,18 @@ export const selectTriggerStyle = (
   };
 };
 
-/**
- * The list: the popover surface, one step of padding, full trigger width.
- *
- * A long list must be reachable, and the runtime's content sets no bound of its
- * own (its edge-scroll parts are empty in 0.11.0), so the surface caps at the
- * menus' 320px and scrolls. The wheel moves it; a highlighted row reveals itself
- * after commit (`RevealOnHighlight`), because the runtime never scrolls its own
- * highlight into view.
- */
 export const selectContentStyle = (theme: PrimitiveTheme): StyleDesc =>
   mergeStyle(recipeTw.classesToStyle(selectContentClass, theme).style, {
     maxHeight: 320,
     overflowY: "scroll",
   });
 
-/** A group caption: the caption role, muted, above its rows. */
 export const selectLabelStyle = (theme: PrimitiveTheme): StyleDesc =>
   recipeTw.classesToStyle(selectLabelClass, theme).style;
 
-/** The rule between two groups. */
 export const selectSeparatorStyle = (theme: PrimitiveTheme): StyleDesc =>
   recipeTw.classesToStyle(selectSeparatorClass, theme).style;
 
-/** An item's paint, from the three states the runtime reports. */
 export const selectItemStyle =
   (
     theme: PrimitiveTheme,
@@ -369,22 +262,11 @@ export const selectItemStyle =
       resolveStyle(caller, state),
     );
 
-/**
- * One row's content: the label, the selected mark, and the row's announcement.
- *
- * 0.11.0's `SelectItem` is a plain `div` with no role, and a role-less element
- * never reaches the accessibility tree — so the content inside it carries the
- * row's `option` role, its name and the selected state. The state comes from
- * the callback GPUix hands this row, which is the only place it is reported, so
- * an uncontrolled Select still needs no mirror of its value.
- */
 export const renderSelectRow = (
   option: SelectOption,
   theme: PrimitiveTheme,
   state: SelectItemState,
 ): ReactElement => {
-  // A stored theme that lost the colour group has no mark colour; the row's
-  // `aria-selected` still carries the state, so the glyph is simply absent.
   const mark = colorRole(theme, "popoverForeground");
   return (
     <div
@@ -394,10 +276,7 @@ export const renderSelectRow = (
       style={recipeTw.classesToStyle(selectItemRowClass, theme).style}
     >
       {option.label}
-      {/*
-        The selected mark is decorative: the row's `aria-selected` is the state,
-        so the glyph carries no second name.
-      */}
+      {}
       {state.selected && mark !== undefined ? (
         <Icon name="check" size="sm" color={mark} />
       ) : null}
@@ -405,23 +284,6 @@ export const renderSelectRow = (
   );
 };
 
-/**
- * Bring the row the keyboard moved onto into view.
- *
- * GPUix scrolls a list on the wheel but never moves it for its own highlight, so
- * a list taller than its 320px cap kept an unreachable tail: twenty ArrowDowns
- * left the offset where the wheel put it. The row is the only part that is told
- * `highlighted`, so it is the part that has to reveal itself — after commit,
- * because the runtime needs both elements' ids.
- *
- * The move is arithmetic over the two painted boxes (`core/scroll.ts`'s
- * `revealScroll`), not the renderer's `scrollIntoView`: that one scrolls a
- * scroller to the index of its **direct child**, so a row inside a `SelectGroup`
- * could only reveal its group.
- *
- * It renders its children unchanged: a fragment is transparent to the runtime's
- * part walk, exactly like the `ScrollArea` viewport's group.
- */
 const RevealOnHighlight = ({
   highlighted,
   instance,
@@ -452,7 +314,6 @@ const RevealOnHighlight = ({
   return <>{children}</>;
 };
 
-/** One data-driven row: a themed `SelectItem` that reveals its own highlight. */
 const SelectRow = ({
   option,
   theme,
@@ -467,8 +328,7 @@ const SelectRow = ({
   readonly scroller: PublicInstanceHolder;
 }): ReactElement => {
   const instance = useRef<PublicInstance | null>(null);
-  // A stable callback: a fresh one detaches and re-attaches the item's ref on
-  // every paint, which the accordion's rows already pay for.
+
   const attach = useCallback((next: PublicInstance | null) => {
     instance.current = next;
   }, []);
@@ -493,7 +353,6 @@ const SelectRow = ({
   );
 };
 
-/** The element tree `Select` renders. Pure in its arguments. */
 export const renderSelect = (
   {
     options,
@@ -549,8 +408,7 @@ export const renderSelect = (
       scroller={scroller}
     />
   );
-  // The trigger is what a reader lands on when the list is closed, so its
-  // announcement is the choice the control is showing.
+
   const announced = Option.getOrUndefined(
     selectValueLabel(
       entries,
@@ -576,26 +434,12 @@ export const renderSelect = (
         ref={ref}
         disabled={disabled}
         testId={triggerTestId}
-        // The trigger is the control, so it is what assistive technology must
-        // see: a named `combobox`. GPUix renders it as a `div` with a tab stop
-        // and no role, and a role-less node is absent from the accessibility
-        // tree — measured on 0.11.0, a Select with a `label` produced no node
-        // at all (the wrapper's `aria-label` landed on a plain `div`). The rows
-        // announce themselves from inside GPUix's role-less item parts
-        // (`renderSelectRow`).
         role="combobox"
         aria-label={accessibleName(label)}
         aria-description={accessibleName(description)}
         aria-id={controlId}
         onLayout={onLayout}
-        // A combobox must say whether its list is open, and GPUix publishes no
-        // state of its own — the wrapper owns the open state (`Select`), so
-        // this is the one it just rendered. A render without it (the pure
-        // `renderSelect`) publishes no expanded state rather than a guess.
         aria-expanded={open}
-        // What the control holds, in the option's own words: the trigger is
-        // the node a reader lands on while the list is closed, so paint is not
-        // enough. `aria-valuetext` is the value channel 0.11.0 publishes.
         aria-valuetext={announced}
         style={selectTriggerStyle(spec, theme, triggerStyle)}
       >
@@ -606,41 +450,26 @@ export const renderSelect = (
         ref={scroller}
         side={side}
         align={align}
-        // The rows are `option` nodes, so their container is what holds them:
-        // without the role the options would sit under the role-less floating
-        // layer. The list is unnamed — the trigger is the named control — and
-        // the role paints nothing, so the measured 320px surface is unchanged.
         role="listbox"
         style={selectContentStyle(theme)}
       >
         {Arr.map(entries, (entry, index) => {
           if (!isSelectGroup(entry)) return renderItem(entry);
-          // A caption that arrived blank is no caption: an empty `<text>` is
-          // 0px but a run of spaces lays out a full line, which drew a blank
-          // band between two groups of rows.
+
           const caption = visibleCopy(entry.label);
           return (
             <Fragment key={`group-${index}`}>
               {index === 0 ? null : (
                 <SelectSeparator style={selectSeparatorStyle(theme)} />
               )}
-              {/*
-                The caption names the run it heads: 0.11.0's `SelectGroup` is a
-                plain `div`, so the `group` role and the caption are what a
-                reader hears before the group's options.
-              */}
+              {}
               <SelectGroup role="group" aria-label={accessibleName(caption)}>
                 {caption === undefined ? null : (
                   <SelectLabel style={selectLabelStyle(theme)}>
                     {caption}
                   </SelectLabel>
                 )}
-                {/*
-                  Spread, not nested: the parts helper walks a component's
-                  children and flattens fragments, so an array left as one child
-                  would hide every row of the group from a test (and from a
-                  caller composing an item list).
-                */}
+                {}
                 {...Arr.map(entry.options, renderItem)}
               </SelectGroup>
             </Fragment>
@@ -651,20 +480,12 @@ export const renderSelect = (
   );
 };
 
-/** A list of options in a popover. */
 export const Select = (props: SelectProps): ReactElement => {
   const theme = useTheme();
   const scroller = useRef<PublicInstance | null>(null);
-  // The open state is held here, not read from GPUix, for one reason: a
-  // combobox has to publish `aria-expanded` and the runtime publishes no open
-  // state to read. GPUix still decides when it changes — this only mirrors what
-  // it reports, and a caller may take the state over with `open`.
+
   const [held, setHeld] = useState(props.defaultOpen === true);
-  // The same rule for the choice: an uncontrolled select's value lives inside
-  // GPUix, and a closed trigger has to announce it. The mirror only moves an
-  // uncontrolled select — with `value` set, the caller's prop is the truth —
-  // and the caller's own `selectedValue` outranks both, because a parent that
-  // mirrors the choice itself is the one statement of it.
+
   const [heldValue, setHeldValue] = useState<string | undefined>(
     props.defaultValue,
   );
@@ -679,8 +500,7 @@ export const Select = (props: SelectProps): ReactElement => {
         if (props.value === undefined) setHeldValue(next);
         notify?.(next);
       },
-      // The legacy alias ran inside `renderSelect`; the wrapper now reports the
-      // one value through `valueChange`, so handing both down would fire twice.
+
       onChange: undefined,
       onOpenChange: (next) => {
         if (props.open === undefined) setHeld(next);

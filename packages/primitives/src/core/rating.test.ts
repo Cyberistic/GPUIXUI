@@ -1,12 +1,3 @@
-/**
- * The rating contract.
- *
- * The guarded defects: an arrow wrapping from five stars to one (a rating is not
- * a radio group), an arrow clearing a rated value (zero is the clear key's job),
- * a rating that cannot be cleared at all, and a `max` that is zero or fractional
- * turning the tab stop into a star that does not exist.
- */
-
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -22,9 +13,6 @@ import {
 
 describe("starCount", () => {
   it("reads a count it cannot lay out as one star", () => {
-    // The bug guarded: `Infinity` reached `Arr.range(1, max)` in the paint,
-    // whose `new Array(Infinity)` throws `RangeError: Invalid array length`
-    // and takes the render with it.
     expect(starCount(Number.POSITIVE_INFINITY)).toBe(1);
     expect(starCount(Number.NEGATIVE_INFINITY)).toBe(1);
     expect(starCount(Number.NaN)).toBe(1);
@@ -44,15 +32,11 @@ describe("clampRating", () => {
   });
 
   it("paints the stars a whole-star score has fully earned", () => {
-    // Whole stars do not round: 4.9 is not five filled stars, because the
-    // caller's score never reached five. Halves take the finer rule below.
     expect(clampRating(4.9, 5)).toBe(4);
     expect(clampRating(4.9, 5, true)).toBe(5);
   });
 
   it("snaps a half score to the nearest half place", () => {
-    // The bug guarded: a stored 4.4 rendered as four stars while the caller's
-    // own readout said 4.4, so a half score read as the star below it.
     expect(clampRating(4.4, 5, true)).toBe(4.5);
     expect(clampRating(4.2, 5, true)).toBe(4);
     expect(clampRating(9, 5, true)).toBe(5);
@@ -95,8 +79,6 @@ describe("decideRating", () => {
   });
 
   it("steps in halves when the score is half precision", () => {
-    // The bug guarded: an arrow on a half score jumped a whole star, so a
-    // reader at 3.5 could not reach 4 without skipping the half it held.
     expect(decideRating(3.5, 5, "right", true)).toStrictEqual(Option.some(4));
     expect(decideRating(3.5, 5, "left", true)).toStrictEqual(Option.some(3));
     expect(decideRating(0, 5, "right", true)).toStrictEqual(Option.some(0.5));
@@ -104,19 +86,15 @@ describe("decideRating", () => {
   });
 
   it("clamps at the ends instead of wrapping", () => {
-    // The bug guarded: a radio-group move wraps 5 → 1, which for a rating reads
-    // as "you just lost your five stars".
     expect(decideRating(5, 5, "right")).toStrictEqual(Option.some(5));
     expect(decideRating(1, 5, "left")).toStrictEqual(Option.some(1));
   });
 
   it("never clears a rated value with an arrow — zero is explicit", () => {
-    // The bug guarded: ArrowLeft at one star went to 0, so a reader nudging the
-    // arrow lost the rating the page says only Delete clears.
     expect(decideRating(1, 5, "left")).toStrictEqual(Option.some(1));
     expect(decideRating(1, 5, "down")).toStrictEqual(Option.some(1));
     expect(decideRating(0.5, 5, "left", true)).toStrictEqual(Option.some(0.5));
-    // ...while an unrated rating is still reached only from zero's own end.
+
     expect(decideRating(0, 5, "left")).toStrictEqual(Option.some(0));
     expect(decideRating(0, 5, "right")).toStrictEqual(Option.some(1));
   });
@@ -164,8 +142,6 @@ describe("pointerRating", () => {
   });
 
   it("keeps the whole star without halves, a position or a measured box", () => {
-    // The bug guarded: a press the renderer could not measure folded to the
-    // half below the star, so a plain click lost the star it hit.
     expect(pointerRating(4, Option.some(106), box, false)).toBe(4);
     expect(pointerRating(4, Option.none(), box, true)).toBe(4);
     expect(pointerRating(4, Option.some(106), Option.none(), true)).toBe(4);

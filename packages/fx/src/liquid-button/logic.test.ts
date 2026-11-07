@@ -1,13 +1,3 @@
-/**
- * The liquid flood's arithmetic.
- *
- * The bugs these guard: a pointer inside the left half entering from the right;
- * a flood born across the control instead of empty at its edge; a right-edge
- * flood that grows the wrong way; a width of `NaN` reaching the runtime; and a
- * drain that empties toward the edge the pointer entered from rather than the
- * one it left through.
- */
-
 import { describe, expect, it } from "vitest";
 import {
   liquidAcross,
@@ -17,7 +7,6 @@ import {
   liquidOpacity,
 } from "./logic.js";
 
-/** A 240-wide control at x = 100. */
 const box = { x: 100, width: 240 };
 
 describe("liquidEdge", () => {

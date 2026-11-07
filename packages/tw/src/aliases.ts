@@ -1,18 +1,3 @@
-/**
- * Base UI `cn-*` hooks → the class recipes `style-luma.css` applies.
- *
- * The Base UI registry writes short hook names (`cn-input`, `cn-button`) and
- * the style preset owns the actual rules. This is the one table that turns
- * those hooks into classes before `cn` resolves conflicts, so a caller's
- * `px-6` still wins over the recipe's `px-3`.
- *
- * Values are verbatim from `references/ui` @ d2fba50,
- * `apps/v4/registry/styles/style-luma.css`. Where luma deliberately differs
- * from new-york-v4 (`rounded-3xl` input, filled input surface), the luma value
- * is kept; `aliases.test.ts` records those differences.
- */
-
-/** The luma `cn-*` hooks that the Base UI component sources use. */
 export const BASE_ALIASES: Readonly<Record<string, string>> = {
   "cn-input":
     "bg-input/50 border-transparent focus-visible:border-ring focus-visible:ring-ring/30 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 h-9 rounded-3xl border px-3 py-1 text-base transition-[color,box-shadow,background-color] file:h-7 file:text-sm file:font-medium focus-visible:ring-3 aria-invalid:ring-3 md:text-sm",

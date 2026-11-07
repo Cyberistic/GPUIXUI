@@ -1,32 +1,3 @@
-/**
- * Guards the one surface a control cannot do without: the fill it paints
- * between the pointer arriving and the press landing.
- *
- * The bug this holds: `filledHover` / `filledPressed` derive their step by
- * moving an action role 12% / 18% of the way toward the theme's `foreground`,
- * and **nothing measured the result**. The contrast table measures roles on
- * strips; `decorativeSurfaces` measures roles on strips; a derived fill is
- * neither — so a theme whose `foreground` sits on its own action role painted a
- * hover that was the fill it replaced while every report stayed empty. That is
- * reachable, not hypothetical: `invisibleFeedbackBrand` is a brand built in one
- * hue, where the page copy reads and the action carries its own label.
- *
- * The contract also found a shipped step on the floor: Windows dark's primary
- * `#60CDFF` hovered to **1.05:1**, under the 1.05 perceptibility floor — a
- * primary button on a Windows window that did not answer the pointer — so the
- * platform carries `#4CC2FF` (1.068:1) now.
- *
- * And it measured the deviation the pages had been describing as adoption: the
- * components package's action used to paint the derived fills for `primary` and
- * `danger` while its `secondary` variant painted the `hover` / `active` role
- * washes over the `secondary` fill — **1.000:1** hovered in the two
- * high-contrast variants and macOS light, and 1.000:1 pressed in Windows dark,
- * where the wash *is* the fill. That painter belongs to another package, which
- * has since delegated the action to `@gpuixui/primitives` (plan 160); the
- * variant table the primitives own is where the derivation now lives, and this
- * suite holds the documents to that painter in both directions.
- */
-
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
@@ -71,7 +42,6 @@ const section = (document: string, heading: string): string => {
     .replace(/\s+/g, " ");
 };
 
-/** Every shipped, high-contrast, platform and authored style, named. */
 const everyStyle: ReadonlyArray<readonly [string, Theme]> = [
   [lightTheme.name, lightTheme],
   [darkTheme.name, darkTheme],
@@ -99,7 +69,6 @@ const everyStyle: ReadonlyArray<readonly [string, Theme]> = [
   ),
 ];
 
-/** The measured step of one role in one state, as the report reads it. */
 const step = (
   theme: Theme,
   role: (typeof filledRoles)[number],
@@ -109,10 +78,6 @@ const step = (
 
 describe("the pointer feedback a filled role paints", () => {
   it("measures both states of every filled role", () => {
-    // A control has two pointer states and four faces (the three actions and a
-    // toggle's accent): a placement table that drops one leaves that face's cue
-    // unmeasured, which is exactly how the contract's predecessor missed every
-    // derived fill.
     const measured = actionFeedbackPlacements.map(
       ({ role, state }) => `${role}/${state}`,
     );
@@ -125,8 +90,6 @@ describe("the pointer feedback a filled role paints", () => {
   });
 
   it("holds the tightest step over every shipped style to the floor", () => {
-    // The tightest placement is the claim a brand has to beat, so the page
-    // prints the number this computes rather than a remembered one.
     const tightest = everyStyle
       .flatMap(([name, theme]) =>
         actionFeedbackPlacements.map(({ role, state }) => ({
@@ -149,8 +112,6 @@ describe("the pointer feedback a filled role paints", () => {
   });
 
   it("prints the Windows step it repaired", () => {
-    // The catalogue quotes the painted values, so a palette or helper edit that
-    // moves them fails here rather than leaving the page teaching an old step.
     const windows = platformTheme(themes.dark, "win32");
     const hover = step(windows, "primary", "hover");
     const pressed = step(windows, "primary", "pressed");
@@ -174,9 +135,6 @@ describe("the pointer feedback a filled role paints", () => {
   });
 
   it("reports a brand whose pointer step lands on its own fill", () => {
-    // One hue, so the page copy reads and the action carries its own white
-    // label, while both pointer steps move toward text that is the fill's own
-    // colour — the hover and the press collapse together.
     const failures = actionFeedbackFailures(invisibleFeedbackBrand);
 
     expect(failures).toHaveLength(2);
@@ -195,9 +153,6 @@ describe("the pointer feedback a filled role paints", () => {
   });
 
   it("fails the gate on that brand, through the decorative report", () => {
-    // No new `ThemeAudit` key: the derived fill is a decorative surface, so the
-    // report a brand already runs covers it and the docs site's readout needs no
-    // eleventh formatter.
     const audit = auditTheme(invisibleFeedbackBrand);
 
     expect(
@@ -207,8 +162,6 @@ describe("the pointer feedback a filled role paints", () => {
   });
 
   it("reports a stored theme that lost its action role as unmeasurable", () => {
-    // A theme restored from storage can predate the role; the placement is
-    // reported rather than skipped, the same rule every other contract follows.
     const { primary: _primary, ...withoutPrimary } = lightColors;
     const stored: { colors: Partial<ThemeColors> } = {
       colors: withoutPrimary,
@@ -233,11 +186,6 @@ describe("the pointer feedback a filled role paints", () => {
   });
 
   it("reads the painters that carry the derived fills", () => {
-    // The placements exist because two packages paint these helpers: the
-    // primitives' registry asks for `fill-<action>` / `fill-<action>-pressed`,
-    // and the action's own variant table derives the step outright. The
-    // components' action delegates to the primitives' button (plan 160), so the
-    // painter a contract is held to is that table.
     const primitives = read("../../primitives/src/recipe/index.ts");
     const variants = read("../../primitives/src/core/variants.ts");
     const button = read("../../components/src/internal/button.tsx");
@@ -253,11 +201,6 @@ describe("the pointer feedback a filled role paints", () => {
 });
 
 describe("the secondary variant paints the derived fills", () => {
-  // The variant swapped its fill to the `hover` / `active` role washes, and a
-  // wash is often the fill it replaces: 15 of its 32 pointer placements sat
-  // under the floor, 1.000:1 in the variants a reader selects for clarity. It
-  // derives both states from the `secondary` fill now, like the other actions,
-  // so its label keeps an opaque step the filled-role contract measures.
   const variants = read("../../primitives/src/core/variants.ts");
   const secondary = variants.slice(
     variants.indexOf("const secondary: ControlVariant"),
@@ -292,12 +235,6 @@ describe("the secondary variant paints the derived fills", () => {
   });
 
   it("holds the four documents to the fixed paint", () => {
-    // The deviation was printed as a measured fact in all four, so the same
-    // four have to carry its closure: the history stays (a reader can check the
-    // claim) and the retracted "still swaps" sentence does not. The inventory is
-    // read through the row that taught the deviation, not through the whole
-    // file: "still swaps" is an ordinary phrase for the text-swap components and
-    // their honest limits, so only the `Action fills` row can retract it.
     const row = inventory.slice(
       inventory.indexOf("| Action fills |"),
       inventory.indexOf("\n", inventory.indexOf("| Action fills |")),

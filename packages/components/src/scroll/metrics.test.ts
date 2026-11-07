@@ -1,13 +1,3 @@
-/**
- * The scroll reading, without a renderer.
- *
- * The bugs these guard: a progress bar that divides by a content box the
- * viewport already covers (`Infinity` or a fraction above 1); an offset past
- * either end painting a value the reader cannot reach; a box with nothing to
- * scroll offering a fade or a non-zero reading; and a `NaN` measurement reaching
- * the runtime as a style value.
- */
-
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import { edgeGradient, scrollMetrics, scrollSize } from "./metrics.js";
@@ -74,7 +64,7 @@ describe("scrollMetrics", () => {
   it("keeps the offset a pinned header is positioned from, clamped", () => {
     expect(sample(0, 200, 600).offsetY).toBe(0);
     expect(sample(-240, 200, 600).offsetY).toBe(-240);
-    // A bounce past either end reports the end the reader can see.
+
     expect(sample(40, 200, 600).offsetY).toBe(0);
     expect(sample(-900, 200, 600).offsetY).toBe(-400);
   });

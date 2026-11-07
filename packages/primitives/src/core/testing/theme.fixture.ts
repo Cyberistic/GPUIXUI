@@ -1,18 +1,3 @@
-/**
- * A theme for tests.
- *
- * This is a **test double**, not a second palette: every colour is a
- * deliberately meaningless sequential hex value and every number is derived
- * from its own key. A test that passes against it cannot be relying on a real
- * design decision, and a resolution test that *should* differ when the theme
- * differs (see `style.test.ts`) cannot pass by accident.
- *
- * It is a `Theme` from `@gpuixui/tokens` (re-exported as `PrimitiveTheme`), so
- * a fixture that no longer satisfies the real shape fails to compile rather
- * than drifting into a second contract. The shipped light and dark themes are
- * exercised in `runtime/theme.runtime.test.tsx`.
- */
-
 import type {
   FontWeight,
   PrimitiveTheme,
@@ -20,11 +5,9 @@ import type {
   TextStyle,
 } from "../theme.js";
 
-/** A distinct opaque colour per index, so two roles can never compare equal. */
 const shade = (index: number): string =>
   `#${index.toString(16).padStart(6, "0").toUpperCase()}`;
 
-/** A distinct translucent colour per index, for the roles that carry alpha. */
 const wash = (index: number): string => `${shade(index)}40`;
 
 const text = (size: number, weight: FontWeight): TextStyle => ({
@@ -33,7 +16,6 @@ const text = (size: number, weight: FontWeight): TextStyle => ({
   fontWeight: weight,
 });
 
-/** One size per role, so a test can name a role and get a unique style. */
 const typography: PrimitiveTheme["typography"] = {
   sans: "Test Sans",
   mono: "Test Mono",
@@ -49,13 +31,6 @@ const typography: PrimitiveTheme["typography"] = {
   codeBlock: text(12, 400),
 };
 
-/**
- * One palette per offset.
- *
- * The light and dark doubles must not share a value: a switch test with two
- * identical palettes cannot tell a repaint from a frozen first theme. `1000`
- * keeps the dark shades distinct and still meaningless.
- */
 const palette = (offset: number): PrimitiveTheme["colors"] => ({
   background: shade(offset + 1),
   foreground: shade(offset + 2),
@@ -171,20 +146,6 @@ export const testThemeDark: PrimitiveTheme = {
   colors: palette(1000),
 };
 
-/**
- * A theme as a store can hand one back: the type group without a role.
- *
- * A theme restored from storage that predates a release is missing the roles
- * that release added, and the type group is the one group a store can lose
- * without the store noticing — JSON writes the roles it has and nothing for the
- * ones it does not.
- *
- * The assertion is the honest one: a theme that lost a role is **not** a
- * `Theme`, which is the whole point of the seam that reads it. `@gpuixui/tokens`
- * fabricates its incomplete themes the same way (`incomplete.test.ts`), because
- * the type system cannot describe the value a store produces.
- */
-/** A type group a fixture can remove a role from, which the type itself forbids. */
 type MutableTypeGroup = {
   -readonly [Role in keyof PrimitiveTheme["typography"]]?: PrimitiveTheme["typography"][Role];
 };

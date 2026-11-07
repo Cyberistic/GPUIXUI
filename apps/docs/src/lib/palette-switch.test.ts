@@ -11,16 +11,6 @@ import {
   platformOf,
 } from "../../scripts/palette-switch-probe";
 
-/**
- * The palette switch is the one axis a reader uses to see a component in both
- * of the library's themes, so its two halves need holding: the **state** half
- * is covered by `platform.test.ts` (the switch's order and the labels), and the
- * **press** half is React in a browser. `apps/docs/scripts/palette-switch-probe.ts`
- * presses the group in a hydrated page and reads the consequence off the
- * surfaces; this file keeps the probe and the policy from drifting apart, and
- * holds the readout parser the probe's assertions depend on.
- */
-
 const root = new URL("../../../../", import.meta.url);
 const read = (path: string): string =>
   readFileSync(new URL(path, root), "utf8");
@@ -39,16 +29,11 @@ describe("the palette switch's readout", () => {
   });
 
   it("refuses a truncated readout instead of guessing a field", () => {
-    // A missing field must be absent, not silently defaulted: a parser that
-    // read `light` and filled the rest would let a surface that reported
-    // nothing pass the mode assertion.
     expect(parseSurface("light|darwin|#F6F8FA")).toBeUndefined();
     expect(parseSurface("")).toBeUndefined();
   });
 
   it("accepts only a platform the library names", () => {
-    // The expected fill is derived from the surface's own platform, so an
-    // unknown value must not resolve to a theme by accident.
     expect(platformNames.filter((name) => platformOf(name) === name)).toEqual([
       ...platformNames,
     ]);
@@ -68,12 +53,9 @@ describe("the palette switch's readout", () => {
 
 describe("the switch's press path", () => {
   it("waits for the button's own handler before it presses", () => {
-    // A capture taken while the dev server compiles the route tree found no
-    // React fiber at all; the handler is the precondition a press needs.
     const readyAt = probe.indexOf('ready("Light")');
     const pressAt = probe.indexOf('press("Light")');
-    // The gate is the shared read (`react-ready.ts`), over every copy of the
-    // group; `react-ready.test.ts` proves the read itself.
+
     expect(probe).toContain("firstReady(");
     const start = probe.indexOf("const ready = ");
     const end = probe.indexOf("const press = ");
@@ -84,13 +66,6 @@ describe("the switch's press path", () => {
   });
 
   it("waits for the surface it measures, not only the switch", () => {
-    // Bug guarded: the sidebar's group hydrates before the page's previews, and
-    // a press in that window updated the group while the page's own hydration
-    // render landed afterwards — the surfaces kept the server's palette, so the
-    // probe reported "pressing Light left no surface in light mode" against a
-    // page a reader could not yet have clicked. Measured on the served build:
-    // the first hydration read pressed Light while every surface stayed `dark`,
-    // and the same press 250 ms later read `light` on all three.
     const start = probe.indexOf("const ready = ");
     const end = probe.indexOf("const press = ");
     expect(start).toBeGreaterThan(-1);
@@ -102,21 +77,16 @@ describe("the switch's press path", () => {
   });
 
   it("presses both palettes and reads every surface", () => {
-    // One direction would pass on a group that only lights one palette, or on
-    // a page whose single preview never re-resolved.
     expect(probe).toContain('press("Dark")');
     expect(probe).toContain('countSurfaces("light")');
     expect(probe).toContain("data-mode");
     expect(probe).toContain("data-platform");
-    // The switch is the app's now: the URL must stay clean, in both
-    // directions, or a stale path has written the state back into it.
+
     expect(probe).toContain("namesSwitchAxis(");
     expect(probe).toContain("location.search");
   });
 
   it("carries no colour of its own", () => {
-    // Every expected fill is derived with `platformTheme`, so a palette edit in
-    // the library reaches the probe instead of leaving a stale hex.
     expect(probe).toContain("platformTheme(themes[mode], platform)");
     expect(probe.match(/#[0-9a-fA-F]{6}/g) ?? []).toEqual([]);
   });
@@ -124,9 +94,6 @@ describe("the switch's press path", () => {
 
 describe("the switch's mount marker", () => {
   it("reports from inside the content boundary, after the page", () => {
-    // The marker still sits in the same `Suspense` boundary as the page and
-    // after it, so its effect runs once there is a preview to repaint — the
-    // state bump is what re-resolves every surface, not a disabled button.
     const view = read("apps/docs/src/lib/docs-view.tsx");
     const start = view.indexOf("<Suspense>");
     const end = view.indexOf("</Suspense>");
@@ -160,8 +127,7 @@ describe("the policy", () => {
     expect(policy).toContain("### The palette switch is a measured click");
     expect(policy).toContain("nub apps/docs/scripts/palette-switch-probe.ts");
     expect(policy).toContain("__reactProps.onClick");
-    // The two measurements a reader can repeat, and the failure that proves
-    // the probe is not vacuous.
+
     expect(policy).toContain("3 of 3 surfaces painted");
     expect(policy).toContain("the address bar carries the switch's state");
   });

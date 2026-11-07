@@ -1,19 +1,8 @@
-/**
- * The Shimmer drawing.
- *
- * The bug these guard: the preview painted a translucent band over its children
- * instead of putting the highlight in the text, and a fixed strip of stops that
- * the component's own `shimmerFrame` never moved. The drawing now samples the
- * component's frame, so two frames must produce different gradients and the
- * surface must never regain a band.
- */
-
 import { SHIMMER_STEPS, shimmerFrame } from "@gpuixui/components/shimmer/logic";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { ShimmerDemo, shimmerGradient } from "./shimmer-demo";
 
-/** The stop positions in a gradient, after each `color-mix(...)`. */
 const stops = (gradient: string): ReadonlyArray<string> =>
   gradient.match(/\)\) \d+(?:\.\d+)?%/g) ?? [];
 

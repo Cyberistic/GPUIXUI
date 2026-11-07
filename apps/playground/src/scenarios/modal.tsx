@@ -1,21 +1,3 @@
-/**
- * `modal-focus-trap` — the modal contract Dialog and Popover are built on.
- *
- * Plan `140` proved a popup paints, takes `autoFocus`, and receives Escape. It
- * did not measure the three facts a modal surface needs, which is what this
- * probe exists for:
- *
- * - component code can move native focus (`useGpuix().renderer.focusElement`),
- *   so focus can enter a dialog and return to its trigger;
- * - `focusNextWithin` / `focusPreviousWithin` keep Tab inside a container;
- * - Escape in a nested layer closes only that layer.
- *
- * The view repeats the shape `DialogContent` uses — a ref callback stores the
- * `PublicInstance`, a layout effect saves and restores the previous focus — so
- * the probe exercises the mechanism the component will use, not a host helper.
- * The steps drive synthetic keys, so the Tab branch is the component's own
- * `onKeyDown`, not a direct renderer call.
- */
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { Effect } from "effect";
 import * as Arr from "effect/Array";
@@ -28,7 +10,6 @@ import type { Smoke } from "@gpuixui/testing";
 import { Body, Pressable, Readout } from "../ui.js";
 import type { ScenarioBody } from "../types.js";
 
-/** Every element the modal surface owns; nothing else may hold focus. */
 const MODAL_IDS: ReadonlyArray<string> = [
   "modal-content",
   "modal-a",
@@ -114,8 +95,6 @@ const ModalProbe = () => {
 
   const handleContentKey = (event: KeyEvent) => {
     if (event.key === "tab") {
-      // 0.11.0 moves focus on Tab by default; the trap cancels it and drives
-      // the wrap through `focusNextWithin` / `focusPreviousWithin`.
       event.preventDefault();
       const id = Option.getOrElse(contentId, () => -1);
       if (event.modifiers?.shift === true) {
@@ -228,17 +207,9 @@ const ModalProbe = () => {
   );
 };
 
-/** The focused `testId`, or `"none"` when nothing has focus. */
 const focused = (host: Smoke.SmokeHost): string =>
   Option.getOrElse(Option.fromNullishOr(host.focused()), () => "none");
 
-/**
- * Presses `key` `times` times and asserts the walk stayed inside the modal.
- *
- * Both halves matter: a trap that never moves focus and a trap that leaks to
- * the page behind the veil are different failures, so the sequence is required
- * to hold at least two distinct ids before the containment check.
- */
 const walk = (
   ctx: Smoke.SmokeContext,
   key: string,

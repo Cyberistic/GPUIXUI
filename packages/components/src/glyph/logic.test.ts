@@ -1,14 +1,3 @@
-/**
- * The glyph wall's arithmetic, measured without a window.
- *
- * The bugs these guard: a wall that reshuffles between mounts (the same seed
- * must paint the same wall); a cell that lands outside the box it is clipped to;
- * a huge box that mounts thousands of text hosts instead of growing its cell; a
- * density or cell the renderer cannot use reaching the paint as `NaN`; a mark
- * set that is empty and paints nothing; and a caller's marks being ignored in
- * favour of the house set.
- */
-
 import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
 import {
@@ -57,8 +46,6 @@ describe("glyphField", () => {
     expect(huge.cell).toBeGreaterThan(glyphCell);
     expect(huge.cells.length).toBeLessThanOrEqual(glyphMaxCells);
 
-    // The cap is a bound on nodes, not a reason to paint part of the wall: a
-    // small box keeps the caller's cell and fills it edge to edge.
     const small = glyphField({
       width: 100,
       height: 100,
@@ -69,14 +56,6 @@ describe("glyphField", () => {
     expect(grid(small)).toBe(100);
   });
 
-  /**
-   * The bug this guards: the cell was chosen from the box's **area** alone, and
-   * the grid floors each dimension at one cell — so a strip narrower than the
-   * estimate painted one column of every row it could fit. Measured, a 10 × 6000
-   * box painted **272** text hosts and a 10 × 10 000 box **454**, against a cap
-   * of 240. A wall is a node per glyph, so that is the one bound the module
-   * promises and a decorative strip could hold thousands.
-   */
   it("keeps the cap on a wall that is one cell wide or one cell tall", () => {
     const strips = [
       { width: 10, height: 6000 },
@@ -97,9 +76,6 @@ describe("glyphField", () => {
   });
 
   it("holds the cap over every aspect ratio", () => {
-    // A derived sweep rather than a second list of the boxes above: the cap is
-    // a claim about *any* box, and the area estimate failed only where one side
-    // is shorter than the cell it computes.
     const sides = [1, 10, 16, 240, 1000, 8000];
     const over = Arr.flatMap(sides, (width) =>
       Arr.flatMap(sides, (height) => {
@@ -171,8 +147,7 @@ describe("glyphField", () => {
       expect(cell.opacity).toBeGreaterThanOrEqual(glyphDim);
       expect(cell.opacity).toBeLessThanOrEqual(1);
     });
-    // Texture, not a block: a wall that paints every cell at one brightness is
-    // the same paint as a solid fill.
+
     expect(
       Arr.dedupe(Arr.map(field.cells, (cell) => cell.opacity)).length,
     ).toBeGreaterThan(1);

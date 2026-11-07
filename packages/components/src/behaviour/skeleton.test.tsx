@@ -1,12 +1,3 @@
-/**
- * Skeleton behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: `animate={false}` still scheduled the pulse (so a
- * reduced-motion still frame moved), a provider reduced preference was
- * overruled, the block ignored the sides it was given, and the placeholder
- * painted a literal instead of the active platform's `skeleton` role.
- */
-
 import { platformTheme } from "@gpuixui/tokens";
 import { describe, expect, it } from "vitest";
 import { after, waitFor } from "../internal/interaction.js";
@@ -15,7 +6,6 @@ import { renderComponent } from "../internal/test-root.js";
 import { MotionProvider } from "../motion.js";
 import { Skeleton } from "../skeleton.js";
 
-/** The opacity the block painted on the frame just read. */
 const opacityOf = (root: ReturnType<typeof renderComponent>): unknown =>
   root.renderer.findByTestId("s")?.style.opacity;
 
@@ -49,8 +39,7 @@ describe("Skeleton", () => {
     );
 
     expect(opacityOf(pulsing)).toBe(1);
-    // The dim frame the pulse visits, not an arbitrary intermediate value: the
-    // runtime interpolates nothing on its own, so a step is the whole motion.
+
     await waitFor(() => expect(opacityOf(pulsing)).toBe(0.6));
     await waitFor(() => expect(opacityOf(pulsing)).toBe(1));
 
@@ -98,7 +87,7 @@ describe("Skeleton", () => {
 
     expect(paint(macOS)).toBe(macOS.colors.skeleton);
     expect(paint(windows)).toBe(windows.colors.skeleton);
-    // The premise: the two styles do not paint the same placeholder.
+
     expect(macOS.colors.skeleton).not.toBe(windows.colors.skeleton);
   });
 });

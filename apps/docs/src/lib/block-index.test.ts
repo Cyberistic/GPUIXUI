@@ -3,15 +3,6 @@ import { describe, expect, it } from "vitest";
 import { allBlocks } from "./block-index-data";
 import { frontmatterField, frontmatterOf } from "./frontmatter";
 
-/**
- * The all-blocks list.
- *
- * The page is generated from the block pages' frontmatter rather than a second
- * hand-kept list, so the two can only disagree if the generator stops reading a
- * page. Held here: every page on disk is a row, and every row prints the title
- * and description its own page declares.
- */
-
 const dir = new URL("../../content/docs/blocks/", import.meta.url);
 
 const pageFiles = readdirSync(dir).filter(

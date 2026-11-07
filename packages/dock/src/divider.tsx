@@ -1,28 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * The draggable, keyboard-operable divider between two panes.
- *
- * This is the one control the whole package builds on: `SplitPane` places one,
- * and `PanelGroup` and `DockLayout` place one between every adjacent pair. It
- * owns the measured runtime rules a divider must honour:
- *
- * - **pointer capture arms only on the pair** — the runtime captures the pointer
- *   for an element subscribed to both `onMouseDown` and `onMouseMove`
- *   (`pointer-capture`), so the divider declares both and keeps all of a drag's
- *   moves even 80 px outside its 6 px box (`split-pane-lifecycle`);
- * - **it is a control, not only a handle** — a `role="separator"` tab stop that
- *   declares the keyboard ring at rest, announces `aria-valuetext` (there is no
- *   `aria-valuenow` in 0.11.0), and answers the arrows and Home/End
- *   (`split-pane-lifecycle`, WCAG 2.1.1);
- * - **no `transform`** — the runtime has none (upstream issue #102), so the
- *   pressed feedback is an opacity fade of a highlight layer, timed by
- *   `@gpuixui/motion`, never a scaled or translated surface.
- *
- * The divider reports **deltas and keys**, never a size: the parent owns the
- * units (pixels for a split, fractions for a group) and the clamp, so one
- * gesture feeds a split and a dock without a second copy of the arithmetic.
- */
-
 import { useRef, useState, type ReactElement } from "react";
 import type { EventPayload, StyleDesc } from "@gpuix/react";
 import { motionTiming } from "@gpuixui/motion/timing";
@@ -32,33 +8,26 @@ import { DIVIDER_WIDTH, isDividerKey, type DividerKey } from "./logic.js";
 import { useTheme } from "./theme.js";
 
 export interface DividerProps {
-  /** `"horizontal"` lays the panes left/right (a vertical divider, X axis). */
   readonly orientation: "horizontal" | "vertical";
-  /** The size this divider announces, in the parent's units. */
+
   readonly valueText: string;
-  /** The divider's accessible name. */
+
   readonly label?: string;
   readonly disabled?: boolean;
-  /**
-   * Float over the leading pane's trailing edge instead of taking a gap: no
-   * fill, no width in the flow and no pressed highlight — AppKit's split-view
-   * seam, where the pane's own hairline is all that shows. The parent must be
-   * positioned.
-   */
+
   readonly seam?: boolean;
-  /** Stable locator for automation. */
+
   readonly testId?: string;
-  /** A press armed the capture; the parent records its starting size. */
+
   readonly onDragStart: () => void;
-  /** A captured move, as a cumulative pixel delta from the press point. */
+
   readonly onDragDelta: (delta: number) => void;
-  /** The pointer released (or left the box with no button). */
+
   readonly onDragEnd?: () => void;
-  /** A divider key; the parent decides the step and the clamp. */
+
   readonly onKey: (key: DividerKey) => void;
 }
 
-/** The draggable, keyboard-operable divider between two panes. */
 export const Divider = ({
   orientation,
   valueText,

@@ -59,29 +59,3 @@ HoverCard
 | `HoverCardContent` | `collisionPadding` | `number` | `8` |
 | `HoverCardContent` | `className` / `style` | `string` / `StyleDesc` | — |
 | `HoverCardContent` | `testId` / `children` | `string` / `PartChildren` | — |
-
-## Notes
-- The trigger is a `Button`, not an HTML anchor: the runtime has no link host, so
-  a link-shaped trigger is the `link` action (underlined text, no fill).
-- No `aria-haspopup` and no per-trigger delays; the waits belong to the card.
-- `Tab` does not open the card (a traversal moves focus without running the
-  trigger's `onFocus`); a focus the caller moves, or a press, does.
-- Focus opens the card immediately, and a `Tab` out of it closes after
-  `closeDelay` — the runtime does not say how focus arrived.
-- Escape reaches the card while focus is on its trigger or inside the card. A
-  card opened by the pointer alone, with focus elsewhere, cannot hear a window
-  Escape: 0.11.0 delivers window keys only to the application's render handler.
-- A press focuses the trigger before its click arrives, so the focus path does
-  not open the card during a press — the click is the open, and one gesture
-  cannot open and close it in the same turn.
-
-The card is placed by the popover's measured rules: the requested side is kept
-unless it has no room, the surface is pulled inside the window by
-`collisionPadding`, and its box never overhangs the frame it is drawn in. A
-leaving card stays painted for its `fast` exit and takes no presses.
-
-## Related
-
-- **Preview card** — the same idea with a longer read and a press route.
-- **Popover** — a surface the reader keeps open and acts in.
-- **Tooltip** — a one-line label with no content to travel into.

@@ -1,13 +1,3 @@
-/**
- * Holds the rules a movable tab rests on.
- *
- * The bugs these guard: a drop that ignores which half of a tab the pointer is
- * over lands on the wrong side of it, a move that leaves the source's selection
- * pointing at the tab that just left mounts a panel for a tab the strip no
- * longer holds, and a step that wraps teleports a tab from one end to the
- * other. All three read as "the tab moved" in a screenshot, so they are pinned
- * here rather than inferred from the window probe.
- */
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
 import {
@@ -24,13 +14,11 @@ import {
   type TabBox,
 } from "./tabs-drag.js";
 
-/** Two groups side by side, as the probe lays them out: 280 wide, 24 apart. */
 const groups: ReadonlyArray<GroupBox> = [
   { group: "left", x: 28, y: 100, width: 280, height: 240 },
   { group: "right", x: 332, y: 100, width: 280, height: 240 },
 ];
 
-/** The left strip's tabs, 60 wide from the group's own padding. */
 const leftTabs: ReadonlyArray<TabBox> = [
   { tab: "alpha", x: 32, width: 60 },
   { tab: "bravo", x: 96, width: 60 },
@@ -44,7 +32,6 @@ describe("groupAt", () => {
   });
 
   it("reports a miss between the groups and outside both", () => {
-    // 312 is the gap between left's right edge (308) and right's left (332).
     expect(groupAt({ x: 320, y: 200 }, groups)).toEqual(Option.none());
     expect(groupAt({ x: 100, y: 20 }, groups)).toEqual(Option.none());
     expect(groupAt({ x: 700, y: 200 }, groups)).toEqual(Option.none());

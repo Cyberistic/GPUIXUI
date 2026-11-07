@@ -1,10 +1,3 @@
-/**
- * Browser preview for the Sliding text page.
- *
- * The native value slides horizontally into a clipped box when it changes; the
- * preview clips one line and slides the current value in from the direction.
- */
-
 import { useState } from "react";
 
 const states = ["Draft", "In review", "Merged"];

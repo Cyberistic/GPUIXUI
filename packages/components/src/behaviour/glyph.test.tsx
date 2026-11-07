@@ -1,18 +1,3 @@
-/**
- * Glyph in the real GPUix renderer.
- *
- * The bugs these guard: a wall generated for a different box than the one
- * painted; a wall that reshuffles between mounts; a decorative wall of text that
- * leaks into the accessibility tree (the absence that deferred `glyph` in the
- * first place); a breath that runs one way and stops, because the runtime tweens
- * a target once; a reduced preference that keeps breathing; a field that
- * swallows the presses of the content in front of it; and a resize that keeps
- * painting the old wall.
- *
- * The motion clock is paused before the mount, so the first frame is the declared
- * initial frame rather than wherever the frame loop had got.
- */
-
 import type { TestElement } from "@gpuix/react/testing";
 import * as Arr from "effect/Array";
 import type { ReactNode } from "react";
@@ -29,7 +14,6 @@ import { glyphField } from "../glyph/logic.js";
 import { Glyph } from "../glyph.js";
 import { MotionProvider } from "../motion.js";
 
-/** One element by test id, failing rather than casting. */
 const byTestId = (
   renderer: ReturnType<typeof renderComponent>["renderer"],
   testId: string,
@@ -41,7 +25,6 @@ const byTestId = (
   return element;
 };
 
-/** The wall's painted glyphs, in paint order. */
 const glyphsOf = (
   page: ReturnType<typeof renderComponent>,
 ): ReadonlyArray<TestElement> =>
@@ -50,14 +33,12 @@ const glyphsOf = (
     (element) => element.testId?.startsWith("wall-cell-") ?? false,
   );
 
-/** Mount under a paused motion clock, then let the box measurement land. */
 const mountFrozen = (node: ReactNode): ReturnType<typeof renderComponent> => {
   const page = renderComponent(<div />);
   page.renderer.clockPause();
   page.rerender(node);
   page.renderer.flush();
-  // The wall generates from its own layout, so the glyphs arrive on the frame
-  // after the measurement.
+
   settle(page);
   settle(page);
   return page;
@@ -65,18 +46,6 @@ const mountFrozen = (node: ReactNode): ReturnType<typeof renderComponent> => {
 
 const WALL = { width: 400, height: 240 } as const;
 
-/**
- * The box this suite's per-glyph sweep fills.
- *
- * The sweep reads the painted bounds of **every** glyph through the native
- * renderer, which is one FFI tree read per cell. At the house 22px cell the
- * suite's 400 × 240 wall is 180 hosts — ~1.6 s alone, and twice over the suite's
- * 5 s budget under load (measured 5.38 s). A 220 × 140 box is the same claim
- * over a 10 × 6 grid at the same cell (60 hosts) with a few pixels of slack
- * below the last row, so the text host's line box stays inside the wall. The
- * larger walls are covered by the cases that read the painted text rather than
- * every glyph's box.
- */
 const SWEPT = { width: 220, height: 140 } as const;
 
 describe("Glyph", () => {
@@ -158,9 +127,6 @@ describe("Glyph", () => {
       />,
     );
     try {
-      // The window itself is the only node: a glyph is `role="presentation"`,
-      // which the runtime maps to no node at all, so a wall of characters is
-      // not read aloud.
       expect(Arr.map(a11yNodes(page.renderer), (node) => node.role)).toEqual([
         "window",
       ]);
@@ -218,8 +184,7 @@ describe("Glyph", () => {
     try {
       expect(page.renderer.findByTestId("wall-breath")).toBeUndefined();
       expect(glyphsOf(page).length).toBeGreaterThan(1);
-      // The wall is still painted — the preference removes the journey, not the
-      // field — and its entrance is an instant assignment.
+
       expect(byTestId(page.renderer, "wall").customProps?.motion).toMatchObject(
         {
           transition: { duration: 0 },
@@ -248,7 +213,6 @@ describe("Glyph", () => {
       const layer = byTestId(page.renderer, "wall-breath");
       const content = byTestId(page.renderer, "content");
 
-      // Paint order is tree order, so the wall is behind the content.
       expect(wall.children.indexOf(layer.id)).toBeLessThan(
         wall.children.indexOf(content.id),
       );

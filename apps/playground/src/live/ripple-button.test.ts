@@ -1,19 +1,3 @@
-/**
- * Holds the `ripple-lifecycle` fixture, the probe that paints it and the
- * section a plan reads.
- *
- * The gap this guards: the catalogue's *Ripple button* row claims four things
- * about the glass — the disc is the action's own label ink at a faint share, it
- * is a circle, it grows from the press point, and it is clipped by the control
- * and takes no pointer input — while the component's renderer suite reads the
- * layer's reported box and its declarations only. This suite keeps the wash
- * algebra, the frame arithmetic, the probe's clock discipline and the printed
- * count pointing at one another, so a probe that stopped measuring the paint
- * would fail here rather than pass there.
- *
- * `node:fs` is deliberate, as in the other live fixtures: this reads the
- * repository's own probe and prose, never a runtime path.
- */
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -47,28 +31,22 @@ const probe = read("./ripple-button-probe.tsx");
 const scenarios = read("./scenarios.tsx");
 const readme = read("../../README.md");
 
-/** The action's frame as the probe measured it on 0.11.0 here. */
 const ACTION: RippleBox = { x: 32, y: 68, ...RIPPLE_ACTION };
 
-/** The fill the action paints under the pointer, and the ink the disc mixes. */
 const FILL: Rgb = { r: 176, g: 178, b: 254 };
 const INK: Rgb = { r: 17, g: 20, b: 26 };
 
-/** The share the two measured frames carry on 0.11.0: small, then clipped. */
 const SMALL_SHARE = 0.064;
 const CLIP_SHARE = 0.0327;
 
-/** The share a frame sample carries, with `NaN` standing for "not a wash". */
 const shareOf = (observed: Rgb): number =>
   Option.getOrElse(washShare(observed, FILL, INK), () => Number.NaN);
 
-/** The probe's own steps, so a count cannot be read out of another probe. */
 const stepsOf = (): string => {
   const start = probe.indexOf("export const rippleSteps");
   return probe.slice(start);
 };
 
-/** This probe's README section, so a value printed elsewhere cannot pass. */
 const sectionOf = (): string => {
   const heading = "### `ripple-lifecycle` — measured on 0.11.0 here";
   const start = readme.indexOf(heading);
@@ -79,8 +57,6 @@ const sectionOf = (): string => {
 
 describe("the fixture", () => {
   it("puts both presses inside the action and off its centre", () => {
-    // A disc born at the element's centre (or the window's origin) has to be
-    // distinguishable from one born where the pointer landed.
     expect(RIPPLE_PRESS.first.across).toBeGreaterThan(0);
     expect(RIPPLE_PRESS.first.across).toBeLessThan(1);
     expect(RIPPLE_PRESS.first.down).toBeGreaterThan(0);
@@ -121,8 +97,7 @@ describe("the fixture", () => {
       expect(corner.x).toBeLessThan(disc.x + disc.width);
       expect(corner.y).toBeGreaterThan(disc.y);
       expect(corner.y).toBeLessThan(disc.y + disc.height);
-      // A round layer is a circle inside this box, so a corner sample has to be
-      // outside the circle: the measurement a square layer fails.
+
       expect(
         Math.hypot(corner.x - centre.x, corner.y - centre.y),
       ).toBeGreaterThan(disc.width / 2);
@@ -158,9 +133,6 @@ describe("the fixture", () => {
   });
 
   it("reads the share of the ink a frame sample carries", () => {
-    // The two measured frames, from the window: a 56.5-point disc and a
-    // 201-point one. Both samples sit on the fill-to-ink line, and the later
-    // one is fainter because the disc fades as it grows.
     const share = shareOf({ r: 166, g: 168, b: 239 });
     expect(share).toBeCloseTo(SMALL_SHARE, 2);
     expect(isWash(share)).toBe(true);
@@ -169,15 +141,13 @@ describe("the fixture", () => {
   });
 
   it("refuses a sample that is not a wash of that ink", () => {
-    // The fill itself is no wash, and the ink itself is not a faint one: a
-    // layer painted in the action's own fill or one painted solid both fail.
     expect(isWash(shareOf(FILL))).toBe(false);
     expect(isWash(shareOf(INK))).toBe(false);
-    // A second colour off the fill-to-ink line: the channels disagree.
+
     expect(
       Option.isNone(washShare({ r: 120, g: 168, b: 239 }, FILL, INK)),
     ).toBe(true);
-    // Too few channels with a span to measure: two of them are rounding.
+
     expect(
       Option.isNone(
         washShare({ r: 176, g: 179, b: 255 }, FILL, { r: 178, g: 181, b: 26 }),
@@ -209,7 +179,6 @@ describe("the probe", () => {
   });
 
   it("mounts a named action with no visible label inside the measured box", () => {
-    // A text run in the action would be a second paint to tell from the wash.
     const element = probe.slice(
       probe.indexOf("<RippleButton"),
       probe.indexOf("/>", probe.indexOf("<RippleButton")),
@@ -219,8 +188,6 @@ describe("the probe", () => {
   });
 
   it("reads the fill from the frame under the pointer, not from the palette", () => {
-    // A hovered filled action repaints in the theme's `filledHover` role, so the
-    // wash has to be measured over the fill the glass actually shows.
     const steps = stepsOf();
     expect(steps).toContain("ctx.host.hoverAt(RIPPLE_IDS.action");
     expect(steps).toContain("const fill = yield* sample(");
@@ -239,8 +206,7 @@ describe("the probe", () => {
     );
     expect(pauses).toBe(2);
     expect(resumes).toBe(2);
-    // The first pause comes before the first press, and the disc is captured
-    // and sampled before the clock is resumed: the wash is a frozen progress.
+
     expect(steps.indexOf("yield* pauseClock()")).toBeLessThan(
       steps.indexOf("yield* pressAt("),
     );
@@ -255,8 +221,7 @@ describe("the probe", () => {
       Arr.fromIterable(stepsOf().matchAll(/ctx\.expect\w+\(/g)),
     );
     expect(sites).toBeGreaterThan(0);
-    // The printed count is the run's own (the closures assert per call), so it
-    // can only floor a probe: a site added without a count fails here.
+
     expect(RIPPLE_CHECKS).toBe(51);
     expect(RIPPLE_CHECKS).toBeGreaterThanOrEqual(sites);
   });
@@ -290,8 +255,6 @@ describe("the record", () => {
   });
 
   it("cites the probes the paint rests on", () => {
-    // The wash's fill is the hover role, and the frame's clock is the renderer's:
-    // a section that loses either citation stops saying why it measured them.
     expect(sectionOf()).toContain("`filled-action-dim`");
     expect(sectionOf()).toContain("`motion-geometry`");
   });

@@ -1,5 +1,3 @@
-/** The vault's rules: how a body splits into links, and what links to a note. */
-
 import * as Arr from "effect/Array";
 import type { VaultNote } from "./data.js";
 
@@ -7,7 +5,6 @@ export type Span =
   | { readonly _tag: "Text"; readonly text: string }
   | { readonly _tag: "Link"; readonly id: string };
 
-/** A paragraph, in order, with each `[[id]]` as a link span. */
 export const spans = (paragraph: string): ReadonlyArray<Span> =>
   Arr.flatMap(
     paragraph.split(/(\[\[[a-z-]+\]\])/),

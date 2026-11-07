@@ -42,8 +42,6 @@ export const Route = createRootRoute({
 });
 
 function RootComponent() {
-  // A deploy replaces every hashed chunk; a tab that loaded the old build asks
-  // for a file that is gone, and one reload is what puts it right.
   useEffect(watchPreloadErrors, []);
   return (
     <html lang="en" suppressHydrationWarning>

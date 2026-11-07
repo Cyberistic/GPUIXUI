@@ -1,11 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Collapsible example: advanced run options inside a card.
- *
- * Closed by default, so the common path is two fields. The body unmounts while
- * closed — that is the component's contract, not an animation shortcut.
- */
-
 import { Card, CardDescription, CardHeader, CardTitle } from "../src/card.js";
 import {
   Collapsible,
@@ -14,7 +7,6 @@ import {
 } from "../src/collapsible.js";
 import { textStyle, useTheme } from "../src/internal/theme.js";
 
-/** One option line: label on the left, value on the right. */
 const Option = ({
   label,
   value,
@@ -49,7 +41,6 @@ const Option = ({
   );
 };
 
-/** A run dialog with its advanced options collapsed. */
 export const CollapsibleExample = () => {
   const theme = useTheme();
   return (

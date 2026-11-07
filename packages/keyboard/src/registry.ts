@@ -9,20 +9,17 @@ import { decodeGpuixEvent } from "./decode.js";
 import { resolve, type Binding, type Keymap, type Scope } from "./keymap.js";
 import { toTanstackPlatform, type Platform } from "./platform.js";
 
-/** One command: a named action bound to a hotkey in a scope. */
 export interface Command {
   readonly id: string;
   readonly title: string;
   readonly scope: Scope;
-  /** The chord (`"mod+s"`) or sequence (`["g", "g"]`) that triggers it. */
+
   readonly hotkey: Binding;
-  /** Runs at the caller's boundary; the registry only resolves, never runs. */
+
   readonly handler: Effect.Effect<void>;
 }
 
-/** What the registry resolves. */
 export interface CommandRegistryService {
-  /** The command this event resolves to under the scope stack, or `None`. */
   readonly resolve: (
     event: KeyEvent,
     scopes: ReadonlyArray<Scope>,

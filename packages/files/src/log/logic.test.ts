@@ -1,16 +1,3 @@
-/**
- * The log line grammar and the filter the viewer runs over it.
- *
- * The bugs these guard:
- *
- * - a line without a level token being dropped or chopped, instead of kept as
- *   the whole message at the default level;
- * - a word that merely *starts* with a level name (`debugging`) being read as
- *   that level and eating the rest of the word;
- * - the `warning` alias not mapping to `warn`, so a common log spelling is
- *   silently re-leveled.
- */
-
 import * as HashSet from "effect/HashSet";
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";

@@ -1,23 +1,3 @@
-/**
- * The props types a package's source declares, read from the repository.
- *
- * Two page contracts hold a page's `## API` tables to the source: the
- * primitives' suite and the components' suite. Both resolved an interface's own
- * fields through `extends`, an alias's intersection, a parenthesised branch and
- * an `Omit` with a reader of their own, so one fix landed in one copy and the
- * other drifted. This module is that reader, once.
- *
- * It is a **test-time repository read**: `node:fs` directly, no Effect platform
- * layer, because both callers are plain vitest cases and a guard that needed a
- * runtime provided could stop being the check that any host can run. It never
- * touches the GPUix binding, so it stays in the platform-free half of this
- * package.
- *
- * The reader is deliberately a shape reader, not a TypeScript program: a props
- * type is an interface's fields, its parents, or an alias body, and a name no
- * root declares is the runtime's own surface (`Props`, `ChildProps`, the
- * floating helpers) — not this repository's to document.
- */
 import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import * as Arr from "effect/Array";
@@ -25,61 +5,39 @@ import * as Option from "effect/Option";
 import * as Result from "effect/Result";
 import * as Str from "effect/String";
 
-/**
- * One source tree to read, and the package name a declaration is filed under.
- *
- * The name is not displayed: it is the preference key, so a type both packages
- * declare (`FieldProps`) resolves first in the package that named it.
- */
 export interface PropsRoot {
   readonly pkg: string;
   readonly dir: URL;
 }
 
-/** A props type as its source declares it: fields, parents, or an alias body. */
 export interface DeclaredType {
-  /** The file that declares it, relative to its root — `field.tsx`, `list/row.ts`. */
   readonly file: string;
-  /** The root this declaration came from, so its own parents resolve there first. */
+
   readonly pkg: string;
   readonly props: ReadonlyArray<string>;
   readonly parents: ReadonlyArray<string>;
-  /** An alias's right-hand side, when the declaration is a `type`. */
+
   readonly alias?: string;
 }
 
-/** Every declaration the roots carry: by type name, then by declaring package. */
 export interface PropsIndex {
-  /** The roots in the order they were indexed, the fallback resolution order. */
   readonly roots: ReadonlyArray<string>;
   readonly declarations: ReadonlyMap<string, ReadonlyMap<string, DeclaredType>>;
 }
 
-/** An interface header, however its `extends` list is wrapped. */
 const INTERFACE_HEADER =
   /(?:^|\n)(?:export\s+)?interface\s+(\w+)(?:<[^>]*>)?(?:\s+extends\s+([^{]+))?\s*\{/g;
 
-/** A type alias header; its body is taken up to the terminating `;`. */
 const TYPE_ALIAS = /(?:^|\n)(?:export\s+)?type\s+(\w+)(?:<[^>]*>)?\s*=\s*/g;
 
-/** `readonly name?:` and `readonly "aria-id"?:`, the shape every prop is written in. */
 const PROP_SIGNATURE =
   /(?:readonly\s+|^[ \t]*)(?:"([^"]+)"|([A-Za-z_][\w-]*))\s*\??:/gm;
 
-/** The prop names one object type's body declares. */
 const signatureNames = (body: string): ReadonlyArray<string> =>
   Arr.filterMap(Arr.fromIterable(body.matchAll(PROP_SIGNATURE)), (match) =>
     Result.succeed(match[1] ?? match[2] ?? ""),
   );
 
-/**
- * The text between a `{` and its matching `}`, comments and all.
- *
- * A bracket scan is the one place an index walk says more than a combinator
- * can: it stops at the first balanced close instead of visiting the rest of the
- * file. A prop's doc comment contains braces of its own, which a character
- * class cannot track.
- */
 const balancedBody = (source: string, open: number): Option.Option<string> => {
   let depth = 0;
   for (let index = open; index < source.length; index += 1) {
@@ -92,13 +50,6 @@ const balancedBody = (source: string, open: number): Option.Option<string> => {
   return Option.none();
 };
 
-/**
- * An alias body, up to the `;` that ends it at its own level.
- *
- * Only bracketing is tracked: a function type's `=>` would look like the close
- * of a generic to a `<>` counter, and a `;` inside an inline object is behind a
- * `{`. This is the same first-balanced-close scan as {@link balancedBody}.
- */
 const aliasBody = (source: string, start: number): Option.Option<string> => {
   let depth = 0;
   for (let index = start; index < source.length; index += 1) {
@@ -111,7 +62,6 @@ const aliasBody = (source: string, start: number): Option.Option<string> => {
   return Option.none();
 };
 
-/** The members of an intersection or union, split only at its own level. */
 const typeParts = (body: string): ReadonlyArray<string> => {
   const opened = "{([";
   const closed = "})]";
@@ -136,14 +86,6 @@ const typeParts = (body: string): ReadonlyArray<string> => {
   );
 };
 
-/**
- * The interfaces an `extends` clause names, split at its own commas.
- *
- * A generic's comma belongs to the generic — `Omit<InputProps, "style">` is one
- * parent, not two — so an unclosed `<` keeps the split waiting. Splitting on
- * commas alone read the cross-package parent as `Omit<InputProps` plus a stray
- * `"style">`, so a field's inherited surface resolved to nothing.
- */
 const parentParts = (clause: string): ReadonlyArray<string> => {
   const opened = "{([";
   const closed = "})]";
@@ -189,7 +131,6 @@ const parentParts = (clause: string): ReadonlyArray<string> => {
   );
 };
 
-/** Every source file under one root whose declarations a page's props read from. */
 const sourceFiles = (dir: URL): ReadonlyArray<string> =>
   Arr.filter(
     readdirSync(fileURLToPath(dir), {
@@ -202,17 +143,9 @@ const sourceFiles = (dir: URL): ReadonlyArray<string> =>
       !Str.endsWith(".d.ts")(name),
   );
 
-/** One source file's text, relative to its root. */
 const readSource = (dir: URL, file: string): string =>
   readFileSync(fileURLToPath(new URL(file, dir)), "utf8");
 
-/**
- * Indexes every props declaration the roots carry, by name and package.
- *
- * A name two roots both declare keeps both. A later declaration of one name in
- * one package replaces the earlier one, the rule a duplicate interface already
- * breaks at compile time.
- */
 export const indexProps = (roots: ReadonlyArray<PropsRoot>): PropsIndex => {
   const declarations = new Map<string, Map<string, DeclaredType>>();
   const remember = (name: string, declared: DeclaredType): void => {
@@ -258,11 +191,9 @@ export const indexProps = (roots: ReadonlyArray<PropsRoot>): PropsIndex => {
   return { roots: Arr.map(roots, (root) => root.pkg), declarations };
 };
 
-/** Every type name the index carries, in the order its roots declared them. */
 export const typeNames = (index: PropsIndex): ReadonlyArray<string> =>
   Arr.fromIterable(index.declarations.keys());
 
-/** The declaration `pkg` makes for `name`, when it makes one. */
 export const declarationIn = (
   name: string,
   index: PropsIndex,
@@ -270,13 +201,6 @@ export const declarationIn = (
 ): Option.Option<DeclaredType> =>
   Option.fromNullishOr(index.declarations.get(name)?.get(pkg));
 
-/**
- * The declaration a name resolves to, from the package that named it out.
- *
- * `from` is tried first, then the roots in the order they were indexed, so a
- * cross-package parent resolves inside the package that wrote it and a shared
- * name resolves in the package whose page is being held.
- */
 const declarationOf = (
   name: string,
   index: PropsIndex,
@@ -296,15 +220,6 @@ const declarationOf = (
   );
 };
 
-/**
- * Every prop a type carries, through `extends`, an alias intersection, a
- * parenthesised branch of a union, and an `Omit`.
- *
- * A name no root declares is the runtime's own surface (`Props` and the
- * floating helpers): its properties are not this repository's to document, so
- * it contributes nothing. `seen` keeps a cycle from recursing. The result is
- * not deduplicated — a caller that needs names as a set builds one.
- */
 export const propsOf = (
   name: string,
   index: PropsIndex,
@@ -335,7 +250,6 @@ const propsIn = (
   });
 };
 
-/** One alias member or parent, through a grouping parenthesis, an object, or an `Omit`. */
 const resolvePart = (
   part: string,
   index: PropsIndex,

@@ -1,12 +1,3 @@
-/**
- * The film says the library works with these packages. Each runs here, under a
- * real GPUix tree, so the claim is not taken on trust. A package that stops
- * working fails its case by name, and its chip comes out of the film.
- *
- * Effect, TanStack Table, Virtual, Hotkeys and Form are the library's own
- * dependencies and have their suites in `packages/`. react-doctor is a CLI that
- * reads source; it is run over `examples/blocks` by hand (plan 069).
- */
 import { createTestRoot } from "@gpuix/react/testing";
 import { EventType } from "@tanstack/ai";
 import { stream, useChat } from "@tanstack/ai-react";

@@ -1,17 +1,3 @@
-/**
- * Holds the `empty-error-states-lifecycle` fixture, the probe that paints it and
- * the section a reader plans from.
- *
- * The bug this guards: MISSION lists **empty and error states** among the
- * interactions a real runtime has to verify, and no probe drove either — the
- * shipped `EmptyState` had only been mounted, and the panel a list falls back to
- * on a failed load had never painted an error surface or recovered from one. The
- * probe settles both in a window; this suite keeps the fixture, the states it
- * moves through and the words the README prints pointing at one another.
- *
- * `node:fs` is deliberate, as in the other live fixtures: this reads the
- * repository's own probe and prose, never a runtime path.
- */
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
@@ -45,7 +31,6 @@ const readme = read("../../README.md");
 
 const theme = getTheme("dark");
 
-/** This probe's own README section, so a value printed elsewhere cannot pass. */
 const sectionOf = (): string => {
   const heading =
     "### `empty-error-states-lifecycle` — measured on 0.11.0 here";
@@ -60,7 +45,7 @@ describe("the panel's states", () => {
     expect(EMPTY_ERROR_STAGES).toEqual(["error", "empty", "ready"]);
     expect(afterAction("error")).toBe("empty");
     expect(afterAction("empty")).toBe("ready");
-    // A third press has nowhere to go: the panel is already showing its record.
+
     expect(afterAction("ready")).toBe("ready");
   });
 
@@ -98,8 +83,7 @@ describe("the roles the probe reads", () => {
     );
     expect(actionPaint(theme)).toBe(theme.colors.primary);
     expect(contentPaint(theme)).toBe(theme.colors.success);
-    // The four surfaces are different paints, so a sample cannot pass by
-    // matching the one behind it.
+
     const painted = [
       stagePaint(theme),
       errorSurfacePaint(theme),
@@ -110,8 +94,6 @@ describe("the roles the probe reads", () => {
   });
 
   it("samples inside the padding each state owns", () => {
-    // The empty state's root reserves a 32-point padding; the probe reads at 8,
-    // which is inside the panel and clear of its words.
     expect(EMPTY_INSET).toBeLessThan(32);
     expect(PAINT_INSET).toBeLessThan(EMPTY_ERROR_WIDTH);
     expect(inside({ x: 100, y: 50 }, PAINT_INSET, PAINT_INSET)).toEqual({
@@ -128,7 +110,7 @@ describe("the probe", () => {
     expect(probe).toContain("<EmptyState");
     expect(probe).toContain('from "@gpuixui/primitives"');
     expect(probe).toContain('variant="primary"');
-    // Both actions advance the same state machine, and the probe presses both.
+
     expect(probe.match(/onClick=\{advance\}/g)?.length).toBe(2);
     expect(probe).toContain("ctx.host.click(EMPTY_ERROR_IDS.retry)");
     expect(probe).toContain("ctx.host.click(EMPTY_ERROR_IDS.newProject)");
@@ -158,8 +140,7 @@ describe("the probe", () => {
     expect(probe).toContain(
       "the empty state unpaints when a record replaces it",
     );
-    // The count in the fixture is the floor a step can add to; an assertion
-    // planted without a matching count fails here.
+
     const sites = Arr.length(
       Arr.fromIterable(probe.matchAll(/ctx\.expect\w+\(/g)),
     );
@@ -184,8 +165,7 @@ describe("the registry and the README", () => {
 
   it("documents the measurement under the version it was made on", () => {
     const section = sectionOf();
-    // Scoped to this section: another probe's "33 checks" must not satisfy the
-    // count a reader of *this* measurement is told.
+
     expect(section).toContain(`${EMPTY_ERROR_CHECKS} checks`);
     expect(section).toContain("`src/live/empty-error.ts`");
     expect(section).toContain("empty-error.test.ts");

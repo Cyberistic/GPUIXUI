@@ -1,33 +1,3 @@
-/**
- * The `media-player-lifecycle` probe: the **shipped** `MediaPlayer` painted in
- * a real window.
- *
- * `media-frame-lifecycle` measured the route a clip can take on this runtime —
- * an image buffer the app re-pushes, an interval the app owns and a transport
- * the app draws. That route is the *composition*, and the library now ships the
- * wrapper: `@gpuixui/media`'s `MediaPlayer` owns the clock, the transport, the
- * fill and Mux's chrome, and the caller supplies the frames. The package proved
- * its own rules against the offscreen renderer; nothing had ever painted the
- * shipped component in a window, so every claim the package makes about the
- * **transport** — the clock's format, the played and buffered shares, the seek's
- * keys, the disabled refusal — was held only by the package's own suite.
- *
- * The probe gives the shipped player the same clip the composition probe
- * measures and reads four things only a window can answer:
- *
- * 1. **The picture.** The frame the playhead names is the frame the picture
- *    paints — a pixel count inside the picture's own box, not a state read.
- * 2. **The timeline.** The played fill and the buffered range are the
- *    package's shares of the frame's own width, read as painted boxes rather
- *    than as state.
- * 3. **The transport.** The clock, the fill's share and the seek's keys, each
- *    read against the **package's own** arithmetic
- *    (`@gpuixui/media/player/logic`), so the window is measured against the
- *    rule the component ships rather than a copy of it. The pointer scrub is
- *    the same share read from the band a reader presses.
- * 4. **The refusal.** A disabled player keeps its picture and refuses every
- *    press and every key.
- */
 import { Duration, Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -66,24 +36,14 @@ import {
 } from "./media-player.js";
 import { settleUntil } from "./settle.js";
 
-/** The captures a reader can look at, one per painted state. */
 const REST = "player-rest";
 const SOUGHT = "player-sought";
 const DISABLED = "player-disabled";
 
-/** Long enough for a state change to reach the frame before it is captured. */
 const SETTLE = Duration.millis(140);
 
-/** How many re-reads a probe spends before it reports the last one. */
 const ATTEMPTS = 120;
 
-/**
- * The page: the shipped player, and what it reports to the app.
- *
- * The reports are the component's own contract with a caller — the playhead it
- * moved to and whether it is running — so the page records them and the probe
- * reads the record back.
- */
 const MediaPlayerPage = (): ReactNode => {
   const theme = useTheme();
   const [report, setReport] = useState<PlayerReport>(PLAYER_REST);
@@ -146,7 +106,6 @@ const MediaPlayerPage = (): ReactNode => {
   );
 };
 
-/** The probe's window: one page, laid out at the window's own size. */
 export const MediaPlayerProbe = (): ReactNode => {
   const window = useWindowSize();
   const theme = useTheme();
@@ -163,20 +122,17 @@ export const MediaPlayerProbe = (): ReactNode => {
   );
 };
 
-/** One painted box, with a failure that names the locator. */
 const boxOf = (ctx: Smoke.AsyncSmokeContext, testId: string) =>
   Effect.flatMap(ctx.host.bounds(testId), (bounds) =>
     ctx.expectSome(`the ${testId} paints a box`, Option.fromNullishOr(bounds)),
   );
 
-/** Captures the window and decodes it. */
 const frameOf = (ctx: Smoke.AsyncSmokeContext, name: string) =>
   Effect.gen(function* () {
     yield* ctx.host.capture(name);
     return yield* ctx.host.pixels(name);
   });
 
-/** The capture's device scale, which the boxes are counted in. */
 const scaleOf = (ctx: Smoke.AsyncSmokeContext, frame: Pixels.Pixels) =>
   Effect.gen(function* () {
     const size = yield* ctx.host.windowSize();
@@ -186,7 +142,6 @@ const scaleOf = (ctx: Smoke.AsyncSmokeContext, frame: Pixels.Pixels) =>
     );
   });
 
-/** How many pixels of `hex` paint inside `box`. */
 const countIn = (
   ctx: Smoke.AsyncSmokeContext,
   frame: Pixels.Pixels,
@@ -199,7 +154,6 @@ const countIn = (
     countPaint(frame, box, scale, hex),
   );
 
-/** The report a readout names, as a failed check rather than a thrown one. */
 const reportIn = (ctx: Smoke.AsyncSmokeContext, readout: string) =>
   ctx.expectSome("the readout names a report", playerReportOf(readout));
 
@@ -209,7 +163,6 @@ export const mediaPlayerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.waitFor(PLAYER_IDS.controls);
     yield* ctx.host.waitFor(PLAYER_IDS.readout);
 
-    // ---- the shipped player at rest ----
     const poster = yield* boxOf(ctx, PLAYER_IDS.poster);
     yield* ctx.expectNear(
       "the shipped picture paints the player's own width",
@@ -252,9 +205,6 @@ export const mediaPlayerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // ---- the picture, at rest ----
-    // The bar fades after its idle window, and the scrim is part of the chrome:
-    // wait it out so the frame is counted where it is not covered.
     yield* Effect.sleep(Duration.millis(PLAYER_IDLE_MS * 2));
     const rest = yield* frameOf(ctx, REST);
     const scale = yield* scaleOf(ctx, rest);
@@ -275,7 +225,6 @@ export const mediaPlayerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       0,
     );
 
-    // ---- the transport ----
     yield* ctx.host.click(PLAYER_IDS.play);
     const running = yield* settleUntil(
       ctx.host.text(PLAYER_IDS.readout),
@@ -304,7 +253,6 @@ export const mediaPlayerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // Pause: the clock holds, so the label and the report agree exactly.
     yield* ctx.host.click(PLAYER_IDS.playBar);
     const paused = yield* settleUntil(
       ctx.host.text(PLAYER_IDS.readout),
@@ -333,7 +281,6 @@ export const mediaPlayerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // ---- the transport's keys ----
     yield* ctx.host.focusElement(PLAYER_IDS.trackHit);
     yield* ctx.host.key("end");
     const ended = yield* settleUntil(
@@ -390,7 +337,6 @@ export const mediaPlayerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // ---- the picture, after the seek ----
     const soughtFrame = yield* frameOf(ctx, SOUGHT);
     yield* ctx.expectNear(
       "the seek paints the frame the playhead landed on",
@@ -410,16 +356,13 @@ export const mediaPlayerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       0,
     );
 
-    // ---- the pointer scrub ----
     yield* ctx.host.key("home");
     yield* settleUntil(
       ctx.host.text(PLAYER_IDS.time),
       (text) => text === timeLabel(0, PLAYER_CLIP_MS),
       ATTEMPTS,
     );
-    // The band is the clip's whole length, so a press's share of its width is
-    // its share of the clip. The rail inside the band is pointer-transparent,
-    // so the registered band is the element that hears the press.
+
     yield* ctx.host.drag(PLAYER_IDS.trackHit, 0, 0, {
       offset: { x: PLAYER_SCRUB_OFFSET, y: 0 },
       steps: 1,
@@ -475,8 +418,6 @@ export const mediaPlayerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // The release ended the gesture: a pointer that rests on the band reports
-    // nothing, so a scrub cannot stay armed on the first hover.
     const released = yield* ctx.host.text(PLAYER_IDS.readout);
     yield* ctx.host.hover(PLAYER_IDS.trackHit);
     yield* Effect.sleep(SETTLE);
@@ -486,7 +427,6 @@ export const mediaPlayerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       released,
     );
 
-    // ---- a disabled player refuses the transport, and keeps its picture ----
     yield* ctx.host.click(PLAYER_IDS.disable);
     yield* settleUntil(
       ctx.host.text(PLAYER_IDS.disable),

@@ -2,23 +2,6 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { componentSources } from "../components/docs/sources";
 
-/**
- * The "Component source" accordion, held to the registry it reads.
- *
- * A page names a key into `componentSources`, and MDX does not typecheck that
- * prop: the Dropdown menu page passed `dropdown-menu-demo`, a demo key rather
- * than a source key, so the accordion under Installation rendered a code block
- * with no code — the one part of a page that shows the reader the shipping
- * implementation was empty, and the build stayed green.
- *
- * Three things have to agree: the key a page names is registered, the file the
- * page labels the accordion with is the file the registry imports, and the file
- * exists in the workspace. The registry is also read from the other side, so a
- * key no page uses is not shipped dead.
- *
- * `node:fs` is the test's own read of checked-in files, not runtime I/O.
- */
-
 const docsDir = new URL("../../content/docs/components/", import.meta.url);
 const repo = new URL("../../../../", import.meta.url);
 const sourceRegistry = new URL(
@@ -26,10 +9,8 @@ const sourceRegistry = new URL(
   import.meta.url,
 );
 
-/** The registry keyed by plain strings, so a page's name needs no assertion. */
 const registry: Readonly<Record<string, string>> = componentSources;
 
-/** Every curated page that shows a component's source. */
 const mentions = (): ReadonlyArray<{
   readonly page: string;
   readonly name: string;
@@ -50,7 +31,6 @@ const mentions = (): ReadonlyArray<{
       }),
     );
 
-/** The registry as `key → repository-relative path`, read from its imports. */
 const registryPaths = (): ReadonlyMap<string, string> => {
   const body = readFileSync(sourceRegistry, "utf8");
   return new Map(
@@ -58,8 +38,7 @@ const registryPaths = (): ReadonlyMap<string, string> => {
       (match) => {
         const [key, specifier] = [match[1], match[2]];
         if (key === undefined || specifier === undefined) return [];
-        // A registry import is relative to the registry file itself, so the
-        // module URL resolves it; the `?raw` query is not part of the path.
+
         const resolved = new URL(specifier, sourceRegistry);
         return [[key, resolved.pathname.slice(repo.pathname.length)] as const];
       },
@@ -73,8 +52,7 @@ describe("the component source accordions", () => {
 
     expect(paths.size).toBe(Object.keys(componentSources).length);
     expect(paths.size).toBeGreaterThanOrEqual(5);
-    // An `?raw` import that resolves to nothing would be an empty accordion
-    // too, so the content is read as well as the key.
+
     expect(
       Object.entries(componentSources)
         .filter(([, source]) => source.trim().length === 0)
@@ -91,11 +69,6 @@ describe("the component source accordions", () => {
   });
 
   it("label the file the registry actually imports", () => {
-    // Compare the text the accordion prints with the file the page labels,
-    // rather than the import's variable name: the registry's keys are not
-    // always identifiers (`switch` is reserved) and an entry may rename its
-    // import (`switch: switchSource`). Content equality is the property a
-    // reader relies on: the block under the label is that file.
     const mismatched = mentions().flatMap(({ page, name, file }) => {
       const registered = registry[name];
       const printed = readFileSync(new URL(file, repo), "utf8");

@@ -1,13 +1,3 @@
-/**
- * Badge behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: a variant that does not tint the pill; a status variant
- * painted from a constant rather than the theme (both themes are asserted);
- * `outline` filling instead of bordering; and the two sizes collapsing to one
- * height. Expectations are built from the theme, so a changed token moves the
- * assertion with it.
- */
-
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { contrastFloorsFor, contrastRatio } from "@gpuixui/tokens";
@@ -25,12 +15,9 @@ import {
   type ComponentTestRoot,
 } from "../internal/test-root.js";
 
-/** The height the renderer measured for the badge, `None` when it is missing. */
 const heightOf = (root: ComponentTestRoot): Option.Option<number> =>
   Option.map(sizeOf(root, "badge"), ({ height }) => height);
 
-/** The style the tree painted for `testId`; `{}` when the element is missing, so
- *  a vanished part fails the assertion rather than throwing. */
 const styleOf = (
   root: ComponentTestRoot,
   testId = "badge",
@@ -43,9 +30,6 @@ const styleOf = (
     () => ({}),
   );
 
-/** The pill height a size adds: its leading plus the `py-0.5` padding. `sm`
- *  uses `text-xs` (16px leading); `md` adopts `text-sm` (20px leading) — the
- *  fixed metric, not the theme's off-grid `label` role (ADR 0006). */
 const heightFor = (theme: Theme, size: BadgeSize): number =>
   (size === "sm" ? 16 : 20) + theme.spacing["2xs"] * 2;
 
@@ -74,7 +58,7 @@ describe("Badge", () => {
     primary.unmount();
 
     const outline = renderComponent(<Badge testId="badge" variant="outline" />);
-    // `toMatchObject` cannot assert an absent key, so the fill is checked apart.
+
     expect(styleOf(outline).backgroundColor).toBeUndefined();
     expect(styleOf(outline)).toMatchObject({
       color: darkTheme.colors.mutedForeground,
@@ -144,10 +128,6 @@ describe("Badge", () => {
   });
 
   it("keeps the pill out of the pointer, and lets a consumer opt back in", () => {
-    // The bug this guards: a badge paints a fill, and a filled child is the
-    // boundary the hit test stops counting at, so the example's trailing badge
-    // swallowed the press its row never heard (`list-row-press` measured
-    // `selected=none`; the same badge with `pointerEvents: "none"` selects).
     Arr.forEach(["dark", "light"] as const, (mode) => {
       const page = renderComponent(
         <List testId="list" selectionMode="single">
@@ -181,12 +161,6 @@ describe("Badge", () => {
   });
 
   it("paints the documented defaults for a stored variant and size it does not ship", () => {
-    // The bugs these guard: `BADGE_VARIANTS[variant]` and `BADGE_SIZES[size]`
-    // read the stored name straight off the table. A record saved under a
-    // renamed variant (`"critical"`), or a size this release dropped, answered
-    // `undefined`, so the pill painted no ink role and no fill at all — an
-    // unfilled label the page cannot read — at the runtime's own type size.
-    // The names arrive from a store, so they are what a decoder can hand over.
     const badge = renderComponent(
       // @ts-expect-error a stored name is not the union's literal
       <Badge testId="badge" variant="critical" size="xs">
@@ -206,8 +180,6 @@ describe("Badge", () => {
   });
 
   it("keeps a shipped variant and size when it was stored as one", () => {
-    // The negative control: the guard must not flatten every pill to its
-    // default. `primary`/`sm` still paint their own roles and type step.
     const badge = renderComponent(
       <Badge testId="badge" variant="primary" size="sm">
         Active
@@ -249,11 +221,6 @@ describe("Badge", () => {
   });
 
   it("draws an outline badge's edge on the wash its row wears", () => {
-    // The bug this guards: `outline` drew its edge in the decorative `border`
-    // role, which on a row's own `accent`/`selected` wash is the wash itself
-    // (~1.00:1) — a badge with a boundary at rest and none the moment its row
-    // was hovered or chosen. The list's `trailing` slot is where a status badge
-    // lives, so the boundary is the whole pill there.
     Arr.forEach(
       [
         ["dark", darkTheme],
@@ -282,8 +249,6 @@ describe("Badge", () => {
             page.renderer.findByTestId("badge")?.style.borderColor,
           );
 
-          // The two washes the row wears, read from the painter: the hover tint
-          // it declares and the fill it paints once chosen.
           hoverCentreOf(page, "row");
           expect(page.renderer.findByTestId("row")?.style.hover).toMatchObject({
             backgroundColor: theme.colors.accent,
@@ -296,16 +261,10 @@ describe("Badge", () => {
           expect(edge).toBe(theme.colors.borderStrong);
 
           Arr.forEach([theme.colors.accent, theme.colors.selected], (fill) => {
-            // The edge the badge paints clears the boundary floor on the strips
-            // its row can wear.
             expect(contrastRatio(edge, fill) ?? 0).toBeGreaterThanOrEqual(
               contrastFloorsFor(theme).boundary,
             );
-            // And the role it used to paint is the premise: it cannot be the
-            // edge of anything, because it does not clear the 3:1 a control's
-            // boundary needs — the pill would be its own fill on the wash. The
-            // measured role is a divider, and a palette that moves it a step
-            // still leaves it nowhere near a boundary.
+
             expect(contrastRatio(theme.colors.border, fill) ?? 0).toBeLessThan(
               contrastFloorsFor(theme).boundary,
             );

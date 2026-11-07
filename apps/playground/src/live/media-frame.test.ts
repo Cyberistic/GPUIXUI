@@ -1,19 +1,3 @@
-/**
- * Holds the `media-frame-lifecycle` fixture, the probe that paints it and the
- * section a plan reads.
- *
- * The gap this guards: Tier 5's *Video / audio player + waveform* row says
- * playback "needs a platform surface — **unverified**", and no probe had painted
- * what a clip can be built from. The answer has two halves that can drift apart
- * — the JSX runtime declares no media element, and the composition a player
- * therefore needs is an image buffer re-pushed on the app's own clock — so this
- * suite holds the element set the absence claim rests on, the clip's arithmetic,
- * the probe's wiring and the prose that prints it.
- *
- * `node:fs` is deliberate, as in the other live fixtures: this reads the
- * repository's own probe, the installed runtime's typings and the prose, never a
- * runtime path.
- */
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -51,16 +35,13 @@ const probe = read("./media-frame-probe.tsx");
 const scenarios = read("./scenarios.tsx");
 const readme = read("../../README.md");
 
-/** The JSX runtime's own element list: the absence claim reads this file. */
 const runtimeTypings = read("../../node_modules/@gpuix/react/jsx-runtime.d.ts");
 
-/** The probe's own steps, so a count cannot be read out of another probe. */
 const stepsOf = (): string => {
   const start = probe.indexOf("export const mediaFrameSteps");
   return start === -1 ? "" : probe.slice(start);
 };
 
-/** This probe's README section, so a value printed elsewhere cannot pass. */
 const sectionOf = (): string => {
   const heading = "### `media-frame-lifecycle` — measured on 0.11.0 here";
   const start = readme.indexOf(heading);
@@ -71,8 +52,6 @@ const sectionOf = (): string => {
 
 describe("the runtime's element list", () => {
   it("declares no media host element", () => {
-    // The absence, read from the typings the app compiles against: the
-    // intrinsic set is the whole of what a view can mount.
     const declared = [...runtimeTypings.matchAll(/^\s{4}"?([a-z-]+)"?:/gm)];
     const names = Arr.map(declared, (match) => match[1] ?? "");
     expect(names).toEqual([
@@ -113,7 +92,7 @@ describe("the clip's arithmetic", () => {
     expect(timeLabel(0)).toBe("0:00 / 0:04");
     expect(timeLabel(3 * MEDIA_SEEK_STEP_MS)).toBe("0:03 / 0:04");
     expect(timeLabel(MEDIA_CLIP_MS)).toBe("0:04 / 0:04");
-    // A clock is never asked for a negative position.
+
     expect(formatTime(-10)).toBe("0:00");
   });
 
@@ -121,7 +100,7 @@ describe("the clip's arithmetic", () => {
     expect(fillWidth(0)).toBe(0);
     expect(fillWidth(MEDIA_CLIP_MS)).toBe(MEDIA_TRACK.width);
     expect(fillWidth(3 * MEDIA_SEEK_STEP_MS)).toBe((MEDIA_TRACK.width * 3) / 4);
-    // Clamped: a playhead past the end is a full track, not a longer one.
+
     expect(fillWidth(MEDIA_CLIP_MS * 2)).toBe(MEDIA_TRACK.width);
     expect(fillWidth(MEDIA_CLIP_MS, 80)).toBe(80);
   });
@@ -134,7 +113,7 @@ describe("the clip's arithmetic", () => {
     expect(frameIndex(MEDIA_CLIP_MS)).toBe(MEDIA_FRAMES.length - 1);
     expect(frameHex(0)).toBe(frameHex(MEDIA_TICK_MS));
     expect(frameHex(3 * MEDIA_SEEK_STEP_MS)).not.toBe(frameHex(0));
-    // Every frame is its own colour, or a seek would be invisible.
+
     const channels = Arr.map(
       MEDIA_FRAMES,
       (colour) => `${colour.r},${colour.g},${colour.b}`,
@@ -145,7 +124,7 @@ describe("the clip's arithmetic", () => {
   it("hands the runtime a full straight-RGBA buffer per frame", () => {
     const buffer = framePixels(frameColour(2 * MEDIA_SEEK_STEP_MS));
     expect(buffer.length).toBe(MEDIA_BUFFER.width * MEDIA_BUFFER.height * 4);
-    // Corner and centre pixels are the same colour: the frame is solid.
+
     const at = (index: number) => [
       buffer[index * 4],
       buffer[index * 4 + 1],
@@ -170,7 +149,7 @@ describe("the clip's arithmetic", () => {
     const ids = Object.values(MEDIA_IDS);
     expect(new Set(ids).size).toBe(ids.length);
     expect(MEDIA_FILL).not.toBe(frameHex(0));
-    // The poster is wider than the track it reports progress on.
+
     expect(MEDIA_POSTER.width).toBeGreaterThan(MEDIA_TRACK.width);
     expect(MEDIA_POSTER.height).toBeGreaterThan(MEDIA_TRACK.height);
   });
@@ -201,9 +180,9 @@ describe("the probe", () => {
     expect(push).toContain("MEDIA_BUFFER.width");
     expect(push).toContain("MEDIA_BUFFER.height");
     expect(push).toContain("framePixels(frameColour(playhead))");
-    // The pixels are on the element in a layout effect, before the paint.
+
     expect(probe).toContain("useLayoutEffect");
-    // A poster that never repaints would pass a still-image check.
+
     expect(probe).toContain("}, [playhead]);");
   });
 
@@ -211,7 +190,7 @@ describe("the probe", () => {
     expect(probe).toContain("setInterval(");
     expect(probe).toContain("clearInterval(timer)");
     expect(probe).toContain("advancePlayhead(current, MEDIA_TICK_MS)");
-    // The clip stops itself rather than relying on the interval to be cleared.
+
     expect(probe).toContain("if (playing && playhead >= MEDIA_CLIP_MS)");
   });
 
@@ -223,7 +202,7 @@ describe("the probe", () => {
     expect(seek).toContain('key === "home"');
     expect(seek).toContain('key === "end"');
     expect(seek).toContain("MEDIA_SEEK_STEP_MS");
-    // The transport is a real action, and the seek target takes focus.
+
     expect(probe).toContain("testId={MEDIA_IDS.play} onActivate={toggle}");
     expect(probe).toContain("onKeyDown={seek}");
     expect(probe).toContain("tabIndex={0}");
@@ -234,7 +213,7 @@ describe("the probe", () => {
       Arr.fromIterable(stepsOf().matchAll(/ctx\.expect\w+\(/g)),
     );
     expect(sites).toBeGreaterThan(0);
-    // Three closures assert once per call, so the printed count floors the sites.
+
     expect(MEDIA_CHECKS).toBeGreaterThanOrEqual(sites);
   });
 });
@@ -251,7 +230,7 @@ describe("the record", () => {
     expect(section).toContain("no `video` or `audio`");
     expect(section).toContain("`setImagePixels`");
     expect(section).toContain("The app owns the clock and the transport");
-    // The row it answers is quoted, so a reader can find the claim it retired.
+
     expect(section).toContain("needs a platform surface");
   });
 

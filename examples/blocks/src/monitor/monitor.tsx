@@ -1,13 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Monitor — a hardware monitor in the dark Mac look, after the reference the
- * owner sent: a ring per processor with its load, temperature, clock and fan
- * beside it; RAM, network and drives as cards; the busiest processes as a table.
- *
- * Every ring is `@gpuixui/data`'s `DonutChart` (the load against the rest of the
- * circle) and the window is the shell's, so the block is the library arranged —
- * not a drawing of one. The samples are the block's data: nothing polls.
- */
 import { DonutChart, Sparkline } from "@gpuixui/data";
 import * as Arr from "effect/Array";
 import { Icon } from "@gpuixui/icons";
@@ -481,11 +472,6 @@ const Screen = ({
   );
 };
 
-/**
- * The monitor paints in the dark look the reference shows; the theme is the
- * library's dark theme with an opaque window, because the offscreen renderer has
- * no window server to blur through.
- */
 export const Monitor = ({
   platform,
 }: {

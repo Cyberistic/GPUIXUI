@@ -1,23 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * ColorPicker: a swatch that opens a picker with a saturation/value area, hue
- * and alpha rails, a hex field, presets and a contrast readout.
- *
- * The anatomy follows Arc's colour picker. What the runtime cannot do is stated
- * rather than approximated: there is no `transform`, so the area's thumb is
- * placed by the area's own measurement; a gradient is two stops, so the area is
- * three stacked fills and the hue rail six ramps; there is no repeating
- * gradient, so the alpha rail fades to the panel instead of a checkerboard; and
- * there is no screen sampling, so the eyedropper is absent rather than a button
- * that reports nothing. Hex is the only grammar, because a colour function is a
- * second grammar to parse, format and keep in step with the value.
- *
- * The value is uppercase hex, with two alpha digits when the colour is not
- * opaque. The trigger, the panel and every part are the library's own: the
- * popover is `Popover`, the rails are the `Slider` parts, the field is `Input`
- * and the presets are `Button`s.
- */
-
 import type { KeyEvent, Props, PublicInstance } from "@gpuix/react";
 import { useGpuix, useWindowSize } from "@gpuix/react";
 import {
@@ -66,41 +47,36 @@ import {
 } from "./color-picker/parts.js";
 import { Popover, PopoverContent, PopoverTrigger } from "./popover.js";
 
-/** The panel's width at the reference's size, and the gap it keeps from the window edge. */
 const PANEL_WIDTH = 304;
 const WINDOW_GUTTER = 32;
 
-/** {@link ColorPicker} props. */
 export interface ColorPickerProps extends Omit<
   Props,
   "children" | "style" | "onChange"
 > {
-  /** The trigger and panel's accessible name. A blank value reads as `"Color picker"`. */
   readonly label: string;
-  /** The controlled colour: hex, with alpha digits when it is not opaque. */
+
   readonly value?: string;
-  /** The initial colour, read the same way. */
+
   readonly defaultValue?: string;
-  /** Every committed colour, as uppercase hex. */
+
   readonly onValueChange?: (hex: string) => void;
-  /** The surface the contrast readout measures against. Default the theme's page. */
+
   readonly background?: string;
-  /** The preset row. Defaults to six theme roles. */
+
   readonly swatches?: ReadonlyArray<string>;
   readonly disabled?: boolean;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
-  /** A style, or a function of the picker's state. */
+
   readonly style?: StateStyle<ColorPickerState>;
 }
 
-/** What the picker draws: whether it can act, and whether a draft was refused. */
 export interface ColorPickerState {
   readonly disabled: boolean;
   readonly valid: boolean;
 }
 
-/** The six theme colours offered when a caller passes no presets. */
 const defaultSwatches = (colors: {
   readonly primary: string;
   readonly secondary: string;
@@ -117,14 +93,12 @@ const defaultSwatches = (colors: {
   colors.foreground,
 ];
 
-/** The colour the picker starts from, or the documented one. */
 const initialOf = (colour: string | undefined): Hsva =>
   Option.getOrElse(
     parseColor(colour ?? DEFAULT_COLOUR),
     () => new Hsva({ h: 0, s: 0, v: 0, a: 1 }),
   );
 
-/** {@link ColorPicker} — a swatch that opens a picker. */
 export const ColorPicker = ({
   label,
   value,
@@ -143,7 +117,7 @@ export const ColorPicker = ({
   const { renderer } = useGpuix();
   const panel = useRef<PublicInstance | null>(null);
   const area = useRef<PublicInstance | null>(null);
-  /** The panel's tab order, in the order a reader meets its parts. */
+
   const stops = useRef<Array<PublicInstance | null>>([]);
   const stop = useMemo(
     () =>
@@ -170,8 +144,7 @@ export const ColorPicker = ({
     },
     [],
   );
-  // A label is copy from an i18n table as often as a literal: a blank one is
-  // the absence the documented default names.
+
   const name = accessibleName(textOf(label)) ?? DEFAULT_COLOR_PICKER_LABEL;
   const [hsva, setHsva] = useState<Hsva>(() => initialOf(defaultValue));
   const [open, setOpen] = useState(false);
@@ -219,8 +192,6 @@ export const ColorPicker = ({
     });
   };
 
-  // The panel is not modal: its first control takes focus once it is painted,
-  // so Tab reaches the rest of them instead of leaving from the surface itself.
   const greeted = useRef(false);
   useLayoutEffect(() => {
     if (!open) greeted.current = false;
@@ -296,9 +267,6 @@ export const ColorPicker = ({
         }}
       >
         <div
-          // The picker's panel is not modal, but its controls are one surface:
-          // Tab walks them and wraps, instead of leaving the popover on the
-          // first press (the library popover's own Tab rule).
           onKeyDown={(event: KeyEvent) => {
             if (event.key !== "tab") return;
             event.preventDefault();
@@ -444,7 +412,6 @@ export const ColorPicker = ({
   );
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md`. */
 export const colorPickerMeta = {
   name: "Color picker",
   tier: 2,

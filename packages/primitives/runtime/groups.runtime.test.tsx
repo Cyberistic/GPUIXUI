@@ -1,29 +1,3 @@
-/**
- * The rows of the group controls in the real GPUix runtime.
- *
- * Each case is a defect measured in the pinned runtime, and the row the user
- * presses is the subject of all four:
- *
- * 1. **A painted box is not a press target.** GPUix gives a filled element a
- *    mouse-blocking hitbox (`style.rs` `should_occlude`), so the checked box a
- *    group draws inside its row swallowed the press before the row's handler
- *    ran: a checked `CheckboxGroup` option could be checked by clicking the row
- *    but not unchecked by clicking its own box. The box is decorative, so it now
- *    declares `pointerEvents: "none"` and the row hears every press.
- * 2. **The ring belongs on the element that holds focus.** `focusVisible` is a
- *    refinement the runtime applies only to an element it tracks focus for
- *    (`apply_focus_visible`, gated on a focus handle), so a declaration on a
- *    decorative circle never painted: the radio and checkbox groups had no
- *    keyboard focus indicator at all.
- * 3. **A row is a press target.** A single-line option row measured 17px tall
- *    on 0.11.0 — under the 24px floor WCAG 2.2 SC 2.5.8 states — so every row
- *    reserves it.
- * 4. **The caption beside a name is help, not decoration.** An option's
- *    `description` was painted text only, so a reader heard the name and lost
- *    the words that qualify it; the row announces it through the one help
- *    channel 0.11.0 has (`aria-description`).
- */
-
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { expect, it } from "vitest";
@@ -42,7 +16,6 @@ import {
 } from "./harness.js";
 import { Surface, openWindow, testTheme } from "./fixture.js";
 
-/** The row an option painted, found by the name it announces. */
 const rowOf = (runtime: Runtime, label: string) =>
   Option.getOrElse(
     Arr.findFirst(
@@ -52,7 +25,6 @@ const rowOf = (runtime: Runtime, label: string) =>
     () => expect.fail(`the runtime retained no row labelled ${label}`),
   );
 
-/** The decorative box inside a row — the first child the group draws. */
 const boxOf = (runtime: Runtime, label: string) => {
   const row = rowOf(runtime, label);
   return Option.getOrElse(
@@ -70,13 +42,11 @@ const boundsOf = (runtime: Runtime, label: string): Bounds => {
   );
 };
 
-/** An option's announced state — `aria-valuetext` is the only state this runtime carries. */
 const announced = (runtime: Runtime, label: string): string =>
   Option.getOrElse(a11yValueOf(runtime.a11y(), { label }), () =>
     expect.fail(`no accessibility node announced ${label}`),
   );
 
-/** Whether an element declares the runtime's keyboard ring. */
 const ringed = (element: {
   readonly style: { readonly focusVisible?: unknown };
 }) => Option.isSome(Option.fromNullishOr(element.style.focusVisible));
@@ -122,9 +92,6 @@ const groups = (props?: { readonly defaultValue?: string }) => (
 );
 
 it("unchecks a checked checkbox group option when its own box is pressed", async () => {
-  // The bug this guards: the filled box owns a mouse-blocking hitbox, so the
-  // press never reached the row — the only clickable part of a checked option
-  // was the empty space beside its box.
   const runtime = await openWindow();
   let changes = 0;
   runtime.render(
@@ -151,10 +118,6 @@ it("unchecks a checked checkbox group option when its own box is pressed", async
 });
 
 it("paints a stored selection it cannot read as no selection, not a crash", async () => {
-  // The bug guarded: a selection is saved with the control, and a record
-  // written by an older release holds a map of chosen ids where this one writes
-  // a list. Read as the type promises, that object reached `Arr.contains`, whose
-  // iteration threw `self is not iterable` and took every row out of the render.
   const runtime = await openWindow();
   // @ts-expect-error — a selection a store wrote in an older shape.
   const stored: ReadonlyArray<string> = { x: true };
@@ -174,14 +137,11 @@ it("paints a stored selection it cannot read as no selection, not a crash", asyn
   expect(announced(runtime, "Xray")).toBe("unchecked");
   runtime.clickElement(rowOf(runtime, "Xray"));
   runtime.flush();
-  // Absence means uncontrolled, so the press still paints.
+
   expect(announced(runtime, "Xray")).toBe("checked");
 });
 
 it("declares the keyboard ring on the option that holds native focus", async () => {
-  // The bug this guards: the ring was declared on the decorative circle, which
-  // has no focus handle, so the runtime never painted it. A group option had no
-  // keyboard focus indicator.
   const runtime = await openWindow();
   runtime.render(groups());
 
@@ -206,12 +166,6 @@ it("declares the keyboard ring on the option that holds native focus", async () 
 });
 
 it("paints a failed radio group's empty edge and keeps the chosen fill", async () => {
-  // The bug this guards: `CheckboxGroup` could paint a failed validation but
-  // `RadioGroup` had no `invalid` prop at all, so a form could mark one group
-  // and not the other. The chosen radio keeps its accent fill — the fill is the
-  // selection, not the error — while an empty circle's edge takes the
-  // destructive role; both rows still declare the keyboard ring. Read back off
-  // the runtime, because the prop only matters if it reaches the paint.
   const runtime = await openWindow();
   runtime.render(
     <Surface>
@@ -238,10 +192,6 @@ it("paints a failed radio group's empty edge and keeps the chosen fill", async (
 });
 
 it("publishes a row's trimmed name, and no name at all for a blank label", async () => {
-  // The bug this guards: the row's `aria-label` was the option's label
-  // verbatim, so a padded label reached the accessibility tree with its padding
-  // and a blank one published an empty name — an icon-only option announced
-  // nothing rather than leaving the name to the content it paints.
   const runtime = await openWindow();
   runtime.render(
     <Surface>
@@ -262,18 +212,10 @@ it("publishes a row's trimmed name, and no name at all for a blank label", async
     (node) => node.aria?.label,
   );
 
-  // The padded label announced its padding, and the blank one announced an
-  // empty name; the row now publishes the trimmed name, or none at all.
   expect(names).toEqual([undefined, "Yankee"]);
 });
 
 it("announces an option's caption as the row's help", async () => {
-  // The bug this guards: the caption beside an option's name was painted text
-  // only — this runtime has no `aria-describedby`, so a reader of a radio that
-  // says "Every Monday." heard "Weekly" and nothing else. The row is the
-  // control, so the caption rides the one help channel 0.11.0 has
-  // (`aria-description`), and a blank caption is absence rather than an empty
-  // description.
   const runtime = await openWindow();
   runtime.render(
     <Surface>
@@ -307,8 +249,6 @@ it("announces an option's caption as the row's help", async () => {
 });
 
 it("paints every group option at the pressable floor", async () => {
-  // The bug this guards: a single-line option row was the height of its text
-  // (17px on 0.11.0), so the target a pointer had to hit was under the floor.
   const runtime = await openWindow();
   runtime.render(groups());
   Arr.forEach(["Alpha", "Beta", "Xray", "Yankee"], (label) => {
@@ -319,12 +259,6 @@ it("paints every group option at the pressable floor", async () => {
 });
 
 it("addresses a data-option row by the locator its value derives", async () => {
-  // The bug this guards: a group forwarded its `testId` to the wrapper, which
-  // paints the group and takes no focus, and passed none to the rows it builds
-  // — so a probe could address the group and never press one choice, and had to
-  // recognise a row by the text it paints (a contains match, which also hits
-  // the text inside it). `itemTestId` derives one locator per value; the press
-  // and the keyboard must then both reach the row it names.
   const runtime = await openWindow();
   runtime.render(
     <Surface>
@@ -367,13 +301,11 @@ it("addresses a data-option row by the locator its value derives", async () => {
       expect.fail(`the runtime retained no row at ${locator}`),
     );
 
-  // The group keeps its own locator; each row is the element its value names.
   expect(Option.isSome(runtime.element("plan"))).toBe(true);
   expect(row("plan-b").customProps?.["aria-label"]).toBe("Beta");
   expect(row("channel-sms").customProps?.["aria-label"]).toBe("SMS");
   expect(row("format-italic").customProps?.["aria-label"]).toBe("Italic");
 
-  // A press on the row the locator names reaches the control.
   runtime.clickElement(row("channel-sms"));
   runtime.flush();
   expect(announced(runtime, "SMS")).toBe("checked");
@@ -381,8 +313,6 @@ it("addresses a data-option row by the locator its value derives", async () => {
   runtime.flush();
   expect(announced(runtime, "Italic")).toBe("pressed");
 
-  // The keyboard continues from the row, and the window reports the same
-  // locator this contract derives — which is what lets a probe read the focus.
   focusOn(runtime, "Alpha");
   runtime.keyDown("plan-a", "down");
   runtime.flush();

@@ -1,22 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * ConfirmDialog: the safety workflow, not a styled box.
- *
- * It is the dialog the rest of the library uses when an action cannot be undone.
- * Two decisions make it safe rather than merely convenient:
- *
- * - **Cancel holds initial focus**, so Enter on an untouched dialog cancels. The
- *   ordering is deliberate: `DialogContent` focuses its surface, then this
- *   component's layout effect moves focus to Cancel (child effects run first).
- * - **Confirm does not close the dialog.** The caller owns the async work and
- *   closes through `open` when it succeeds, so a failed save can stay open with
- *   the error visible instead of vanishing mid-flight.
- *
- * While `loading`, the confirm action paints the package's spinner beside its
- * label and refuses activation: the package's busy mark is the three-dot
- * indicator, because 0.11.0 has no transform and nothing rotates.
- */
-
 import { Match } from "effect";
 import { useRef } from "react";
 import type { PublicInstance } from "@gpuix/react";
@@ -36,42 +18,31 @@ import { useMoveTiming } from "./internal/presence.js";
 import { textOf } from "./internal/text.js";
 import { useTheme } from "./internal/theme.js";
 
-/** The words a blank action label falls back to. */
 const DEFAULT_CONFIRM_LABEL = "Confirm";
 const DEFAULT_CANCEL_LABEL = "Cancel";
 
-/** How much emphasis the confirm action carries. */
 export type ConfirmTone = "default" | "danger";
 
-/** {@link ConfirmDialog} props. */
 export interface ConfirmDialogProps {
-  /** The controlled open state. The caller owns it, including closing it. */
   readonly open: boolean;
   readonly onOpenChange: (open: boolean) => void;
-  /** The dialog's name; also its accessible label. */
+
   readonly title: string;
-  /** What the action does, including what cannot be undone. */
+
   readonly description: string;
-  /** Default `"Confirm"`; a blank label reads as the default. */
+
   readonly confirmLabel?: string;
-  /** Default `"Cancel"`; a blank label reads as the default. */
+
   readonly cancelLabel?: string;
-  /** Default `"default"`. `"danger"` paints the destructive button variant. */
+
   readonly tone?: ConfirmTone;
-  /**
-   * Disables both actions, marks the confirm button busy and suppresses Escape
-   * and outside-press dismissal. The caller still decides when to close.
-   */
+
   readonly loading?: boolean;
   readonly onConfirm: () => void;
-  /** Extra dialog body between the description and the actions. */
+
   readonly children?: PartChildren;
 }
 
-/**
- * A modal that asks before an irreversible action. Cancel is focused first and
- * Escape is the same as cancelling; confirming only reports, it never closes.
- */
 export const ConfirmDialog = ({
   open,
   onOpenChange,
@@ -84,17 +55,13 @@ export const ConfirmDialog = ({
   onConfirm,
   children,
 }: ConfirmDialogProps) => {
-  // A default covers only an absent prop, so a label table's missing key would
-  // paint both actions nameless — including the one that cannot be undone.
   const confirmWord =
     accessibleName(textOf(confirmLabel)) ?? DEFAULT_CONFIRM_LABEL;
   const cancelWord =
     accessibleName(textOf(cancelLabel)) ?? DEFAULT_CANCEL_LABEL;
   const theme = useTheme();
   const cancel = useRef<PublicInstance | null>(null);
-  // The error slot is the caller's: the last body stays mounted for the
-  // collapse, so a retry does not empty it before its exit tween. The dialog's
-  // gap lives inside the slot, because a flex gap cannot grow with it.
+
   const gap = theme.spacing["2xl"];
   const hasBody = children !== undefined && children !== null;
   const body = useRef(children);
@@ -151,7 +118,6 @@ export const ConfirmDialog = ({
   );
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const confirmDialogMeta = {
   name: "Confirmation dialogs",
   tier: 2,

@@ -1,26 +1,3 @@
-/**
- * A tree, flattened to the rows a reader can see, as pure data.
- *
- * The rules are the ones `virtual-tree-lifecycle` measured in a window: a
- * 4 000-row tree paints a ten-row window, expand and collapse repaint the
- * flattening in place, a nested row insets by **16px** per level, and the arrow
- * keys move **native focus** row by row rather than mounting a tab stop per row.
- * Nothing here paints or focuses: {@link flattenTree} answers the rows, and
- * {@link treeCursorMove} answers the expansion and active row a key produces.
- *
- * The cursor is data — an expanded set plus the active key — so a tree can be
- * driven from Effect or a store exactly like the table's selection. The component
- * moves native focus towards the active row after the commit; a call from the key
- * handler moved nothing, because the row was still outside the tab order (the
- * same measured rule the table example follows).
- *
- * The type-ahead rule is not this module's: the window, the repeat rule and the
- * character a keystroke types come from `@gpuixui/components/typeahead`, the
- * seam a list and a menu also read, so a tree cannot disagree with them about
- * what a typed prefix means. {@link typeAheadRow} keeps only the step that maps
- * the position the seam answers back onto this tree's row key.
- */
-
 import { typeaheadMatchIndex } from "@gpuixui/components/typeahead";
 import { spokenText } from "@gpuixui/primitives/core";
 import { Match, pipe } from "effect";
@@ -33,67 +10,34 @@ import * as Schema from "effect/Schema";
 import { listOf } from "../internal/list.js";
 import { neighbourKey } from "../selection/logic.js";
 
-/**
- * The inset one nesting level adds, in pixels.
- *
- * Measured by `virtual-tree-lifecycle`: a child row's label sits 16px inside its
- * parent's, which is what makes the hierarchy readable without a paint.
- */
 export const TREE_INDENT = 16;
 
-/** What a flattened tree needs from the caller. */
 export interface TreeSpec<T> {
-  /** The stable identity a row is expanded, activated and focused by. */
   readonly keyOf: (node: T) => string;
-  /**
-   * The children a node has, in paint order.
-   *
-   * A leaf answers `[]` — or the list a store carries for "no children", which
-   * is **`null`** (JSON writes it for a field the record never set) or an
-   * omitted field. Both read as no children: a saved tree's leaves are the
-   * ordinary shape of the data, not a caller mistake, so every reader that
-   * walks the hierarchy reads the slot through {@link listOf} rather than
-   * iterating it.
-   */
+
   readonly childrenOf: (node: T) => ReadonlyArray<T> | null | undefined;
 }
 
-/** One visible row: the node, where it sits and whether its children paint. */
 export interface TreeRow<T> {
   readonly node: T;
   readonly key: string;
-  /** `0` at a root, one more for every level of nesting. */
+
   readonly depth: number;
-  /** The key of the node this row hangs from; absent at a root. */
+
   readonly parent: Option.Option<string>;
-  /** The node has children, so it paints a chevron whether or not it is open. */
+
   readonly hasChildren: boolean;
-  /** The node's children paint under it. */
+
   readonly expanded: boolean;
 }
 
-/**
- * The rows a reader can see, in paint order.
- *
- * A node paints once. A key already painted is not entered a second time, so a
- * caller's duplicated sibling or a node repeated under its own descendant cannot
- * make the flatten loop or paint two rows that answer to one key. That is a
- * caller mistake the tree swallows rather than throws: a data surface that
- * refuses to paint is worse than one that paints the node its caller gave it.
- *
- * The roots and every node's children are read as lists ({@link listOf}): a
- * saved tree writes `null` for the children a leaf never carried, so a leaf is
- * a leaf rather than a `TypeError` out of the first render.
- */
 export const flattenTree = <T>(
   roots: ReadonlyArray<T> | null | undefined,
   spec: TreeSpec<T>,
   expanded: HashSet.HashSet<string>,
 ): ReadonlyArray<TreeRow<T>> => {
   const rows: Array<TreeRow<T>> = [];
-  // The walk is the one place a mutable set earns its keep: "painted once" is
-  // carried across two recursive branches, and an immutable copy per node would
-  // make the flatten quadratic for no gain. Nothing escapes this function.
+
   const painted = MutableHashSet.empty<string>();
 
   const visit = (
@@ -122,22 +66,12 @@ export const flattenTree = <T>(
   return rows;
 };
 
-/** One row as a folding tree paints it: the visible rows, and the ones leaving. */
 export interface PaintedRow<T> {
   readonly row: TreeRow<T>;
-  /** The branch this row belonged to closed; it is painted for its exit only. */
+
   readonly leaving: boolean;
 }
 
-/**
- * The rows to paint while a branch folds.
- *
- * A collapsed branch is absent from {@link flattenTree} in the frame the cursor
- * changes, so a tree that keeps its rows for an exit tween has to put each one
- * back where it stood: before the first row after it that still paints. A
- * leaving row at the tail of the tree closes at the end. A closing branch
- * therefore travels out of the place it occupied rather than jumping.
- */
 export const paintedRows = <T>(
   rows: ReadonlyArray<TreeRow<T>>,
   leaving: ReadonlyArray<TreeRow<T>>,
@@ -172,7 +106,6 @@ export const paintedRows = <T>(
   ];
 };
 
-/** Every key in the tree that has children, in paint order. */
 export const branchKeys = <T>(
   roots: ReadonlyArray<T> | null | undefined,
   spec: TreeSpec<T>,
@@ -194,13 +127,11 @@ export const branchKeys = <T>(
   return keys;
 };
 
-/** Whether a node's children paint. */
 export const isExpanded = (
   expanded: HashSet.HashSet<string>,
   key: string,
 ): boolean => HashSet.has(expanded, key);
 
-/** Open or close one node. */
 export const setExpanded = (
   expanded: HashSet.HashSet<string>,
   key: string,
@@ -208,46 +139,24 @@ export const setExpanded = (
 ): HashSet.HashSet<string> =>
   open ? HashSet.add(expanded, key) : HashSet.remove(expanded, key);
 
-/** Flip one node. */
 export const toggleExpanded = (
   expanded: HashSet.HashSet<string>,
   key: string,
 ): HashSet.HashSet<string> =>
   setExpanded(expanded, key, !isExpanded(expanded, key));
 
-/** Nothing open. */
 export const collapseAll = (): HashSet.HashSet<string> => HashSet.empty();
 
-/**
- * An expansion set handed over as data: a list or a set of text keys.
- *
- * A saved workspace records its open folders, and a store is not a `Set`: JSON
- * writes a `Set` as a list, but a record written by another release, a
- * hand-edited layout, or a field a migration truncated can hand back anything
- * where the keys belong. Building the set with `HashSet.fromIterable` straight
- * off that value threw `TypeError: … is not iterable` during the first render,
- * so a restored tree failed to open at all. Only an iterable carrying text
- * entries is an expansion; anything else is the state a fresh tree starts in
- * (nothing open) rather than a crash.
- */
 export const expandedSet = (value: unknown): HashSet.HashSet<string> =>
   P.isIterable(value)
     ? HashSet.fromIterable(Arr.filter(Arr.fromIterable(value), P.isString))
     : HashSet.empty();
 
-/** Every branch open, which is what "expand all" means. */
 export const expandAll = <T>(
   roots: ReadonlyArray<T> | null | undefined,
   spec: TreeSpec<T>,
 ): HashSet.HashSet<string> => HashSet.fromIterable(branchKeys(roots, spec));
 
-/**
- * Every ancestor of `key`, and `key` itself, so revealing a node opens it.
- *
- * Walking up needs no parent map: the caller's tree already answers a node's
- * children, so a depth-first search records the path to the target. A key the
- * tree does not hold answers nothing, and the caller's set is unchanged.
- */
 export const expandedPath = <T>(
   roots: ReadonlyArray<T> | null | undefined,
   spec: TreeSpec<T>,
@@ -274,7 +183,6 @@ export const expandedPath = <T>(
   return walk(listOf(roots), []);
 };
 
-/** Expand every ancestor of `key` in one step, for a reveal or a search hit. */
 export const expandTo = <T>(
   expanded: HashSet.HashSet<string>,
   roots: ReadonlyArray<T> | null | undefined,
@@ -287,7 +195,6 @@ export const expandTo = <T>(
       Arr.reduce(path, expanded, (set, ancestor) => HashSet.add(set, ancestor)),
   });
 
-/** The keys a tree row answers. */
 export const treeKeys = [
   "up",
   "down",
@@ -299,28 +206,22 @@ export const treeKeys = [
   "space",
 ] as const;
 
-/** One key a tree row answers. */
 export const TreeKey = Schema.Literals(treeKeys);
 
-/** One key a tree row answers. */
 export type TreeKey = typeof TreeKey.Type;
 
-/** Whether a key event belongs to the tree, so an unrelated key passes on. */
 export const isTreeKey = Schema.is(TreeKey);
 
-/** The cursor a tree holds: what is open, and the row the keyboard stands on. */
 export interface TreeCursor {
   readonly expanded: HashSet.HashSet<string>;
   readonly active: Option.Option<string>;
 }
 
-/** Nothing open, nothing active. */
 export const emptyCursor: TreeCursor = {
   expanded: HashSet.empty(),
   active: Option.none(),
 };
 
-/** The row a key names, when the tree paints it. */
 export const findRow = <T>(
   rows: ReadonlyArray<TreeRow<T>>,
   key: Option.Option<string>,
@@ -329,7 +230,6 @@ export const findRow = <T>(
     Arr.findFirst(rows, (row) => row.key === wanted),
   );
 
-/** The index a row paints at, when the tree paints it. */
 const indexOf = <T>(
   rows: ReadonlyArray<TreeRow<T>>,
   key: Option.Option<string>,
@@ -338,28 +238,17 @@ const indexOf = <T>(
     Arr.findFirstIndex(rows, (row) => row.key === wanted),
   );
 
-/** The row at an index. */
 const at = <T>(
   rows: ReadonlyArray<TreeRow<T>>,
   index: number,
 ): Option.Option<TreeRow<T>> => Option.fromNullishOr(rows[index]);
 
-/** The row a tree starts on: the active one while it paints, else the first. */
 export const cursorRow = <T>(
   rows: ReadonlyArray<TreeRow<T>>,
   cursor: TreeCursor,
 ): Option.Option<TreeRow<T>> =>
   Option.orElse(findRow(rows, cursor.active), () => Arr.head(rows));
 
-/**
- * The cursor a key produces over the painted rows.
- *
- * The contract is the desktop tree's: Up/Down/Home/End move the active row and
- * clamp at the ends, Right opens a closed branch or steps into an open one,
- * Left closes an open branch or steps out to its parent, and Enter or Space
- * flips the branch under the cursor. A leaf answers Right/Left with no move.
- * A move never wraps: the last row's Down stays where it is.
- */
 export const treeCursorMove = <T>(
   rows: ReadonlyArray<TreeRow<T>>,
   cursor: TreeCursor,
@@ -412,10 +301,6 @@ export const treeCursorMove = <T>(
           row.hasChildren && isExpanded(cursor.expanded, row.key)
             ? opened(row, false)
             : Option.match(row.parent, {
-                // A root has no parent to step out to, so Left leaves the
-                // cursor where it is rather than clearing it: an empty cursor
-                // falls back to the first row, which moves a reader standing on
-                // a later root.
                 onNone: () => cursor,
                 onSome: (parent) => focus(Option.some(parent)),
               }),
@@ -443,28 +328,9 @@ export const treeCursorMove = <T>(
   );
 };
 
-/**
- * The words a row is painted and named by.
- *
- * `labelOf` is a caller's accessor over its own nodes, so it can answer blank
- * for a node whose name is missing — a file the listing could not read, a
- * record restored without its title. A blank label reads as the row's **key**,
- * the stable identity the tree expands, focuses and reports by: the row is then
- * named by something, and a typed prefix can reach it, rather than the tree
- * painting a nameless row no key can find.
- */
 export const treeName = (label: string, key: string): string =>
   spokenText(Option.fromNullishOr(label), key);
 
-/**
- * The row a typed prefix names: the first row **after** the active one whose
- * label starts with the prefix, wrapping to the first match.
- *
- * Searching after the cursor is what lets a repeated letter walk the matches.
- * An empty prefix, or one nothing matches, answers `None`, so the caller keeps
- * the row it was on. A row whose label came back blank is searched by its key
- * ({@link treeName}), the same word it is painted and named by.
- */
 export const typeAheadRow = <T>(
   rows: ReadonlyArray<TreeRow<T>>,
   active: Option.Option<string>,

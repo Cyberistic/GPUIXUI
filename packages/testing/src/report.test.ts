@@ -1,10 +1,3 @@
-/**
- * Guards the report's honesty.
- *
- * If the JSON encoder dropped a nested tagged union, a failed scenario reported
- * exit `0`, or the human report hid which check failed and what it expected, a
- * red smoke run could look green or be impossible to act on.
- */
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as Option from "effect/Option";
@@ -85,8 +78,6 @@ describe("formatReport", () => {
   );
 
   it.effect("explains an unverified capability a scoped run sampled", () =>
-    // `workspace=unverified` beside `1/1 scenarios passed` reads as a failure
-    // unless the summary says why: the selection did not cover the capability.
     Effect.gen(function* () {
       const one = scenario("one", "workspace", (ctx) =>
         ctx.expectEqual("a", 1, 1),

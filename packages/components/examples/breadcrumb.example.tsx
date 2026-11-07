@@ -1,11 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Breadcrumb example: a deep path that collapses its middle.
- *
- * `maxItems={3}` keeps the project and the current page and replaces the rest
- * with an ellipsis; the links below the trail show which one was chosen.
- */
-
 import { useState } from "react";
 import {
   Breadcrumb,
@@ -18,7 +11,6 @@ import {
 import { Card, CardDescription, CardHeader, CardTitle } from "../src/card.js";
 import { textStyle, useTheme } from "../src/internal/theme.js";
 
-/** A path trail whose links report where they would navigate. */
 export const BreadcrumbExample = () => {
   const theme = useTheme();
   const [chosen, setChosen] = useState("none");

@@ -1,33 +1,12 @@
-/**
- * Small presentational helpers the scenarios share.
- *
- * `Readout` is the important one: every assertion reads a **number or a string
- * from a readout element**, never a pixel from a screenshot. A readout encodes
- * the state under test as `key=value key=value`.
- *
- * Every colour comes from the theme `ThemeProvider` supplies, so the shell's
- * palette switch re-paints these helpers without a restart.
- */
 import type { ReactNode } from "react";
 import type { StyleDesc } from "@gpuix/react";
 import { ENTER_KEY, SPACE_KEY } from "@gpuixui/primitives/core";
 import { textStyle } from "@gpuixui/tokens";
 import { useTheme } from "@gpuixui/tokens/react";
 
-/**
- * Whether `key` activates a `role="button"` surface here.
- *
- * The two names are the runtime's own (`ENTER_KEY`/`SPACE_KEY`), not the DOM's:
- * GPUix reports the spacebar as `space`, so a comparison against `" "` — the
- * browser spelling — refuses every Space press. Both act on the key **down** in
- * the playground, unlike a library control's key-up rule for Space: the
- * renderer's synthetic key, this shell's only key source, sends a down and no
- * release, and selecting a sidebar row a second time is the same row.
- */
 export const isActivationKey = (key: string | undefined): boolean =>
   key === ENTER_KEY || key === SPACE_KEY;
 
-/** A `testId`-addressable string the smoke steps assert against. */
 export const Readout = ({
   testId,
   children,
@@ -49,7 +28,6 @@ export const Readout = ({
   );
 };
 
-/** Body text in the theme's foreground colour. */
 export const Body = ({
   testId,
   children,
@@ -68,7 +46,6 @@ export const Body = ({
   );
 };
 
-/** A surface with padding and a hairline border. */
 export const Panel = ({
   children,
   style,
@@ -92,14 +69,12 @@ export const Panel = ({
   );
 };
 
-/** A horizontal strip that holds controls. */
 export const Toolbar = ({ children }: { readonly children: ReactNode }) => (
   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
     {children}
   </div>
 );
 
-/** A one-pixel separator. */
 export const Divider = () => {
   const theme = useTheme();
   return (
@@ -112,7 +87,6 @@ export const Divider = () => {
   );
 };
 
-/** A clickable surface used as a button (GPUix has no `<button>` element). */
 export const Pressable = ({
   testId,
   onClick,

@@ -48,8 +48,3 @@ const help = "Where notifications are delivered.";
 | `className` | `string` | — | a Tailwind class string, joined after the recipe so it wins conflicts |
 | `style` | `StateStyle<FieldState>` | — | resolved against the live state, merged last |
 | `testId` | `string` | — | stable locator |
-
-## Notes
-- No `maxLength`, filter or mask: the runtime applies a value only when it **changes**, so a refused character stays in the box.
-- No `type`, `inputMode` or `pattern`; validate with `Schema` at the boundary.
-- `disabled` is emulated: read-only, out of the tab order.

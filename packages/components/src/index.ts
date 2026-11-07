@@ -1,11 +1,3 @@
-/**
- * The package's public surface: one line per component module.
- *
- * Every module exports its parts, their prop types and its inventory record.
- * Importing a subpath (`@gpuixui/components/badge`) is the finer-grained
- * alternative and is what the docs pages show.
- */
-
 export * from "./alert.js";
 export * from "./aspect-ratio.js";
 export * from "./accordion.js";
@@ -88,16 +80,6 @@ export * from "./user-menu.js";
 
 export type { PartChildren } from "./internal/parts.js";
 
-/**
- * The theming surface: the provider every component reads its roles from, and
- * the two themes it ships with.
- *
- * A consumer who installs this package alone must be able to theme it — the
- * isolated linker does not put `@gpuixui/tokens` in their reach — so the
- * provider and the themes are published here. They are the token package's own
- * exports, re-exported through the package's single seam; there is still one
- * provider, not a second one.
- */
 export {
   ThemeProvider,
   darkTheme,

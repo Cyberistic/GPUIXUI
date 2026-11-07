@@ -1,19 +1,3 @@
-/**
- * Hexagon in the real GPUix renderer.
- *
- * The bugs these guard: a grid generated for a different box than the one
- * painted (the view box would scale to the wrong size, or leak a centred square);
- * a field that generates nothing after its first layout; a breath that runs one
- * way and stops, because the runtime tweens a target once; a reduced preference
- * that keeps breathing; a decorative field that leaks into the accessibility tree
- * or swallows presses; and a resize that keeps painting the old grid.
- *
- * The motion clock is paused before the mount, so the first frame is the declared
- * initial frame rather than wherever the frame loop had got. The markup is read
- * from the prop the component hands the runtime; the pixels it paints are the
- * `svg-pattern` probe's measurement, not something a headless tree can show.
- */
-
 import type { TestElement, TestRoot } from "@gpuix/react/testing";
 import * as Arr from "effect/Array";
 import type { ReactNode } from "react";
@@ -29,7 +13,6 @@ import {
 import { patternBreatheMs, patternDim } from "@gpuixui/components/authoring";
 import { MotionProvider } from "@gpuixui/components/motion";
 
-/** One element by test id, failing rather than casting. */
 const byTestId = (
   renderer: TestRoot["renderer"],
   testId: string,
@@ -41,18 +24,15 @@ const byTestId = (
   return element;
 };
 
-/** The markup one field handed the runtime. */
 const sourceOf = (page: ReturnType<typeof renderComponent>): string =>
   String(byTestId(page.renderer, "field-lines").customProps?.source ?? "");
 
-/** Mount under a paused motion clock, then let the box measurement land. */
 const mountFrozen = (node: ReactNode): ReturnType<typeof renderComponent> => {
   const page = renderComponent(<div />);
   page.renderer.clockPause();
   page.rerender(node);
   page.renderer.flush();
-  // The field generates from its own layout, so the picture arrives on the
-  // frame after the measurement.
+
   settle(page);
   settle(page);
   return page;
@@ -141,7 +121,6 @@ describe("Hexagon", () => {
       />,
     );
     try {
-      // The window itself is the only node: the field adds no role and no name.
       expect(Arr.map(a11yNodes(page.renderer), (node) => node.role)).toEqual([
         "window",
       ]);
@@ -173,7 +152,6 @@ describe("Hexagon", () => {
       const layer = byTestId(page.renderer, "field-breath");
       const content = byTestId(page.renderer, "content");
 
-      // Paint order is tree order, so the grid is behind the content.
       expect(field.children.indexOf(layer.id)).toBeLessThan(
         field.children.indexOf(content.id),
       );

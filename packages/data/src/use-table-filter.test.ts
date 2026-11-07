@@ -1,17 +1,3 @@
-/**
- * A predicate tree narrows the same records the grid paints.
- *
- * The gap this guards: `AdvancedFilter` composes a tree, while `useTable`
- * narrowed by a text query only — so the builder's claim that "a builder, a
- * saved query and a table's filter read one shape" was true of the data and
- * false of the table. A caller had to copy the column lookup itself, and a
- * copied lookup is how the tree and the grid come to disagree about which
- * field a clause names. `fieldValueOf` is the one seam: the grid's columns
- * answer a tree's field, and a field no column names is blank rather than a
- * throw (a saved query that mentions a removed column narrows, it does not
- * crash the grid).
- */
-
 import { describe, expect, it } from "vitest";
 import type { GridColumn } from "./grid-core.js";
 import { emptyTree, filterByTree, type FilterTree } from "./surfaces/logic.js";
@@ -35,7 +21,6 @@ const columns: ReadonlyArray<GridColumn<File>> = [
 
 const fieldOf = fieldValueOf(columns);
 
-/** A tree holding one comparison, the shape a builder composes. */
 const oneClause = (
   field: string,
   comparison: "equals" | "contains" | "greaterThan" | "lessThan",
@@ -52,8 +37,6 @@ describe("a predicate tree over the grid's columns", () => {
   });
 
   it("reads a field no column names as blank, not a throw", () => {
-    // A saved query can outlive the column it names. The grid must keep
-    // painting the records it can decide rather than fail on the lookup.
     expect(fieldOf(beta, "removed")).toBe("");
     expect(
       filterByTree(files, oneClause("removed", "greaterThan", "100"), fieldOf),

@@ -1,22 +1,3 @@
-/**
- * Guards the addresses and the premise of the `shell-stage-scroll` probe.
- *
- * The probe mounts the real `App`, presses the tall entry's row and wheels the
- * stage, none of which runs on a host with no binding. Its premises are held
- * here:
- *
- *   - the tall entry exists and is not the one the app opens on;
- *   - the bottom marker it reads is declared by that entry's own view — the
- *     charts example — so a renamed chart fails this file rather than making the
- *     probe read an element that no longer exists;
- *   - the shell still declares a stage with `overflow: "scroll"` (the
- *     declaration the probe depends on) and the address it reads;
- *   - the README prints the number of checks the probe asserts, counted from the
- *     probe's own source.
- *
- * `node:fs` is deliberate, as in `shell-selection.test.ts`: this reads the
- * repository's own files, never a runtime path.
- */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
@@ -49,7 +30,6 @@ const tallId = idOf(
 );
 const firstId = idOf(Arr.head(registry));
 
-/** Every assertion a probe makes records one check. */
 const asserted = (text: string): number =>
   Arr.length(Arr.fromIterable(text.matchAll(/ctx\.expect[A-Za-z]*\(/g)));
 

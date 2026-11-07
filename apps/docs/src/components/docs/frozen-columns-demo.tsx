@@ -2,40 +2,16 @@ import { paintableSize } from "@gpuixui/data/internal/size";
 import * as Option from "effect/Option";
 import { useRef, useState } from "react";
 
-/**
- * Browser preview for the Frozen columns page.
- *
- * `@gpuixui/data`'s `FrozenTable` is a GPUix host composition, so the package
- * page cannot mount it and this drawing is a labelled approximation. What it
- * does not approximate is the composition's rule: GPUix 0.11.0 paints no
- * `position: "sticky"`, so the frozen column is a **second scroller** beside the
- * data pane, mirrored through one offset — a wheel over either pane moves both
- * vertically, and only the data pane pans sideways. The height rule is the
- * package's own `paintableSize`: a `NaN`, an infinity or a negative is **no
- * height**, so the panes take the share of the pane they sit in, and zero is a
- * height (an empty box is the caller's choice). Only the paint is the browser's.
- */
-
-/** One scroll offset, as a browser reports it. */
 export interface ScrollPair {
   readonly scrollTop: number;
   readonly scrollLeft: number;
 }
 
-/** The offset each pane takes after one of them scrolled. */
 export interface Panes {
   readonly frozen: ScrollPair;
   readonly data: ScrollPair;
 }
 
-/**
- * The offsets both panes take after one scrolled.
- *
- * A vertical mirror must not reset the data pane's `x` — the programmatic
- * scroll paints synchronously and reports its own change — so the data pane's
- * last horizontal offset is carried into a vertical mirror, and the frozen
- * column never pans sideways: its `scrollLeft` is always zero.
- */
 export const mirroredOffsets = (
   scrolled: "frozen" | "data",
   offset: ScrollPair,
@@ -48,13 +24,10 @@ export const mirroredOffsets = (
   },
 });
 
-/** The box the drawing gives the panes when the caller's height can paint. */
 export const READABLE_HEIGHT = 200;
 
-/** The a height the layout cannot paint: a share that arrived as `NaN`. */
 export const UNREADABLE_HEIGHT = Number.NaN;
 
-/** A record the grid lists, split across the frozen and the data columns. */
 export interface FrozenRecord {
   readonly id: string;
   readonly name: string;
@@ -63,7 +36,6 @@ export interface FrozenRecord {
   readonly size: string;
 }
 
-/** The records the grid opens on: more than one pane can show at 200px. */
 export const FROZEN_RECORDS: ReadonlyArray<FrozenRecord> = [
   {
     id: "r1",
@@ -131,13 +103,10 @@ export const FROZEN_RECORDS: ReadonlyArray<FrozenRecord> = [
   },
 ];
 
-/** The frozen pane's width, and the width every frozen cell paints. */
 export const FROZEN_WIDTH = 180;
 
-/** The scrolling columns' total width: wider than the pane, so it can pan. */
 export const CONTENT_WIDTH = 420;
 
-/** The badge a record's status paints. */
 const statusTone = (status: FrozenRecord["status"]): string =>
   status === "approved"
     ? "gx-badge-success"
@@ -145,12 +114,10 @@ const statusTone = (status: FrozenRecord["status"]): string =>
       ? "gx-badge-warning"
       : "gx-badge-neutral";
 
-/** The record the grid opens on: the first one, chosen for the whole grid. */
 const OPENING_CHOICE: Option.Option<string> = Option.fromNullishOr(
   FROZEN_RECORDS[0]?.id,
 );
 
-/** The page's preview: a frozen column beside a data pane that pans. */
 export function FrozenColumnsDemo() {
   const [height, setHeight] = useState<number>(READABLE_HEIGHT);
   const [chosen, setChosen] = useState<Option.Option<string>>(OPENING_CHOICE);
@@ -183,7 +150,6 @@ export function FrozenColumnsDemo() {
     }
   };
 
-  /** The same handler on both panes: a press selects the record for the grid. */
   const select = (id: string): void => setChosen(Option.some(id));
 
   const rows = (pane: "frozen" | "data") => (

@@ -1,11 +1,3 @@
-/**
- * Browser preview for the Toggle page.
- *
- * A toggle is a button with a persistent pressed state. The preview reuses the
- * shared button chrome and paints the resting, pressed and disabled states
- * through the accent roles. The Code tab shows the native usage.
- */
-
 import { useState } from "react";
 
 const ToggleButton = ({

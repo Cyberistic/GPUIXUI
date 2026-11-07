@@ -12,20 +12,6 @@ import {
   type LaneName,
 } from "./inventory";
 
-/**
- * The inventory parse behind the composition pages.
- *
- * `/data-display` and `/workspace` render their rows
- * from `.agents/slop/COMPONENTS.md`, so the parser is the seam that keeps a page honest. The
- * guards below check the parts that would fail silently: a row lost to a
- * malformed cell, a lane naming a row that was renamed, a status the page does
- * not know how to group, and the inline Markdown a note carries.
- *
- * The escaped-pipe case guards a measured regression: a note that writes a
- * union in a code span (`` `"all" \| "any"` ``) used to split on the escaped
- * bar, read as five cells and drop the row from every lane page.
- */
-
 const inventory = parseInventory(
   readFileSync(
     new URL("../../../../.agents/slop/COMPONENTS.md", import.meta.url),
@@ -86,9 +72,6 @@ describe("parseInventory", () => {
   });
 
   it("keeps an escaped pipe in the cell it was written in", () => {
-    // A union written in a code span (`` `"all" \| "any"` ``) is valid table
-    // Markdown, but a split on every bar reads it as five cells, drops the row
-    // from every lane page and leaves the table looking valid.
     const parsed = parseInventory(
       [
         "## Tier 1 — foundational",
@@ -126,9 +109,6 @@ describe("parseInventory", () => {
       ].join("\n"),
     );
 
-    // The old parser kept Tier 4 open across the next heading, so any later
-    // table with the same columns was counted as Tier 4. A stale section is
-    // what made the animated catalogue report as Tier 5.
     expect(parsed.rows.map((row) => row.name)).toEqual(["Toolbars"]);
     expect(parsed.malformed).toEqual([]);
   });
@@ -166,8 +146,6 @@ describe("the real inventory", () => {
   });
 
   it("groups every status the inventory uses", () => {
-    // A new token would otherwise fall through to "pending" and hide a shipped
-    // row (or show a blocked one as merely unbuilt).
     const ungrouped = inventory.rows
       .filter(
         (row) =>
@@ -199,9 +177,6 @@ describe("the real inventory", () => {
   });
 
   it("keeps the animated catalogue out of the last tier", () => {
-    // The parser left the last tier open across a non-tier heading, so the 34
-    // plan 600 rows were reported as Tier 5. The document's own headings are
-    // the ground truth: read the two table bodies and compare names.
     const source = readFileSync(
       new URL("../../../../.agents/slop/COMPONENTS.md", import.meta.url),
       "utf8",
@@ -227,8 +202,7 @@ describe("the real inventory", () => {
       "## Animated primitives (plan 600)",
       "### Declined and covered catalogue entries",
     );
-    // The decorative half of the catalogue moved to `@gpuixui/fx` (plan 726)
-    // and its own section; both are the animated tier.
+
     const effects = section("## Effects", "## Blocked by the runtime");
     const tierFive = section(
       "## Tier 5 — specialised",
@@ -256,9 +230,6 @@ describe("the real inventory", () => {
 
 describe("supportLabel", () => {
   it("prints an unmeasured verdict as a word, not a question mark", () => {
-    // `?` is the inventory's only non-word verdict, and a lane that copied it
-    // cell-for-cell would show a reader a question mark where the column says
-    // whether GPUix supports the row.
     expect(supportLabel("?")).toBe("unmeasured");
   });
 
@@ -269,10 +240,6 @@ describe("supportLabel", () => {
   });
 
   it("prints an unmeasured verdict without the inventory carrying one", () => {
-    // Every shipped row is measured now, so reading the live inventory cannot
-    // exercise this branch: a guard that required a real `?` row went red the
-    // moment the last one was measured. The fixture keeps the branch alive
-    // without making the inventory's progress a test failure.
     const parsed = parseInventory(
       [
         "## Tier 3 — data presentation",
@@ -289,8 +256,6 @@ describe("supportLabel", () => {
   });
 
   it("is the verdict the lane table prints", () => {
-    // A label nothing renders is dead code: the lane table must read the cell
-    // through it, so a `?` row cannot reach a reader as a question mark.
     const table = readFileSync(
       new URL("../components/docs/lane-table.tsx", import.meta.url),
       "utf8",

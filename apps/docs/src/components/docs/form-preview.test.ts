@@ -1,16 +1,3 @@
-/**
- * The form preview's contract: the messages a failed submit turns on, which
- * field owns each, and the submit the caller owns.
- *
- * The bugs these guard are the ones a form page gets wrong: messages painted
- * before anything was submitted (a form that nags from the first keystroke), a
- * failed submit that reports one message for two bad fields (the runtime stops
- * at the first unless `errors: "all"` is asked for), an edit that clears a
- * message belonging to a field the reader did not touch, a pending form that
- * submits twice, and a success line quoting the draft on screen instead of the
- * one that was accepted.
- */
-
 import { describe, expect, it } from "vitest";
 import {
   accept,

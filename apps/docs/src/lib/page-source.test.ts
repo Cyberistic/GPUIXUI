@@ -6,18 +6,6 @@ import { readPageModules } from "./page-dependencies-source";
 import { pageSourceIndex } from "./page-source";
 import { pageSources, unresolvedPageSources } from "./page-source-data";
 
-/**
- * `.agents/slop/MISSION.md` asks every component page for copyable source. The pages the
- * packages ship are Markdown the site mounts, so the site resolves the module a
- * page documents at build time and prints that file's own text.
- *
- * Before this block existed, a package page showed the component's behaviour,
- * theming and API and never the code a reader would own if they copied it —
- * only the nine curated pages carried a source accordion. The guard holds the
- * generated block in both directions: every package page has a readable module,
- * and the text it prints is the file on disk rather than a second copy.
- */
-
 const root = fileURLToPath(new URL("../../../../", import.meta.url)).replace(
   /\/$/,
   "",
@@ -25,7 +13,6 @@ const root = fileURLToPath(new URL("../../../../", import.meta.url)).replace(
 
 const read = (path: string): string => readFileSync(join(root, path), "utf8");
 
-/** What a page prints, and the file it says it printed. */
 const printed = async (
   url: string,
 ): Promise<{ readonly file: string; readonly source: string }> => {
@@ -44,7 +31,7 @@ describe("the source behind a package page", () => {
       .filter((url) => pageSources.sources[url] === undefined);
 
     expect(missing).toEqual([]);
-    // A scan that stopped matching must not pass on an empty index.
+
     expect(pages.length).toBeGreaterThan(55);
   });
 
@@ -95,10 +82,6 @@ describe("the source behind a package page", () => {
   });
 
   it("names the file it prints instead of a length nobody re-measures", () => {
-    // The policy used to say the accordion "prints 9,709 characters of
-    // `Switch.tsx`"; the file had grown to 9,943, so a reader was shown a
-    // measurement nobody re-ran. The block prints the file whole, so the
-    // policy names the file and leaves its length to the file.
     const policy = read("docs/preview-strategy.md");
 
     expect(policy).not.toMatch(/\d[\d,]* characters of/);
@@ -113,8 +96,7 @@ describe("the source behind a package page", () => {
     const frame = view.slice(view.indexOf("function PackageContent"));
 
     expect(frame).toContain("<PackageSource url={url} />");
-    // The curated frame has its own hand-named source; the generated one would
-    // print a second accordion with the same file.
+
     expect(
       view.slice(0, view.indexOf("function PackageContent")),
     ).not.toContain("<PackageSource");

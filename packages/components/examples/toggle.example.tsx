@@ -1,18 +1,9 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Toggle example: a formatting toolbar.
- *
- * A toggle sets a mode for the next action, so the toolbar keeps three text
- * toggles and one icon-only toggle. The icon-only toggle carries its `label`,
- * because a glyph is not an accessible name.
- */
-
 import { useState } from "react";
 import { Icon } from "@gpuixui/icons";
 import { textStyle, useTheme } from "../src/internal/theme.js";
 import { Toggle } from "../src/toggle.js";
 
-/** Three modes and a view switch, each owning its own pressed state. */
 export const ToggleExample = () => {
   const theme = useTheme();
   const [bold, setBold] = useState(true);

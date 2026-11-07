@@ -10,39 +10,24 @@ import { Match } from "effect";
 import * as Option from "effect/Option";
 import { useEffect, useRef, useState, type MouseEvent } from "react";
 
-/**
- * Browser preview for the ImagePreview page.
- *
- * The native surface is caller-driven by design — the runtime's `<img>` host
- * reports neither load completion nor failure, so `status` is the caller's —
- * and the preview shows exactly that: three states a reader can set, the
- * retry action the error state offers, and the pointer zoom the shipped
- * `ImageZoom` composes. The picture is an illustration of the bytes a caller
- * hands the frame; the lens is the package's own arithmetic.
- */
-
 export type PreviewStatus = "loading" | "loaded" | "error";
 
-/** The three states, in the order the switcher offers them. */
 export const PREVIEW_STATUSES: ReadonlyArray<PreviewStatus> = [
   "loaded",
   "loading",
   "error",
 ];
 
-/** The frame the preview draws, matching `ImagePreview`'s own default. */
 export const PREVIEW_FRAME = { width: 240, height: 160 } as const;
 
 const frame = { x: 0, y: 0, ...PREVIEW_FRAME };
 
-/** The geometry `ImageZoom` resolves for this frame at its default magnification. */
 const geometry: ZoomGeometry = zoomGeometry({
   width: Option.some(PREVIEW_FRAME.width),
   height: Option.some(PREVIEW_FRAME.height),
   scale: Option.none(),
 });
 
-/** The box the picture paints for a pointer over the frame, by the zoom's rule. */
 export const previewZoom = (pointer: ZoomPointer): ZoomBox =>
   zoomFollow(geometry, frame, pointer);
 
@@ -53,7 +38,6 @@ const PICTURE = `data:image/svg+xml,${encodeURIComponent(
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 160"><rect width="240" height="160" fill="#191D25"/><path d="M0 132 L48 110 L96 122 L144 74 L192 92 L240 52 L240 160 L0 160 Z" fill="#2E2370"/><path d="M0 132 L48 110 L96 122 L144 74 L192 92 L240 52" fill="none" stroke="#A7A9FF" stroke-width="2"/><circle cx="48" cy="110" r="2.5" fill="#E0E3FF"/><circle cx="144" cy="74" r="2.5" fill="#E0E3FF"/><circle cx="192" cy="92" r="2.5" fill="#E0E3FF"/></svg>`,
 )}`;
 
-/** One frame in a named state; pure, so a test can mount every state. */
 export const PreviewFrame = ({
   status,
   pointer,

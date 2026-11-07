@@ -1,12 +1,3 @@
-/**
- * Typed refusals for the capabilities the pinned runtime does not provide.
- *
- * `UnsupportedRuntimeFeature` is a `Schema.TaggedError`, so it can fail an
- * Effect's error channel and be caught with `catchTag`. `unsupportedFeature`
- * builds one from the capability matrix, keeping the reason and workaround in
- * one place.
- */
-
 import * as Schema from "effect/Schema";
 import {
   capabilities,
@@ -34,7 +25,6 @@ export class UnsupportedRuntimeFeature extends Schema.TaggedError<UnsupportedRun
   }
 }
 
-/** The typed refusal for one unsupported capability, read from the matrix. */
 export const unsupportedFeature = (
   feature: UnsupportedFeature,
 ): UnsupportedRuntimeFeature => {

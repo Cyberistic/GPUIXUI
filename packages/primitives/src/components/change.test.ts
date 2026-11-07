@@ -1,20 +1,3 @@
-/**
- * The one change callback a value control calls.
- *
- * `docs/component-api.md` §2 names `onValueChange` for a value part and
- * `onCheckedChange` for a boolean one; `onChange` is the deprecated alias kept
- * for one release. The bug this guards is a control that quietly keeps calling
- * only the alias, so a caller who migrates stops being notified.
- *
- * The helper's precedence is pinned directly, and every value control is held to
- * routing its props through it — a component that reads `props.onChange` itself
- * would pass its own tests and fail here.
- *
- * `node:fs` is used only because this is a test-time repository check, the same
- * boundary `docs.test.ts` and `inventory.test.ts` use; the package's runtime
- * source stays on Effect's platform services.
- */
-
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import * as Arr from "effect/Array";
@@ -22,7 +5,6 @@ import * as Str from "effect/String";
 import { describe, expect, it } from "vitest";
 import { valueChange } from "./internal.js";
 
-/** A component whose value is a callback, not a boolean. */
 const VALUE_CONTROLS = [
   "Input.tsx",
   "NumberField.tsx",
@@ -80,7 +62,6 @@ describe("value controls", () => {
   });
 
   it("type their props with the shared change contract", () => {
-    // A floor, so a rename that stops matching cannot pass silently.
     expect(Arr.length(VALUE_CONTROLS)).toBeGreaterThan(5);
     expect(
       Arr.filter(

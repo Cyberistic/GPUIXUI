@@ -12,10 +12,6 @@ import {
   SbShell,
 } from "./sidebar-kit";
 
-/**
- * Sidebar 06 — the docs sections as dropdown menus on each row, over the
- * newsletter card shadcn puts in the footer.
- */
 const Newsletter = () => {
   const [subscribed, setSubscribed] = useState(false);
 

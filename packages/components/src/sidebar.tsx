@@ -1,39 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Sidebar: the application's persistent navigation panel.
- *
- * The family follows shadcn's `sidebar.tsx` part for part. Three shadcn
- * mechanisms do not exist in GPUix 0.11.0 and are translated instead of faked:
- *
- * - **CSS variables and `data-*` selectors** become one layout value in the
- *   provider (`side`, `variant`, `collapsible`) and plain numbers in
- *   `sidebar/logic.ts`. The provider owns the layout because `SidebarInset` is
- *   a sibling of `Sidebar`; shadcn reads it through a parent selector, which
- *   the renderer cannot express. `Sidebar` accepts the same three props as
- *   overrides and defaults them to the provider's.
- * - **`transition-[left,right,width]`** becomes the runtime's `motion` on
- *   exactly those properties. There is no `transform`, so offcanvas travel is
- *   a negative edge offset and the mobile sheet fades and travels 12px from its
- *   edge rather than sliding its full width.
- * - **`document.cookie`** becomes the `SidebarPreference` seam. The default is
- *   an in-process jar with shadcn's `sidebar_state` key and seven-day lifetime;
- *   an application that wants the state across launches passes its own.
- *
- * The ⌘/Ctrl+B shortcut is a key handler on the provider's wrapper. GPUix
- * accepts a window-level handler only at `render()` (`docs/gpuix-capabilities.md`
- * §Window-level key events), so a key typed while focus is outside the provider
- * subtree — a second window, an unportalled overlay — is not seen. Every key
- * that bubbles from the app does reach it, which is the whole application in a
- * normal shell.
- *
- * Rows are the primitives' action (`@gpuixui/primitives/button`), the same one
- * this package's `Button` wraps, so Enter/Space activation, the disabled stop
- * and the focus ring are the shared contract rather than a second one. The
- * tooltip is the runtime's, styled with this package's recipe: reaching the
- * primitives' barrel for one tip would add its whole graph to every consumer of
- * this package (see the package README's surface budget).
- */
-
 import type {
   EventPayload,
   KeyEvent,
@@ -163,7 +128,6 @@ import type { SidebarPreference } from "./sidebar/preference.js";
 import { send, useLocalState, useLocalStore } from "./internal/local-state.js";
 import { makeSidebarStore, tooltipShown } from "./sidebar/store.js";
 
-/** The value every part reads. */
 export interface SidebarContextValue {
   readonly state: "expanded" | "collapsed";
   readonly open: boolean;
@@ -175,13 +139,13 @@ export interface SidebarContextValue {
   readonly side: SidebarSide;
   readonly variant: SidebarVariant;
   readonly collapsible: SidebarCollapsible;
-  /** The open panel's width, from the provider. */
+
   readonly width: number;
-  /** The icon rail's width, from the provider. */
+
   readonly iconWidth: number;
-  /** The mobile sheet's width, from the provider. */
+
   readonly mobileWidth: number;
-  /** The icon-mode tip showing, if any. */
+
   readonly tooltip: Option.Option<string>;
   readonly showTooltip: (label: string) => void;
   readonly hideTooltip: () => void;
@@ -191,7 +155,6 @@ const SidebarContext = createContext<SidebarContextValue | undefined>(
   undefined,
 );
 
-/** The sidebar a part belongs to. Throws outside a {@link SidebarProvider}. */
 export const useSidebar = (): SidebarContextValue => {
   const value = useContext(SidebarContext);
   if (value === undefined) {
@@ -200,29 +163,17 @@ export const useSidebar = (): SidebarContextValue => {
   return value;
 };
 
-/**
- * The sidebar's toggle, as a rule an app root can forward.
- *
- * The provider hears the keys that bubble through its own subtree. GPUix
- * delivers window keys only to the application's render handler, so an app that
- * wants ⌘/Ctrl+B to work with focus outside the sidebar forwards its root
- * `onKeyDown` through this predicate — the same rule, one implementation.
- */
 export const isSidebarShortcut = (event: KeyEvent): boolean =>
-  // A held key is one gesture: GPUI reports every repeat with `isHeld`.
   event.isHeld !== true &&
   event.key?.toLowerCase() === SIDEBAR_KEYBOARD_SHORTCUT &&
   (event.modifiers?.cmd === true || event.modifiers?.ctrl === true);
 
-/** A width a caller may have stored: a finite, positive number, or the default. */
 const positiveWidth = (value: number | undefined, fallback: number): number =>
   value !== undefined && Number.isFinite(value) && value > 0 ? value : fallback;
 
-/** Whether the panel is collapsed to icons. */
 const iconCollapsed = (context: SidebarContextValue): boolean =>
   context.state === "collapsed" && context.collapsible === "icon";
 
-/** In the icon rail a block's rows are centred from the rail's own width. */
 const useRailPadding = () => {
   const context = useSidebar();
   if (!iconCollapsed(context)) return undefined;
@@ -230,7 +181,6 @@ const useRailPadding = () => {
   return { paddingLeft: pad, paddingRight: pad };
 };
 
-/** The layout a part paints from. */
 const layoutOf = (context: SidebarContextValue) => ({
   open: context.open,
   variant: context.variant,
@@ -239,34 +189,28 @@ const layoutOf = (context: SidebarContextValue) => ({
   iconWidth: context.iconWidth,
 });
 
-/** {@link SidebarProvider} props. */
 export interface SidebarProviderProps extends Omit<Props, "children"> {
-  /** The starting state when neither `open` nor a stored preference exists. */
   readonly defaultOpen?: boolean;
-  /** The controlled open state. `undefined` means uncontrolled. */
+
   readonly open?: boolean;
   readonly onOpenChange?: (open: boolean) => void;
-  /** Where the open state is kept. Defaults to the in-process cookie jar. */
+
   readonly preference?: SidebarPreference;
-  /** The edge both the panel and its gap occupy. Default `"left"`. */
+
   readonly side?: SidebarSide;
-  /** The surface the panel wears. Default `"sidebar"`. */
+
   readonly variant?: SidebarVariant;
-  /** What collapsing does. Default `"offcanvas"`. */
+
   readonly collapsible?: SidebarCollapsible;
-  /** The open panel's width. Default `256` (shadcn's `16rem`). */
+
   readonly width?: number;
-  /** The icon rail's width. Default `48` (shadcn's `3rem`). */
+
   readonly iconWidth?: number;
-  /** The mobile sheet's width. Default `288` (shadcn's `18rem`). */
+
   readonly mobileWidth?: number;
   readonly children?: ReactNode;
 }
 
-/**
- * One store, one layout, and the keyboard shortcut. Render it once at the root
- * and put {@link Sidebar} and {@link SidebarInset} inside it.
- */
 export const SidebarProvider = ({
   defaultOpen,
   open: openProp,
@@ -301,9 +245,6 @@ export const SidebarProvider = ({
   );
   const snapshot = useLocalState(store.local);
 
-  // A controlled `open` is the authority. The effect applies it to the store so
-  // every part paints the caller's value, and a caller that refuses the change
-  // keeps the state it passed.
   useEffect(() => {
     if (openProp === undefined || openProp === snapshot.open) return;
     send(store.setOpen(openProp));
@@ -387,8 +328,6 @@ export const SidebarProvider = ({
         onKeyDown={handleKeyDown}
         style={mergeStyles(
           mergeStyles(recipeStyle(SIDEBAR_ROOT, theme), {
-            // The inset variant wears the chrome behind its content: the panel
-            // and the wrapper are one surface, and the inset floats on it.
             backgroundColor:
               variant === "inset" ? theme.colors.card : theme.colors.background,
           }),
@@ -401,23 +340,17 @@ export const SidebarProvider = ({
   );
 };
 
-/** {@link Sidebar} props. */
 export interface SidebarProps extends Omit<Props, "children"> {
-  /** The edge to occupy. Defaults to the provider's `side`. */
   readonly side?: SidebarSide;
-  /** The surface. Defaults to the provider's `variant`. */
+
   readonly variant?: SidebarVariant;
-  /** What collapsing does. Defaults to the provider's `collapsible`. */
+
   readonly collapsible?: SidebarCollapsible;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
   readonly children?: ReactNode;
 }
 
-/**
- * The panel. On a narrow window it is the modal sheet; above the breakpoint it
- * is the gap and the panel the gap reserves room for.
- */
 export const Sidebar = ({
   side: requestedSide,
   variant: requestedVariant,
@@ -502,8 +435,7 @@ export const Sidebar = ({
           width,
           ...(side === "left" ? { left: offset } : { right: offset }),
           padding: variant === "sidebar" ? 0 : 8,
-          // The plain variant edges the panel against the content; the
-          // floating and inset variants paint that edge on the inner box.
+
           ...(variant === "sidebar"
             ? {
                 borderColor: theme.colors.border,
@@ -520,7 +452,6 @@ export const Sidebar = ({
   );
 };
 
-/** The mobile sheet: the same children in a modal panel at the named edge. */
 const SidebarSheet = ({
   side,
   className,
@@ -614,13 +545,10 @@ const SidebarSheet = ({
   );
 };
 
-/** {@link SidebarTrigger} props. */
 export interface SidebarTriggerProps extends Omit<Props, "children"> {
-  /** Default `"sm"`. */
   readonly size?: "sm" | "md" | "lg";
 }
 
-/** The control that toggles the panel (or the sheet on a narrow window). */
 export const SidebarTrigger = ({
   size = "sm",
   testId = "sidebar-trigger",
@@ -641,19 +569,10 @@ export const SidebarTrigger = ({
   );
 };
 
-/** {@link SidebarRail} props. */
 export interface SidebarRailProps extends Omit<Props, "children"> {
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
 }
 
-/**
- * The thin strip on the panel's outer edge.
- *
- * A press toggles; a press dragged 8px toward the edge also toggles, once. The
- * runtime delivers `onMouseMove` with `pressedButton` for the gesture, so the
- * drag needs no pointer capture.
- */
 export const SidebarRail = ({
   className,
   style,
@@ -713,8 +632,7 @@ export const SidebarRail = ({
           top: 0,
           bottom: 0,
           width: 16,
-          // Inside the panel's edge, not straddling it: paint order is tree
-          // order, so a strip outside would sit under the inset beside it.
+
           ...(side === "left" ? { right: 0 } : { left: 0 }),
           cursor,
           hover: { backgroundColor: theme.colors.hover },
@@ -725,14 +643,11 @@ export const SidebarRail = ({
   );
 };
 
-/** {@link SidebarInset} props. */
 export interface SidebarInsetProps extends Omit<Props, "children"> {
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
   readonly children?: ReactNode;
 }
 
-/** The content beside the panel. */
 export const SidebarInset = ({
   className,
   style,
@@ -768,13 +683,11 @@ export const SidebarInset = ({
   );
 };
 
-/** {@link SidebarHeader} props. */
 export interface SidebarHeaderProps extends Omit<Props, "children"> {
   readonly className?: string;
   readonly children?: ReactNode;
 }
 
-/** The panel's heading block. */
 export const SidebarHeader = ({
   className,
   style,
@@ -796,13 +709,11 @@ export const SidebarHeader = ({
   );
 };
 
-/** {@link SidebarFooter} props. */
 export interface SidebarFooterProps extends Omit<Props, "children"> {
   readonly className?: string;
   readonly children?: ReactNode;
 }
 
-/** The panel's footer block. */
 export const SidebarFooter = ({
   className,
   style,
@@ -824,13 +735,11 @@ export const SidebarFooter = ({
   );
 };
 
-/** {@link SidebarContent} props. */
 export interface SidebarContentProps extends Omit<Props, "children"> {
   readonly className?: string;
   readonly children?: ReactNode;
 }
 
-/** The scrolling middle of the panel. */
 export const SidebarContent = ({
   className,
   style,
@@ -851,12 +760,10 @@ export const SidebarContent = ({
   );
 };
 
-/** {@link SidebarSeparator} props. */
 export interface SidebarSeparatorProps extends Omit<Props, "children"> {
   readonly className?: string;
 }
 
-/** A rule between two regions of the panel. */
 export const SidebarSeparator = ({
   className,
   style,
@@ -877,13 +784,11 @@ export const SidebarSeparator = ({
   );
 };
 
-/** {@link SidebarGroup} props. */
 export interface SidebarGroupProps extends Omit<Props, "children"> {
   readonly className?: string;
   readonly children?: ReactNode;
 }
 
-/** One labelled group of rows. */
 export const SidebarGroup = ({
   className,
   style,
@@ -902,14 +807,12 @@ export const SidebarGroup = ({
   );
 };
 
-/** {@link SidebarGroupLabel} props. */
 export interface SidebarGroupLabelProps extends Omit<Props, "children"> {
   readonly className?: string;
-  /** The heading. A stored label is often translated, so it is text. */
+
   readonly children?: string;
 }
 
-/** A group's heading. It collapses out of the way with the panel's width. */
 export const SidebarGroupLabel = ({
   className,
   children,
@@ -950,15 +853,12 @@ export const SidebarGroupLabel = ({
   );
 };
 
-/** {@link SidebarGroupAction} props. */
 export interface SidebarGroupActionProps extends Omit<Props, "children"> {
-  /** The accessible name; the action is icon-only. */
   readonly label: string;
   readonly className?: string;
   readonly children?: ReactNode;
 }
 
-/** A group's trailing action. */
 export const SidebarGroupAction = ({
   label,
   className,
@@ -994,13 +894,11 @@ export const SidebarGroupAction = ({
   );
 };
 
-/** {@link SidebarGroupContent} props. */
 export interface SidebarGroupContentProps extends Omit<Props, "children"> {
   readonly className?: string;
   readonly children?: ReactNode;
 }
 
-/** The rows under a group heading. */
 export const SidebarGroupContent = ({
   className,
   style,
@@ -1018,13 +916,11 @@ export const SidebarGroupContent = ({
   );
 };
 
-/** {@link SidebarMenu} props. */
 export interface SidebarMenuProps extends Omit<Props, "children"> {
   readonly className?: string;
   readonly children?: ReactNode;
 }
 
-/** A list of rows. */
 export const SidebarMenu = ({
   className,
   style,
@@ -1043,13 +939,11 @@ export const SidebarMenu = ({
   );
 };
 
-/** {@link SidebarMenuItem} props. */
 export interface SidebarMenuItemProps extends Omit<Props, "children"> {
   readonly className?: string;
   readonly children?: ReactNode;
 }
 
-/** One row, and the anchor for its action and badge. */
 export const SidebarMenuItem = ({
   className,
   style,
@@ -1068,35 +962,28 @@ export const SidebarMenuItem = ({
   );
 };
 
-/** The three heights a menu row offers. */
 export type SidebarMenuButtonSize = keyof typeof SIDEBAR_MENU_BUTTON_SIZES;
 
-/** {@link SidebarMenuButton} props. */
 export interface SidebarMenuButtonProps extends Omit<Props, "children"> {
-  /** The item is the current destination. */
   readonly isActive?: boolean;
-  /** Default `"default"`. */
+
   readonly variant?: "default" | "outline";
-  /** Default `"default"`. */
+
   readonly size?: SidebarMenuButtonSize;
-  /** The tip shown when the panel is collapsed to icons. */
+
   readonly tooltip?: string;
-  /**
-   * The label. GPUix has no CSS descendant selectors to truncate arbitrary
-   * children, so the label is a text part the component owns.
-   */
+
   readonly label?: string;
-  /** The leading slot: an icon, usually. */
+
   readonly children?: ReactNode;
-  /** The trailing slot: a count, a chevron. */
+
   readonly trailing?: ReactNode;
   readonly disabled?: boolean;
   readonly className?: string;
-  /** The row's action, pointer or keyboard. */
+
   readonly onClick?: (event: EventPayload) => void;
 }
 
-/** A row: an icon, a label, and an optional trailing slot. */
 export const SidebarMenuButton = ({
   isActive = false,
   variant = "default",
@@ -1173,9 +1060,7 @@ export const SidebarMenuButton = ({
         style,
       )}
     >
-      {/* The rail is a glyph: the label's zero-width text still takes a flex
-          slot and its 8px gap, which pushed the icon 4px off the row's centre.
-          The accessible name is `Action`'s own `label`, so nothing is lost. */}
+      {}
       {label === undefined || icon ? null : (
         <text
           style={mergeStyles(recipeStyle(SIDEBAR_MENU_LABEL, theme), {
@@ -1203,10 +1088,6 @@ export const SidebarMenuButton = ({
       {shown ? (
         <TooltipContent
           side="right"
-          // The runtime's `center` anchors to the row's top edge, so a rail tip
-          // painted half a row too high; `start` puts its top on the row and
-          // the extra offset clears the rail's own padding, not just the 32px
-          // button, so the tip never sits over the panel's edge.
           align="start"
           sideOffset={6 + (context.iconWidth - 32) / 2}
           testId={testId === undefined ? undefined : `${testId}-tip`}
@@ -1226,17 +1107,14 @@ export const SidebarMenuButton = ({
   );
 };
 
-/** {@link SidebarMenuAction} props. */
 export interface SidebarMenuActionProps extends Omit<Props, "children"> {
-  /** The accessible name; the action is icon-only. */
   readonly label: string;
-  /** Reveal only while the row is hovered or focused. Default `false`. */
+
   readonly showOnHover?: boolean;
   readonly className?: string;
   readonly children?: ReactNode;
 }
 
-/** A row's trailing action. */
 export const SidebarMenuAction = ({
   label,
   showOnHover = false,
@@ -1296,13 +1174,11 @@ export const SidebarMenuAction = ({
   );
 };
 
-/** {@link SidebarMenuBadge} props. */
 export interface SidebarMenuBadgeProps extends Omit<Props, "children"> {
   readonly className?: string;
   readonly children?: string;
 }
 
-/** A row's trailing count. */
 export const SidebarMenuBadge = ({
   className,
   style,
@@ -1336,14 +1212,11 @@ export const SidebarMenuBadge = ({
   );
 };
 
-/** {@link SidebarMenuSkeleton} props. */
 export interface SidebarMenuSkeletonProps extends Omit<Props, "children"> {
-  /** Draw the leading square. Default `false`. */
   readonly showIcon?: boolean;
   readonly className?: string;
 }
 
-/** A loading row. */
 export const SidebarMenuSkeleton = ({
   showIcon = false,
   className,
@@ -1372,13 +1245,11 @@ export const SidebarMenuSkeleton = ({
   );
 };
 
-/** {@link SidebarMenuSub} props. */
 export interface SidebarMenuSubProps extends Omit<Props, "children"> {
   readonly className?: string;
   readonly children?: ReactNode;
 }
 
-/** A submenu list. */
 export const SidebarMenuSub = ({
   className,
   style,
@@ -1403,13 +1274,11 @@ export const SidebarMenuSub = ({
   );
 };
 
-/** {@link SidebarMenuSubItem} props. */
 export interface SidebarMenuSubItemProps extends Omit<Props, "children"> {
   readonly className?: string;
   readonly children?: ReactNode;
 }
 
-/** One submenu row. */
 export const SidebarMenuSubItem = ({
   className,
   style,
@@ -1427,22 +1296,19 @@ export const SidebarMenuSubItem = ({
   );
 };
 
-/** {@link SidebarMenuSubButton} props. */
 export interface SidebarMenuSubButtonProps extends Omit<Props, "children"> {
-  /** The item is the current destination. */
   readonly isActive?: boolean;
-  /** Default `"md"`. */
+
   readonly size?: "sm" | "md";
-  /** The label; see {@link SidebarMenuButtonProps.label}. */
+
   readonly label?: string;
   readonly className?: string;
   readonly children?: ReactNode;
   readonly disabled?: boolean;
-  /** The row's action, pointer or keyboard. */
+
   readonly onClick?: (event: EventPayload) => void;
 }
 
-/** A submenu row: a label with an optional leading mark. */
 export const SidebarMenuSubButton = ({
   isActive = false,
   size = "md",
@@ -1503,25 +1369,23 @@ export const SidebarMenuSubButton = ({
   );
 };
 
-/** {@link SidebarInput} props: a plain field at the panel's own height. */
 export interface SidebarInputProps {
   readonly value?: string;
   readonly placeholder?: string;
-  /** Leave the value selectable but not editable. */
+
   readonly readOnly?: boolean;
-  /** Leaves the tab order and ignores edits. */
+
   readonly disabled?: boolean;
-  /** A Tailwind class string, joined after the recipe. */
+
   readonly className?: string;
-  /** A style, merged last. */
+
   readonly style?: StyleDesc;
-  /** Stable locator for automation. */
+
   readonly testId?: string;
-  /** Called with the runtime's edit event. */
+
   readonly onChange?: (event: EventPayload) => void;
 }
 
-/** The search or filter field shadcn puts in a panel header. */
 export const SidebarInput = ({
   className,
   style,
@@ -1543,7 +1407,6 @@ export const SidebarInput = ({
   );
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const sidebarMeta = {
   name: "Sidebar",
   tier: 2,

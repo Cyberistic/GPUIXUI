@@ -10,15 +10,6 @@ import {
   samePreviews,
 } from "../../scripts/docs-theme-probe";
 
-/**
- * The docs chrome has a light/dark switch of its own, separate from the
- * previews' `?mode=` axis: the chrome's palette is declared in `app.css` while a
- * preview paints the library's theme. `docs-theme.test.ts` measures both
- * schemes' contrast; this file holds the **press** half — the probe that moves
- * `<html>` from one scheme to the other and requires every preview to stay put —
- * and the values it asserts against.
- */
-
 const root = new URL("../../../../", import.meta.url);
 const read = (path: string): string =>
   readFileSync(new URL(path, root), "utf8");
@@ -54,8 +45,6 @@ describe("the docs theme's readout", () => {
   });
 
   it("reads a page with no preview as no preview, not one empty entry", () => {
-    // `"".split(",")` is `[""]`, which would count as a painted surface and let
-    // a page that mounts none pass the "every preview stayed" comparison.
     expect(parseReadout("dark|#0a0a0a|dark|")?.previews).toEqual([]);
   });
 
@@ -68,9 +57,6 @@ describe("the docs theme's readout", () => {
   });
 
   it("refuses a preview entry it cannot read whole", () => {
-    // Dropping the unreadable half would compare a shorter list against the
-    // opening read and report a preview that moved when the page only failed to
-    // paint its platform attribute.
     expect(parsePreview("dark:darwin")).toBeUndefined();
     expect(
       parseReadout("light|#ffffff|light|dark:darwin:#11141A,dark"),
@@ -90,9 +76,6 @@ describe("the previews comparison", () => {
   });
 
   it("reads a different platform as a moved preview", () => {
-    // The platform switch and the docs theme switch are two axes: a preview
-    // that kept its fill but re-resolved its platform would mean the docs
-    // theme press leaked into the library's choice.
     expect(
       samePreviews(
         [preview("dark", "darwin", "#11141A")],
@@ -113,8 +96,6 @@ describe("the chrome's fills", () => {
   });
 
   it("reads the sheet rather than carrying a copy", () => {
-    // The probe must not hold a hex of its own: a palette edit in `app.css` has
-    // to move what the press asserts, or the guard measures a previous scheme.
     const literals = probe.match(/#[0-9a-fA-F]{6}/g) ?? [];
     expect(literals).toEqual([]);
     expect(probe).toContain("app.css");
@@ -122,10 +103,6 @@ describe("the chrome's fills", () => {
   });
 
   it("compares the paint a minified sheet serves, not its spelling", () => {
-    // Bug guarded: the probe read `#ffffff` from the source sheet while a
-    // production build serves it as `#fff`, so a correct palette failed with
-    // "the light chrome painted #fff, not the sheet's #ffffff value" the moment
-    // the probe was pointed at a built server. The comparison is the paint.
     expect(samePaint("#fff", "#ffffff")).toBe(true);
     expect(samePaint("#FFFFFF", "#ffffff")).toBe(true);
     expect(samePaint("#0a0a0a", "#0a0a0a")).toBe(true);
@@ -137,8 +114,6 @@ describe("the chrome's fills", () => {
   });
 
   it("derives a preview's fill from the library palette, not from the docs sheet", () => {
-    // The two palettes are the point of the probe: a preview is held to the
-    // library's `background` role for the mode and platform it reports.
     expect(expectedBackground("dark", "darwin")).toBe(
       platformTheme(themes.dark, "darwin").colors.background,
     );
@@ -152,8 +127,7 @@ describe("the press path", () => {
   it("waits for the toggle's handler before it presses", () => {
     const readyAt = probe.indexOf("session.page.text(ready)");
     const pressAt = probe.indexOf("session.page.text(press)");
-    // The gate is the shared read (`react-ready.ts`), which finds React 19's
-    // fiber props; `react-ready.test.ts` proves the read itself.
+
     expect(probe).toContain("firstReady(");
     expect(probe).toContain("[data-theme-toggle]");
     expect(readyAt).toBeGreaterThan(-1);
@@ -161,9 +135,6 @@ describe("the press path", () => {
   });
 
   it("presses both directions and holds every preview still", () => {
-    // One press would pass on a toggle that only ever darkens, and reading the
-    // chrome alone would pass while a preview followed it — the separation the
-    // policy promises.
     expect(probe.match(/session\.page\.text\(press\)/g)).toHaveLength(2);
     expect(probe).toContain(".gx-demo[data-mode]");
     expect(probe).toContain("a preview followed the docs theme");
@@ -176,8 +147,6 @@ describe("the press path", () => {
   });
 
   it("compares the settled previews with the same-fields rule", () => {
-    // The previews are objects; `join(",")` reads `[object Object]` for every
-    // entry, so a page whose previews all moved could pass the comparison.
     expect(probe).toContain("samePreviews(next.previews, opening.previews)");
     expect(probe).not.toContain("previews.join");
   });
@@ -193,8 +162,6 @@ describe("the policy", () => {
   });
 
   it("records the served build's minified paint and the comparison it needs", () => {
-    // Bug guarded: the policy promised the chrome was held to the sheet, and
-    // the string comparison broke on the build the probe is run against.
     expect(policy).toContain("by paint,\n  not by spelling");
     expect(policy).toContain("samePaint");
     expect(policy).toContain("three-digit form");

@@ -1,16 +1,3 @@
-/**
- * The motion seam's frames and mount window.
- *
- * The bugs these guard: an offset with the wrong sign (a drawer that jumps away
- * from its edge, a popover that arrives from the wrong side of its trigger); a
- * mount window with the wrong unit — `motionTiming` names seconds because the
- * runtime reads seconds, while the seam keeps a leaving box painted for
- * milliseconds, and a preference change has to collapse both to zero; and a
- * stagger that survives the reduced preference, holding a resting surface at its
- * first frame for the length of the wait. The direction of every edge is
- * asserted here because the behaviour suite can only see the surfaces it mounts.
- */
-
 import {
   motionLevels,
   motionTiming,
@@ -29,7 +16,6 @@ import {
   type SurfaceTiming,
 } from "./presence.js";
 
-/** The timing a surface at `level` moves with, as the hook builds it. */
 const timing = (
   level: keyof typeof motionLevels,
   preference?: MotionPreference,
@@ -56,8 +42,6 @@ describe("the frames", () => {
   });
 
   it("arrives from outside the window edge a panel is anchored to", () => {
-    // A right-edge drawer rests at the edge and starts further right; a
-    // top-edge panel starts higher. The other two mirror them.
     expect(fadeFromSide("right", 12).initial).toEqual({ opacity: 0, left: 12 });
     expect(fadeFromSide("left", 12).initial).toEqual({ opacity: 0, left: -12 });
     expect(fadeFromSide("bottom", 12).initial).toEqual({ opacity: 0, top: 12 });
@@ -65,8 +49,6 @@ describe("the frames", () => {
   });
 
   it("arrives from the side of the trigger it is anchored to", () => {
-    // A surface below its trigger starts above its resting place and moves
-    // down; one above starts below; the sides mirror the same rule.
     expect(fadeFromAnchor("bottom", 4).initial).toEqual({
       opacity: 0,
       top: -4,
@@ -80,7 +62,6 @@ describe("the frames", () => {
   });
 
   it("dims a scrim without moving it", () => {
-    // A veil has no edge: it fades, so it must carry no geometry at all.
     expect(fadeOnly).toEqual({
       initial: { opacity: 0 },
       animate: { opacity: 1 },
@@ -96,8 +77,6 @@ describe("the mount window", () => {
   });
 
   it("collapses to nothing under the reduced preference", () => {
-    // The seam reads the preference per render, so this is the value that makes
-    // a leaving surface unmount in the frame it closes.
     expect(exitWindowMs(timing("slow", "reduced"))).toBe(0);
   });
 
@@ -106,9 +85,6 @@ describe("the mount window", () => {
   });
 
   it("times any run by the transition it paints, not by the level's number", () => {
-    // The feedback layers (a ripple, a sheen, a flood) keep a layer mounted for
-    // the length of an *enter* journey, and the timing they paint is where the
-    // preference reaches the window: the level table alone cannot rescale.
     expect(transitionWindowMs(timing("normal").enter)).toBe(
       motionLevels.normal,
     );
@@ -120,14 +96,10 @@ describe("the mount window", () => {
   });
 
   it("counts the wait before a delayed run", () => {
-    // The runtime holds a delayed run's first frame for the wait, so a window
-    // that counted only the duration would unmount a feedback layer before its
-    // journey began.
     expect(transitionWindowMs(delayedTiming(timing("normal").enter, 80))).toBe(
       motionLevels.normal + 80,
     );
-    // A hand-built timing can carry a wait the scheduler would refuse; it is no
-    // window rather than a NaN one.
+
     expect(transitionWindowMs({ duration: 0.2, delay: Number.NaN })).toBe(
       motionLevels.normal,
     );
@@ -136,10 +108,6 @@ describe("the mount window", () => {
 
 describe("a movement between resting states", () => {
   it("eases at both ends, not like a surface arriving", () => {
-    // The bug this guards: the tab pill and the carousel dot are not entering or
-    // leaving — they move from one resting place to another — and both painted
-    // the *enter* curve (`easeOut`), so the timing table's third phase had no
-    // consumer. The curve is read from the table rather than restated.
     expect(moveTiming("normal", "animated")).toEqual({
       duration: motionLevels.normal / 1000,
       ease: "easeInOut",
@@ -159,8 +127,6 @@ describe("a movement between resting states", () => {
 
 describe("a staggered run", () => {
   it("hands the delay to the runtime in the seconds it reads", () => {
-    // The runtime's `delay` is seconds like `duration`; milliseconds here would
-    // make a reveal wait a thousand times too long.
     expect(delayedTiming(timing("normal").enter, 80)).toEqual({
       duration: 0.2,
       ease: "easeOut",
@@ -169,9 +135,6 @@ describe("a staggered run", () => {
   });
 
   it("drops the delay with the journey under the reduced preference", () => {
-    // The runtime waits a delay out *before* an instant assignment, so a kept
-    // delay holds a reduced surface at its first frame for the whole stagger —
-    // measured on `Reveal` (`behaviour/reveal.test.tsx`).
     expect(delayedTiming(timing("normal", "reduced").enter, 80)).toEqual({
       duration: 0,
     });

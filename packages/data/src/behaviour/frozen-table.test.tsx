@@ -1,22 +1,3 @@
-/**
- * The frozen-column grid in the real GPUix renderer, mounted through the shipped
- * example.
- *
- * The bugs these guard are the ones two scrollers can hide:
- *
- * - a frozen column that only follows **one** direction of the mirror, so a
- *   wheel over it leaves the data pane behind and the rows stop lining up;
- * - a vertical mirror that resets the data pane's horizontal pan, because
- *   `scrollTo` takes both axes;
- * - a frozen press that chooses nothing in the data pane, because the two panes
- *   read two selections;
- * - panes that clamp at different ends, leaving one column at the last row while
- *   the other still scrolls.
- *
- * Everything is read off the painted tree and the runtime's own scroll offset —
- * not off the component's state.
- */
-
 import { afterEach, describe, expect, it } from "vitest";
 import { darkTheme } from "@gpuixui/tokens";
 import * as Arr from "effect/Array";
@@ -34,7 +15,7 @@ let root: DataTestRoot | undefined;
 
 const mount = (): DataTestRoot => {
   root = renderData(<FrozenTableExample />);
-  // Both bodies learn their height from the panes' `onLayout` events.
+
   settle(root);
   return root;
 };
@@ -69,7 +50,6 @@ const allText = (root: DataTestRoot): string =>
 
 const readout = (root: DataTestRoot): string => allText(root);
 
-/** A wheel aimed inside a pane, at the point the runtime hit-tests. */
 const wheel = (
   root: DataTestRoot,
   testId: string,
@@ -106,7 +86,7 @@ describe("the frozen-column table", () => {
     const body = scrollOf(root, "frozen-body");
     expect(body.y).toBeLessThan(0);
     expect(frozen.y).toBe(body.y);
-    // The record under the reader keeps one y across the seam.
+
     expect(boundsOf(root, "frozen-row-file-20").y).toBe(
       boundsOf(root, "body-row-file-20").y,
     );
@@ -136,7 +116,7 @@ describe("the frozen-column table", () => {
     root.renderer.flush();
 
     expect(readout(root)).toContain("file-3 selected");
-    // Both panes read the one chosen record.
+
     expect(
       root.renderer.findByTestId("frozen-row-file-3")?.style.backgroundColor,
     ).toBe(darkTheme.colors.selected);
@@ -154,8 +134,7 @@ describe("the frozen-column table", () => {
     const body = scrollOf(root, "frozen-body");
     expect(body.y).toBeLessThan(0);
     expect(frozen.y).toBe(body.y);
-    // The last record is still lined up: a pane that clamped earlier would
-    // leave it at a different y.
+
     expect(boundsOf(root, "frozen-row-file-60").y).toBe(
       boundsOf(root, "body-row-file-60").y,
     );

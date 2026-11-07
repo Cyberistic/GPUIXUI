@@ -1,18 +1,3 @@
-/**
- * Holds the `menu-radio-lifecycle` fixture, the probe that paints it and the
- * section a plan reads.
- *
- * The bug this guards: a radio row's state is one check mark in a fixed leading
- * slot, so the row's box is the same marked or not — `aria-selected` and the
- * mark's accessible name are renderer facts, and only a frame says whether the
- * `primary` ink reached the glass. The probe's reading is a tolerance count (a
- * 16-point glyph's 1.33-point stroke has no fully covered pixel), and the four
- * row readings are what this suite holds: the ink is on the chosen row, the
- * choice moves it, and the chosen row's own press reports nothing.
- *
- * `node:fs` is deliberate, as in the other live fixtures: this reads the
- * repository's own probe and prose, never a runtime path.
- */
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -44,13 +29,11 @@ const probe = read("./menu-radio-probe.tsx");
 const registry = read("./registry.ts");
 const readme = read("../../README.md");
 
-/** The probe's own steps, so a count cannot be read out of another probe. */
 const stepsOf = (): string => {
   const start = probe.indexOf("export const menuRadioSteps");
   return start === -1 ? "" : probe.slice(start);
 };
 
-/** This probe's README section, so a value printed elsewhere cannot pass. */
 const sectionOf = (): string => {
   const heading = "### `menu-radio-lifecycle` — measured on 0.11.0 here";
   const start = readme.indexOf(heading);
@@ -59,12 +42,6 @@ const sectionOf = (): string => {
   return readme.slice(start, end === -1 ? undefined : end);
 };
 
-/**
- * The ink the frame was measured against.
- *
- * An unreadable role gives black, which every closeness assertion below then
- * fails: the fallback cannot make a bad palette pass.
- */
 const ink = Option.getOrElse(
   rgbOf(markInk(palettes.dark.colors.primary)),
   () => ({ r: 0, g: 0, b: 0 }),
@@ -91,14 +68,12 @@ describe("the readout", () => {
 
 describe("the mark's ink", () => {
   it("counts a glyph whose stroke has no fully covered pixel", () => {
-    // The measured closest pixel: 82% of the ink over the popover fill.
     expect(MARK_TOLERANCE).toBeLessThan(inkDistance(173, 175, 179, ink));
     expect(MARK_TOLERANCE).toBeGreaterThan(inkDistance(143, 145, 217, ink));
     expect(isMarkInk(143, 145, 217, ink)).toBe(true);
   });
 
   it("refuses the row's label and its fill", () => {
-    // The row's own text is 67 away at its measured coverage; the fill further.
     expect(isMarkInk(173, 175, 179, ink)).toBe(false);
     expect(
       isMarkInk(
@@ -115,7 +90,7 @@ describe("the probe", () => {
   it("mounts the shipped menu and one radio row per choice", () => {
     expect(probe).toContain("DropdownMenuRadioGroup");
     expect(probe).toContain("DropdownMenuRadioItem");
-    // The rows, ids and group name come from the fixture, not a second list.
+
     expect(probe).toContain("Arr.map(MENU_RADIO_OPTIONS");
     expect(probe).toContain("testId={option.testId}");
     expect(probe).toContain("value={option.value}");
@@ -142,8 +117,7 @@ describe("the probe", () => {
       Arr.fromIterable(stepsOf().matchAll(/ctx\.expect\w+\(/g)),
     );
     expect(sites).toBeGreaterThan(0);
-    // Capture and row helpers assert once per call, so the printed count floors
-    // the sites in the steps.
+
     expect(MENU_RADIO_CHECKS).toBeGreaterThanOrEqual(sites);
   });
 });
@@ -173,7 +147,7 @@ describe("the registry and the record", () => {
     expect(section).toContain("The mark is the row's state");
     expect(section).toContain("A radio choice closes the surface");
     expect(section).toContain("The chosen row's own press reports nothing");
-    // The measurement is a paint count, not a layout read.
+
     expect(section).toContain("41");
   });
 

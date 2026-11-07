@@ -8,6 +8,9 @@
     "dev": "nub run build && nub watch dist/main.js",
     "smoke": "nub run build && nub dist/smoke/run.js",
     "terminal": "nub run build && nub dist/terminal/run.js",
+    "bundle": "nub run build && nub scripts/bundle.ts",
+    "start": "nub run bundle && nub dist/bundle/start.mjs",
+    "bench:launch": "nub run bundle && caffeinate -du nub dist/launch/run.js",
     "check-types": "nub run --filter @gpuixui/testing build && tsc -p tsconfig.check.json",
     "test": "nub run --filter @gpuixui/testing build && vitest run"
   },
@@ -45,6 +48,7 @@
     "@types/node": "^26.1.1",
     "@types/react": "^19.2.0",
     "better-auth": "^1.7.17",
+    "esbuild": "^0.28.2",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }

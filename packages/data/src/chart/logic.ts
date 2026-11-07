@@ -66,7 +66,6 @@ export const chartMaxOf = (
     Math.max(max, seriesMax(one, categories)),
   );
 
-/** Each divides by the axis's four intervals into a tick worth printing. */
 const NICE_STEPS = [1, 1.2, 1.6, 2, 2.4, 3, 4, 5, 6, 8, 10] as const;
 
 export const niceCeiling = (raw: number): number => {
@@ -347,7 +346,6 @@ export const donutSegments = (
   return segments;
 };
 
-/** Every ring segment, flattened — a donut chart's marks in one list. */
 export const donutMarks = (
   values: ReadonlyArray<number>,
   box: ChartBox,

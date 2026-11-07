@@ -1,18 +1,3 @@
-/**
- * Tier 3 probes: the shipped `@gpuixui/data` tree and expandable row, mounted
- * from their examples.
- *
- * The package behaviour suites own the paint in the offscreen renderer; these
- * probes are the second host a plan can read, and they exercise the composition
- * the way an application does: a press opens the folder it lands on, the arrow
- * keys move native focus with the cursor, a reveal opens the path to a deep row,
- * and an expanded row opens a panel that is as wide as the table and pushes the
- * rows below it.
- *
- * The ids are the examples' own (`tree-row-src`, `expandable-detail-index`, …),
- * so a probe that drifts from the shipped screen fails instead of measuring a
- * copy.
- */
 import { Effect } from "effect";
 import * as Option from "effect/Option";
 import { examples } from "@gpuixui/data/examples";
@@ -33,11 +18,9 @@ import {
 const text = (ctx: Smoke.SmokeContext, id: string): string =>
   Option.getOrElse(Option.fromNullishOr(ctx.host.text(id)), () => "");
 
-/** The example's readout line, so the scenario cannot print another spelling. */
 const readout = (rows: number, active: string): string =>
   dataTreeReadout({ rows, active: Option.some(active) });
 
-/** A row's chevron slot: the inset a nested row is measured by. */
 const rowSlot = (key: string): string => `${dataTreeRow(key)}-slot`;
 
 const TreeExample = examples["tree"];
@@ -47,7 +30,6 @@ export const dataTreeScenario: ScenarioBody = {
   view: () => (TreeExample === undefined ? null : <TreeExample />),
   steps: (ctx) =>
     Effect.gen(function* () {
-      // `src` starts open, so the tree paints its children and `docs` stays shut.
       yield* ctx.expectContains(
         "the tree paints its roots and one open folder",
         text(ctx, DATA_TREE_READOUT),
@@ -59,7 +41,6 @@ export const dataTreeScenario: ScenarioBody = {
         true,
       );
 
-      // A nested row insets one step: the chevron slot is the row's own inset.
       const parentSlot = yield* ctx.expectSome(
         "the parent's chevron slot painted",
         Option.fromNullishOr(ctx.host.bounds(rowSlot("src"))),
@@ -75,7 +56,6 @@ export const dataTreeScenario: ScenarioBody = {
         1,
       );
 
-      // A press opens the folder it lands on.
       ctx.host.click(dataTreeRow("docs"));
       yield* ctx.expectContains(
         "the press opened the folder it hit",
@@ -87,8 +67,6 @@ export const dataTreeScenario: ScenarioBody = {
         Option.fromNullishOr(ctx.host.bounds(dataTreeRow("readme.md"))),
       );
 
-      // A press on a file moves the cursor and takes the focus the arrow key
-      // needs; the next row is then one key away.
       ctx.host.click(dataTreeRow("readme.md"));
       yield* ctx.expectContains(
         "the press moved the cursor to the file",
@@ -120,8 +98,6 @@ export const dataTreeScenario: ScenarioBody = {
         dataTreeRow("guide.md"),
       );
 
-      // Left steps out of a file to its parent, and a second Left closes the
-      // open branch without leaving the row.
       ctx.host.key("left");
       yield* ctx.expectContains(
         "Left stepped out to the parent folder",
@@ -135,15 +111,13 @@ export const dataTreeScenario: ScenarioBody = {
         readout(DATA_TREE_ROWS_OPEN, "docs"),
       );
 
-      // Type-ahead jumps to the first match after the cursor.
       ctx.host.click(DATA_TREE_EXPAND);
       yield* ctx.expectContains(
         "expand all opened every branch",
         text(ctx, DATA_TREE_READOUT),
         `${DATA_TREE_ROWS_ALL} rows`,
       );
-      // A press on a visible row takes the focus the typed key needs: the
-      // button above took it when it was pressed.
+
       ctx.host.click(dataTreeRow("index.ts"));
       ctx.host.key("r");
       yield* ctx.expectContains(
@@ -152,7 +126,6 @@ export const dataTreeScenario: ScenarioBody = {
         "active=readme.md",
       );
 
-      // A reveal opens the path to a deep row and moves the cursor to it.
       ctx.host.click(DATA_TREE_COLLAPSE);
       ctx.host.click(DATA_TREE_REVEAL);
       yield* ctx.expectContains(
@@ -195,8 +168,6 @@ export const dataExpandableRowsScenario: ScenarioBody = {
         "src/index.ts",
       );
 
-      // The panel is a sibling row, so it spans the table's content and takes
-      // its own height in the column.
       const row = yield* ctx.expectSome(
         "the opened row painted",
         Option.fromNullishOr(ctx.host.bounds("expandable-row-index")),
@@ -223,7 +194,6 @@ export const dataExpandableRowsScenario: ScenarioBody = {
         1,
       );
 
-      // A press on the panel is not the row's press.
       ctx.host.click("expandable-kv-index-label-path");
       yield* ctx.expectContains(
         "a press on the panel kept the row open",
@@ -231,7 +201,6 @@ export const dataExpandableRowsScenario: ScenarioBody = {
         "open=index",
       );
 
-      // A second press on the row closes it again.
       ctx.host.click("expandable-row-index");
       yield* ctx.expectContains(
         "the second press closed the row",

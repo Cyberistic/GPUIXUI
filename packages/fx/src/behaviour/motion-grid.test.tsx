@@ -1,20 +1,3 @@
-/**
- * MotionGrid in the real GPUix renderer.
- *
- * The bugs these guard: a cell placed by flow layout, so a reorder paints it in
- * its new slot in the frame the array changes (nothing to tween); a cell that is
- * keyed by position, so reordering remounts the row and every cell replays its
- * entrance instead of travelling; a frame sized by the *current* arrangement, so
- * the box jumps a row ahead of the cells that are still moving; a reorder that
- * moves cells but leaves the frame's height behind; a reduced-motion reader who
- * still watches a tween; and a cell whose absolutely positioned content stops
- * receiving presses at the box it is painted in.
- *
- * The motion clock is paused before a read, so a mid-travel claim is the frame
- * named rather than wherever real time had got; and a cell list a store handed
- * back as `null`, which threw before a cell painted.
- */
-
 import type { TestElement, TestRoot } from "@gpuix/react/testing";
 import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
@@ -29,7 +12,6 @@ import {
 import { MotionGrid, type MotionGridItem } from "../motion-grid.js";
 import { MotionProvider } from "@gpuixui/components/motion";
 
-/** The suite's grid is 3 × 100 px wide, 80 px a row, with 10 px gaps. */
 const grid = {
   columns: 3,
   cellWidth: 100,
@@ -37,21 +19,17 @@ const grid = {
   gap: 10,
 } as const;
 
-/** The frame a full first row reserves, and a two-row frame under the suite. */
 const FRAME_WIDTH = 320;
 const ONE_ROW = 80;
 const TWO_ROWS = 170;
 
-/** A cell body, so a press can be measured where the cell is painted. */
 const body = (id: string): ReactNode => (
   <div testId={`body-${id}`} style={{ width: "100%", height: "100%" }} />
 );
 
-/** Cells for the given ids, in that order. */
 const cells = (...ids: ReadonlyArray<string>): ReadonlyArray<MotionGridItem> =>
   ids.map((id) => ({ id, content: body(id) }));
 
-/** One element by test id, failing rather than casting. */
 const byTestId = (
   renderer: TestRoot["renderer"],
   testId: string,
@@ -63,12 +41,6 @@ const byTestId = (
   return element;
 };
 
-/**
- * Mount a grid and run its entrance to rest.
- *
- * The clock is paused first, so the frame it settles on is exactly the house
- * level rather than a frame the paint loop happened to reach.
- */
 const mount = (node: ReactNode): ComponentTestRoot => {
   const page = renderComponent(node);
   page.renderer.clockPause();
@@ -77,13 +49,11 @@ const mount = (node: ReactNode): ComponentTestRoot => {
   return page;
 };
 
-/** Render a new arrangement and paint the frame it asks for. */
 const show = (page: ComponentTestRoot, node: ReactNode): void => {
   page.rerender(node);
   settle(page);
 };
 
-/** Where a cell is painted, as its left/top inside the window. */
 const at = (page: ComponentTestRoot, id: string) => {
   const box = requireBounds(page, `motion-grid-cell-${id}`);
   return { x: box.x, y: box.y };
@@ -125,8 +95,7 @@ describe("MotionGrid", () => {
     );
     try {
       const before = at(page, "b");
-      // `c` keeps its slot, so it is the control: it must not move because a
-      // cell before it did.
+
       const still = at(page, "c");
 
       show(
@@ -144,7 +113,7 @@ describe("MotionGrid", () => {
 
       page.renderer.clockFastForward(1_000);
       settle(page);
-      // The swap is complete: `b` took the first slot and `a` the second.
+
       expect(at(page, "b").x).toBe(0);
       expect(at(page, "a").x).toBe(110);
     } finally {
@@ -171,8 +140,7 @@ describe("MotionGrid", () => {
       const mid = at(page, "b");
       expect(mid.x).toBeLessThan(from.x);
       expect(mid.x).toBeGreaterThan(0);
-      // A cell keyed by its id keeps its element: removing `a` travels the two
-      // survivors rather than remounting them at their new slots.
+
       expect(byTestId(page.renderer, "motion-grid-cell-b").id).toBe(b.id);
       expect(byTestId(page.renderer, "motion-grid-cell-c").id).toBe(c.id);
 
@@ -200,11 +168,11 @@ describe("MotionGrid", () => {
 
       expect(byTestId(page.renderer, "motion-grid-cell-a").id).toBe(a.id);
       expect(byTestId(page.renderer, "motion-grid-cell-b").id).toBe(b.id);
-      // The arriving cell is the one that declares an entrance...
+
       expect(
         byTestId(page.renderer, "motion-grid-cell-c").customProps?.motion,
       ).toMatchObject({ initial: { opacity: 0 } });
-      // ...and it starts at the slot it is arriving into, not off-stage.
+
       expect(at(page, "c").x).toBe(220);
     } finally {
       page.unmount();
@@ -260,8 +228,6 @@ describe("MotionGrid", () => {
       page.renderer.clockFastForward(100);
       settle(page);
 
-      // The frame is arithmetic over the cell size, not over where the cells
-      // happen to be this frame.
       expect(requireBounds(page, "grid")).toEqual(frame);
       expect(
         ["a", "b", "c"].map((id) => {
@@ -292,8 +258,6 @@ describe("MotionGrid", () => {
         </MotionProvider>,
       );
 
-      // No clock advance: a reduced reorder is an assignment, and a mounted cell
-      // paints opaque.
       expect(at(page, "b").x).toBe(0);
       const motion = byTestId(page.renderer, "motion-grid-cell-b").customProps
         ?.motion;
@@ -366,10 +330,6 @@ describe("MotionGrid", () => {
   });
 
   it("paints a grid whose stored cell list is not a list", () => {
-    // The bug guarded: a grid restored with a saved layout carries JSON's `null`
-    // for a list its record never carried, and `Arr.length`/`items.map` threw
-    // out of the render, taking the page with it where no cells paints an empty
-    // frame.
     const page = renderComponent(
       <div>
         <text testId="before">Before</text>
@@ -382,7 +342,6 @@ describe("MotionGrid", () => {
       </div>,
     );
     try {
-      // The sibling is the counter: a render that threw takes the tree with it.
       expect(page.renderer.getAllText()).toContain("Before");
       expect(page.renderer.findByTestId("motion-grid-cell-a")).toBeUndefined();
     } finally {
@@ -391,9 +350,6 @@ describe("MotionGrid", () => {
   });
 
   it("keeps the cells beside a stored entry that names none", () => {
-    // A deleted record leaves `null` inside the list, and an id that is not
-    // text has no key a reorder can keep: the cell threw on that id while its
-    // neighbours painted.
     const page = mount(
       <MotionGrid
         testId="grid"
@@ -408,8 +364,6 @@ describe("MotionGrid", () => {
       />,
     );
     try {
-      // The two readable cells keep their slots: the malformed entry did not
-      // take a place in the row.
       const first = at(page, "a");
       const second = at(page, "b");
       expect(second.x - first.x).toBe(110);

@@ -1,13 +1,3 @@
-/**
- * The gradient's arithmetic, without a renderer.
- *
- * The bugs these guard: a ramp that paints the same colour end to end; a
- * one-glyph line that divides by zero; an end the parser cannot read that
- * paints a hole instead of the start colour; a short hex or an alpha end read
- * as three channels; a word gap or an empty line counted as a glyph; and a
- * surrogate pair split into two glyphs.
- */
-
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import {

@@ -1,13 +1,3 @@
-/**
- * The reference set's examples, held to the package and the page.
- *
- * A parity claim is a map, not a mood: every row names a chart, an option and a
- * preview, and this suite fails when a name the package does not export, an
- * option the page does not print, or a preview mode the site does not serve
- * appears in it. It also fails when a shipped part the reference exercises has
- * no row at all, so the table cannot quietly shrink.
- */
-
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
@@ -16,13 +6,6 @@ import { parity, type ParityEntry } from "./parity.js";
 const read = (path: string): string =>
   readFileSync(new URL(path, import.meta.url), "utf8");
 
-/**
- * The source of every module the package's chart parts live in.
- *
- * A part is exported from the module that **declares** it: the legend from
- * the legend's own module, the three structure charts from theirs. So the
- * exported names are read from all of them.
- */
 const source = [
   read("./chart.tsx"),
   read("./legend.tsx"),

@@ -1,12 +1,3 @@
-/**
- * Measure once per open, then place the surface from `internal/placement.ts`.
- *
- * The runtime has no layout callback, so the surface is measured after its first
- * commit with `getElementBounds` and the corrected side/offset arrives on the
- * next render. Both occurrences (Popover and Dropdown menu) share this hook so
- * the one-shot rule — and the reset when the surface closes — exists once.
- */
-
 import { useGpuix, type PublicInstance } from "@gpuix/react";
 import type { FloatingAlign, FloatingSide } from "@gpuix/react/floating";
 import * as Option from "effect/Option";
@@ -17,7 +8,6 @@ import {
   type Placement,
 } from "./placement.js";
 
-/** What the hook needs from the open surface and its trigger. */
 export interface UsePlacementInput {
   readonly open: boolean;
   readonly side: FloatingSide;
@@ -35,13 +25,6 @@ const boundsOf = (
     Option.fromNullishOr(renderer?.getElementBounds?.(element.id)),
   );
 
-/**
- * The placement to render. The requested `side`/`align` are used until the first
- * measurement, then the resolved placement; closing resets the measurement so the
- * next open re-decides. The requested pair goes through
- * `requestedPlacement`, so a stored value the unions do not name is the house
- * `bottom`/`start` before the first measurement too.
- */
 export const usePlacement = ({
   open,
   side,

@@ -9,23 +9,11 @@ import {
 } from "./sidebar-preview";
 import { MENU_WIDTH } from "./user-menu-preview";
 
-/**
- * Browser previews for the Sidebar and User menu pages.
- *
- * The shipped sidebar is a GPUix tree — a width tween, an anchored mobile sheet
- * and a modal's focus rules — so the page cannot mount it. This drawing is the
- * same window the sheet and drawer pages draw: an app bar, the panel at the
- * component's widths as the window's left column, and the inset beside it. The
- * paint is the browser's and the page says so; the behaviour the component
- * promises is measured natively.
- */
-
 const USER = {
   name: "Benji van der Brand",
   email: "benji@example.com",
 } as const;
 
-/** A drawn portrait for the identity: a picture, not an initials disc. */
 const PORTRAIT = `data:image/svg+xml,${encodeURIComponent(
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" fill="#0F766E"/><circle cx="16" cy="12" r="6" fill="#CCFBF1"/><path d="M4 32c0-7 5.4-12 12-12s12 5 12 12z" fill="#CCFBF1"/></svg>`,
 )}`;
@@ -123,7 +111,6 @@ const RUNS = [
   { id: "run-1031", label: "Changelog digest", state: "failed", ms: "2.4s" },
 ] as const;
 
-/** The identity disc: the picture every place the same person appears paints. */
 const Identity = ({ size }: { readonly size: "sm" | "md" }) => {
   const diameter = avatarSize[size];
   return (
@@ -139,7 +126,6 @@ const Identity = ({ size }: { readonly size: "sm" | "md" }) => {
   );
 };
 
-/** One row of the account menu: a mark and its label. */
 const AccountRow = ({
   label,
   mark,
@@ -162,13 +148,6 @@ const AccountRow = ({
   </button>
 );
 
-/**
- * The identity row and its dropdown.
- *
- * `side="right"` — the default a reader expects from a sidebar footer — puts the
- * menu beside the row, over the page rather than over the panel it belongs to.
- * `side="bottom"` is still available for a footer with no room beside it.
- */
 const AccountMenu = ({
   collapsed,
   side,
@@ -257,12 +236,6 @@ const AccountMenu = ({
   );
 };
 
-/**
- * The panel: the window's left column at the component's widths.
- *
- * The width and the offcanvas travel are the layout's, not the style sheet's,
- * because they follow the collapse state; the paint is in `demos.css`.
- */
 export const SidebarPanel = ({
   mode,
   open,
@@ -326,7 +299,6 @@ export const SidebarPanel = ({
   );
 };
 
-/** The content beside the panel: the room the gap reserves, with real rows. */
 const SidebarInset = () => (
   <div className="gx-sidebar-inset">
     <div className="gx-sidebar-inset-bar">
@@ -358,7 +330,6 @@ const SidebarInset = () => (
   </div>
 );
 
-/** The window: the panel on its left, the inset beside it, the controls above. */
 export const SidebarDemo = () => {
   const [mode, setMode] = useState<SidebarMode>("icon");
   const [open, setOpen] = useState(true);
@@ -411,7 +382,6 @@ export const SidebarDemo = () => {
   );
 };
 
-/** The account row in a right-hand footer, on the window it belongs to. */
 export const UserMenuDemo = () => {
   const [last, setLast] = useState("none");
   return (

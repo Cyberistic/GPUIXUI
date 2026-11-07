@@ -1,10 +1,3 @@
-/**
- * Browser preview for the Typing text page.
- *
- * The native control reveals a string a character at a time with the whole
- * string as its name; the preview ticks the same cursor forward on a timer.
- */
-
 import { useEffect, useState } from "react";
 
 const text = "Deploying to production…";

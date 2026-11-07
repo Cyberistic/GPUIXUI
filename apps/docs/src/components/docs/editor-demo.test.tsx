@@ -25,15 +25,6 @@ import {
   SearchReplaceDemo,
 } from "./search-replace-demo";
 
-/**
- * The editor lane's previews.
- *
- * Four package pages now mount a labelled browser approximation, and each one
- * runs the shipped logic — the diff's edit script, the markdown fence rule, the
- * find scan and the replace-all. These cases hold the drawing to that logic and
- * to the states the pages document.
- */
-
 const html = (node: Parameters<typeof renderToStaticMarkup>[0]): string =>
   renderToStaticMarkup(node);
 
@@ -58,7 +49,7 @@ describe("the Code editor preview", () => {
     expect(kinds).toContain("number:42");
     expect(kinds).toContain("keyword:return");
     expect(kinds).toContain("comment:// the action");
-    // A word that merely starts with a keyword stays plain text.
+
     expect(tokenize("constant")).toEqual([{ kind: "plain", text: "constant" }]);
   });
 
@@ -67,7 +58,7 @@ describe("the Code editor preview", () => {
     const lines = CODE_SAMPLE.split("\n").length;
 
     expect(markup.match(/class="gx-codeedit-line"/g)).toHaveLength(lines);
-    expect(markup).toContain(`>${lines}<`); // the last gutter number
+    expect(markup).toContain(`>${lines}<`);
     expect(markup).toContain('aria-label="Code editor"');
     expect(markup).toContain('class="gx-tok-keyword"');
     expect(markup).toContain("Read only");
@@ -110,22 +101,18 @@ describe("the Diff viewer preview", () => {
     const markup = html(<DiffViewerDemo />);
     expect(markup).toContain("gx-diff-hunk");
     expect(markup).toMatch(/@@ -\d+,\d+ \+\d+,\d+ @@/);
-    // The long unchanged middle is skipped rather than painted as context.
+
     expect(markup).not.toContain("Math.round");
   });
 
   it("draws two equal scrollers and a divider in split mode", () => {
-    // The bug guarded: the split preview was one grid whose cells sized to
-    // their content, so the right column overflowed the sheet and the divider
-    // was painted through the code. Each side is its own scroller now, with a
-    // shared row height.
     const markup = html(<DiffViewerDemo initialMode="split" />);
 
     expect(markup.match(/gx-diff-side-before/g)).toHaveLength(2);
     expect(markup.match(/gx-diff-side-after/g)).toHaveLength(2);
     expect(markup.match(/gx-diff-divider/g)).toHaveLength(2);
     expect(markup.match(/gx-diff-cols/g)).toHaveLength(2);
-    // Every painted side row keeps the one code-line height the sheet uses.
+
     expect(markup.match(/class="gx-diff-line"/g)?.length).toBeGreaterThan(0);
   });
 });
@@ -194,8 +181,6 @@ describe("the Search and replace preview", () => {
   });
 
   it("narrows a whole-word scan to the standalone matches", () => {
-    // `pre` sits inside every `preview`, so the loose scan finds them and the
-    // whole-word rule finds none — the rule the W toggle documents.
     const loose = findRanges(FIND_SAMPLE, "pre");
     const whole = findRanges(FIND_SAMPLE, "pre", { wholeWord: true });
 

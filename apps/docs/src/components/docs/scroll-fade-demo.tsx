@@ -1,10 +1,3 @@
-/**
- * Browser preview for the Scroll fade page.
- *
- * The native scroll box fades the edge hiding more content; the preview toggles
- * the same two-stop strips with the offset.
- */
-
 import { useState, type UIEvent } from "react";
 
 const notes = [

@@ -1,27 +1,13 @@
-/**
- * Ranked subsequence matching for the command palette.
- *
- * A query matches when its characters appear in order in the label, not
- * necessarily together: `opfl` matches "Open file". Matches are scored so word
- * starts beat runs inside a word, and a longer consecutive run beats a shorter
- * one. Ties break by declaration index, so equal labels never swap places.
- *
- * The type-ahead matcher in `typeahead.ts` is a different tool: it
- * cycles rows by prefix as the user types. This one filters and ranks a list
- * once per query.
- */
-
 import { Order, pipe } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Str from "effect/String";
 
-/** One matching item, with its score and its declaration index. */
 export interface FuzzyMatch<A> {
   readonly item: A;
   readonly score: number;
-  /** Position in the input list; the stable tie-break. */
+
   readonly index: number;
 }
 
@@ -33,11 +19,9 @@ const charAt = (text: string, index: number): string =>
 
 const WORD_CHARACTER = /[a-z0-9]/;
 
-/** First character of a word: the start of the text, or after a separator. */
 const isWordStart = (text: string, index: number): boolean =>
   index === 0 || !WORD_CHARACTER.test(charAt(text, index - 1));
 
-/** Ten for the character, plus a word-start or run bonus. */
 const stepScore = (text: string, index: number, streak: number): number =>
   10 + (isWordStart(text, index) ? 8 : streak * 2);
 
@@ -63,16 +47,11 @@ const walk = (
     : walk(query, text, queryIndex, textIndex + 1, score, 0);
 };
 
-/**
- * A case-insensitive subsequence score for `query` in `text`, or `None` when the
- * query is not a subsequence. An empty or whitespace-only query scores `0`.
- */
 export const fuzzyScore = (
   query: string,
   text: string,
 ): Option.Option<number> => walk(normalise(query), normalise(text), 0, 0, 0, 0);
 
-/** Every matching item, scored and carrying its declaration index. */
 export const fuzzyMatches = <A>(
   items: ReadonlyArray<A>,
   query: string,
@@ -89,18 +68,12 @@ export const fuzzyMatches = <A>(
     Arr.getSomes,
   );
 
-/** Score descending, then declaration order: a total, stable order. */
 const rankOrder = <A>(): Order.Order<FuzzyMatch<A>> =>
   Order.combine(
     Order.mapInput(Order.Number, (match: FuzzyMatch<A>) => -match.score),
     Order.mapInput(Order.Number, (match: FuzzyMatch<A>) => match.index),
   );
 
-/**
- * Order matches by group: groups follow their first appearance, and each
- * group's items sort by score then declaration order. Ungrouped items form one
- * group. A group with no match disappears.
- */
 export const rankByGroup = <A>(
   matches: ReadonlyArray<FuzzyMatch<A>>,
   groupOf: (item: A) => string | undefined,
@@ -116,26 +89,9 @@ export const rankByGroup = <A>(
   );
 };
 
-/**
- * The commands a palette was handed: only a list is a list.
- *
- * A palette's action list is built by the app, and while a registry loads — or
- * when a saved toolbar's list was restored — the slot can be the `null` a store
- * writes. The matcher reduced over that value before the first row painted, so
- * the absence threw out of the render. An absent list is no rows, which is the
- * empty state the palette already has.
- */
 export const commandListOf = <A>(
   value: ReadonlyArray<A> | null | undefined,
 ): ReadonlyArray<A> => (Arr.isArray(value) ? value : []);
 
-/**
- * The recent command ids a store kept: its text entries, in order.
- *
- * Recents are saved with the app — the palette's history is part of a
- * workspace — so a restored record's `null` reaches the palette, and the
- * membership set built from it threw. Only a list is a list, and an entry that
- * is not an id is dropped, so a hole cannot hide the recents beside it.
- */
 export const recentIdsOf = (value: unknown): ReadonlyArray<string> =>
   Arr.isArray(value) ? Arr.filter(value, P.isString) : [];

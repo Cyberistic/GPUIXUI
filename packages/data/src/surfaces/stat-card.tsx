@@ -1,17 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * A statistic card: a label, a reading and a hint.
- *
- * The reading is **derived**, never stored twice: the card is handed the value
- * it shows, so an edit that reaches the object reaches the card in the same
- * frame (`inspector-lifecycle` measured the area card following a width change
- * in the same frame as the preview box and the readout).
- *
- * ```tsx
- * <StatCard label="Area" value={`${width * height}`} unit="px²" />
- * ```
- */
-
 import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { spaceValue, visibleCopy } from "@gpuixui/primitives/core";
@@ -25,42 +12,25 @@ import { recipeStyle } from "../recipe.js";
 import { themeColors, useTheme } from "../theme.js";
 import { STAT_CARD, STAT_HINT, STAT_LABEL, STAT_VALUE } from "./recipe.js";
 
-/** Which way a reading moved, and by how much. */
 export interface StatTrend {
   readonly direction: "up" | "down" | "flat";
-  /**
-   * The trend's own words, e.g. `+12%`.
-   *
-   * A saved card is data: JSON writes `null` for a field it never set, so a
-   * nullish text reaches the paint as the absence it is.
-   */
+
   readonly text: string | null;
 }
 
-/** {@link StatCard} props. */
 export interface StatCardProps extends Omit<Props, "children"> {
-  /** What the reading measures. */
   readonly label: string;
-  /** The reading, already rendered by the caller. */
+
   readonly value: ReactNode;
-  /** The unit the reading is in, beside it. */
+
   readonly unit?: string;
-  /** A line under the reading. */
+
   readonly hint?: ReactNode;
-  /** The movement of the reading. */
+
   readonly trend?: StatTrend;
   readonly className?: string;
 }
 
-/**
- * The colour a trend's direction paints.
- *
- * A trend's words are **text on the card**, so they take the status tone's
- * readable role (`statusTone(...).foreground`, held to the body floor on
- * `card`), never the solid fill role — a fill is measured at the 3:1 mark floor
- * and can fall under the text floor on the page (the base light `success` is
- * 4.26:1 on the page, one authored look 3.92:1).
- */
 export const trendTone = (
   direction: StatTrend["direction"],
   theme: ReturnType<typeof useTheme>,
@@ -71,7 +41,6 @@ export const trendTone = (
       ? statusTone(theme, "destructive").foreground
       : themeColors(theme).mutedForeground;
 
-/** A card that shows one derived reading. */
 export const StatCard = ({
   label,
   value,
@@ -83,14 +52,9 @@ export const StatCard = ({
   ...rest
 }: StatCardProps) => {
   const theme = useTheme();
-  // A saved card writes `null` for the fields it never set, so the trend is
-  // read as the absence the prop already means rather than dereferenced.
+
   const movement = Option.fromNullishOr(trend);
-  // Copy that arrived blank is the absence it is: a locale table's missing row
-  // or a saved record hands over `""`, and a run of spaces lays out a full line
-  // where an empty string lays out none. The reading is the caller's data and
-  // still paints; the label, unit, hint and trend are this card's lines, so a
-  // blank one paints no line at all (the rule `visibleCopy` states).
+
   const title = visibleCopy(label);
   const unitCopy = visibleCopy(unit);
   const hintCopy = P.isString(hint) ? visibleCopy(hint) : hint;

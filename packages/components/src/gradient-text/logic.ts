@@ -1,26 +1,8 @@
-/**
- * The ramp a gradient text paints, without a renderer.
- *
- * `@gpuix/native@0.11.0` has no text fill: a `<text>` host paints one `color`,
- * and a `linear-gradient` is a box background, not a glyph fill. So the ramp is
- * **sampled per glyph** — every code point is its own text host, and its colour
- * is the ramp at that code point's position in the line. The blend is discrete
- * at glyph resolution rather than continuous, which is the honest form the
- * runtime can paint.
- *
- * This module owns the arithmetic the component would otherwise repeat: which
- * code points become glyphs, where each sits in its line, and the colour at
- * each position. It also owns the two boundaries: a line of one glyph paints
- * the start colour instead of dividing by zero, and an end that is not a hex
- * colour paints the whole run in the start colour rather than a hole.
- */
-
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Result from "effect/Result";
 import * as Str from "effect/String";
 
-/** One hex colour read into channels, with alpha as `0…255`. */
 export interface HexColor {
   readonly red: number;
   readonly green: number;
@@ -28,17 +10,14 @@ export interface HexColor {
   readonly alpha: number;
 }
 
-/** `#rgb`, `#rgba`, `#rrggbb` and `#rrggbbaa`; the runtime's palette is hex. */
 const HEX = /^#([0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i;
 
-/** The `index`th byte of a hex run: a one-digit nibble is doubled, a pair is read whole. */
 const byteAt = (digits: string, index: number, width: number): number => {
   const start = index * width;
   const part = Str.slice(start, start + width)(digits);
   return Number.parseInt(width === 1 ? `${part}${part}` : part, 16);
 };
 
-/** Read one hex colour; `None` when the value is not a hex colour. */
 export const parseHexColor = (value: string): Option.Option<HexColor> =>
   Option.flatMap(Option.fromNullishOr(HEX.exec(value)), (match) => {
     const digits = Str.toLowerCase(match[1] ?? "");
@@ -54,27 +33,17 @@ export const parseHexColor = (value: string): Option.Option<HexColor> =>
     });
   });
 
-/** A channel as a two-digit lowercase hex pair. */
 const hexByte = (value: number): string =>
   Str.padStart(2, "0")(Math.round(value).toString(16));
 
-/** A sampled colour, `#rrggbb` unless the alpha is below opaque. */
 const writeHex = (color: HexColor): string =>
   `#${hexByte(color.red)}${hexByte(color.green)}${hexByte(color.blue)}${
     color.alpha === 255 ? "" : hexByte(color.alpha)
   }`;
 
-/** `t` held to the unit interval; a non-finite value is the start of the ramp. */
 const clamped = (t: number): number =>
   Number.isFinite(t) ? Math.min(Math.max(t, 0), 1) : 0;
 
-/**
- * The colour a ramp paints at `t`, from `start` at `0` to `end` at `1`.
- *
- * Both ends must be hex colours. An end that is not one paints the whole run in
- * `start` — the runtime accepts a named colour, but there is no way to
- * interpolate one — rather than emitting a colour the caller never asked for.
- */
 export const gradientColor = (start: string, end: string, t: number): string =>
   Option.match(Option.all([parseHexColor(start), parseHexColor(end)]), {
     onNone: () => start,
@@ -89,32 +58,27 @@ export const gradientColor = (start: string, end: string, t: number): string =>
     },
   });
 
-/** One painted glyph: a code point and the colour the ramp gives it. */
 export interface GradientGlyph {
-  /** Stable while the glyph at this position keeps its text. */
   readonly key: string;
   readonly text: string;
   readonly color: string;
-  /** Where the glyph sits in its line, from `0` at the first to `1` at the last. */
+
   readonly position: number;
-  /** The word this glyph belongs to, on the first glyph only. */
+
   readonly label: Option.Option<string>;
 }
 
-/** One word: a run of glyphs that never breaks across a line. */
 export interface GradientWord {
   readonly key: string;
   readonly label: string;
   readonly glyphs: ReadonlyArray<GradientGlyph>;
 }
 
-/** One line: words that wrap between each other, never inside one. */
 export interface GradientLine {
   readonly key: string;
   readonly words: ReadonlyArray<GradientWord>;
 }
 
-/** The glyphs of one word, coloured by their place in the line. */
 const wordGlyphs = (
   word: string,
   line: number,
@@ -134,14 +98,6 @@ const wordGlyphs = (
     };
   });
 
-/**
- * The lines, words and glyphs of `text`, each coloured by `colorAt`.
- *
- * An explicit newline starts a new row, every run of whitespace is one word
- * gap, a blank line contributes no row, and the position restarts at each line,
- * because a two-line run is two complete profiles rather than one split at the
- * break.
- */
 export const glyphLines = (
   text: string,
   colorAt: (position: number) => string,
@@ -173,7 +129,6 @@ export const glyphLines = (
       }),
   );
 
-/** The lines and glyphs of `text`, coloured by a ramp from `from` to `to`. */
 export const gradientLines = (
   text: string,
   from: string,
@@ -181,7 +136,6 @@ export const gradientLines = (
 ): ReadonlyArray<GradientLine> =>
   glyphLines(text, (position) => gradientColor(from, to, position));
 
-/** How many glyphs a layout paints, for a state a caller can read. */
 export const glyphCount = (lines: ReadonlyArray<GradientLine>): number =>
   Arr.reduce(
     lines,

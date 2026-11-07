@@ -5,17 +5,6 @@ import { describe, expect, it, vi } from "vitest";
 import { blockList, blocks } from "../blocks";
 import { SIDEBAR_EXAMPLES, SidebarExample } from "../sidebar-examples";
 
-/**
- * The one Sidebar page.
- *
- * The sixteen shadcn sidebar blocks used to be sixteen pages and sixteen index
- * tiles. They are now sections of `/blocks/sidebar`: one registry entry,
- * one tile, one thumbnail, and sixteen drawings that keep their own state. This
- * guards the merge — a lost example, a slug that points at nothing, a section
- * without its shadcn link, or a control that regressed to paint would all still
- * build and still count as a block.
- */
-
 vi.mock("../platform-toggle", () => ({
   usePlatform: () => ({
     platform: "darwin",
@@ -111,7 +100,6 @@ interface Group {
   readonly sections: ReadonlyArray<Section>;
 }
 
-/** Each `## group`, and each `### Sidebar NN — title` section beneath it. */
 const groups: ReadonlyArray<Group> = page
   .split(/^## /m)
   .slice(1)
@@ -218,7 +206,7 @@ describe("the Sidebar page", () => {
       const example = SIDEBAR_EXAMPLES.find(
         (entry) => entry.slug === section.slug,
       );
-      // The link's URL carries periods of its own; count the prose's stops.
+
       const prose = section.description.replace(/\[[^\]]+\]\([^)]+\)/g, "");
       const faults = [
         section.number === section.slug.slice(-2) ? "" : "number",

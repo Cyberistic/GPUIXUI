@@ -1,7 +1,3 @@
-/**
- * The waveform is stable and in range (a re-render must not redraw a different
- * song), the clock pads, and a row press lands on the row.
- */
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";

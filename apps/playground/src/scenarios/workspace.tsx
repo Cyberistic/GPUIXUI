@@ -1,17 +1,3 @@
-/**
- * Tier 4 probe: `workspace-tab-drag`.
- *
- * The docking question is whether a workspace can be composed from what GPUix
- * has: tabs in React state, a pointer-captured divider, and a tab that moves
- * between panes. Plan `130` §3.3 wants a real drag between panes; pointer
- * capture keeps every move on the pressed tab, so the tab decides the drop from
- * the pointer delta (a documented heuristic, not a floating preview — 0.10.0
- * has no `position: fixed`).
- *
- * The last step records the honesty note the docking plan needs: with no
- * storage primitive, panel state does not survive a remount; persistence is the
- * app boundary's job (Effect `FileSystem`/`Config`).
- */
 import { useState } from "react";
 import { Effect, Option } from "effect";
 import { useTheme } from "@gpuixui/tokens/react";
@@ -23,7 +9,6 @@ type PaneId = "a" | "b";
 
 const DROP_THRESHOLD = 80;
 
-/** A tab and the pane it lives in; `press` is the in-flight drag. */
 const TabStrip = ({
   pane,
   tabs,

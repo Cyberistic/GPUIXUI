@@ -1,14 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Capture one block offscreen, for its docs preview and Blocks tile (plan 729).
- *
- *   nub run --filter @gpuixui/blocks capture -- <slug> <out.png> [win32|linux] [--dark]
- *
- * The test renderer paints the real tree at 2× with no OS window, so there is
- * no blur and no traffic lights to capture: the theme's window is opaque here
- * and the materials paint their fallback roles — the honest picture of the
- * block without its window server.
- */
 import { createTestRoot } from "@gpuix/react/testing";
 import {
   darkTheme,
@@ -70,8 +60,7 @@ const program =
           </ThemeProvider>,
         );
         root.renderer.flush();
-        // A measured reveal (a Disclosure's body) lays out on the paint after
-        // its first: deliver the layout events, run every tween, paint again.
+
         for (const _ of [0, 1, 2]) {
           root.renderer.dispatchNativeEvents();
           root.renderer.clockFastForward(1_000);

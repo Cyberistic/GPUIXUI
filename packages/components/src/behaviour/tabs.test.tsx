@@ -1,24 +1,3 @@
-/**
- * Tabs behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: a click that showed two panels at once; the active tab
- * painted with the wrong theme role; arrow keys that moved the highlight but not
- * real focus (or did not wrap); manual activation that selected on focus anyway,
- * so Enter was meaningless; a disabled tab that could be focused or clicked; and
- * a controlled tab set that changed its own panel when the consumer said no. A
- * caller `ref` on a trigger was discarded in favour of the internal one, and so
- * was a caller `onBlur`. A vertical tab set could move along the wrong axis,
- * stay laid out horizontally, react to Left/Right, or bypass manual activation.
- *
- * The shared selected surface is measured, so these also guard its geometry: the
- * set used to paint the selected background on each trigger separately, which no
- * single element could move; a wrong origin (the rail's box instead of the box
- * its absolute children resolve against) or a stale box leaves the pill off its
- * trigger, and a pill that swallows the pointer makes the trigger unclickable.
- * The reflow that moves a trigger without resizing it is `tabs-reflow.test.tsx`'s
- * contract, because it is a measurement rule rather than a Tabs behaviour.
- */
-
 import * as Option from "effect/Option";
 import {
   contrastFloors,
@@ -45,7 +24,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../tabs.js";
 import type { TabsOrientation } from "../tabs.js";
 import type { TabsActivation } from "../tabs/logic.js";
 
-/** Three settings panels with the middle tab disabled. */
 const Settings = ({
   activation,
   value,
@@ -89,7 +67,6 @@ const focusTab = (root: ComponentTestRoot, testId: string): void => {
   root.renderer.focusElement(root.renderer.findByTestId(testId)?.id ?? -1);
 };
 
-/** The same three tabs on the vertical axis, with the middle one disabled. */
 const VerticalSettings = ({
   activation,
 }: {
@@ -125,9 +102,6 @@ describe("Tabs", () => {
   it("moves from the selection when no trigger reported focus", () => {
     const tabs = renderComponent(<Settings />);
 
-    // A key that reaches the rail names no row and no focus event has recorded
-    // one. It must still move from the selection rather than re-anchor at the
-    // first enabled tab.
     tabs.renderer.nativeSimulateKeyDown(
       tabs.renderer.findByTestId("list")?.id ?? -1,
       "right",
@@ -176,12 +150,10 @@ describe("Tabs", () => {
         tabs.renderer.findByTestId("tab-profile")?.style.backgroundColor,
       ).toBeUndefined();
 
-      // The pill's whole job is to show which tab is selected, so it has to be
-      // a surface a reader can find on the rail it sits in…
       expect(contrastRatio(pill, rail) ?? 0).toBeGreaterThanOrEqual(
         decorativeFloor,
       );
-      // …and the `foreground` label it carries is body text on that fill.
+
       expect(contrastRatio(label, pill) ?? 0).toBeGreaterThanOrEqual(
         contrastFloors.body,
       );
@@ -194,10 +166,6 @@ describe("Tabs", () => {
   });
 
   it("does not go back to the card role, which the high-contrast rail shares", () => {
-    // The measured premise: the pill used to paint `card`, and in the
-    // high-contrast light theme `card` and the rail's `background` are the same
-    // value, so the selected tab painted a 1.00:1 surface. `selected` is the
-    // state wash the decorative contract holds to the floor on `background`.
     const high = getTheme("light", "high");
 
     expect(contrastRatio(high.colors.card, high.colors.background) ?? 0).toBe(
@@ -215,7 +183,7 @@ describe("Tabs", () => {
     expect(requireBounds(tabs, "tabs-indicator")).toEqual(
       requireBounds(tabs, "tab-profile"),
     );
-    // The surface takes no input: the trigger underneath keeps the click.
+
     expect(
       tabs.renderer.findByTestId("tabs-indicator")?.style.pointerEvents,
     ).toBe("none");
@@ -227,11 +195,6 @@ describe("Tabs", () => {
   });
 
   it("follows the rail when the window moves it, not the origin it first reported", () => {
-    // A rail is measured in window coordinates, so a pane opening above the tab
-    // set moves it without changing the rail's own layout. The origin was taken
-    // once, at mount: a trigger that re-measures after the move is then
-    // subtracted from a box the rail no longer starts at, and the pill is
-    // painted away from its tab by however far the rail travelled.
     const Shifted = ({
       inset,
       danger,
@@ -259,10 +222,6 @@ describe("Tabs", () => {
       requireBounds(tabs, "shifted-danger"),
     );
 
-    // The rail moves down and right, and the longer label makes the selected
-    // trigger report its new box in the same pass. The runtime delivers the new
-    // rail box and the trigger's box in the round that follows, which is the
-    // paint the pill is placed from.
     tabs.rerender(<Shifted inset={120} danger="Danger!" />);
     settleMotion(tabs);
     settleMotion(tabs);
@@ -332,12 +291,6 @@ describe("Tabs", () => {
   });
 
   it("paints and moves a stored orientation name as the documented horizontal set", () => {
-    // The bugs these guard: a tab set is stored in a workspace layout, so
-    // `orientation` arrives as a string as often as a literal. The raws treated
-    // an unknown name as "not horizontal": the root painted the vertical axis
-    // (`flex-row`, rail beside panel) and the rail answered Down/Up while
-    // Right/Left did nothing — the opposite of the documented horizontal set
-    // the props promise.
     // @ts-expect-error — an axis a store wrote, not the union the props declare.
     const stored: TabsOrientation = "diagonal";
 
@@ -377,10 +330,6 @@ describe("Tabs", () => {
   });
 
   it("reads a stored activation name as automatic", () => {
-    // The bug this guards: a stored policy name the union no longer carries
-    // (`"eager"`) fell through to manual, so an arrow moved real focus and left
-    // the old panel painted — Enter was required although the component
-    // documents `automatic` as its default.
     // @ts-expect-error — a policy a store wrote, not the union the props declare.
     const stored: TabsActivation = "eager";
 
@@ -421,7 +370,6 @@ describe("Tabs", () => {
 
     tabs.renderer.simulateKeystrokes("right");
 
-    // Billing is disabled, so the move lands on Danger.
     expect(focusedTestId(tabs)).toEqual(Option.some("tab-danger"));
     expect(tabs.renderer.findByTestId("panel-danger")).toBeDefined();
     expect(tabs.renderer.findByTestId("panel-profile")).toBeUndefined();
@@ -539,7 +487,6 @@ describe("Tabs", () => {
     );
     settleMotion(tabs);
 
-    // The panel follows the value; the pill needs a measured trigger box.
     expect(tabs.renderer.findByTestId("panel-ghost")).toBeDefined();
     expect(tabs.renderer.findByTestId("tabs-indicator")).toBeUndefined();
 
@@ -563,7 +510,6 @@ describe("Tabs", () => {
 
     expect(ref.current?.id).toBe(tabs.renderer.findByTestId("tab-profile")?.id);
 
-    // The internal ref still carries the roving tab stop.
     focusTab(tabs, "tab-profile");
     tabs.renderer.simulateKeystrokes("right");
     expect(focusedTestId(tabs)).toEqual(Option.some("tab-danger"));
@@ -600,7 +546,6 @@ describe("Tabs", () => {
 
     tabs.renderer.simulateKeystrokes("down");
 
-    // Billing is disabled, so the move lands on Danger.
     expect(focusedTestId(tabs)).toEqual(Option.some("tab-danger"));
     expect(tabs.renderer.findByTestId("panel-danger")).toBeDefined();
     expect(tabs.renderer.findByTestId("panel-profile")).toBeUndefined();

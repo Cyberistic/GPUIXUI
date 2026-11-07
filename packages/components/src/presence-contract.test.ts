@@ -1,39 +1,3 @@
-/**
- * The pointer contract every animated floating surface keeps.
- *
- * The bug this guards: `ContextMenuContent` composed the presence seam but never
- * painted the leaving state on its surface, and its `anchored` host kept
- * `occlude`, so for the 200 ms a dismissed menu stayed painted it still took the
- * pointer — a press inside that box went to the ghost (or was swallowed by the
- * occlusion) instead of the control underneath, and the press the dismissal was
- * for needed a second click. `presence.test.tsx` measures the behaviour; this
- * suite holds the shape that makes it possible.
- *
- * A surface hosted by `<FloatingLayer>` or `<anchored>` sits over whatever it
- * opened from, so it must paint `pointerEvents` from its presence while it
- * leaves. An `anchored` host must make `occlude` conditional for the same
- * reason: the occlusion is a native mouse block that no style value can undo.
- *
- * **Every surface the seam keeps mounted owes that guard, not only the floating
- * ones.** The rule was a literal copied into each overlay, and `Reveal` and
- * `AutoHeight` — which stay mounted for their exit like a surface — never
- * copied it, so a press meant for what a collapsing section uncovered ran a
- * control inside the fading box instead. It lives once, as `presenceStyle` in
- * the seam, and this suite fails a surface that composes the seam without it
- * and any source that writes the literal again.
- *
- * **The scan reads each entry in the same pass that lists it**, and skips one a
- * concurrent writer removed. Five sessions write this tree, so a listing can
- * name a file that is gone by the time it is opened: reproduced 2026-10-22 with
- * the same list-then-open walk over a directory another process was writing,
- * which threw `ENOENT: no such file or directory, open '…/tmp-6.tsx'` **106
- * times in one five-second run**. That is the class this suite once failed with
- * (a single occurrence in a full-package run, stack through the walk). Every
- * other failure — a permission error, a missing directory — still fails the
- * suite rather than shrinking the scan, and a source floor keeps a scan that
- * read nothing from passing the contract vacuously.
- */
-
 import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import {
@@ -52,13 +16,11 @@ import { indicatorBox } from "./tabs/indicator.js";
 
 const packageRoot = new URL("../", import.meta.url);
 
-/** One source file and the text read from it in the same pass. */
 interface Source {
   readonly path: string;
   readonly body: string;
 }
 
-/** What a scan read, and what it could not read for a reason worth failing. */
 interface Scan {
   readonly sources: ReadonlyArray<Source>;
   readonly failures: ReadonlyArray<string>;
@@ -66,23 +28,19 @@ interface Scan {
 
 const empty: Scan = { sources: [], failures: [] };
 
-/** True for an entry another session removed between the listing and the read. */
 const vanished = (error: unknown): boolean =>
   P.isObject(error) && "code" in error && error.code === "ENOENT";
 
-/** Merge two scans, keeping their order. */
 const merge = (left: Scan, right: Scan): Scan => ({
   sources: [...left.sources, ...right.sources],
   failures: [...left.failures, ...right.failures],
 });
 
-/** A failed read, unless it is the vanished-entry case the scan tolerates. */
 const failure = (path: string, error: unknown): Scan =>
   vanished(error)
     ? empty
     : { sources: [], failures: [`${path}: ${String(error)}`] };
 
-/** Read one listed entry. */
 const readEntry = (path: string): Scan =>
   Result.match(
     Result.try(() =>
@@ -94,7 +52,6 @@ const readEntry = (path: string): Scan =>
     },
   );
 
-/** Every readable source file under `relative`, recursively, minus suites. */
 const scan = (relative: string): Scan => {
   const directory = fileURLToPath(new URL(relative, packageRoot));
   return Result.match(
@@ -113,14 +70,12 @@ const scan = (relative: string): Scan => {
   );
 };
 
-/** A source file from the motion package, which now owns the presence table. */
 const motionSource = (file: string): string =>
   readFileSync(
     fileURLToPath(new URL(`../../motion/src/${file}`, import.meta.url)),
     "utf8",
   );
 
-/** This package's seam, as its text. */
 const seamBody = (): string =>
   Option.getOrElse(
     Option.map(
@@ -134,7 +89,6 @@ const seamBody = (): string =>
 
 const { sources, failures } = scan("src/");
 
-/** A floating host plus the presence seam: a surface that can cover a control. */
 const floating = Arr.filter(sources, ({ body }) => {
   return (
     Str.includes("useSurfacePresence(")(body) &&
@@ -142,21 +96,14 @@ const floating = Arr.filter(sources, ({ body }) => {
   );
 });
 
-/** The guard a leaving surface paints: no presses while its exit runs. */
 const guard = /presenceStyle\(/;
 const occludeGuard = /occlude=\{(?:presence\.)?present\}/;
 
-/**
- * A surface whose presence is a constant: it mounts once and never leaves, so
- * it has no exit for a press to land in.
- */
 const neverLeaves = /useSurfacePresence\(\s*true\b/;
 
-/** The literal the guard replaced, before it had a home in the seam. */
 const inlineGuard =
   /pointerEvents:\s*(?:presence\.)?present\s*\?\s*"auto"\s*:\s*"none"/;
 
-/** The opening tag of a host, so an attribute is read where it is written. */
 const tags = (body: string, host: string): ReadonlyArray<string> => {
   const opening = new RegExp(`^${host}[\\s>]`);
   return Arr.filterMap(Str.split("<")(body), (chunk) =>
@@ -171,20 +118,17 @@ const tags = (body: string, host: string): ReadonlyArray<string> => {
 
 describe("the pointer contract", () => {
   it("reads every listed source, tolerating only a vanished entry", () => {
-    // The read that used to throw is the one path a concurrent writer can
-    // empty: a file listed a moment ago and gone at open time.
     expect(readEntry("src/__vanished_between_listing_and_read__.tsx")).toEqual(
       empty,
     );
     expect(readEntry("src/alert.tsx").sources).toHaveLength(1);
 
     expect(failures).toEqual([]);
-    // A scan that read nothing cannot satisfy the contract below by accident.
+
     expect(sources.length).toBeGreaterThan(100);
   });
 
   it("covers every floating surface, so the rule cannot pass on an empty tree", () => {
-    // A floor rather than the exact count: a new surface joins the rule.
     expect(Arr.length(floating)).toBeGreaterThanOrEqual(6);
   });
 
@@ -196,10 +140,6 @@ describe("the pointer contract", () => {
   });
 
   it("every surface that stays painted for an exit takes no press", () => {
-    // The bug this guards: the rule lived as a literal in eight floating
-    // surfaces, and the two that stayed mounted without copying it — `Reveal`
-    // and `AutoHeight` — ran a press on content the reader could no longer see.
-    // The seam owns the rule now; this case reads every surface it keeps.
     const mounted = Arr.filter(
       sources,
       ({ body }) =>
@@ -207,7 +147,7 @@ describe("the pointer contract", () => {
           Str.includes("presenceMotion(")(body)) &&
         !neverLeaves.test(body),
     );
-    // A floor rather than the exact count: a new surface joins the rule.
+
     expect(Arr.length(mounted)).toBeGreaterThanOrEqual(10);
     const offenders = Arr.filterMap(mounted, ({ path, body }) =>
       guard.test(body) ? Result.failVoid : Result.succeed(path),
@@ -216,9 +156,6 @@ describe("the pointer contract", () => {
   });
 
   it("keeps the guard in one home", () => {
-    // Eight copies and two omissions were one rule; a ninth copy is how the
-    // next omission happens. The rule now lives in the motion package, where a
-    // primitive can compose it without depending on this package.
     const copies = Arr.filterMap(sources, ({ path, body }) =>
       inlineGuard.test(body) ? Result.succeed(path) : Result.failVoid,
     );
@@ -232,13 +169,6 @@ describe("the pointer contract", () => {
   });
 
   it("a pointer-placed host drops its occlusion with its presence", () => {
-    // A deferred host is placed at a point after measurement, and its box is the
-    // surface: the occlusion is a native mouse block its child's `pointerEvents`
-    // cannot undo (measured on the context menu: with only the style guard the
-    // press case failed `expected +0 to be 1`). The modal veil is deliberately
-    // exempt — its `<anchored>` is a zero-size anchor at the window origin and
-    // its backdrop child owns the box, which `presence.test.tsx` measures a press
-    // through while the modal leaves.
     const offenders = Arr.flatMap(floating, ({ path, body }) => {
       return Arr.filterMap(tags(body, "anchored"), (tag) =>
         Str.includes("occlude")(tag) &&
@@ -252,21 +182,14 @@ describe("the pointer contract", () => {
   });
 });
 
-/** A stagger spread onto a house timing, which re-implements the reduced rule. */
 const inlineDelay = /\.\.\.timing(?:\.\w+)?\s*,\s*delay\s*:/;
 
-/** The arrivals that queue behind a stagger, and the seam that builds it. */
 const staggered = ["src/reveal.tsx", "src/avatar-group.tsx"] as const;
 const timingSeam = "src/internal/presence.tsx";
 const retiredDelayCopies = ["groupEntering", "unitTransition"] as const;
 
 describe("the house timing", () => {
   it("gains a delay in one place, so the reduced rule has one home", () => {
-    // The bug this guards: `Reveal` spread `delayMs` onto the reduced timing
-    // itself, and the runtime waits a delay out *before* an instant assignment —
-    // so a reduced reveal sat at its first frame for the whole stagger. Its two
-    // siblings had each written the correct rule in their own logic module. The
-    // rule is the motion package's now, and no surface may restate it.
     const offenders = Arr.filterMap(sources, ({ path, body }) =>
       inlineDelay.test(body) ? Result.succeed(path) : Result.failVoid,
     );
@@ -300,12 +223,7 @@ describe("the house timing", () => {
   it("still drops the delay with a journey the timing cannot run, so the rule cannot pass by deletion", () => {
     const shared = motionSource("presence.ts");
     expect(Str.includes("export const delayedTiming")(shared)).toBe(true);
-    // The rule is the module's own reading of a duration, not a literal zero:
-    // a stored timing whose duration is absent, unreadable or not positive is
-    // no journey either, and the window conversion reads it the same way. The
-    // read is nullish-safe because `PresenceTransition` is structural too, and
-    // the delay is converted by the module's own reader — a delay outside the
-    // clock's range adds nothing — rather than by raw division.
+
     expect(Str.includes("milliseconds(timing?.duration) === 0")(shared)).toBe(
       true,
     );
@@ -318,13 +236,9 @@ describe("the house timing", () => {
 
 describe("the shared presence table", () => {
   it("is composed by this package's seam, not restated", () => {
-    // The bug this guards: both packages carried the frames, the window and the
-    // pointer rule, and they agreed only until one was edited. The seam must
-    // reach the one table rather than copy it, so a fix lands for both.
     const seam = seamBody();
     expect(seam).toContain('from "@gpuixui/motion/presence"');
-    // The React half is the physics-free entry: the seam needs the provider and
-    // the mount window, not the spring sampler beside them.
+
     expect(seam).toContain('from "@gpuixui/motion/react/presence"');
     expect(seam).not.toMatch(/from "@gpuixui\/motion\/react";/);
     expect(seam).not.toContain("export const fadeFrom");
@@ -333,17 +247,6 @@ describe("the shared presence table", () => {
   });
 });
 
-/**
- * The two movements the timing table names, and the seam hook both read.
- *
- * The bug this guards: the table defines `standard` as "a movement between two
- * resting states", and the tab pill and the carousel indicator are exactly that
- * — but both painted the *enter* curve, so the table's third phase had no
- * consumer and a selection eased like a surface arriving. The behaviour suites
- * measure the curve each one paints; this suite holds them to the one reader,
- * so a movement cannot quietly go back to `useSurfaceTiming(…).enter` or write
- * a curve of its own.
- */
 const movements: ReadonlyArray<{
   readonly path: string;
   readonly level: string;
@@ -352,7 +255,6 @@ const movements: ReadonlyArray<{
   { path: "src/carousel.tsx", level: "fast" },
 ];
 
-/** One scanned source, or a broken suite when it was not read. */
 const sourceOf = (path: string): string =>
   Option.getOrElse(
     Option.map(
@@ -372,8 +274,7 @@ describe("the movement between resting states", () => {
     );
     expect(seam).toContain("export const useMoveTiming = (");
     expect(seam).toContain("moveTiming(level, useMotionPreference())");
-    // A surface that arrives still reads the arrival timing, so the movement is
-    // a second reader of the table rather than a replacement for the first.
+
     expect(seam).toContain("export { useSurfacePresence, useSurfaceTiming");
   });
 
@@ -394,15 +295,6 @@ describe("the movement between resting states", () => {
   });
 });
 
-/**
- * The runtime's own motion typing, where the animatable field list is declared.
- *
- * This package depends on `@gpuix/react`, not on the native binding, so the
- * installed copy the workspace pins is read from a package that links it (the
- * playground, whose binding recipe `apps/playground/README.md` documents, or the
- * docs app). The first copy that reads wins; a checkout where neither is
- * installed fails below rather than skipping the claim.
- */
 const runtimeHost = Arr.findFirst(
   [
     readEntry(
@@ -413,15 +305,6 @@ const runtimeHost = Arr.findFirst(
   (read) => read.sources.length === 1,
 );
 
-/**
- * The fields a `MotionStyle` declaration carries.
- *
- * The declaration is read from text rather than the type, because the claim the
- * inventory makes is about what the **runtime** animates: `@gpuixui/motion`
- * emits numbers and records them, and only the renderer's grammar decides
- * whether the field is paint. Reading the installed typings is how the row's
- * limit stays the runtime's instead of a memory of one release.
- */
 const motionFieldsIn = (typings: string): ReadonlyArray<string> => {
   const declared = Option.flatMap(
     Option.fromNullishOr(
@@ -445,7 +328,6 @@ const motionFieldsIn = (typings: string): ReadonlyArray<string> => {
   );
 };
 
-/** The fields the installed runtime's `MotionStyle` declares. */
 const motionFields = (): ReadonlyArray<string> =>
   Option.getOrElse(
     Option.map(runtimeHost, (read) =>
@@ -459,13 +341,6 @@ const motionFields = (): ReadonlyArray<string> =>
     () => [],
   );
 
-/**
- * The movements the runtime has no key for — the gap the inventory row prints.
- *
- * `transform` is upstream issue #102; a filter is not a numeric motion field at
- * all. A runtime that publishes one of these turns the row's limit into a stale
- * claim, so the list is derived from the typings, not remembered beside them.
- */
 const unrepresentable = [
   "transform",
   "transformOrigin",
@@ -476,22 +351,15 @@ const unrepresentable = [
   "filter",
 ] as const;
 
-/** The fields of those movements a declaration actually carries. */
 const unrepresentableIn = (
   fields: ReadonlyArray<string>,
 ): ReadonlyArray<string> =>
   Arr.filter(unrepresentable, (name) => Arr.contains(fields, name));
 
-/** Every side the presence builders accept, so each one's frames are read. */
 const sides = ["top", "right", "bottom", "left"] as const;
 
 describe("the motion grammar", () => {
   it("reads the runtime's animatable fields, so the row's limit is the runtime's", () => {
-    // The bug this guards: the inventory's Motion row promised that opacity,
-    // size, position and radius tween and that rotation and scale do not, and
-    // cited `timing.test.ts` — a suite that holds the house durations and never
-    // names a style field. A reader following it finds no such proof, and a
-    // `@gpuix/native` bump could add or drop a field without the row noticing.
     expect(Option.isSome(runtimeHost)).toBe(true);
     Arr.forEach(Option.toArray(runtimeHost), (read) => {
       expect(read.failures).toEqual([]);
@@ -508,8 +376,7 @@ describe("the motion grammar", () => {
       "borderRadius",
     ]);
     expect(unrepresentableIn(motionFields())).toEqual([]);
-    // The rule has to be able to report a field, or "no transform" passes by
-    // reading nothing: a declaration that publishes one is the control.
+
     const patched = [
       "export interface MotionStyle {",
       "    width?: number;",
@@ -524,10 +391,6 @@ describe("the motion grammar", () => {
   });
 
   it("keeps every frame the seam paints inside that grammar", () => {
-    // The frames are the table's own builders, so a field added to one of them
-    // must be a movement the renderer can paint; the runtime drops a whole
-    // motion description it cannot read, so an unknown key would silently
-    // remove the fade rather than fail.
     const frames = [
       fadeFrom("top", 8),
       fadeFrom("left", 8),
@@ -546,10 +409,6 @@ describe("the motion grammar", () => {
   });
 
   it("makes each movement the inventory promises a painter", () => {
-    // A movement the row prints has to be a field the runtime knows and a frame
-    // a surface actually paints. The frames are driven rather than read as
-    // prose, so a comment that still names `borderRadius` cannot stand in for
-    // the disc that no longer tweens it.
     const fields = motionFields();
     const presenceKeys = Arr.flatMap([fadeFrom("top", 8), fadeOnly], (frames) =>
       Arr.flatMap(Object.values(frames), (frame) => Object.keys(frame)),
@@ -560,8 +419,7 @@ describe("the motion grammar", () => {
         { x: 15, y: 20, width: 50, height: 30 },
       ),
     );
-    // The radius tween's painter is the ripple, which lives in `@gpuixui/fx`
-    // (plan 726) and holds its own frames to the runtime's fields there.
+
     const painted = [
       ["opacity", presenceKeys],
       ["size", pill],
@@ -570,8 +428,7 @@ describe("the motion grammar", () => {
     Arr.forEach(painted, ([movement, keys]) => {
       expect(movement.length).toBeGreaterThan(0);
       expect(keys.length).toBeGreaterThan(0);
-      // Every key a painter emits is a movement the runtime animates, and the
-      // movement the row names is among them.
+
       expect(Arr.filter(keys, (key) => !Arr.contains(fields, key))).toEqual([]);
     });
     expect(presenceKeys).toContain("opacity");
@@ -600,9 +457,7 @@ describe("the motion grammar", () => {
     );
     expect(row).not.toEqual("");
     expect(row).toContain("presence-contract.test.ts");
-    // The reduced-preference sentence is the motion package's own suite: the row
-    // teaches a reader that composing packages share one policy, so it names the
-    // file that holds it. Both citations must resolve on disk.
+
     expect(row).toContain("timing.test.ts");
     expect(
       readFileSync(
@@ -610,7 +465,7 @@ describe("the motion grammar", () => {
         "utf8",
       ),
     ).toContain("reducedMotionOf");
-    // The four movements and the gap, in the row a reader learns the limit from.
+
     const text = Str.toLowerCase(row);
     Arr.forEach(["opacity", "size", "position", "radius"], (claim) => {
       expect(text).toContain(claim);
@@ -620,29 +475,16 @@ describe("the motion grammar", () => {
   });
 });
 
-/** A source that reads a surface timing's own duration. */
 const readsTimingDuration = (body: string): boolean =>
   Str.includes("timing.enter.duration")(body) ||
   Str.includes("timing.exit.duration")(body);
 
-/** The seam's one conversion from a timing's seconds to a hold window. */
 const windowConversion = /(?:transitionWindowMs|exitWindowMs)\(/;
 
-/** A source that keeps a box painted for a timing, through the seam or by hand. */
 const holdsForTiming = (body: string): boolean =>
   Str.includes("setTimeout")(body) &&
   (windowConversion.test(body) || readsTimingDuration(body));
 
-/**
- * A source that divides a timing's duration into milliseconds by hand.
- *
- * The conversion is the seam's (`transitionWindowMs`), and a second home is a
- * span it does not own whether or not the source schedules the timer itself:
- * `text-swap.ts` handed its half to `RollingText`/`SlidingText`, which schedule
- * it, so a copy sat one call away from the shape that only looked for a
- * `setTimeout` beside the division. One line naming the duration and converting
- * it is that copy's shape.
- */
 const handBuiltWindow = (body: string): boolean =>
   Arr.some(
     Str.split("\n")(body),
@@ -651,29 +493,14 @@ const handBuiltWindow = (body: string): boolean =>
 
 describe("the hold window", () => {
   it("is the seam's conversion, so a delayed run keeps its box", () => {
-    // The bug this guards: `PageTransition` divided its own window out of the
-    // timing (`Math.round((timing.exit.duration ?? 0) * 1000)`), a second copy
-    // of the rule `transitionWindowMs` exists to own. The runtime waits a
-    // delayed run's first frame for `delay`, so a hand-built window counted only
-    // the duration and unmounted a view before its journey began — and a delay
-    // change did not re-run the timer at all. The seam's conversion is one home
-    // for the duration *and* the wait, and a hold window counts whether it
-    // reaches the rule through the helper or still reads the raw duration — the
-    // second is exactly what this case has to see in order to fail it.
-    // `gradient-text` and `splitting-text` read the duration only to report the
-    // reduced preference, so they are not hold windows; a file that hands its
-    // milliseconds to a component that schedules them is one (`text-swap.ts` did,
-    // before the guard looked past the timer), which is why the hand-built shape
-    // is a line and not a file.
     const holding = Arr.filter(sources, ({ body }) => holdsForTiming(body));
-    // A scan that reads no hold window cannot pass vacuously.
+
     expect(Arr.length(holding)).toBeGreaterThan(0);
     const offenders = Arr.filterMap(holding, ({ path, body }) =>
       windowConversion.test(body) ? Result.failVoid : Result.succeed(path),
     );
     expect(offenders).toEqual([]);
-    // The seam is the one home for the conversion; a source that divides a
-    // window out of a duration beside a seamed one holds a span it does not own.
+
     const handBuilt = Arr.filterMap(sources, ({ path, body }) =>
       path !== timingSeam && handBuiltWindow(body)
         ? Result.succeed(path)
@@ -683,24 +510,14 @@ describe("the hold window", () => {
   });
 });
 
-/** The layer a surface paints over the content it keeps for its exit. */
 const shield = /<PresenceShield\b/;
 
-/** The shared menu box, which paints the shield for both menu roots. */
 const sharedShield = /<MenuSurface\b/;
 
-/** A shield handed a constant, which covers a surface that is not leaving. */
 const constantShield = /<PresenceShield\b[^>]*present=\{(?:true|false)\}/;
 
 describe("the leaving shell", () => {
   it("covers the content it keeps mounted for its exit", () => {
-    // The bug this guards: the seam removes a surface's **own** hitbox and
-    // nothing it holds (`pointerEvents` does not inherit), so a card or panel
-    // that stays painted for its exit must cover its content. The rule was one
-    // omission away from the surface it was written for: a dismissed notice kept
-    // its action painted with nothing over it, so the ghost's `Undo` answered a
-    // press. Every surface the seam keeps paints the shield itself; the two menu
-    // roots get it from the shared `MenuSurface` they render.
     const mounted = Arr.filter(
       sources,
       ({ body }) =>
@@ -708,7 +525,7 @@ describe("the leaving shell", () => {
           Str.includes("presenceMotion(")(body)) &&
         !neverLeaves.test(body),
     );
-    // A floor rather than the exact count: a new surface joins the rule.
+
     expect(Arr.length(mounted)).toBeGreaterThanOrEqual(10);
     const offenders = Arr.filterMap(mounted, ({ path, body }) =>
       shield.test(body) || sharedShield.test(body)
@@ -719,8 +536,6 @@ describe("the leaving shell", () => {
   });
 
   it("is derived from the state that owns it, never a constant", () => {
-    // A shield painted while the surface is open covers the controls the reader
-    // is using, which is the opposite failure to a missing one.
     const offenders = Arr.filterMap(sources, ({ path, body }) =>
       constantShield.test(body) ? Result.succeed(path) : Result.failVoid,
     );
@@ -728,13 +543,10 @@ describe("the leaving shell", () => {
   });
 });
 
-/** The per-surface motion table `docs/component-api.md` §11 publishes. */
 const apiDoc = readEntry("../../docs/component-api.md");
 
-/** The package page, whose §Motion states the rules the table's numbers serve. */
 const readmeDoc = readEntry("README.md");
 
-/** The whole document, or `""` when it could not be read. */
 const bodyOf = (doc: Scan): string =>
   Option.getOrElse(
     Option.map(Arr.head(doc.sources), (source) => source.body),
@@ -744,7 +556,6 @@ const bodyOf = (doc: Scan): string =>
 const apiBody = bodyOf(apiDoc);
 const readmeBody = bodyOf(readmeDoc);
 
-/** The lines under a `## <heading>`, up to the next `##` heading. */
 const sectionOf = (
   markdown: string,
   heading: string,
@@ -763,14 +574,6 @@ const sectionOf = (
   );
 };
 
-/**
- * The table under §11's `**Per surface:**` marker.
- *
- * The document carries other tables (the component inventory among them, with a
- * `Drawer` row of its own), so the rows are read from the marked section alone —
- * a scan of every `|` line matched the inventory's `Drawer` first and read a
- * component row as a motion claim.
- */
 const apiLines = Str.split("\n")(apiBody);
 const motionTable: ReadonlyArray<string> = Arr.takeWhile(
   Arr.dropWhile(
@@ -791,13 +594,11 @@ const motionTable: ReadonlyArray<string> = Arr.takeWhile(
   (line) => Str.startsWith("|")(line),
 );
 
-/** The cells of one table line, trimmed. */
 const cellsOf = (line: string): ReadonlyArray<string> =>
   Arr.map(Arr.filter(Str.split("|")(line), Str.isNonEmpty), (cell) =>
     Str.trim(cell),
   );
 
-/** The row whose first cell names `surface`, as all of its cells. */
 const rowOf = (surface: string): ReadonlyArray<string> =>
   Option.getOrElse(
     Option.map(
@@ -810,16 +611,6 @@ const rowOf = (surface: string): ReadonlyArray<string> =>
     () => [],
   );
 
-/**
- * One surface the table names: what it must print and the source that paints it.
- *
- * The bug this guards: the table taught the toast as "fade + 16px from the right
- * edge" on the `notice` level after the card was rewritten to rise 16px on its
- * own 220 ms entry and slide 16px right on a 180 ms exit, and nothing read the
- * table against the painters — so the one document a consumer learns the
- * movement from described a surface the library no longer shipped. Each entry
- * below is a claim the table makes, held to the literal its painter writes.
- */
 interface SurfaceMotion {
   readonly surface: string;
   readonly prints: ReadonlyArray<string>;
@@ -940,14 +731,13 @@ const surfaces: ReadonlyArray<SurfaceMotion> = [
   },
 ];
 
-/** The cells of a row as one lowercase sentence, for a printed claim. */
 const rowText = (surface: string): string =>
   Str.toLowerCase(Arr.join(Arr.drop(rowOf(surface), 1), " "));
 
 describe("the per-surface table", () => {
   it("prints the movement and level its painter writes", () => {
     expect(apiDoc.failures).toEqual([]);
-    // A parse that read no table cannot satisfy the claims below.
+
     expect(Arr.length(motionTable)).toBeGreaterThan(8);
     const missingRows = Arr.filterMap(surfaces, (entry) =>
       Arr.length(rowOf(entry.surface)) > 0
@@ -981,11 +771,6 @@ describe("the per-surface table", () => {
   });
 
   it("teaches the toast's own timing, not a shared level", () => {
-    // The retracted reading: the card used to come in from the right edge on
-    // the shared `notice` level while it rose instead. The movement is the
-    // toast's own now, and the row must say both halves and the unfold the
-    // rebuild added (the three peeking strips are the collapsed stack, not a
-    // second entrance).
     const text = rowText("Toast");
     expect(Str.includes("notice")(text)).toBe(false);
     expect(Str.includes("motiontimingof")(text)).toBe(true);
@@ -995,7 +780,6 @@ describe("the per-surface table", () => {
   });
 });
 
-/** The documents that state the motion contract, by the name a failure prints. */
 const motionDocs: ReadonlyArray<{
   readonly name: string;
   readonly body: string;
@@ -1009,17 +793,8 @@ const motionDocs: ReadonlyArray<{
   },
 ];
 
-/** The retracted claim: the seam owning what the motion package publishes. */
 const ownedSeam = ["owns the frames", "owns the mount window"] as const;
 
-/**
- * §11's ownership row for the components seam.
- *
- * The whole document names the two subpaths elsewhere (the paragraph beneath the
- * table), so the retracted reading is held where it was written: the seam's own
- * "Owns" cell. The row said it owned "the frames … the mount window" after both
- * moved to the motion package.
- */
 const seamRow = Str.toLowerCase(
   Option.getOrElse(
     Option.map(
@@ -1035,10 +810,6 @@ const seamRow = Str.toLowerCase(
 
 describe("the ownership the motion pages teach", () => {
   it("places each half in the entry that publishes it", () => {
-    // The bug this guards: both documents called the components seam the owner of
-    // the frames and the mount window after the table was shared, so a consumer
-    // painting its own surface copied the rule instead of composing it — and the
-    // two packages could then disagree about one contract by editing one copy.
     const wrong = Arr.flatMap(motionDocs, (doc) => {
       const missing = Arr.filterMap(
         [
@@ -1059,7 +830,7 @@ describe("the ownership the motion pages teach", () => {
       return [...missing, ...retracted];
     });
     expect(wrong).toEqual([]);
-    // The seam's own row is where the wrong ownership was written.
+
     expect(seamRow).toContain("re-publication");
     expect(seamRow).toContain("presenceshield");
     expect(
@@ -1068,15 +839,9 @@ describe("the ownership the motion pages teach", () => {
   });
 
   it("leaves the per-surface numbers to the one table", () => {
-    // The bug this guards: the README printed the table's numbers itself, and
-    // they drifted — it taught a toast that "slides 16px in from the right edge"
-    // after the card was rewritten to rise on its own 220 ms entry and leave on a
-    // 180 ms slide, so the first page a developer reads described a surface the
-    // library no longer shipped. §11 is the table, held to its painters above;
-    // the page states the rules and points at it.
     const section = sectionOf(readmeBody, "Motion");
     expect(motionDocs[0]?.failures).toEqual([]);
-    // A parse that read no section cannot pass by accident.
+
     expect(section.length).toBeGreaterThan(5);
     const text = Arr.join(section, "\n");
     expect(text).toContain("docs/component-api.md");

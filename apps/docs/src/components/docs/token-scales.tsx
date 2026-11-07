@@ -10,18 +10,6 @@ import { platformLabel } from "../../lib/platform";
 import { usePlatform } from "./platform-toggle";
 import { PreviewSurface } from "./preview-surface";
 
-/**
- * The geometry scales, drawn from the theme rather than copied.
- *
- * The Theming page named `spacing`, `radius`, `borderWidth`, `iconSize` and
- * `density` in one table and never showed a value, so a reader sizing a control
- * had to open the package. Every row here is generated from the theme, and the
- * elevation order is the package's own `elevationLevels`, so a step added to
- * `@gpuixui/tokens` appears without a docs change. `token-scales.test.tsx` holds
- * each step and its printed size to that theme.
- */
-
-/** The CSS a preview box paints for a theme's elevation step. */
 const cssShadow = (shadow: BoxShadow | undefined): string | undefined =>
   shadow === undefined
     ? undefined
@@ -47,7 +35,6 @@ const Group = ({
   </section>
 );
 
-/** The specimens, given a resolved theme (no context, so it is testable). */
 export function TokenScalesBody({ theme }: { readonly theme: Theme }) {
   const steps = Object.entries(theme.spacing);
   const radii = Object.entries(theme.radius);
@@ -244,7 +231,6 @@ export function TokenScalesBody({ theme }: { readonly theme: Theme }) {
   );
 }
 
-/** The scales on the platform surface, so a platform's radii and density show. */
 export function TokenScales() {
   const { platform, theme } = usePlatform();
 

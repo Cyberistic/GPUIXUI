@@ -1,8 +1,3 @@
-/**
- * The landing's numbers (plan 730). Bug guarded: a bench file that lost a field
- * printing `undefined ms` as a measurement, or a hand edit typing a number
- * the bench never wrote.
- */
 import { describe, expect, it } from "vitest";
 import raw from "./proof.json";
 import { decodeProof, proof } from "./proof";

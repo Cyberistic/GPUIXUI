@@ -1,7 +1,3 @@
-/**
- * A window's samples are stable and inside the sensor's band; the ring's two
- * segments always make a whole; the label names the window a press selects.
- */
 import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
 import { drives, processes, sensors } from "./data.js";

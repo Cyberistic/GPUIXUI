@@ -1,13 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Bubble example: the seven surfaces, a grouped run, an avatar slot, a reaction
- * pill on the surface's edge and a hover action strip.
- *
- * Hover a bubble to reveal its actions; the strip is laid out all along, so it
- * fades in without moving anything. The grouped run tightens its gap and each
- * bubble squares the edge it joins.
- */
-
 import { useState } from "react";
 import { Avatar } from "../src/avatar.js";
 import {
@@ -20,7 +11,6 @@ import {
 } from "../src/bubble.js";
 import { useTheme } from "../src/internal/theme.js";
 
-/** One surface, named by its variant. */
 const surfaces = [
   "default",
   "secondary",
@@ -31,7 +21,6 @@ const surfaces = [
   "destructive",
 ] as const;
 
-/** A bubble field with the seven surfaces and one grouped run. */
 export const BubbleExample = () => {
   const theme = useTheme();
   const [copied, setCopied] = useState("No action yet.");

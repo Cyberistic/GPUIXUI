@@ -1,13 +1,3 @@
-/**
- * Browser preview for the Code block page.
- *
- * The native block paints a title bar — the file name on the start edge, the
- * language and the copy action on the end — an optional line-number gutter and
- * the tokenized source, each token a run in `syntaxColors(theme)`. The preview
- * draws the same chrome and the same palette, through the `--syntax-*` variables
- * the theme bridge publishes, so switching the platform style repaints the code.
- */
-
 type SyntaxRole =
   | "boolean"
   | "comment"

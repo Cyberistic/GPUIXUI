@@ -1,15 +1,3 @@
-/**
- * The example registry's contract.
- *
- * The bugs these guard: an example file that no registry entry mounts (so the
- * screen a reader copies has never run), a registry entry with no file, and an
- * entry importing a symbol its file does not export.
- *
- * `node:fs` is a test-time repository read, the standing exception
- * `inventory.test.ts` records in `@gpuixui/components` (plan 117 §3): no runtime
- * module here imports it.
- */
-
 import { readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import * as Arr from "effect/Array";

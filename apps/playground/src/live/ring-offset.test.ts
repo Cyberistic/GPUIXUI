@@ -1,17 +1,3 @@
-/**
- * Holds the arithmetic the `focus-ring-offset` probe samples and the claims it
- * prints.
- *
- * The bug this guards: an outline's sampled point is `outlineOffset +
- * outlineWidth / 2`, and a probe that samples the width alone measures the
- * theme's 2 pt line at offset 0 — the ring it is meant to distinguish from —
- * while a probe that samples the offset alone lands in the gap. Both look like
- * a painted ring in a sparse frame, so the measurement is held here without a
- * window.
- *
- * `node:fs` is deliberate, as in `field-ink.test.ts`: this reads the
- * repository's own probe and prose, never a runtime path.
- */
 import { readFileSync } from "node:fs";
 import { getTheme } from "@gpuixui/tokens";
 import { describe, expect, it } from "vitest";
@@ -33,9 +19,9 @@ describe("the point an outline is sampled at", () => {
 
   it("lands in the middle of a band that starts at the declared gap", () => {
     const line = getTheme("dark").borderWidth.strong;
-    // Flush: the line's own width, so its middle is one point out.
+
     expect(bandPoint(box, 0, line)).toEqual({ x: 39, y: 40 });
-    // Offset 2 plus a 2 pt line: the middle is three points out, not two.
+
     expect(bandPoint(box, RING_OFFSET, line)).toEqual({ x: 37, y: 40 });
   });
 
@@ -46,8 +32,6 @@ describe("the point an outline is sampled at", () => {
 
 describe("the probe's fixture", () => {
   it("separates the ring from the box by the width of the line", () => {
-    // The gap and the line are both 2 pt, so a frame that confuses them reads
-    // the wrong band rather than a plausible one.
     expect(RING_OFFSET).toBe(getTheme("dark").borderWidth.strong);
   });
 

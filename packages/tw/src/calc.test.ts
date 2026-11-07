@@ -1,13 +1,3 @@
-/**
- * The compile-time numeric `calc()` evaluator.
- *
- * Bug guarded: `calc()` was recorded as unsupported wholesale (an arbitrary
- * CSS value with no `StyleDesc`), so token arithmetic could not be expressed
- * as a class. It now resolves numeric literals, `+ - * /`, parentheses and
- * `var(--token)` against the theme, and rejects percentages, units, functions
- * and unknown tokens with a recorded reason — never a silent drop.
- */
-
 import { describe, expect, it } from "vitest";
 import { lightTheme } from "@gpuixui/tokens";
 import {

@@ -40,8 +40,3 @@ Collapsible
 | `Collapsible` | `div` column | `open?`, `defaultOpen?` (default `false`), `onOpenChange?` |
 | `CollapsibleTrigger` | `div role="button"` with `aria-expanded` | `disabled?`, `style?: StateStyle<CollapsibleTriggerState>`, `className?` |
 | `CollapsibleContent` | `div`, mounted while open | `children`, `className?` |
-
-## Notes
-- The body grows from zero to the height it measures; the target is read before the opening frame paints.
-- A `Tab` traversal focuses the trigger **without running its `onFocus`**; the ring is declared at rest.
-- No `aria-controls`; the trigger–body relationship is positional.

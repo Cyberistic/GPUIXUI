@@ -1,36 +1,18 @@
-import { readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { sidebarPages } from "./sidebar-pages.test-util";
-
-/**
- * The block pages.
- *
- * A block is a page-level recipe: a browser reproduction plus the real
- * `@gpuixui/*` source. The reproduction comes from `blocks.tsx`, and a page
- * whose `BlockPreview` name is not in that registry throws at render, while a
- * registered block with no page is dead code nothing links to. Neither shows up
- * in the build, so the two are held together here.
- *
- * The dashboard page is also where a chart's runtime rule is explained, and that
- * explanation drifted once: it said GPUix paints `<svg source>` "natively, so
- * this is not a DOM widget", while the measured rule is one tint per element.
- * The claims are held to the capability record, and the recipe is held to the
- * charts `@gpuixui/data` actually ships.
- */
 
 const here = (path: string): string =>
   readFileSync(new URL(path, import.meta.url), "utf8");
 
 const pageDir = new URL("../../content/docs/blocks/", import.meta.url);
 const registry = here("../components/docs/blocks.tsx");
-const record = here("../../../../docs/gpuix-capabilities.md");
 
 interface BlockEntry {
   readonly key: string;
   readonly slug: string;
 }
 
-/** The `name`/`slug` pair of each registry entry, read from its own source. */
 const entries: ReadonlyArray<BlockEntry> = [
   ...registry.matchAll(
     /^ {2}"?([a-z0-9-]+)"?: \{\n {4}name: "([a-z0-9-]+)",\n {4}slug: "([a-z0-9-]+)",/gm,
@@ -40,7 +22,7 @@ const entries: ReadonlyArray<BlockEntry> = [
   if (key === undefined || name === undefined || slug === undefined) {
     throw new Error("a blocks.tsx entry did not match name/slug");
   }
-  // The map key and the block's own name are two spellings of one identity.
+
   if (key !== name) throw new Error(`block ${key} names itself ${name}`);
   return [{ key, slug }];
 });
@@ -54,12 +36,17 @@ const pageFor = (slug: string): string =>
 const isPageList = (value: unknown): value is ReadonlyArray<string> =>
   Array.isArray(value) && value.every((entry) => typeof entry === "string");
 
+const prose = (page: string): string =>
+  page
+    .replace(/^---[\s\S]*?---/, "")
+    .replace(/```[\s\S]*?```/g, "")
+    .replace(/<[^>]+>/g, "")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1");
+
 describe("the block pages", () => {
   it("registers every page, and has a page for every registered block", () => {
     expect(entries.length).toBeGreaterThanOrEqual(3);
 
-    // Both directions, without sorting: a page with no block is a preview that
-    // throws, and a block with no page is code nothing links to.
     const registered = entries.map(({ slug }) => `${slug}.mdx`);
     expect(pageFiles.filter((file) => !registered.includes(file))).toEqual([]);
     expect(registered.filter((file) => !pageFiles.includes(file))).toEqual([]);
@@ -68,8 +55,7 @@ describe("the block pages", () => {
   it("mounts the registry key each page names", () => {
     const problems = entries.flatMap(({ key, slug }) => {
       const page = pageFor(slug);
-      // A collection page (the sidebar family) mounts one example per section
-      // instead of one `<BlockPreview>`; its own guard holds the sixteen.
+
       const mounted =
         page.includes(`<BlockPreview name="${key}" />`) ||
         page.includes("<SidebarExample ");
@@ -96,67 +82,69 @@ describe("the block pages", () => {
     );
   });
 
-  it("teaches one conversation dress per platform the block paints", () => {
-    // Bug guarded: the page said "three platform dresses" and listed macOS,
-    // Windows 11 and Linux while the block ships a fourth, Omarchy.
-    const block = here("../components/docs/conversations-block.tsx");
-    const names = [
-      ...(
-        block.split("export type ConversationPlatform = ")[1]?.split(";")[0] ??
-        ""
-      ).matchAll(/"(\w+)"/g),
-    ].flatMap((match) => match[1] ?? []);
-    const labels: Readonly<Record<string, string>> = {
-      macos: "macOS",
-      windows: "Windows 11",
-      linux: "Linux (Breeze dark)",
-      omarchy: "Omarchy",
-    };
-    const words = ["zero", "one", "two", "three", "four", "five"];
-    const page = pageFor("conversations").replace(/\s+/g, " ");
+  it("links every block to the file that paints it", () => {
+    const files = [...registry.matchAll(/^ {4}file: "([^"]+)",$/gm)].flatMap(
+      (match) => match[1] ?? [],
+    );
+    const missing = files.filter(
+      (file) => !existsSync(new URL(`../../../../${file}`, import.meta.url)),
+    );
 
-    expect(names).toEqual(["macos", "windows", "linux", "omarchy"]);
-    expect(page).toContain(`## The ${words[names.length]} dresses`);
-    names.forEach((name) => {
-      expect(page).toContain(`**${labels[name]}**`);
-    });
-    expect(page).not.toMatch(/three platform dresses|all three/);
+    expect(files).toHaveLength(entries.length);
+    expect(missing).toEqual([]);
+    expect(here("../components/docs/block-preview.tsx")).toContain(
+      "Block source on GitHub",
+    );
+  });
+
+  it("keeps every block page to its preview and one sentence", () => {
+    const verbose = entries
+      .filter(({ slug }) => slug !== "sidebar")
+      .flatMap(({ slug }) => {
+        const words = prose(pageFor(slug)).trim().split(/\s+/).filter(Boolean);
+        return words.length > 40 ? [`${slug}: ${words.length} words`] : [];
+      });
+
+    expect(verbose).toEqual([]);
   });
 });
 
-describe("the dashboard page's charts", () => {
-  const dashboard = pageFor("dashboard");
-  const recipe = here("../components/docs/dashboard.tsx");
+describe("the dashboard's charts", () => {
+  const drawing = here("../components/docs/dashboard.tsx");
+  const recipe = drawing;
 
-  it("labels the preview as a reproduction and states the one-tint rule", () => {
-    expect(record).toContain("as one tint");
-    expect(dashboard).toContain("browser reproduction");
-    expect(dashboard).toContain("one tint");
-    expect(dashboard).toContain("stacked");
-    expect(dashboard).not.toContain("not a DOM widget");
+  it("draws with the package's chart geometry, not a second implementation", () => {
+    expect(drawing).toContain('from "@gpuixui/data/chart/logic"');
+    expect(drawing).toContain("stackedBarMarks");
+    expect(drawing).toContain("groupedBarMarks");
+    expect(drawing).toContain("ringSegments");
+    expect(drawing).not.toContain("hourlyBars");
+  });
+
+  it("curves every block chart through the package, not a local spline", () => {
+    for (const file of ["dashboard-01.tsx", "charts-demo.tsx"]) {
+      const source = here(`../components/docs/${file}`);
+      expect(source, file).not.toContain("chart-smooth");
+      expect(source, file).toContain("curvePath");
+    }
+    expect(
+      existsSync(
+        new URL("../components/docs/chart-smooth.ts", import.meta.url),
+      ),
+    ).toBe(false);
   });
 
   it("composes the charts the data package ships", () => {
-    // Bug guarded: the page said "the library has no chart component yet" and
-    // the recipe carried its own `<Chart>` whose markup was a comment
-    // (`markup="/* Mon–Sun bars */"`), so the copyable source painted nothing
-    // and the reader was told a shipped component did not exist. `@gpuixui/data`
-    // ships `BarChart`, `DonutChart` and `StackedBar`, and the composition list
-    // names them.
     expect(recipe).toContain('} from "@gpuixui/data"');
     expect(
       ["BarChart", "DonutChart", "StackedBar"].flatMap((part) =>
-        recipe.includes(part) && dashboard.includes(part) ? [] : [part],
+        recipe.includes(part) ? [] : [part],
       ),
     ).toEqual([]);
-    expect(dashboard).toContain("/graphics/charts");
   });
 
   it("hands the recipe no placeholder geometry", () => {
-    // A `markup="/* … */"` string is not geometry: it is a comment where a
-    // chart should be, and a reader who pasted the recipe got a blank panel.
     expect(recipe).not.toMatch(/markup="\/\*/);
     expect(recipe).not.toContain("no chart component");
-    expect(dashboard).not.toContain("Charts are a gap");
   });
 });

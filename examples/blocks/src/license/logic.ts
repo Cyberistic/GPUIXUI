@@ -1,5 +1,3 @@
-/** The Hunter License block's rules: the directory's filter and a rank's words. */
-
 import * as Arr from "effect/Array";
 import * as Order from "effect/Order";
 import type { Hunter, Specialty } from "./data.js";

@@ -1,11 +1,3 @@
-/**
- * A property panel over one object: text, number, boolean and select fields,
- * each edit reporting the whole record.
- *
- * The object stays one record; the rows read it and `onChange` writes it back,
- * so a preview and the panel can read the same object without a second copy.
- */
-
 import * as P from "effect/Predicate";
 import { useState } from "react";
 import {
@@ -21,7 +13,6 @@ const KINDS = [
   { value: "cone", label: "Cone" },
 ];
 
-/** The panel and a readout that proves an edit reaches the one object. */
 export const PropertyPanelExample = () => {
   const theme = useTheme();
   const [name, setName] = useState("cube");

@@ -3,16 +3,6 @@ import { describe, expect, it } from "vitest";
 import { PanelLayout } from "./logic.js";
 import { layoutOfDeclarations, type ResizablePanelProps } from "./resizable.js";
 
-/**
- * `Resizable` is a skin over `PanelGroup`, not a second resize.
- *
- * shadcn's block is four names over `react-resizable-panels`; this package
- * already has the drag, the 16px key step and the persisted shape. The alias
- * declares panes and hands them to that group, so these cases hold the mapping
- * (declared fractions → `PanelLayout`, label defaulting, direction) and the
- * source (one `PanelGroup`, one `Divider`, parts that paint nothing).
- */
-
 const source = readFileSync(
   new URL("./resizable.tsx", import.meta.url),
   "utf8",
@@ -58,8 +48,6 @@ describe("the declared layout", () => {
   });
 
   it("keeps the shares a caller wrote, so a restore reads the same numbers", () => {
-    // `normalizePanels` rescales at paint time; the declaration itself is the
-    // caller's own numbers, which is what a persisted layout stores.
     const layout = layoutOfDeclarations("horizontal", [
       panel("a", 1),
       panel("b", 3),
@@ -73,7 +61,7 @@ describe("one control underneath", () => {
     expect(source).toContain("<PanelGroup");
     expect(source).not.toContain("onDragDelta");
     expect(source).not.toContain('role="separator"');
-    // The divider lives in the group, and the alias only names it.
+
     expect(group).toContain("dividerLabel?.(index) ?? `Resize ${panel.label}`");
   });
 

@@ -13,18 +13,6 @@ import {
   type NavState,
 } from "./navigation-menu-preview";
 
-/**
- * The preview's state machine, held to the component that ships.
- *
- * A navigation menu's rules are temporal — one panel at a time, a hover that
- * must wait, a press that must beat a pending timer — and a drawing that only
- * swapped a title would look identical whether or not any of them held. These
- * cases read the delays and the guards out of
- * `packages/components/src/navigation-menu.tsx` and drive the preview's reducer
- * over the transitions the page teaches, so the model cannot drift from the
- * source it stands in for.
- */
-
 const source = readFileSync(
   new URL(
     "../../../../../packages/components/src/navigation-menu.tsx",
@@ -33,7 +21,6 @@ const source = readFileSync(
   "utf8",
 );
 
-/** Drive the nav through a list of events. */
 const run = (
   events: ReadonlyArray<NavEvent>,
   from: NavState = initialNavState(),
@@ -43,9 +30,6 @@ const VALUES = NAV_ITEMS.map((item) => item.value);
 
 describe("the component the preview mirrors", () => {
   it("waits the delay the source declares before a hover opens", () => {
-    // The component defaults its props to `OPEN_DELAY_MS`/`CLOSE_DELAY_MS`, and
-    // a delay a caller supplies that cannot be read falls back to them, so the
-    // preview's constants are held to the package's own rather than to a copy.
     const open = /const OPEN_DELAY_MS = (\d+);/.exec(source)?.[1];
     const close = /const CLOSE_DELAY_MS = (\d+);/.exec(source)?.[1];
     expect(open, "the component declares no open delay").toBeDefined();
@@ -57,7 +41,6 @@ describe("the component the preview mirrors", () => {
   });
 
   it("keeps one open item and toggles it shut on its own trigger", () => {
-    // `setOpen(expanded ? null : value)` is the one-panel rule and the toggle.
     expect(source).toContain("setOpen(expanded ? null : value)");
     expect(
       applyNavEvent(initialNavState("docs"), { type: "press", value: "docs" })
@@ -72,9 +55,6 @@ describe("the component the preview mirrors", () => {
   });
 
   it("lets an explicit press stop the pointer policy", () => {
-    // stopHover() runs before the toggle, and hover events return while
-    // `suspended` is set — the runtime delivers the pointer's leave after the
-    // key that opened another panel.
     expect(source).toContain("stopHover();");
     expect(source).toContain("if (suspended.current) return;");
 
@@ -83,8 +63,7 @@ describe("the component the preview mirrors", () => {
       { type: "press", value: "platform" },
     ]);
     expect(pressed.open).toBe("platform");
-    // The pointer is still resting there in the drawing, but the stale leave
-    // and the pending open can no longer move the panel.
+
     expect(run([{ type: "hover-leave", value: "platform" }], pressed)).toEqual(
       pressed,
     );
@@ -129,8 +108,6 @@ describe("the component the preview mirrors", () => {
   });
 
   it("closes on Escape and on an outside press, and never on a link's second run", () => {
-    // `dismiss.current` stops the hover policy and closes; the same branch an
-    // outside press takes. A link runs once and closes its panel.
     expect(source).toContain("setOpen(null);");
     const open = initialNavState("community");
     expect(run([{ type: "escape" }], open).open).toBeNull();
@@ -139,7 +116,6 @@ describe("the component the preview mirrors", () => {
   });
 
   it("moves focus into the panel only for ArrowDown", () => {
-    // `isDown(event)` is the only branch that requests the panel's focus.
     expect(source).toContain("if (isDown(event)) {");
     expect(source).toContain("requestPanelFocus(value)");
     expect(source).toContain("moveFocus(value, -1)");
@@ -172,15 +148,12 @@ describe("the preview's state machine", () => {
       event: { type: "hover-open", value: "docs" },
     });
 
-    // Once the panel is the hovered one, there is nothing left to schedule:
-    // the pointer is on the trigger the panel belongs to.
     const opened = applyNavEvent(resting, {
       type: "hover-open",
       value: "docs",
     });
     expect(navTimer(opened)).toBeUndefined();
 
-    // Leaving the trigger to cross into the panel owes the close grace.
     const crossing = applyNavEvent(opened, {
       type: "hover-leave",
       value: "docs",
@@ -222,7 +195,7 @@ describe("the preview's state machine", () => {
   it("reads the open item back by label, and a closed nav as closed", () => {
     expect(openLabel(null)).toBe("closed");
     expect(openLabel("community")).toBe("Community");
-    // A value the nav no longer holds is printed rather than swallowed.
+
     expect(openLabel("gone")).toBe("gone");
   });
 

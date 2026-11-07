@@ -1,39 +1,7 @@
-/**
- * Placement rules for GPUix's anchored layer, measured against 0.11.0.
- *
- * The runtime positions `start`/`end` exactly and snaps a surface inside the
- * window, but two measured defects remain (plan 156 §8, re-measured in plan 323):
- *
- * - `align="center"` puts the surface's *end* on the anchor's centre line, so it
- *   is short by half the surface on both axes. The host applies an `offset` after
- *   positioning, which is where the half-size compensation goes.
- * - `fit="snap"` clamps to the window instead of flipping, so a bottom surface
- *   near the window edge is moved up **over** its trigger.
- *
- * The side is therefore chosen from the **room** each side offers, never from
- * where the runtime has painted the surface: the surface is measured on the
- * commit it mounts, before the anchored layer applies its side, so its box still
- * sits on the trigger's origin and "does the surface cover its trigger" was true
- * for every surface and every side. Every requested side flipped — a `top`
- * popover opened below, a `left` one opened to the right — until the rule read
- * the room instead of the unplaced box.
- *
- * The rules here are pure: the caller measures, this module decides. They are
- * intentionally one-shot — a caller applies the result once per open so a flip
- * can never oscillate.
- *
- * `side` and `align` are named by the caller but can arrive from persisted UI
- * state the library never type-checked, so every rule reads them through the
- * house guards below: an unknown name is the house `bottom`/`start` rather than
- * a `Match.exhaustive` that throws out of the render. A component whose own
- * `align` default differs reads it before the rule (Popover's `alignOf`).
- */
-
 import type { FloatingAlign, FloatingSide } from "@gpuix/react/floating";
 import { Match } from "effect";
 import * as Schema from "effect/Schema";
 
-/** A box in window coordinates, as `getElementBounds` reports it. */
 export interface FloatingBounds {
   readonly x: number;
   readonly y: number;
@@ -41,62 +9,35 @@ export interface FloatingBounds {
   readonly height: number;
 }
 
-/** The window the surface must stay inside. */
 export interface WindowBounds {
   readonly width: number;
   readonly height: number;
 }
 
-/** Everything the rule needs; `surface` is the measured box (its size). */
 export interface PlacementInput {
-  /**
-   * The requested side. `FloatingSide` is a compile-time guarantee, but a
-   * persisted setting is not: a name the union does not carry opens the house
-   * `bottom` side instead of throwing out of the render.
-   */
   readonly side: unknown;
-  /**
-   * The requested alignment, read the same way: an unknown name is the house
-   * `start`, never a `Match.exhaustive` failure.
-   */
+
   readonly align: unknown;
   readonly trigger: FloatingBounds;
-  /**
-   * The surface's measured size. Its position is deliberately not read: a
-   * surface is measured before the anchored layer places it, so the box still
-   * sits on the trigger's origin ({@link resolveSide}).
-   */
+
   readonly surface: FloatingBounds;
   readonly window: WindowBounds;
   readonly margin: number;
 }
 
-/** The side and alignment to use, plus the host offset that corrects `center`. */
 export interface Placement {
   readonly side: FloatingSide;
   readonly align: FloatingAlign;
   readonly alignOffset: number;
 }
 
-/** The four sides the anchored layer paints. */
 const PlacementSide = Schema.Literals(["top", "right", "bottom", "left"]);
 
-/** The three alignments the anchored layer paints. */
 export const isAlign = Schema.is(Schema.Literals(["start", "center", "end"]));
 
-/**
- * The side a stored choice asks for, or the house `bottom`.
- *
- * `side` is a prop a surface takes, and a surface can be opened with a value an
- * application restored from persisted UI state — a value the library never
- * type-checked. Reading it through the schema keeps that door closed: an
- * unknown name opens the house side rather than reaching a `Match.exhaustive`
- * that throws out of the render.
- */
 const sideOf = (side: unknown): FloatingSide =>
   Schema.is(PlacementSide)(side) ? side : "bottom";
 
-/** The alignment a stored choice asks for, or the house `start`. */
 const alignOf = (align: unknown): FloatingAlign =>
   isAlign(align) ? align : "start";
 
@@ -109,7 +50,6 @@ const oppositeSide = (side: unknown): FloatingSide =>
     Match.exhaustive,
   );
 
-/** The room a side offers, measured from the trigger to the window edge. */
 const roomOn = (side: unknown, input: PlacementInput): number =>
   Match.value(sideOf(side)).pipe(
     Match.when("top", () => input.trigger.y - input.margin),
@@ -131,7 +71,6 @@ const roomOn = (side: unknown, input: PlacementInput): number =>
     Match.exhaustive,
   );
 
-/** The surface extent that has to fit along the side's axis. */
 const extentOn = (side: unknown, surface: FloatingBounds): number =>
   Match.value(sideOf(side)).pipe(
     Match.when("top", () => surface.height),
@@ -141,20 +80,6 @@ const extentOn = (side: unknown, surface: FloatingBounds): number =>
     Match.exhaustive,
   );
 
-/**
- * The side the surface opens on, chosen from the room each side offers.
- *
- * A side fits when its room is at least the surface's extent; the requested
- * side wins, then the opposite when it fits, then the roomier of the two.
- *
- * **Room, not the painted box.** The surface is measured once, on the commit it
- * mounts, and the anchored layer has not applied its side yet, so its box sits
- * on the trigger's origin. The old "does the snapped surface cover its trigger"
- * test was therefore true for every surface and every side, and every requested
- * side flipped: a `top` popover opened below, a `left` one to the right. The
- * room a side offers is also the span the runtime's `fit: "snap"` clamps
- * against, so the two agree by construction.
- */
 export const resolveSide = (input: PlacementInput): FloatingSide => {
   const side = sideOf(input.side);
   const extent = extentOn(side, input.surface);
@@ -167,12 +92,6 @@ export const resolveSide = (input: PlacementInput): FloatingSide => {
   return oppositeRoom > roomOn(side, input) ? opposite : side;
 };
 
-/**
- * The offset that turns a `start`-anchored surface into a true centre. GPUix's
- * own `center` is not usable: it centres on the trigger's containing block, not
- * on the trigger (measured in plan 323), so `center` is mapped to `start` plus
- * half the difference between the trigger and the surface.
- */
 const alignOffsetOn = (
   side: unknown,
   align: unknown,
@@ -194,19 +113,9 @@ const alignOffsetOn = (
     Match.exhaustive,
   );
 
-/** The host alignment: GPUix's own `center` is not usable (see above). */
 const hostAlign = (align: FloatingAlign): "start" | "end" =>
   align === "end" ? "end" : "start";
 
-/**
- * The placement a surface asks for before it has been measured.
- *
- * A first render has no boxes yet, so it paints the requested side and a
- * `start`/`end` alignment with no offset; `center` becomes `start` here for the
- * same reason {@link resolvePlacement} maps it. The values are read through the
- * house guards, so a stored name the union does not carry never reaches the
- * anchored layer.
- */
 export const requestedPlacement = (
   side: unknown,
   align: unknown,
@@ -216,10 +125,6 @@ export const requestedPlacement = (
   alignOffset: 0,
 });
 
-/**
- * The placement to render, resolved once per open. `center` becomes `start` plus
- * an offset because the host's `center` centres on the containing block.
- */
 export const resolvePlacement = (input: PlacementInput): Placement => {
   const side = resolveSide(input);
   return {

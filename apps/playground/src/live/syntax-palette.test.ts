@@ -1,11 +1,3 @@
-/**
- * Holds the `syntax-palette` fixtures to the palette the probe asserts.
- *
- * The probe counts exact colours out of a captured frame, so a fixture that
- * drifted from the shipped palette — or a reader that counted the wrong crop —
- * would turn a real regression into a silent pass. The frame tests draw the
- * pixels the probe counts, and the palette tests read `syntaxColors` itself.
- */
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -28,17 +20,13 @@ import {
   SYNTAX_TOKEN,
 } from "./syntax-palette.js";
 
-/** An opaque colour, as the RGBA a capture stores. */
 const rgba = (r: number, g: number, b: number): Pixels.Rgba =>
   new Pixels.Rgba({ r, g, b, a: 0xff });
 
-/** The page fill every sample sits on. */
 const PAGE = rgba(0x0b, 0x0d, 0x11);
 
-/** The dark palette's keyword, as bytes a frame holds. */
 const KEYWORD = rgba(0xa7, 0xa9, 0xff);
 
-/** A frame filled with `fill`, with `marks` painted at their own coordinates. */
 const frameOf = (
   width: number,
   height: number,
@@ -62,7 +50,6 @@ const frameOf = (
   return new Pixels.Pixels({ width, height, data });
 };
 
-/** The 4×3 frame the reader cases share: two keyword pixels on a page fill. */
 const sample = (): Pixels.Pixels =>
   frameOf(4, 3, PAGE, [
     [1, 1, KEYWORD],
@@ -83,7 +70,7 @@ describe("the syntax-palette reader", () => {
       [4, 2, KEYWORD],
       [5, 2, KEYWORD],
     ]);
-    // Two logical pixels at (1, 1) cover the four device pixels at (2–3, 2–3).
+
     expect(
       countInk(doubled, { x: 1, y: 1, width: 2, height: 1 }, 2, DARK_KEYWORD),
     ).toEqual(Option.some(4));
@@ -102,7 +89,6 @@ describe("the syntax-palette reader", () => {
   });
 
   it("reports an unread region rather than zero", () => {
-    // A box the capture does not cover would make "this ink is absent" a lie.
     expect(countInk(sample(), { ...BOX, x: 40 }, 1, DARK_KEYWORD)).toEqual(
       Option.none(),
     );
@@ -127,8 +113,6 @@ describe("the syntax-palette fixtures", () => {
   });
 
   it("keeps the runtime's default keyword apart from both shipped inks", () => {
-    // The negative control counts this ink in the unthemed block. If it were a
-    // shipped colour, the same block would satisfy both sides of the probe.
     const runtime = Option.fromNullishOr(Pixels.hexToRgba(RUNTIME_KEYWORD));
     const light = Option.fromNullishOr(Pixels.hexToRgba(LIGHT_KEYWORD));
     const dark = Option.fromNullishOr(Pixels.hexToRgba(DARK_KEYWORD));

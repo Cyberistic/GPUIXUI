@@ -19,19 +19,6 @@ import {
   type ZoomView,
 } from "./zoom";
 
-/**
- * A generic zoom-and-pan canvas.
- *
- * diagram's shape is kept — `children`, `className`, `minScale`, `maxScale`,
- * `initialScale`, `zoomStep`, a `controls` render prop and a loading overlay —
- * because the wrapper is useful for any drawing, not only a diagram. The wheel
- * zooms around the pointer, a primary/middle drag pans, and the control prop
- * gets the four actions and the percentage. Pinch is the one gesture left to a
- * later pass: Pele's own `enableZoom` carries it, and this wrapper trades that
- * for React-owned content and a fit-to-view control.
- */
-
-/** The values the controls render prop receives. */
 export interface ZoomPanApi {
   readonly zoomIn: () => void;
   readonly zoomOut: () => void;
@@ -40,7 +27,6 @@ export interface ZoomPanApi {
   readonly scalePercent: number;
 }
 
-/** Props for {@link ZoomPan}. */
 export interface ZoomPanProps {
   readonly children: ReactNode;
   readonly className?: string;
@@ -51,15 +37,10 @@ export interface ZoomPanProps {
   readonly controls?: (api: ZoomPanApi) => ReactNode;
   readonly isLoading?: boolean;
   readonly loadingFallback?: ReactNode;
-  /**
-   * Fit and centre the content when this value changes. Omit to keep the
-   * caller's starting scale. A playground passes its template id, so a new
-   * template opens fitted while typing keeps the reader's zoom.
-   */
+
   readonly fitOn?: unknown;
 }
 
-/** The canvas. See {@link ZoomPanProps}. */
 export function ZoomPan({
   children,
   className,
@@ -88,7 +69,6 @@ export function ZoomPan({
     setView(next);
   }, []);
 
-  /** A point in the canvas' coordinates, for a viewport event. */
   const localPoint = (
     clientX: number,
     clientY: number,

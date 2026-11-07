@@ -1,42 +1,3 @@
-/**
- * Guards the persisted-choice contract.
- *
- * The defect this holds: the package exposed six unions a consumer can store —
- * theme mode, contrast variant, platform, density, control size and status tone —
- * with no index and no guard. A preference restored from storage is `unknown`,
- * so a settings row or a URL parameter had to retype the union or cast the value
- * (`AGENTS.md` §2 forbids the cast), and a suite that looped over `["light",
- * "dark"]` kept testing two variants after a third shipped. The authored looks
- * added a seventh axis — a stored look — on the same contract, and the type
- * scale's roles are the eighth: a saved document stores the role a run was
- * written with, so the index and guard serve content as well as preferences.
- *
- * Two directions fail here: a guard that accepts something outside its index,
- * and an index that no longer matches the records it selects (a mode added to
- * `themeModes` without a theme, a density preset without a metric per size).
- *
- * Elevation is the ninth: `elevationLevels` was the ordered index a surface
- * picker iterates, and a saved workspace raises a surface with the level it
- * stored, so a name from a release that dropped one had no guard to narrow it
- * and `elevationShadow` answered a flat surface.
- *
- * The avatar scale is the tenth: an identity mark's size is a stored preference
- * as often as a literal, and `avatarSize` ships as a fixed record with no index
- * and no guard, so a saved size could only reach it through a cast.
- *
- * The two layout scales are the last two: a saved panel's inset and a restored
- * placeholder's corner are stored names the catalogue already teaches, and the
- * package that owns the persisted-choice contract had no index for either — the
- * primitives hand-rolled their membership from the theme, so a token consumer had
- * to cast a restored step. `spacingSteps`/`isSpacingStep` and
- * `radiusSteps`/`isRadiusStep` close each axis, held to their scales here.
- *
- * The icon scale is the one a component's `size` prop selects, and it was the
- * only theme scale of the twelve with neither: a saved toolbar's icon size is a
- * stored name, so a consumer could reach `iconSize` only by retyping the union
- * (the catalogue claimed every other axis had both). `iconSizes`/`isIconSize`
- * close it, held to the scale here.
- */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { elevationLevels, isElevationLevel } from "./elevation.js";
@@ -89,7 +50,6 @@ import {
   toneFromStoredChoice,
 } from "./persisted-choices.example.js";
 
-/** One axis a consumer can store: its guard and the index it accepts. */
 interface GuardCase {
   readonly name: string;
   readonly guard: (value: unknown) => boolean;
@@ -112,14 +72,12 @@ const guardCases: ReadonlyArray<GuardCase> = [
   { name: "isIconSize", guard: isIconSize, index: iconSizes },
 ];
 
-/** Values no guard may accept, whatever its index holds. */
 const notMembers: ReadonlyArray<unknown> = [
   "",
   "nope",
   "Light",
   "default ",
-  // Members of `Object.prototype`, which a record-membership test
-  // (`name in scale`) answers true for.
+
   "toString",
   "constructor",
   "hasOwnProperty",
@@ -179,12 +137,6 @@ describe("indexes match the data they select", () => {
     expect(new Set(retroNames)).toEqual(new Set(Object.keys(retroStyles)));
   });
 
-  /**
-   * The type scale is the last name a component paints from, and its index is
-   * the scale's own keys minus the two families: a role the scale grew must be
-   * listed (the package's type check refuses it otherwise), a role it dropped
-   * must leave the index, and a family is not a role.
-   */
   it("names every role of the type scale", () => {
     const scaleRoles = Object.keys(typography).filter(
       (key) => key !== "sans" && key !== "mono",
@@ -196,24 +148,11 @@ describe("indexes match the data they select", () => {
     expect(isTextRole("mono")).toBe(false);
   });
 
-  /**
-   * The avatar scale is fixed rather than a theme group, so its index is held to
-   * the record's own keys in documentation order: a step the scale grows must be
-   * listed (the package's type check refuses it otherwise, `EveryAvatarStepListed`
-   * in `scale.ts`), a step it drops must leave the index, and the order a size
-   * picker iterates is the order the catalogue prints.
-   */
   it("names every step of the avatar scale, in order", () => {
     expect(Object.keys(avatarSize)).toEqual([...avatarSizes]);
     expect(new Set(avatarSizes)).toEqual(new Set(Object.keys(avatarSize)));
   });
 
-  /**
-   * The layout scales' indexes are the scales' own keys in documentation order:
-   * a step the scale grows must be listed (the package's type check refuses it
-   * otherwise), a step it drops must leave the index, and the order a picker
-   * iterates is the order the catalogue prints.
-   */
   it("names every step of the spacing scale", () => {
     expect(Object.keys(spacing)).toEqual([...spacingSteps]);
     expect(new Set(spacingSteps)).toEqual(new Set(Object.keys(spacing)));
@@ -224,17 +163,10 @@ describe("indexes match the data they select", () => {
     expect(new Set(radiusSteps)).toEqual(new Set(Object.keys(radius)));
   });
 
-  /**
-   * The icon scale is the one a component's `size` prop selects, so its index is
-   * the record's own keys in documentation order: a step the scale grows must be
-   * listed (the package's type check refuses it otherwise), and a listed name the
-   * record does not carry has nothing to resolve.
-   */
   it("names every step of the icon scale", () => {
     expect(Object.keys(iconSize)).toEqual([...iconSizes]);
     expect(new Set(iconSizes)).toEqual(new Set(Object.keys(iconSize)));
-    // A theme's icon group is the same scale, so a brand that edits it still
-    // answers every step a stored name can select.
+
     expect(getTheme("light").iconSize).toEqual(iconSize);
   });
 
@@ -303,24 +235,11 @@ describe("a stored choice resolves without a cast", () => {
   });
 });
 
-/**
- * Guards that an index is the only list of the names it carries.
- *
- * The bug this holds: two of the four resolvers re-listed their index in the
- * message they refuse with — `getTheme` said "light, dark are the modes" and
- * "default, high are the variants", while `extendTheme`, `platformTheme` and
- * `retroTheme` built theirs from `densityNames`/`platformNames`/`retroNames` —
- * and `currentPlatform` re-listed the three operating systems instead of asking
- * `isPlatformName`. A mode, variant or platform added to its index would then be
- * accepted by the guard and refused by the message, or read as the identity
- * platform on a host the table styles.
- */
 describe("an index is the only list of its names", () => {
   const read = (path: string): string =>
     readFileSync(new URL(path, import.meta.url), "utf8");
 
   it("refuses against the modes and variants the index carries", () => {
-    // The cast is the storage boundary: a settings row is unknown input.
     const mode = JSON.parse('"sepia"') as ThemeMode;
     const contrast = JSON.parse('"soft"') as ThemeContrast;
 

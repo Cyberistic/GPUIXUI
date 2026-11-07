@@ -1,27 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * `IconButton` — an icon-only action that must be named.
- *
- * A `Button` with `square` already paints an icon-only action, but nothing in
- * its API stops a caller from shipping the glyph with no `label`: the control
- * is then announced as an unnamed button, and there is no text child to fall
- * back on. This narrows that API instead of duplicating the paint — the name is
- * required, the glyph has its own `icon` slot, and the shape is always square.
- *
- * Everything else is `Button`'s contract, because a second implementation would
- * be a second place for the keyboard rules to drift: Enter activates on key
- * down, Space on key up, a held key is ignored, and a busy or disabled control
- * refuses activation. Focus is the keyboard-only outline `Button` declares at
- * rest, and the caller's `style` is resolved against the button's live state and
- * merged last.
- *
- * Ghost is the default variant: a toolbar of icon actions reads as chrome, not
- * as a row of filled buttons. Pass `variant` when one action should carry more
- * weight. `ActionHostProps` also reaches the element through
- * `iconButtonProps`, so an icon-only trigger carries its own `ref` and
- * `aria-expanded` exactly like `Button`.
- */
-
 import { useContext, type ReactElement, type ReactNode } from "react";
 import { useMotionPreference } from "@gpuixui/motion/react/presence";
 import type { EventPayload } from "@gpuix/react";
@@ -50,49 +27,31 @@ import { useTheme } from "./ThemeProvider.js";
 
 export interface IconButtonProps
   extends InteractionProps, TooltipTriggerProps, ActionHostProps {
-  /** The accessible name. An icon-only control has no text to read. */
   readonly label: string;
-  /** The glyph. It paints inside the button and never becomes its name. */
+
   readonly icon: ReactNode;
-  /** Defaults to `ghost`; a toolbar of these stays quiet. */
+
   readonly variant?: ButtonVariant;
-  /** Defaults to `md`. Both sides of the square come from the density. */
+
   readonly size?: ControlSize;
   readonly disabled?: boolean;
-  /** Busy: shows a spinner and blocks activation, but stays focusable. */
+
   readonly loading?: boolean;
-  /**
-   * The words a busy icon button announces — its `aria-description` and the
-   * spinner's name. Defaults to the provider's `loading.busy` (`Loading`); a
-   * blank label announces nothing.
-   */
+
   readonly loadingLabel?: string;
-  /**
-   * Holds the busy spinner's lit dot. Defaults to the motion provider's
-   * preference (`MotionProvider`).
-   */
+
   readonly reducedMotion?: boolean;
-  /**
-   * Called for a click or an activating key, with the event that caused it —
-   * the click payload's `x`/`y` or the key payload the button decided on.
-   * Not called while busy or disabled.
-   */
+
   readonly onActivate?: (event: EventPayload) => void;
-  /** Extra style, resolved against the button's live state and merged last. */
+
   readonly style?: StateStyle<ButtonState>;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
   readonly testId?: string;
-  /** The action's Tab stop; see `ButtonProps.tabIndex`. */
+
   readonly tabIndex?: number;
 }
 
-/**
- * The `Button` an `IconButton` is: square, named, and ghost by default.
- *
- * Exposed so a test can read the decision without a renderer, and so a caller
- * composing several of these can share one props object.
- */
 export const iconButtonProps = (props: IconButtonProps): ButtonProps => {
   const {
     variant,
@@ -116,7 +75,7 @@ export const iconButtonProps = (props: IconButtonProps): ButtonProps => {
     className,
     testId,
     tabIndex,
-    // The trigger props, forwarded as they arrive (`ActionHostProps`).
+
     ...host
   } = props;
   return {
@@ -146,7 +105,6 @@ export const iconButtonProps = (props: IconButtonProps): ButtonProps => {
   };
 };
 
-/** The element an icon button renders. Pure in its arguments. */
 export const renderIconButton = (
   props: IconButtonProps,
   theme: PrimitiveTheme,
@@ -164,11 +122,10 @@ export const renderIconButton = (
     inToolbar,
   );
 
-/** A square, icon-only action that carries its name. */
 export const IconButton = (props: IconButtonProps): ReactElement => {
   const theme = useTheme();
   const focus = useFocus();
-  // The provider states the preference once; the prop is the per-action answer.
+
   const reducedMotion = reducedMotionOf(
     props.reducedMotion,
     useMotionPreference(),

@@ -1,24 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * InputGroup: the field, a mark at either end, and one ring around them.
- *
- * The parts are laid out by the alignment each addon names, not by where it is
- * written: an `inline-start` addon leads the field even when it follows it in
- * the source (shadcn's `order-first`), `inline-end` trails, and the two block
- * alignments take their own line above and below. So the group is one bordered
- * box with one ring, and the field inside paints no chrome of its own.
- *
- * The ring follows the field's focus. `@gpuix/native@0.11.0` reports that focus
- * arrived but not how, so the group paints it on any focus — the keyboard-only
- * distinction the primitives' fields make is not available to an ancestor box
- * (its `focusVisible` state belongs to the focused element).
- *
- * The field and the actions are `@gpuixui/primitives`' `Input`/`TextArea` and
- * this package's `Button`, dressed down by the group's own overrides; the label,
- * description and error are the `Field` parts, so a group reads like the fields
- * beside it.
- */
-
 import type { EventPayload, StyleDesc, PublicInstance } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import { mergeStyles, resolveStyle } from "@gpuix/react/floating";
@@ -56,10 +36,8 @@ import { recipeStyle } from "./internal/recipe.js";
 import { useMergedRef } from "./internal/ref.js";
 import { keepContent, selectionWash, useTheme } from "./internal/theme.js";
 
-/** Where an addon sits in the group. */
 export type InputGroupAlign = keyof typeof INPUT_GROUP_ADDONS;
 
-/** What every part reads from the group around it. */
 interface InputGroupContextValue {
   readonly label: string | undefined;
   readonly help: string | undefined;
@@ -71,29 +49,25 @@ const InputGroupContext = createContext<InputGroupContextValue | undefined>(
   undefined,
 );
 
-/** The group a part belongs to, or none when the part stands alone. */
 const useInputGroup = (): InputGroupContextValue | undefined =>
   useContext(InputGroupContext);
 
-/** {@link InputGroup} props. */
 export interface InputGroupProps {
-  /** The visible label, and the accessible name every group field takes. */
   readonly label?: string;
-  /** Supporting copy under the row; hidden while `error` is present. */
+
   readonly description?: string;
-  /** The message to show; also paints the row as invalid. */
+
   readonly error?: string;
-  /** Paint the row invalid without a message. */
+
   readonly invalid?: boolean;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
-  /** A style, merged last. */
+
   readonly style?: StyleDesc;
   readonly testId?: string;
   readonly children?: PartChildren;
 }
 
-/** One bordered row around a field and its addons. */
 export const InputGroup = ({
   label,
   description,
@@ -161,7 +135,6 @@ export const InputGroup = ({
   );
 };
 
-/** The slot an addon's alignment belongs to. */
 type GroupPane = "top" | "leading" | "field" | "trailing" | "bottom";
 
 const paneOf = (child: ReactNode): GroupPane => {
@@ -178,21 +151,15 @@ const paneOf = (child: ReactNode): GroupPane => {
         : "leading";
 };
 
-/** {@link InputGroupAddon} props. */
 export interface InputGroupAddonProps {
-  /** Default `"inline-start"`. */
   readonly align?: InputGroupAlign;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
   readonly style?: StyleDesc;
   readonly testId?: string;
   readonly children?: ReactNode;
 }
 
-/**
- * A mark at one end of the row: an icon, a unit, a shortcut. A press on the
- * addon itself (not on an action inside it) focuses the group's field.
- */
 export const InputGroupAddon = ({
   align = "inline-start",
   className,
@@ -208,7 +175,7 @@ export const InputGroupAddon = ({
   const focusField = (event: EventPayload): void => {
     const target = group?.field.current;
     if (target === null || target === undefined) return;
-    // A press on an action inside the addon belongs to that action.
+
     if (self.current !== null && event.elementId !== self.current.id) return;
     renderer?.focusElement?.(target.id);
   };
@@ -228,24 +195,20 @@ export const InputGroupAddon = ({
   );
 };
 
-/** {@link InputGroupButton} props: the group's own density. */
 export type InputGroupButtonProps = ButtonProps;
 
-/** An action at one end of the row. */
 export const InputGroupButton = ({
   variant = "ghost",
   size = "sm",
   ...rest
 }: InputGroupButtonProps) => <Button {...rest} variant={variant} size={size} />;
 
-/** {@link InputGroupText} props. */
 export interface InputGroupTextProps {
   readonly className?: string;
   readonly style?: StyleDesc;
   readonly children?: ReactNode;
 }
 
-/** A unit, a prefix or a hint drawn as text. */
 export const InputGroupText = ({
   className,
   style,
@@ -264,7 +227,6 @@ export const InputGroupText = ({
   );
 };
 
-/** What the group takes away from the field: its own edge, fill and ring. */
 const bareField: StyleDesc = {
   borderWidth: 0,
   borderRadius: 0,
@@ -273,7 +235,6 @@ const bareField: StyleDesc = {
   focusVisible: { outlineWidth: 0, outlineOffset: 0 },
 };
 
-/** The field fills the line beside the addons and never shrinks to its text. */
 const fieldSlot: StyleDesc = {
   display: "flex",
   flexDirection: "column",
@@ -281,13 +242,10 @@ const fieldSlot: StyleDesc = {
   minWidth: 0,
 };
 
-/** {@link InputGroupInput} props. */
 export interface InputGroupInputProps extends InputProps {
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
 }
 
-/** The group's single-line field. */
 export const InputGroupInput = ({
   className,
   style,
@@ -329,13 +287,10 @@ export const InputGroupInput = ({
   );
 };
 
-/** {@link InputGroupTextarea} props. */
 export interface InputGroupTextareaProps extends TextAreaProps {
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
 }
 
-/** The group's multi-line field. */
 export const InputGroupTextarea = ({
   className,
   style,
@@ -377,7 +332,6 @@ export const InputGroupTextarea = ({
   );
 };
 
-/** Every part, so a misplaced sibling is named. */
 const inputGroupParts: ReadonlyArray<PartComponent> = [
   InputGroup,
   InputGroupAddon,
@@ -400,7 +354,6 @@ const inputGroupRoot: PartsContract = {
   hint: "Put InputGroupInput (or InputGroupTextarea) and its addons directly inside InputGroup.",
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const inputGroupMeta = {
   name: "Input group",
   tier: 2,

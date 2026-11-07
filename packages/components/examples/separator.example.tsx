@@ -1,18 +1,8 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Separator example: a settings card whose regions are ruled.
- *
- * A horizontal rule ends a region; the vertical rules in the footer separate
- * actions. The footer's rules are decorative — the actions already have names —
- * while the region rules are semantic, so a reader is told where one group of
- * settings ends.
- */
-
 import { Card, CardDescription, CardHeader, CardTitle } from "../src/card.js";
 import { textStyle, useTheme } from "../src/internal/theme.js";
 import { Separator } from "../src/separator.js";
 
-/** One labelled setting row. */
 const Row = ({
   label,
   value,
@@ -47,7 +37,6 @@ const Row = ({
   );
 };
 
-/** A settings card split into three ruled regions. */
 export const SeparatorExample = () => {
   const theme = useTheme();
   return (

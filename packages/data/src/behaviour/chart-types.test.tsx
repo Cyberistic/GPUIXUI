@@ -1,17 +1,3 @@
-/**
- * The chart types beyond the first five, in the real GPUix renderer.
- *
- * The bugs these guard are the ones a richer chart ships with:
- *
- * - an area that paints a flat block because its fade never stacked a band;
- * - a stacked area read against the widest series instead of the totals;
- * - a pie whose slices touch, so two neighbours read as one shape;
- * - a radar web painted in one element with the series, so the plot is a blob;
- * - a radial ring of zero painting an arc that claims a value;
- * - a horizontal bar placed by the vertical geometry, so it floats off its row;
- * - a hover zone that covers the plot but reports no column.
- */
-
 import { afterEach, describe, expect, it } from "vitest";
 import { useState } from "react";
 import * as Arr from "effect/Array";
@@ -85,8 +71,7 @@ describe("the sharper chart types", () => {
     const search = sourceOf(tree, "chart-pie-layer-search");
     expect(direct).toContain("<path");
     expect(search).toContain("<path");
-    // A pie has no hole, so its arc reaches the centre point the donut's does
-    // not. The path differs from the donut's own slice.
+
     expect(direct).not.toBe(sourceOf(tree, "chart-donut-layer-direct"));
   });
 
@@ -104,7 +89,7 @@ describe("the sharper chart types", () => {
     const tree = mount();
 
     const web = sourceOf(tree, "chart-radar-layer-team-web");
-    expect(web).toContain("A"); // an arc command is the circle grid
+    expect(web).toContain("A");
   });
 
   it("keeps a zero datum's ring in the stack and paints no arc for it", () => {
@@ -216,16 +201,13 @@ describe("the sharper chart types", () => {
     );
     settle(root);
 
-    // The document carries the grid's rules too, so the bars are counted by
-    // the colour the series paints in.
     const shapes = seriesShapesOf(
       root,
       "chart-negative",
       "delta",
       palette[0] ?? "",
     );
-    // A -50..20 axis puts zero at y = 71.4; the negative bar starts there and
-    // runs to the plot's floor, rather than painting nothing.
+
     const rects = [
       ...shapes.join(" ").matchAll(/<rect x="([\d.]+)" y="([\d.]+)"/g),
     ];
@@ -251,7 +233,7 @@ describe("the sharper chart types", () => {
     const source = sourceOf(root, "chart-horizontal-layer-signups");
     const rects = [...source.matchAll(/<rect x="([\d.]+)" y="([\d.]+)"/g)];
     expect(rects.length).toBe(2);
-    // One bar per row: the second row starts below the first.
+
     const rows = Arr.map(rects, (match) => Number(match[2]));
     expect(rows[1]).toBeGreaterThan(rows[0] ?? 0);
   });
@@ -664,9 +646,6 @@ describe("the sharper chart types", () => {
   });
 
   it("shows the hovered column's readout when the pointer enters it", () => {
-    // Bug guarded: the zones existed but nothing proved a pointer move reaches
-    // the frame, so a readout could stop opening and every structural case
-    // would still pass. The move goes through GPUI's own hit testing.
     const tree = mount();
     const zone = tree.renderer.findByTestId("chart-bars-zone-1");
     if (zone === undefined) throw new Error("behaviour: no zone 1");

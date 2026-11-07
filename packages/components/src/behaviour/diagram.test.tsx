@@ -1,18 +1,3 @@
-/**
- * Diagram behaviour, driven through the real GPUix test renderer.
- *
- * The claims these guard are the ones a native diagram makes and a browser
- * one cannot:
- *
- * - the drawing is **one element** — the whole diagram travels as a data URL
- *   the runtime's own decoder paints, so there is no DOM and no per-mark
- *   event;
- * - the theme's colours are **baked into** the drawing, because a raster
- *   cannot read a CSS variable;
- * - a source the parser refuses paints the **parser's sentence** in the
- *   drawing's place, rather than an empty frame;
- * - the drawing is **named** for a reader.
- */
 import { afterEach, describe, expect, it } from "vitest";
 import { Diagram } from "../diagram.js";
 import { a11yNodes } from "../internal/a11y.js";
@@ -22,7 +7,6 @@ const SOURCE = `flowchart LR
   A[Author] --> B[Component]
   B --> C[Reader]`;
 
-/** The root the last case mounted, so the next one can take the window. */
 let mounted: { readonly unmount: () => void } | undefined;
 
 afterEach(() => {
@@ -37,8 +21,7 @@ describe("Diagram", () => {
     ));
     const drawing = diagram.renderer.findByTestId("diagram-drawing");
     expect(drawing).toBeDefined();
-    // The whole diagram is one image, so there is one drawing and no
-    // per-mark element behind it.
+
     expect(diagram.renderer.getAllText()).toEqual([]);
   });
 
@@ -60,8 +43,7 @@ describe("Diagram", () => {
     const src = String(drawing?.customProps?.src ?? "");
     const payload = src.slice("data:image/svg+xml;base64,".length);
     const markup = Buffer.from(payload, "base64").toString("utf8");
-    // A raster cannot read a CSS variable, so the theme's values are in the
-    // drawing itself and no `var(--pele-…)` is left behind.
+
     expect(markup).not.toContain("var(--pele-");
   });
 
@@ -83,7 +65,7 @@ describe("Diagram", () => {
         testId="broken"
       />,
     ));
-    // The failure is a status the reader can hear, not an empty frame.
+
     expect(diagram.renderer.findByTestId("broken-error")).toBeDefined();
     expect(diagram.renderer.findByTestId("broken-drawing")).toBeUndefined();
     expect(diagram.renderer.getAllText().join(" ").length).toBeGreaterThan(0);

@@ -1,14 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Natural Display renderer.
- *
- * A `MathNode` from `@gpuixui/calc` is painted with the runtime's own layout:
- * a fraction is a column with a rule, a radical is the glyph beside a
- * vinculum, and rows align at their baseline. No MathML and no HTML math: the
- * dimensions scale from one base size so the LCD can reuse the same tree at
- * display size.
- */
-
 import type { MathNode } from "@gpuixui/calc";
 import type { Theme } from "@gpuixui/tokens";
 

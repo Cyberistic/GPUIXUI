@@ -1,15 +1,3 @@
-/**
- * Browser previews for the Badge page.
- *
- * The shipped badge is a GPUix host tree: one `div` with a recipe-compiled
- * pill, and no role, tab stop or press of its own. The preview cannot mount it,
- * so it draws the same shapes from the theme bridge and says so. The rules that
- * can be wrong — the status vocabulary, the filter and the press route the pill
- * leaves to its row — live in `badge-preview.ts` so a test can fail on them;
- * this file only renders them. The deployments panel around the pills is app
- * composition, not a component.
- */
-
 import { useState, type ReactNode } from "react";
 import {
   badgeSizes,
@@ -30,7 +18,6 @@ import {
 } from "./badge-preview";
 import { usePlatform } from "./platform-toggle";
 
-/** The word each variant is shown with: a label, a state or a version. */
 const sampleText: Readonly<Record<BadgeVariant, string>> = {
   neutral: "main",
   primary: "Production",
@@ -47,13 +34,6 @@ interface PillProps {
   readonly size?: BadgeSize;
 }
 
-/**
- * One badge.
- *
- * The pill is out of the pointer, exactly as the shipped component declares it:
- * a filled child is the boundary the runtime's hit test stops counting at, so a
- * status pill in a selectable row must not swallow the row's press.
- */
 const Pill = ({ children, variant = "neutral", size = "md" }: PillProps) => (
   <span
     className={`gx-badge gx-badge-${variant} gx-badge-${size}`}
@@ -63,7 +43,6 @@ const Pill = ({ children, variant = "neutral", size = "md" }: PillProps) => (
   </span>
 );
 
-/** A labelled run of pills, as the states preview prints them. */
 const Run = ({
   children,
   label,
@@ -77,11 +56,9 @@ const Run = ({
   </div>
 );
 
-/** Whether a press landed on a pill rather than the row around it. */
 const landedOnPill = (target: EventTarget): boolean =>
   target instanceof Element && target.closest("[data-badge]") !== null;
 
-/** The deployment row: the version, its branch label and its status pill. */
 const DeploymentRow = ({
   deployment,
   selected,
@@ -124,15 +101,6 @@ const DeploymentRow = ({
   </li>
 );
 
-/**
- * The interactive preview: a deployments panel with a filter and selectable
- * rows.
- *
- * The panel is app composition — the shipped `Badge` draws one pill and owns
- * nothing around it. Two measured routes are reachable here: a press on the
- * status pill selects its row, and the same pill handed the pointer by the
- * caller (`badge-eager` in the live probe) selects nothing.
- */
 export function BadgeWorkflowBody() {
   const [filter, setFilter] = useState<DeploymentFilter>("all");
   const [selected, setSelected] = useState<string | null>(null);
@@ -213,7 +181,6 @@ export function BadgeWorkflowBody() {
   );
 }
 
-/** The still preview: every variant, both sizes, and the outline's edge. */
 export function BadgeStatesBody() {
   return (
     <div className="gx-badge-demo">
@@ -264,13 +231,11 @@ export function BadgeStatesBody() {
   );
 }
 
-/** The panel on the platform switch's theme. */
 export const BadgeWorkflow = () => {
   const { look, platform } = usePlatform();
   return <BadgeWorkflowBody key={`${platform}-${look}`} />;
 };
 
-/** The states on the platform switch's theme. */
 export const BadgeStates = () => {
   const { look, platform } = usePlatform();
   return <BadgeStatesBody key={`${platform}-${look}`} />;

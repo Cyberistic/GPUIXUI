@@ -1,20 +1,12 @@
 import type { PageOrigin } from "@/lib/collection-routes";
 import { pageEditUrl, pageMarkdownPath } from "@/lib/page-edit";
 
-/**
- * The link from a page to the Markdown that renders it.
- *
- * Every docs page is Markdown — this site's own or a package's — and the footer
- * names the file as well as linking it, so a contributor knows what to open
- * before GitHub does. `/components` and the README ledger count the same
- * files; `page-edit.test.ts` holds every served page to one that exists.
- */
 export function EditPage({
   origin,
   path,
 }: {
   readonly origin: PageOrigin;
-  /** The collection-relative Markdown path the loader hands the frame. */
+
   readonly path: string;
 }) {
   return (

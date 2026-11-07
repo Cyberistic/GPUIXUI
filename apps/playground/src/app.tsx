@@ -1,19 +1,3 @@
-/**
- * The playground shell.
- *
- * The sidebar **is** the scenario registry, so a scenario can never exist in
- * the smoke suite but not in the UI (or the reverse). Selecting one renders its
- * real GPUix tree in the stage.
- *
- * `App` owns the palette and supplies it through `ThemeProvider`; `Shell` reads
- * it back with `useTheme`, so the switch exercises the same path a consumer
- * uses. GPUix has no OS appearance query, so the palette is an app decision.
- *
- * The shell renders and navigates without the native host: the smoke host's
- * checks need a `TestRenderer`, so the footer says how to run them instead of
- * offering a button that cannot work. `main.tsx` refuses to start at all on a
- * host with no binding.
- */
 import { useLayoutEffect, useRef, useState } from "react";
 import { pipe } from "effect";
 import * as Arr from "effect/Array";
@@ -52,9 +36,6 @@ const PaletteSwitch = ({
             testId={`theme-mode-${palette}`}
             tabIndex={0}
             role="button"
-            // The visible text is not a name: the runtime reads a node's label
-            // from `aria-label` only, so a button whose name it cannot read is
-            // announced as "button" and nothing else.
             aria-label={`${palette} palette`}
             onClick={() => onSelect(palette)}
             onKeyDown={(event) => {
@@ -86,17 +67,6 @@ const PaletteSwitch = ({
   );
 };
 
-/**
- * The scenario list: one roving tab stop, arrows that open the next entry.
- *
- * Every row used to be a stop, so a keyboard reader paid a press per scenario to
- * reach the stage and no key moved between rows. The open row is the list's only
- * stop now; an arrow steps the cursor with a clamp, and the step carries the
- * native focus and the scroller with it — the contract `focus-reveal-lifecycle`
- * measured for the library's own lists. Focus and reveal are called from a
- * layout effect because the `tabIndex` change has to paint first (a call from
- * the key handler moved nothing, measured by `virtual-tree-lifecycle`).
- */
 const ScenarioList = ({
   list,
   selected,
@@ -124,7 +94,6 @@ const ScenarioList = ({
     row.scrollIntoView?.();
   }, [cursor, renderer]);
 
-  /** Opens `next` and moves the focus with the cursor; the open row is the stop. */
   const move = (next: number): void => {
     const target = Option.fromNullishOr(list[next]);
     if (Option.isNone(target) || target.value.id === selected) return;
@@ -153,9 +122,6 @@ const ScenarioList = ({
           }}
           tabIndex={selected === scenario.id ? 0 : -1}
           role="button"
-          // A row paints its title in a child `<text>`, and the runtime builds a
-          // node's name from `aria-label` alone — without this every row is an
-          // unnamed button in the accessibility tree.
           aria-label={scenario.title}
           onClick={() => onSelect(scenario.id)}
           onKeyDown={(event) => {

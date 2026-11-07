@@ -1,9 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Welcome — a first-run window (plan 729): no sidebar, the app's mark, a few
- * feature rows per step, Continue, and an Import… the app wires to the
- * system's folder picker (`windowActions(host).pickPaths`, run at its entry).
- */
 import { Icon } from "@gpuixui/icons";
 import { Button, Stack, Text } from "@gpuixui/primitives";
 import { Window } from "@gpuixui/shell";
@@ -20,7 +15,7 @@ export const Welcome = ({
   onImport = () => undefined,
 }: {
   readonly platform?: PlatformName;
-  /** Import…: the app opens the system's folder picker here. */
+
   readonly onImport?: () => void;
 }) => {
   const theme = useTheme();

@@ -1,15 +1,12 @@
 import * as Arr from "effect/Array";
 import { ranges, rows, tabs, type Range, type Row, type Tab } from "./data.js";
 
-/** A stored range name, narrowed to one this dashboard ships. */
 export const isRange = (value: string): value is Range =>
   Arr.some(ranges, (range) => range.value === value);
 
-/** A stored tab name, narrowed to one this dashboard ships. */
 export const isTab = (value: string): value is Tab =>
   Arr.some(tabs, (tab) => tab.value === value);
 
-/** The rows a tab holds: a name this release does not ship shows the outline. */
 export const rowsOf = (tab: Tab): ReadonlyArray<Row> => rows[tab];
 
 /** A row's chosen/un-chosen state, as the list the table paints. */

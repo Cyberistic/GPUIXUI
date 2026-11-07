@@ -1,13 +1,3 @@
-/**
- * `CropArea` — the mask, the handles and the gestures a wrapper forwards.
- *
- * The bug guarded: the mask must be the hole's complement with no bar over the
- * picture, the handle must resize **its** corner rather than moving the hole,
- * and a keyboard resize must reach the caller with the default swallowed. A
- * press on the picture moves the hole; a press on a handle resizes it and must
- * not also start the move.
- */
-
 import { describe, expect, it, vi } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -163,8 +153,6 @@ describe("renderCropArea", () => {
   });
 
   it("keeps a touched edge's handles inside the clipping frame", () => {
-    // The bug guarded: the frame clips its children, so a handle centred on a
-    // full-frame hole's corner painted half a box and kept half a press target.
     const full = new CropRect({ x: 0, y: 0, width: 240, height: 160 });
     const root = renderCropArea(
       props({ value: full }),
@@ -180,11 +168,6 @@ describe("renderCropArea", () => {
   });
 
   it("names a picture the caller did not, never an unnamed image", () => {
-    // The bug guarded: `alt` reached the `<img>` untouched, and the runtime
-    // publishes an `<img>` as an `Image` node named by that `alt` — so a blank
-    // name (an i18n row) or a saved record's `null` published a picture no
-    // reader could identify, while the frame and its handles were already read
-    // through the absence rule.
     Arr.forEach(["", "   ", null as unknown as string], (alt) => {
       const root = renderCropArea(
         props({ src: "data:image/png;base64,AA==", alt }),
@@ -214,8 +197,6 @@ describe("renderCropArea", () => {
   });
 
   it("paints the resize cursor along each corner's own diagonal", () => {
-    // The bug guarded: every handle painted `nwse-resize`, so the top-right and
-    // bottom-left handles pointed across the diagonal they drag on.
     const root = renderCropArea(props(), lightTheme, surfaceOf());
     const cursorOf = (corner: "nw" | "ne" | "sw" | "se") =>
       expectSome(hostProp(handleOf(root, corner), "style"));
@@ -289,9 +270,6 @@ describe("renderCropArea", () => {
   });
 
   it("reads an absent rectangle as the origin and the floor", () => {
-    // The bug guarded: a saved record that carried no crop threw
-    // `Cannot read properties of undefined (reading 'width')` out of the
-    // render, so the frame, the mask and all four handles painted nothing.
     const root = renderCropArea(
       props({ value: undefined as unknown as CropRect }),
       lightTheme,
@@ -366,9 +344,6 @@ describe("renderCropArea", () => {
   });
 
   it("paints no picture for a source that is not text", () => {
-    // The bug guarded: a record restored from storage writes `null` where it
-    // carried no picture, and `src.trim()` threw out of the render — so the
-    // frame, its mask and its handles painted nothing at all.
     const root = renderCropArea(
       props({ src: null as unknown as string }),
       lightTheme,

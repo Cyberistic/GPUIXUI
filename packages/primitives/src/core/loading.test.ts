@@ -32,16 +32,6 @@ import {
 import { testTheme } from "./testing/theme.fixture.js";
 import type { RadiusStep } from "./theme.js";
 
-/**
- * Guards the discrete-step loading indicators.
- *
- * The runtime cannot rotate or interpolate a colour (see `docs/gpuix-capabilities.md`), so these
- * indicators move by stepping a number. That makes the step function the whole
- * behaviour: if it stops advancing, wraps wrongly, or lights two dots at once,
- * the indicator is frozen or nonsensical and nothing else in the pipeline
- * notices.
- */
-
 describe("pulseOpacity", () => {
   it("alternates within its cycle and repeats", () => {
     const first = pulseOpacity(0);
@@ -72,10 +62,7 @@ describe("skeletonStyle", () => {
   });
 
   it("keeps its documented corner for a stored radius name the release dropped", () => {
-    // The bug: a saved placeholder's radius arrived as a name a later release
-    // dropped, so the recipe shipped `rounded-<name>` as an unsupported class
-    // and the block lost the `sm` corner its page documents.
-    const stored = "xl2" as RadiusStep; // the storage boundary
+    const stored = "xl2" as RadiusStep;
     expect(skeletonStyle({ radius: stored }, testTheme).borderRadius).toBe(
       testTheme.radius.sm,
     );
@@ -88,8 +75,6 @@ describe("skeletonStyle", () => {
   });
 
   it("mirrors a circle's missing side so one explicit size stays round", () => {
-    // The bug: width-only fell back to a line height, so a "circle" painted an
-    // ellipse and every avatar placeholder was squashed.
     expect(skeletonSize({ circle: true, width: 40 }, testTheme)).toStrictEqual({
       width: 40,
       height: 40,
@@ -102,16 +87,13 @@ describe("skeletonStyle", () => {
       width: line,
       height: line,
     });
-    // Two explicit sides are the caller's business, even if they differ.
+
     expect(
       skeletonSize({ circle: true, width: 40, height: 24 }, testTheme),
     ).toStrictEqual({ width: 40, height: 24 });
   });
 
   it("takes a side it cannot paint from the default, not from the box", () => {
-    // The bug guarded: a placeholder's side is often a measurement, and a
-    // measurement that never arrived reached `width` as `NaN`, which paints no
-    // box at all — a skeleton that looks like content that finished loading.
     const line = testTheme.typography.body.lineHeight;
     Arr.forEach([Number.NaN, Number.POSITIVE_INFINITY, 0, -4], (side) => {
       expect(skeletonSize({ width: side }, testTheme)).toStrictEqual({
@@ -126,7 +108,7 @@ describe("skeletonStyle", () => {
         skeletonSize({ circle: true, width: side }, testTheme),
       ).toStrictEqual({ width: line, height: line });
     });
-    // A length string is an expression, not a measurement, and stays.
+
     expect(skeletonSize({ width: "45%", height: "2% " }, testTheme)).toEqual({
       width: "45%",
       height: "2% ",
@@ -134,12 +116,6 @@ describe("skeletonStyle", () => {
   });
 
   it("takes a blank side from the default, not from a dimension it cannot parse", () => {
-    // The bug guarded: a placeholder's side comes from a record as often as a
-    // literal, and a field a record carried blank — `""`, or a run of spaces —
-    // is not a length. It reached the style as a dimension the runtime cannot
-    // parse, and the runtime refuses the **whole** style batch for one, so a
-    // saved placeholder took the window down instead of painting the
-    // full-width, one-line box the prop documents as its default.
     const line = testTheme.typography.body.lineHeight;
     expect(skeletonSize({ width: "" }, testTheme)).toStrictEqual({
       width: "100%",
@@ -152,7 +128,7 @@ describe("skeletonStyle", () => {
       width: line,
       height: line,
     });
-    // A real expression stays exactly as written, spacing included.
+
     expect(skeletonSize({ width: "45%" }, testTheme)).toStrictEqual({
       width: "45%",
       height: line,
@@ -171,8 +147,7 @@ describe("spinnerTicks", () => {
     const heads = Arr.map(Arr.range(0, 47), (step) =>
       Arr.filter(spinnerTicks(step, 16), (tick) => tick.active),
     );
-    // A ring with two heads, or none, is not an arc: the head is the one tick
-    // the eye follows around the circle.
+
     expect(Arr.every(heads, (ticks) => ticks.length === 1)).toBe(true);
   });
 
@@ -180,8 +155,7 @@ describe("spinnerTicks", () => {
     expect(headOf(0)).toBe(0);
     expect(headOf(1)).toBe(1);
     expect(headOf(SPINNER_RING_TICKS)).toBe(0);
-    // The bug guarded: a period taken from the indeterminate bar's eight
-    // segments stepped the three-dot row backwards at the cycle edge.
+
     for (const step of Arr.range(0, SPINNER_RING_TICKS - 1)) {
       expect((headOf(step) + 1) % SPINNER_RING_TICKS).toBe(headOf(step + 1));
     }
@@ -191,16 +165,13 @@ describe("spinnerTicks", () => {
     const ticks = spinnerTicks(0, 16);
     const head = ticks[0];
     const tailEnd = ticks[SPINNER_ARC_TICKS - 1];
-    // The gap sits immediately clockwise of the head, where the tail has
-    // already run out.
+
     const gap = ticks[1];
 
     expect(head?.opacity).toBe(1);
     expect(tailEnd?.opacity).toBe(SPINNER_FADE_FLOOR);
     expect(gap?.opacity).toBe(0);
-    // The arc wraps behind the head, so the lit ticks are contiguous and the
-    // gap is one run — a ring with scattered lit ticks reads as dotted, not as
-    // an arc.
+
     expect(Arr.filter(ticks, (tick) => tick.opacity > 0)).toHaveLength(
       SPINNER_ARC_TICKS,
     );
@@ -235,8 +206,7 @@ describe("spinnerTicks", () => {
           ),
         6,
       );
-      // A tick that paints outside the ring's box is clipped by a parent and
-      // the arc loses a piece.
+
       expect(tick.x).toBeGreaterThanOrEqual(0);
       expect(tick.y).toBeGreaterThanOrEqual(0);
       expect(tick.x + tick.side).toBeLessThanOrEqual(size);
@@ -254,9 +224,6 @@ describe("spinnerTicks", () => {
   });
 
   it("paints the accent on every tick and fades the tail with opacity", () => {
-    // A trail painted in the muted role put a grey tick on a filled control,
-    // where only that fill's on-colour is legible; the accent is the tick, and
-    // the step is the opacity.
     const ticks = spinnerTicks(0, 12);
     const spec = { size: 12, accent: "on-primary" } as const;
     const paint = Arr.map(ticks, (tick) =>
@@ -299,10 +266,6 @@ describe("spinnerTicks", () => {
 
 describe("the spinner's own numbers", () => {
   it("publishes the ring's resolution and the fade floor from the core entry", () => {
-    // The page names both numbers, so a consumer reading them must be able to
-    // import them: a constant the package exports from its source file but not
-    // from its public core entry is a name that resolves in the repo and not in
-    // a consumer's program.
     expect(coreSpinnerTicks).toBe(SPINNER_RING_TICKS);
     expect(coreSpinnerArc).toBe(SPINNER_ARC_TICKS);
     expect(coreSpinnerFloor).toBe(SPINNER_FADE_FLOOR);
@@ -319,8 +282,7 @@ describe("indeterminateOffset", () => {
     expect(
       Arr.every(offsets, (value) => value >= 0 && value <= 100 - segment),
     ).toBe(true);
-    // The cycle visits one distinct offset per segment step, so the bar is
-    // never still and never repeats a position inside a cycle.
+
     expect(new Set(offsets).size).toBe(SPINNER_SEGMENTS);
   });
 
@@ -356,27 +318,12 @@ describe("indeterminateOffset", () => {
 
 describe("progressAnimates", () => {
   it("animates only a bar that has no value to draw", () => {
-    // The bug guarded: a determinate bar ran the step timer for a segment it
-    // never paints, waking the tree every interval for nothing.
     expect(progressAnimates(Option.none())).toBe(true);
     expect(progressAnimates(Option.some(42))).toBe(false);
     expect(progressAnimates(Option.some(0))).toBe(false);
   });
 });
 
-/**
- * The loading indicators' cadence.
- *
- * `motionLevels.step` exists for "a step indicator's tick", and both step
- * indicators used to write `120` themselves: the level was a token no painter
- * read, so moving it changed nothing on screen and the two indicators could
- * drift apart one edit at a time. The components read this module's constant
- * now, and this suite holds the seam — the values alone cannot prove it,
- * because a copied literal equals the level until the level moves.
- *
- * Node's `fs` reads the package's own sources, the one-shot test-boundary
- * convention `focus.test.ts` records.
- */
 describe("the loading indicators' cadence", () => {
   const source = (file: string): string =>
     readFileSync(new URL(`../components/${file}`, import.meta.url), "utf8");
@@ -394,31 +341,16 @@ describe("the loading indicators' cadence", () => {
       const text = source(file);
       expect(text, file).toContain("STEP_INTERVAL_MS");
       expect(text, file).toContain("useStep(");
-      // The copy this case exists for: a bare millisecond count is the token
-      // read as a literal, and it survives the level moving.
+
       expect(text, file).not.toMatch(/useStep\([^)]*\b\d{2,}\b/);
     });
   });
 
   it("keeps a pulse slower than a step, outside the transition levels", () => {
-    // A placeholder alternates for as long as it is on screen; the levels time
-    // a transition between two states. The skeleton therefore owns its own
-    // cadence, and a level that ever names it fails here until it is adopted.
     expect(PULSE_INTERVAL_MS).toBeGreaterThan(STEP_INTERVAL_MS);
     expect(Object.values(motionLevels)).not.toContain(PULSE_INTERVAL_MS);
     const text = source("Skeleton.tsx");
     expect(text).toContain("PULSE_INTERVAL_MS");
     expect(text).not.toMatch(/useStep\([^)]*\b\d{2,}\b/);
-  });
-
-  it("keeps the step cadence in the sources, not in a page's prose", () => {
-    // The number belonged to the pages until the prose sections were pruned.
-    // The cadence is still one constant read by both step indicators and the
-    // skeleton; those source cases above are where a retired speed fails now,
-    // and the pages may only say what the movement *is*.
-    const page = (name: string): string =>
-      readFileSync(new URL(`../../docs/${name}`, import.meta.url), "utf8");
-    expect(page("spinner.mdx")).toContain("discrete lit-arc step");
-    expect(page("progress.mdx")).toContain("discrete step");
   });
 });

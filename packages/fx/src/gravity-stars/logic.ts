@@ -1,75 +1,43 @@
-/**
- * Where a field of stars falls, and how long the fall takes.
- *
- * A gravity field is **radial but inward**: one seeded well sits inside the box,
- * and every star starts on the box's own edge along its own evenly spaced angle,
- * falls toward the well, and is re-keyed onto the edge when it lands. The runtime
- * has no `transform` (upstream issue #102) and no paths, so a fall is two straight
- * legs of inset geometry — an approach that brightens, then a plunge that fades —
- * and the acceleration is the `easeIn` curve the runtime interpolates rather than
- * a simulated force.
- *
- * A star closer to the well lands in less time, so the field never reads as one
- * ring collapsing in unison; each star also waits its own share of the base time
- * before it starts. All of it is arithmetic over one measured box and one seed
- * (`internal/scatter.ts` holds the hash), so the field is checked without a
- * window.
- */
-
 import * as Arr from "effect/Array";
 import * as HashMap from "effect/HashMap";
 import * as Option from "effect/Option";
 import { paintable, seededUnit, tenth } from "@gpuixui/components/authoring";
 
-/** The house number of stars. */
 export const gravityStars = 36;
 
-/** The most stars a field paints, because each is its own native tween. */
 export const gravityStarsCap = 160;
 
-/** The smallest and largest star, in pixels. */
 export const gravityMinSize = 1;
 export const gravityMaxSize = 3;
 
-/** The house base time for one fall, in milliseconds. */
 export const gravityFallMs = 3_000;
 
-/** The shortest fall a caller may ask for; below it the motion reads as a blink. */
 export const gravityFallFloor = 600;
 
-/** The longest fall, so a field cannot look frozen. */
 export const gravityFallCapMs = 20_000;
 
-/** The share of a fall spent approaching the well, before the fade. */
 const approachShare = 0.6;
 
-/** Where the well may sit, as a share of the box, so every rim has room. */
 const centreFloorShare = 0.3;
 const centreCeilingShare = 0.7;
 
-/** How far a star's angle may wander from its slot, as a share of one slot. */
 const angleJitterShare = 0.3;
 
-/** The share of the base time a star may wait before it starts. */
 const delayShare = 0.8;
 
-/** A fall's duration band, relative to the base time. */
 const fallFloorShare = 0.5;
 const fallCeilingShare = 1.4;
 const nearFallShare = 0.6;
 const farFallShare = 1.2;
 
-/** A star's brightness band. */
 const peakFloor = 0.35;
 const peakCeiling = 0.85;
 
-/** A measurement the field can be laid out in. */
 export interface GravityBox {
   readonly width: number;
   readonly height: number;
 }
 
-/** The input a field is drawn from. */
 export interface GravityFieldInput extends GravityBox {
   readonly count: number;
   readonly seed: number;
@@ -78,35 +46,31 @@ export interface GravityFieldInput extends GravityBox {
   readonly fallMs: number;
 }
 
-/** The well every star falls toward. */
 export interface GravityCentre {
   readonly x: number;
   readonly y: number;
 }
 
-/** One star's place, size and pace. */
 export interface GravityStar {
-  /** Stable within one field; the identity the renderer re-keys on. */
   readonly key: string;
   readonly size: number;
-  /** The star's top-left where it is born: on the box's own edge. */
+
   readonly x: number;
   readonly y: number;
-  /** The frame the approach hands over to the plunge. */
+
   readonly midX: number;
   readonly midY: number;
-  /** The star's top-left with its centre on the well. */
+
   readonly endX: number;
   readonly endY: number;
-  /** The brightness the approach reaches, `0…1`. */
+
   readonly peak: number;
-  /** The whole fall, both legs. */
+
   readonly durationMs: number;
-  /** How long the star waits before it starts. */
+
   readonly delayMs: number;
 }
 
-/** The two legs of a fall. */
 export interface GravityPhases {
   readonly approach: {
     readonly left: number;
@@ -123,7 +87,6 @@ export interface GravityPhases {
   };
 }
 
-/** The well's seeded place inside the box. */
 export const gravityCentreOf = (
   box: GravityBox,
   seed: number,
@@ -140,13 +103,6 @@ export const gravityCentreOf = (
   ),
 });
 
-/**
- * A star's outward distance from the well to the box's edge along `angle`.
- *
- * The rim is the box's own edge, so a star is born where the surface ends; the
- * nearest edge wins, which makes a well near a corner produce a denser field
- * there — the shape of the box, not a circle, is what the stars leave from.
- */
 const rimDistance = (
   centre: GravityCentre,
   box: GravityBox,
@@ -161,17 +117,14 @@ const rimDistance = (
   return Math.min(alongX, alongY);
 };
 
-/** A value inside `[low, high]`. */
 const clamp = (value: number, low: number, high: number): number =>
   Math.min(Math.max(value, low), high);
 
-/** A star's pace: nearer the well is a shorter fall, within the recorded band. */
 const fallFactor = (distance: number, farthest: number): number =>
   paintable(farthest)
     ? nearFallShare + (farFallShare - nearFallShare) * (distance / farthest)
     : farFallShare;
 
-/** The field: one star per slot, born on the edge and aimed at the well. */
 export const gravityField = (
   input: GravityFieldInput,
 ): ReadonlyArray<GravityStar> => {
@@ -248,7 +201,6 @@ export const gravityField = (
   });
 };
 
-/** The two legs one star's fall is drawn in. */
 export const gravityPhases = (star: GravityStar): GravityPhases => ({
   approach: {
     left: star.midX,
@@ -265,10 +217,6 @@ export const gravityPhases = (star: GravityStar): GravityPhases => ({
   },
 });
 
-/**
- * The frame a stilled star paints: it holds the approach frame, so the reduced
- * preference shows a gathered field rather than a ring waiting on the edge.
- */
 export const gravityRest = (
   star: GravityStar,
 ): {
@@ -281,33 +229,24 @@ export const gravityRest = (
   opacity: star.peak,
 });
 
-/** How far one star is through its fall: brightening in, or plunging into the well. */
 export interface GravityLife {
-  /** How many falls the star has completed; a new lap mounts it fresh on the edge. */
   readonly lap: number;
-  /** Whether it is on the plunge rather than the approach. */
+
   readonly landing: boolean;
 }
 
-/** A star that has not completed a leg yet. */
 export const gravityBorn: GravityLife = { lap: 0, landing: false };
 
-/** The life a star is on; `gravityBorn` until its own tween reports a leg. */
 export const gravityLifeOf = (
   lives: HashMap.HashMap<string, GravityLife>,
   key: string,
 ): GravityLife => Option.getOrElse(HashMap.get(lives, key), () => gravityBorn);
 
-/**
- * The life after one leg completes: the approach hands over to the plunge, and a
- * completed plunge reborns the star on the edge as the next lap.
- */
 export const gravityAdvanced = (life: GravityLife): GravityLife =>
   life.landing
     ? { lap: life.lap + 1, landing: false }
     : { lap: life.lap, landing: true };
 
-/** Whether two readings name the same box, so a repeated report changes nothing. */
 export const gravitySameBox = (
   a: Option.Option<GravityBox>,
   b: Option.Option<GravityBox>,

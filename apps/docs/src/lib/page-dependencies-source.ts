@@ -10,26 +10,8 @@ import {
 import { buildWorkspaceSymbolIndex } from "./public-symbols-source";
 import { componentDocsRoute } from "./shared";
 
-/**
- * The packages each package page's component imports, read from the workspace.
- *
- * A page documents one component; the component's own module is the honest
- * source for what it needs. The page stem names the component (`otp-field` →
- * `OTPField`, `grid` → the `Grid` that lives in `Stack.tsx`), so the public
- * symbol index resolves it first and a file whose stem matches the page is the
- * fallback for a family that publishes no symbol under its own name (`chat`).
- *
- * A page that writes its own `## Dependencies` section is skipped rather than
- * contradicted. A page that resolves to no module is reported, not guessed:
- * the site's guard fails until the page has a source to read.
- *
- * Node-only: this runs inside the Vite plugin, once, at build time.
- */
-
-/** A file's name without its extension, to compare against a page stem. */
 const stemOf = (path: string): string => normalisedName(basename(path, ".tsx"));
 
-/** Every source file a package's component could live in. */
 const componentModules = (
   root: string,
   packageDir: string,
@@ -46,28 +28,12 @@ const componentModules = (
     });
   })(join(root, packageDir, "src"));
 
-/**
- * The subject a page names in its opening line.
- *
- * A page whose file name matches neither a published symbol nor a module stem
- * still opens by naming the part it documents — `` `TableExpandableRow` is a
- * row … `` — and that name resolves through the same symbol index. Read from
- * the first paragraph so a usage snippet further down cannot answer for the
- * page's subject.
- */
 const subjectOf = (markdown: string): string | undefined => {
   const prose = markdown.replace(/^---\n[\s\S]*?\n---\n/, "");
   const opening = prose.split("\n\n")[0] ?? "";
   return /`([A-Za-z_][A-Za-z0-9_]*)`/.exec(opening)?.[1];
 };
 
-/**
- * The names a page's first example imports from its own package, in order.
- *
- * A page that documents a family rather than one part (`charts`) names no
- * single subject in its opening and matches no file stem; the example it
- * teaches is the next honest answer, and it is the page's own code.
- */
 const importedNames = (
   markdown: string,
   specifier: string,
@@ -92,7 +58,6 @@ const importedNames = (
   );
 };
 
-/** The module a page documents, from the published symbol or its file name. */
 const moduleFor = (
   root: string,
   collection: (typeof packageCollections)[number],
@@ -121,9 +86,6 @@ const moduleFor = (
     return bySubject.module;
   }
 
-  // The modules a page's **package** ships, not the collection's directory:
-  // the charts live in `packages/data/docs/charts`, but their module is
-  // `packages/data/src/chart/chart.tsx`.
   const packageDir = collection.dir.replace(/\/docs(\/.*)?$/, "");
   const named = componentModules(root, packageDir)
     .filter((path) => stemOf(path) === wanted)
@@ -142,7 +104,6 @@ const moduleFor = (
   return byImport === undefined ? undefined : byImport.module;
 };
 
-/** The specifiers a module imports, in the order the file declares them. */
 const importsOf = (path: string): ReadonlyArray<string> => {
   const source = readFileSync(path, "utf8");
   const patterns = [
@@ -158,24 +119,14 @@ const importsOf = (path: string): ReadonlyArray<string> => {
   );
 };
 
-/** A page a package ships, and the module it documents. */
 export interface PackagePageModule {
-  /** The URL the page renders at. */
   readonly url: string;
-  /** The component's module, repository-relative; absent when nothing resolved. */
+
   readonly module?: string;
-  /** The page writes its own `## Dependencies`, so the generated strip stays off. */
+
   readonly writesDependencies: boolean;
 }
 
-/**
- * Every page the packages ship, and the module each documents.
- *
- * Two readers want this inventory: the dependency strip (which skips a page
- * that lists its own packages) and the source block (which does not care — the
- * implementation is worth showing either way). Reading it once keeps both
- * from resolving a page differently.
- */
 export const readPackagePages = (
   root: string,
 ): ReadonlyArray<PackagePageModule> => {
@@ -196,32 +147,19 @@ export const readPackagePages = (
   );
 };
 
-/** A page this site writes, and the module its source block shows. */
 export interface CuratedPageModule {
-  /** The URL the page renders at. */
   readonly url: string;
-  /** The module the page's `<ComponentSource>` names, when it resolves. */
+
   readonly module?: string;
-  /** The page writes its own `## Dependencies`, so the generated strip stays off. */
+
   readonly writesDependencies: boolean;
 }
 
-/** The module a curated page's `<ComponentSource file="…">` names. */
 const curatedModule = (root: string, markdown: string): string | undefined => {
   const file = /<ComponentSource\b[^>]*\bfile="([^"]+)"/.exec(markdown)?.[1];
   return file !== undefined && existsSync(join(root, file)) ? file : undefined;
 };
 
-/**
- * Every component page this site writes, and the module it shows.
- *
- * A curated page is MDX this app owns, and the module it displays is the file
- * its `<ComponentSource>` names — not the package page the URL shadows. The two
- * can document different modules: `/components/button` shows the
- * primitives' action, while the components package's page documents its own
- * wrapper. Reading the page's own source block keeps the generated dependency
- * strip beside the code the reader can see.
- */
 export const readCuratedPages = (
   root: string,
 ): ReadonlyArray<CuratedPageModule> =>
@@ -240,7 +178,6 @@ export const readCuratedPages = (
       };
     });
 
-/** The whole index, for the plugin's virtual module and the guard. */
 export const readPageDependencies = (root: string): PageDependencyIndex => {
   const read = [...readPackagePages(root), ...readCuratedPages(root)].filter(
     (page) => !page.writesDependencies,
@@ -271,12 +208,6 @@ export const readPageDependencies = (root: string): PageDependencyIndex => {
   );
 };
 
-/**
- * Every package page's module, including one that lists its own packages.
- *
- * The source block reads this: the implementation is the page's subject whether
- * or not the page chose to write its dependency list by hand.
- */
 export const readPageModules = (
   root: string,
 ): {

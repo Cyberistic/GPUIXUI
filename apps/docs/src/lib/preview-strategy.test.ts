@@ -2,27 +2,6 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { packagePreviews } from "./package-preview";
 
-/**
- * `docs/preview-strategy.md` is the site's policy document: the page template,
- * the honesty rule for previews, and the guard that holds each claim.
- *
- * Bug guarded: a merge of `agent/docs-prune` left its conflict block in the
- * committed file — `<<<<<<< HEAD`, the page-edit section, `=======`, the
- * curated-template paragraph, `>>>>>>> origin/agent/docs-prune` — between the
- * template table and the sections below it. It also left the Related section
- * twice, once claiming "No mounted page writes `## Related`" while the other
- * copy said 31 of 104 do. Both halves of the conflict were wanted; the markers
- * and the duplicated claim were not. Every site test stayed green, because
- * nothing read the policy as a document.
- *
- * The scan is repo-wide on purpose. Five agents merge into this checkout, so a
- * conflict marker can land in a policy document or a rendered page without any
- * one workstream seeing it; a marker in a page is shipped prose to a reader.
- *
- * The reads are synchronous because this is a test boundary and the rest of the
- * site's suites walk the tree the same way (`package-docs.test.ts`).
- */
-
 const root = new URL("../../../../", import.meta.url);
 
 const read = (path: string): string =>
@@ -44,7 +23,8 @@ const curatedPages = readdirSync(
   new URL("apps/docs/content/docs/components", root),
 )
   .filter((name) => name.endsWith(".mdx") && name !== "index.mdx")
-  .map((name) => `apps/docs/content/docs/components/${name}`);
+  .map((name) => `apps/docs/content/docs/components/${name}`)
+  .filter((path) => read(path).includes("<ComponentPreview"));
 
 const curatedTitles = curatedPages
   .map((path) => /^title:\s*(.+)$/m.exec(read(path))?.[1]?.trim() ?? path)
@@ -67,7 +47,6 @@ const documents = [
   ...packagePages,
 ];
 
-/** The two lines a merge writes; `=======` alone is a setext heading. */
 const conflictMarkers = (text: string): ReadonlyArray<number> =>
   text
     .split("\n")
@@ -77,7 +56,6 @@ const conflictMarkers = (text: string): ReadonlyArray<number> =>
 
 describe("the preview strategy document", () => {
   it("reads the policy, the site and every package page", () => {
-    // Floors, so a walk that stopped matching cannot pass on an empty list.
     expect(policyDocs.length).toBeGreaterThanOrEqual(5);
     expect(sitePages.length).toBeGreaterThanOrEqual(40);
     expect(packagePages.length).toBeGreaterThanOrEqual(100);
@@ -118,10 +96,6 @@ describe("the preview strategy document", () => {
   });
 
   it("names every curated page in the policy's list, and no page it lacks", () => {
-    // Bug guarded: the list is prose beside generated navigation, so a page
-    // added to `content/docs/components` — or one whose title moved — left the
-    // bullet behind while the sidebar grew, and an advertised name with no page
-    // was equally silent.
     const policy = read("docs/preview-strategy.md");
     const block =
       policy
@@ -143,9 +117,6 @@ describe("the preview strategy document", () => {
   });
 
   it("names only guard files the site still carries", () => {
-    // Bug guarded: the prune deleted `accessibility-page.test.ts` and renamed
-    // `native-run-note.test.ts` to `.tsx`, and the policy kept citing both
-    // paths, so a reader following a claim about a guard landed on no file.
     const policy = read("docs/preview-strategy.md");
     const cited = [...policy.matchAll(/`(src\/[^`]+\.test\.tsx?)`/g)].flatMap(
       (match) => (match[1] === undefined ? [] : [match[1]]),
@@ -158,13 +129,6 @@ describe("the preview strategy document", () => {
   });
 
   it("does not claim a preview every component page ships", () => {
-    // Bug guarded: the policy said "A page that ships a demo — every component
-    // and primitive page does". When this case was written `MultiStepForm`
-    // shipped none — the caller owns its state — so that page was strategy 4;
-    // every component page mounts one now, and the rule still has to allow a
-    // page that ships none. The pages that mount one are measured by
-    // `native-run-note.test.ts`; this case keeps the sentence from promising
-    // the rest.
     const policy = read("docs/preview-strategy.md").replace(/\s+/g, " ");
 
     expect(policy).not.toContain("every component and primitive page does");
@@ -177,15 +141,6 @@ describe("the preview strategy document", () => {
   });
 
   it("names every demo outside the component and primitive lanes", () => {
-    // Bug guarded: the policy said every lane but Components and Primitives was
-    // strategy 4, while the Property panels page draws its composition and the
-    // media lane draws all five of its surfaces. A lane that starts drawing has
-    // to ask the policy to say so, and a page that loses its demo has to ask it
-    // too.
-    //
-    // A package page may draw through its own `<ComponentPreview>` or through
-    // the site's table (`src/lib/package-preview.ts`), because the package's
-    // Markdown is the package's to write; both count as the page drawing.
     const lanes = ["data", "dock", "editor", "files", "media", "shell"];
     const siteMounted = packagePreviews.map(
       (row) => `packages/${row.origin}/docs/${row.path}`,
@@ -245,11 +200,6 @@ describe("the preview strategy document", () => {
   });
 
   it("states the Related rule without a count the pages can outgrow", () => {
-    // Bug guarded: the policy said "31 of the 104 mounted package pages" write
-    // `## Related`. The prune then removed thirty of those sections and the
-    // collections grew to 140 pages, so both numbers were wrong and the strip's
-    // silence read as dead code. The rule is count-free now; the retired
-    // figures and the count-shaped sentence must not return.
     const policy = read("docs/preview-strategy.md").replace(/\s+/g, " ");
     const rule =
       /a page that writes `## Related`[^.]*\./.exec(policy)?.[0] ?? "";

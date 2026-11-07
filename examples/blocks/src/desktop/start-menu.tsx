@@ -1,10 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * The Start menu. Luna: a blue header with the user, a white column of
- * programs beside a pale-blue column of places, a blue footer with Log Off and
- * Turn Off. Aero: a white column of programs with a search field, beside a dark
- * glass column of places and the shut-down button.
- */
 import type { StyleDesc } from "@gpuix/react";
 import { Avatar } from "@gpuixui/components/avatar";
 import { Icon } from "@gpuixui/icons";

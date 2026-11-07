@@ -1,14 +1,3 @@
-/**
- * The `keyboard-scroll-lifecycle` fixture, held to the arithmetic its probe
- * reads.
- *
- * The probe asserts where the window's renderer holds the offset after each
- * key, so a layout whose content stopped overflowing — or a prediction that
- * drifted from `core/scroll.ts` — would let the probe measure a clamp it
- * mistakes for a move. These cases hold the geometry (two pages of vertical
- * travel, more than a page of horizontal travel) and the prediction at every
- * step the probe takes.
- */
 import { describe, expect, it } from "vitest";
 import {
   HORIZONTAL_CONTENT,
@@ -37,8 +26,6 @@ describe("the keyboard-scroll fixture", () => {
   });
 
   it("steps a line by the density row the theme carries", () => {
-    // The region steps by `theme.density.rowHeight`, so a theme whose row is 28
-    // or 36 moves a different distance — the probe must not pin 32.
     expect(line).toBe(32);
     const compact = { ...getTheme("dark"), density: densityPresets.compact };
     expect(lineStep(compact)).toBe(28);
@@ -52,7 +39,6 @@ describe("the keyboard-scroll fixture", () => {
   });
 
   it("walks the vertical sequence the probe drives", () => {
-    // down, down, up, pagedown, home, pagedown, pagedown, pagedown, end, up
     expect(predictedOffset(0, "down", line, page, VERTICAL_MAX)).toBe(-32);
     expect(predictedOffset(-32, "down", line, page, VERTICAL_MAX)).toBe(-64);
     expect(predictedOffset(-64, "up", line, page, VERTICAL_MAX)).toBe(-32);
@@ -63,7 +49,7 @@ describe("the keyboard-scroll fixture", () => {
     expect(predictedOffset(-160, "pagedown", line, page, VERTICAL_MAX)).toBe(
       -320,
     );
-    // A third page asks for -480; the runtime clamps at the content's end.
+
     expect(predictedOffset(-320, "pagedown", line, page, VERTICAL_MAX)).toBe(
       -320,
     );

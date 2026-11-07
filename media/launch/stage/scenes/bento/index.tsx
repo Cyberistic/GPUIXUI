@@ -1,17 +1,3 @@
-/**
- * The film's bento (plan 066), built on the stageshow skill's gold `bento`:
- * hero and strip, one Stage per picture, one beat per tile, 110 ms apart.
- *
- *   Tile       Span   Kind       The one thing                       Moves
- *   Blocks     2 × 1  Hero UI    the stats block, Month pressed      the take plays
- *   Count      1 × 1  Stat       the real block count, dark tile     counts up
- *   Switch     1 × 1  Component  the Wi-Fi switch                    pressed
- *   Slang      1 × 1  Component  Slang's LCD, 7 × 6 = 42             the take plays
- *   Platforms  1 × 1  Diagram    four targets, one GPUI node         lines draw in
- *
- * Every product picture is real GPUix footage (`Footage`); the page draws only
- * tiles, copy and lines. One window in the grid (the hero's).
- */
 import { Connector, Count, Stage, Text } from "../../kit";
 import type { Act, Rect } from "../../kit";
 import blocks from "../../../../../examples/blocks/package.json";

@@ -1,15 +1,3 @@
-/**
- * A predicate tree narrows the table, and a selection it hides is released.
- *
- * `useTable` narrowed by a text query only, so the advanced filter's tree — the
- * shape `AdvancedFilter` composes and `filterByTree` runs — could not reach a
- * grid without the caller copying the column lookup. This mounts the shipped
- * controller with a tree and measures the consequences a window can see: the
- * painted rows are the tree's, a record the tree hides leaves the selection in
- * the same commit, and a tree that keeps it again paints it chosen (the release
- * is a view, not a write — the core still holds the id).
- */
-
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Str from "effect/String";
@@ -50,7 +38,6 @@ const columns: ReadonlyArray<GridColumn<FileRow>> = [
   { id: "size", valueOf: (row) => row.size },
 ];
 
-/** The tree a reader builds: `size greater than 100`. */
 const keepLarge: FilterTree = {
   kind: "all",
   children: [
@@ -63,7 +50,6 @@ const keepLarge: FilterTree = {
   ],
 };
 
-/** The same clause narrowed the other way: `size less than 100`. */
 const keepSmall: FilterTree = {
   kind: "all",
   children: [
@@ -71,7 +57,6 @@ const keepSmall: FilterTree = {
   ],
 };
 
-/** The controller over the tree, with the buttons a reader would press. */
 const TreeTable = () => {
   const [tree, setTree] = useState<FilterTree>(keepLarge);
   const table = useTable({
@@ -131,7 +116,6 @@ afterEach(() => {
   root = undefined;
 });
 
-/** Whether a record's row is mounted, so a hidden record is one that is not. */
 const paints = (testRoot: DataTestRoot, id: string): boolean =>
   testRoot.renderer.findByTestId(`tree-row-${id}`) !== undefined;
 
@@ -148,7 +132,6 @@ const press = (testRoot: DataTestRoot, testId: string): void => {
   testRoot.renderer.flush();
 };
 
-/** The readout's own words, out of every run the renderer painted. */
 const readout = (testRoot: DataTestRoot): string =>
   Option.getOrElse(
     Arr.findFirst(testRoot.renderer.getAllText(), Str.includes(" rows · ")),
@@ -174,13 +157,12 @@ describe("a table narrowed by a predicate tree", () => {
     press(testRoot, "tree-small");
     expect(paints(testRoot, "byte")).toBe(true);
     expect(paints(testRoot, "beta")).toBe(false);
-    // The tree hides the chosen record, so the same commit paints no choice.
+
     expect(readout(testRoot)).toBe("1 rows · 0 selected");
 
     press(testRoot, "tree-all");
     expect(paints(testRoot, "beta")).toBe(true);
-    // Retention is a view, not a write: the core still holds the id, so the
-    // widened set paints the record the reader chose.
+
     expect(readout(testRoot)).toBe("3 rows · 1 selected");
   });
 });

@@ -1,25 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * A toolbar: the row of controls a data surface acts from.
- *
- * The runtime provides no toolbar host and needs none — a toolbar is a row
- * (`inspector-lifecycle` measured two actions sharing one `y`, both above the
- * rows they act on), so this component is that row: the muted strip, the
- * controls in it, and an optional search field at its head.
- *
- * The search field **debounces** through `@tanstack/pacer`: a query over a long
- * set is not worth a re-filter per keystroke, and the core's debouncer owns
- * the wait. The table's own filter field is a different control and is not
- * debounced — `table-filter-lifecycle` measured the set narrowing as the reader
- * types, and a delay there would be a regression.
- *
- * ```tsx
- * <DataToolbar search={{ value: query, onValueChange: setQuery }}>
- *   <Button onActivate={reset}>Reset</Button>
- * </DataToolbar>
- * ```
- */
-
 import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { Input } from "@gpuixui/primitives";
@@ -32,66 +11,33 @@ import { recipeStyle } from "../recipe.js";
 import { useTheme } from "../theme.js";
 import { DATA_TOOLBAR } from "./recipe.js";
 
-/** The search field a toolbar carries. */
 export interface ToolbarSearch {
-  /** The query the field shows. */
   readonly value: string;
-  /** Receives the debounced query. */
+
   readonly onValueChange: (next: string) => void;
-  /**
-   * The hint a reader sees in the empty field.
-   *
-   * Defaults to `Search…`; a blank hint is that default too, because a default
-   * only covers an absent prop.
-   */
+
   readonly placeholder?: string;
-  /**
-   * The field's accessible name. Defaults to `Search`; a blank name is the
-   * default, because a default only covers an absent prop.
-   */
+
   readonly label?: string;
-  /**
-   * How long the query waits before it is reported, in milliseconds.
-   *
-   * Defaults to `150`. Zero reports every edit at once.
-   */
+
   readonly debounceMs?: number;
 }
 
-/** {@link DataToolbar} props. */
 export interface DataToolbarProps extends Omit<Props, "children"> {
-  /** The controls the row holds. */
   readonly children?: ReactNode;
-  /** The search field, at the head of the row. */
+
   readonly search?: ToolbarSearch;
   readonly className?: string;
-  /**
-   * The toolbar's test id. The search field derives from it:
-   * `${testId}-search`.
-   */
+
   readonly testId?: string;
 }
 
-/** How long a toolbar's query waits by default. */
 export const DEFAULT_SEARCH_DEBOUNCE_MS = 150;
 
-/** The name a toolbar's search field is announced by when none is given. */
 export const DEFAULT_SEARCH_LABEL = "Search";
 
-/** The hint a toolbar's search field shows when none is given. */
 export const DEFAULT_SEARCH_PLACEHOLDER = "Search…";
 
-/**
- * The wait the debouncer can schedule.
- *
- * `debounceMs` is often computed — a setting read from storage, a per-surface
- * policy — and the pacer hands its `wait` to `setTimeout`, which reads `NaN` and
- * the infinities as an **immediate** timer: the query was reported in the next
- * tick and the debounce existed only on paper, which is the one regression the
- * field is here to prevent. A wait that is not a finite, non-negative number is
- * the documented default; **zero** is the caller's immediate reporting, the one
- * value that means it.
- */
 const searchWait = (milliseconds: number | undefined): number =>
   milliseconds === undefined ||
   !Number.isFinite(milliseconds) ||
@@ -99,12 +45,6 @@ const searchWait = (milliseconds: number | undefined): number =>
     ? DEFAULT_SEARCH_DEBOUNCE_MS
     : milliseconds;
 
-/**
- * A row of controls above a data surface.
- *
- * The search field reports a **debounced** query: the wait is the core's, and
- * a pending query is dropped when the toolbar unmounts.
- */
 export const DataToolbar = ({
   children,
   search,
@@ -114,13 +54,10 @@ export const DataToolbar = ({
   ...rest
 }: DataToolbarProps) => {
   const theme = useTheme();
-  // A saved toolbar writes `null` for the search it never carried, so the field
-  // is read as the absence the prop already means.
+
   const field = Option.fromNullishOr(search);
   const wait = searchWait(search?.debounceMs);
-  // The debouncer holds the callback it was built with, so the latest one is
-  // read through a ref: a new `onValueChange` must not rebuild the debouncer
-  // and lose a pending query.
+
   const report = useRef<(next: string) => void>(() => {});
   report.current = search?.onValueChange ?? (() => {});
   const debouncer = useMemo(

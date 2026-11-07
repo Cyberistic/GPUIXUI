@@ -1,21 +1,3 @@
-/**
- * Gradient in the real GPUix renderer.
- *
- * The bugs these guard: a ramp handed to the runtime with stops it cannot paint
- * or an angle it does not read; a second layer that is the same ramp as the
- * first, so the "breath" never changes anything; a breath that runs one way and
- * stops, because the runtime tweens a target once; a reduced preference that
- * keeps crossfading; a still field that leaves a stray layer behind; a
- * background that paints over its content or swallows the press aimed at it; a
- * rounded field whose layer keeps square corners; and an entrance that ignores
- * the house level.
- *
- * The motion clock is paused before the mount, so the first frame is the declared
- * initial frame rather than wherever the frame loop had got. A headless tree
- * reports styles and the motion description, not paint, so the crossfade is read
- * from the target the component hands the runtime.
- */
-
 import type { TestElement, TestRoot } from "@gpuix/react/testing";
 import { motionLevels } from "@gpuixui/motion/timing";
 import type { ReactNode } from "react";
@@ -31,11 +13,9 @@ import { Gradient, type GradientProps } from "../gradient.js";
 import { gradientBaseAngle, rampOf, shiftedRampOf } from "../gradient/logic.js";
 import { MotionProvider } from "../motion.js";
 
-/** The colours the cases paint, so a default can be told from a caller value. */
 const from = "#101820";
 const to = "#F2AA4C";
 
-/** One element by test id, failing rather than casting. */
 const byTestId = (
   renderer: TestRoot["renderer"],
   testId: string,
@@ -47,7 +27,6 @@ const byTestId = (
   return element;
 };
 
-/** Mount under a paused motion clock, so the first frame is the declared one. */
 const mount = (node: ReactNode) => {
   const page = renderComponent(<div />);
   page.renderer.clockPause();
@@ -57,7 +36,6 @@ const mount = (node: ReactNode) => {
   return page;
 };
 
-/** A gradient field at a fixed box. */
 const Field = (props: Partial<GradientProps> = {}) => (
   <Gradient
     testId="field"
@@ -85,7 +63,7 @@ describe("Gradient", () => {
     const page = mount(<Field angle={45} shift={45} />);
     try {
       const shift = byTestId(page.renderer, "gradient-shift");
-      // The two layers are the same colour pair, a turn apart.
+
       expect(shift.style.background).toMatchObject(
         shiftedRampOf(from, to, 45, 45),
       );
@@ -102,7 +80,7 @@ describe("Gradient", () => {
     const page = mount(<Field />);
     try {
       const shift = byTestId(page.renderer, "gradient-shift");
-      // Born transparent and heading for full.
+
       expect(shift.style.opacity).toBe(0);
       expect(shift.customProps?.motion).toMatchObject({
         initial: { opacity: 0 },
@@ -116,7 +94,6 @@ describe("Gradient", () => {
         byTestId(page.renderer, "gradient-shift").customProps?.motion,
       ).toMatchObject({ animate: { opacity: 0 } });
 
-      // A completed fade turns around again, so the field keeps breathing.
       page.renderer.clockFastForward(1_000);
       settle(page);
       expect(
@@ -181,13 +158,11 @@ describe("Gradient", () => {
       const layer = byTestId(page.renderer, "gradient-shift");
       const content = byTestId(page.renderer, "content");
 
-      // Paint order is tree order, so the layer is behind the content.
       expect(field.children.indexOf(layer.id)).toBeLessThan(
         field.children.indexOf(content.id),
       );
       expect(layer.style.pointerEvents).toBe("none");
 
-      // The layer covers the content's box, so a press would land on it first.
       const layerBox = requireBounds(page, "gradient-shift");
       const contentBox = requireBounds(page, "content");
       expect(layerBox.x).toBeLessThanOrEqual(contentBox.x);
@@ -257,7 +232,6 @@ describe("Gradient", () => {
   });
 
   it("paints the caller's radius on the field and its layer", () => {
-    // No `from`/`to`: the house pairing is the theme's `primary` fading out.
     const page = mount(
       <Gradient
         testId="field"
@@ -271,7 +245,7 @@ describe("Gradient", () => {
       expect(byTestId(page.renderer, "gradient-shift").style.borderRadius).toBe(
         12,
       );
-      // The default end dissolves into the surface behind the field.
+
       expect(byTestId(page.renderer, "field").style.background).toMatchObject({
         stops: [
           { color: darkTheme.colors.primary, position: 0 },

@@ -1,10 +1,3 @@
-/**
- * Browser preview for the Glyph page.
- *
- * The native wall places seeded marks on a grid and breathes their ink; the
- * preview reproduces the grid and pulses the marks' opacity on the same loop.
- */
-
 const marks = "+/*<>[]{}~";
 
 let state = (5 * 2654435761) >>> 0;

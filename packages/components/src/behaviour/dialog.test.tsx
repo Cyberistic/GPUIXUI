@@ -1,17 +1,3 @@
-/**
- * Dialog behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: a veil that dims only its parent's box instead of the
- * window; a click reaching a control behind the modal; focus staying outside the
- * dialog or failing to return to the opener; Escape or a backdrop press closing
- * the wrong overlay; Tab escaping a modal; a dialog that cannot be made
- * uninterruptible; and a surface that ignores the theme. A caller `ref` on the
- * content was discarded in favour of the internal one.
- *
- * Leaving-surface regression: the exit tween stayed hit-testable, so a press
- * aimed at the control underneath was swallowed until the surface unmounted.
- */
-
 import { describe, expect, it, vi } from "vitest";
 import type { PublicInstance } from "@gpuix/react";
 import { createRef } from "react";
@@ -41,7 +27,6 @@ import { renderComponent, type TestTheme } from "../internal/test-root.js";
 import { a11yNodes } from "../internal/a11y.js";
 import * as Option from "effect/Option";
 
-/** A destructive-confirmation-shaped dialog, with a real cancel path. */
 const Workspace = ({
   open,
   onOpenChange,
@@ -118,11 +103,6 @@ describe("Dialog", () => {
   });
 
   it("paints the default width when the size it was stored as names no variant", () => {
-    // The bug this guards: `size` is a stored choice, so the union the props
-    // declare is not a runtime guarantee. The table lookup handed `Math.min` an
-    // `undefined`, the renderer dropped the resulting `NaN` width, and the box
-    // shrank to its content — the confirmation modal became a strip the width
-    // of its own copy instead of the 480px default.
     // @ts-expect-error — a size a store wrote, not the union the props declare.
     const stored: DialogSize = "xl";
 
@@ -141,12 +121,10 @@ describe("Dialog", () => {
     const dialog = renderComponent(<Workspace onBehind={onBehind} />);
     clickCentreOf(dialog, "open");
 
-    // The trigger sits under the veil; pressing that point must reach the
-    // dialog, never the page control below it.
     clickCentreOf(dialog, "behind");
 
     expect(onBehind).not.toHaveBeenCalled();
-    // The surface plays its exit before it leaves (see `presence.test.tsx`).
+
     await waitFor(() =>
       expect(dialog.renderer.findByTestId("dialog")).toBeUndefined(),
     );
@@ -184,8 +162,6 @@ describe("Dialog", () => {
 
     dialog.renderer.simulateKeystrokes("escape");
 
-    // The surface is still mounted for its exit tween (the check above waits
-    // for it to leave); a press in that window belongs to the control under it.
     expect(dialog.renderer.findByTestId("dialog")).toBeDefined();
     clickCentreOf(dialog, "behind");
     expect(onBehind).toHaveBeenCalledTimes(1);
@@ -330,10 +306,6 @@ describe("Dialog", () => {
   });
 
   it("keeps its close control outside the body's scroller", async () => {
-    // The bug this guards: the control was painted inside the surface's own
-    // `overflow: "scroll"` box, so a body longer than the dialog carried the
-    // one visible way out off the top of the surface (measured in a window at
-    // 44 at rest and −932 at the body's clamped end).
     const LongDialog = () => (
       <div style={{ display: "flex", padding: 20 }}>
         <Dialog defaultOpen>
@@ -365,7 +337,7 @@ describe("Dialog", () => {
 
     expect(requireBounds(dialog, "dialog")).toEqual(surface);
     expect(requireBounds(dialog, "dialog-close")).toEqual(rest);
-    // The way out still works from where the reader scrolled to.
+
     clickCentreOf(dialog, "dialog-close");
     await waitFor(() =>
       expect(dialog.renderer.findByTestId("dialog")).toBeUndefined(),
@@ -375,10 +347,6 @@ describe("Dialog", () => {
   });
 
   it("returns focus to the opener when the surface auto-focused its own field", async () => {
-    // The regression: `autoFocus` runs during the surface's commit, before the
-    // effect that recorded the previous holder, so the restore target used to be
-    // the field itself — which unmounts with the surface, leaving the reader's
-    // focus nowhere. The holder is now captured in the opening render.
     const AutoFocusPage = () => (
       <div style={{ display: "flex", padding: 40 }}>
         <Dialog>
@@ -394,7 +362,7 @@ describe("Dialog", () => {
     const dialog = renderComponent(<AutoFocusPage />);
 
     clickCentreOf(dialog, "open");
-    // The field wins the focus once, as its `autoFocus` asks...
+
     expect(focusedTestId(dialog)).toEqual(Option.some("dialog"));
 
     dialog.renderer.focusElement(
@@ -403,7 +371,7 @@ describe("Dialog", () => {
     expect(focusedTestId(dialog)).toEqual(Option.some("name"));
 
     clickCentreOf(dialog, "cancel");
-    // ...and the opener gets it back, not the field that is fading away.
+
     expect(focusedTestId(dialog)).toEqual(Option.some("open"));
     await waitFor(() =>
       expect(dialog.renderer.findByTestId("dialog")).toBeUndefined(),
@@ -423,7 +391,7 @@ describe("Dialog", () => {
     );
 
     expect(ref.current?.id).toBe(dialog.renderer.findByTestId("dialog")?.id);
-    // The internal ref still focuses the surface.
+
     expect(focusedTestId(dialog)).toEqual(Option.some("dialog"));
 
     dialog.unmount();

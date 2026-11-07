@@ -1,22 +1,3 @@
-/**
- * Guards the generated geometry `svg-pattern` asserts against.
- *
- * A live run costs a window, so a mistake in the fixture would be reported as a
- * runtime defect (`expected 140 ± 4, got 200`) rather than as the stale
- * constant it is. Each case here holds one half of the probe's model:
- *
- * 1. two shapes sharing a tint, which would report one ink box around both;
- * 2. a fraction that does not match the path the markup actually strokes, so
- *    the scaling check would assert a box the renderer never painted;
- * 3. an overhang that no longer runs past the view box, which would turn the
- *    clipping check into a tautology;
- * 4. a comb path whose subpath count disagrees with the samples, so "every
- *    stroke painted" could pass on a path that lost its tail.
- *
- * `node:fs` is deliberate, as in `registry.test.ts`: the last case checks the
- * README's check count against the steps' assertion sites, which is repository
- * Markdown rather than a runtime path.
- */
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import * as Order from "effect/Order";
@@ -50,7 +31,6 @@ import {
   wideSvg,
 } from "./pattern.js";
 
-/** How many subpaths a markup's `d` attribute carries. */
 const subpaths = (markup: string): number =>
   Arr.length(Arr.fromIterable(markup.matchAll(/M /g)));
 
@@ -64,7 +44,6 @@ const scenarios = readFileSync(
   "utf8",
 );
 
-/** The probe's steps, bounded by the declaration that follows them. */
 const steps = (() => {
   const start = scenarios.indexOf("const svgPatternSteps");
   if (start === -1) return "";
@@ -76,7 +55,6 @@ const steps = (() => {
   return scenarios.slice(start, Number.isFinite(end) ? end : scenarios.length);
 })();
 
-/** The count the README prints for this probe, if any. */
 const printedCheckCount = (): number =>
   Number(/(\d+) checks, `--only svg-pattern`/.exec(readme)?.[1] ?? Number.NaN);
 
@@ -88,8 +66,6 @@ describe("the pattern fixture", () => {
   });
 
   it("writes the square its fraction is computed from", () => {
-    // (100 − 2×20) + 10 = 70 view-box units of ink, half the 10-unit stroke
-    // reaching past each of the path's edges.
     expect(squareFraction()).toBeCloseTo(0.7, 10);
     expect(squareSvg()).toContain(
       `M ${SQUARE.inset} ${SQUARE.inset} H ${TILE - SQUARE.inset} V ${TILE - SQUARE.inset}`,
@@ -114,8 +90,7 @@ describe("the pattern fixture", () => {
     expect(patternScale(WIDE.width)).toBe(3);
     expect(patternScale(TALL.width)).toBe(1);
     expect(patternScale(OVERHANG_SIZE)).toBe(2);
-    // The two boxes separate the width's scale from the height's: a stroke is
-    // 30 points in the 300-wide box and 10 in the 200-tall one.
+
     expect(strokeWeight(WIDE.stroke, WIDE.width)).toBe(30);
     expect(strokeWeight(TALL.stroke, TALL.width)).toBe(10);
     expect(wideSvg()).toContain(`M 0 ${OVERHANG.y} H ${TILE}`);
@@ -134,7 +109,7 @@ describe("the pattern fixture", () => {
           centre + COMB.stroke / 2 <= COMB.viewBox.width,
       ),
     ).toBe(true);
-    // The tail keeps the same margin as a gap: one pitch less the stroke.
+
     expect(
       COMB.viewBox.width - (combCentre(COMB.strokes - 1) + COMB.stroke / 2),
     ).toBe(COMB.pitch - COMB.stroke);
@@ -183,10 +158,6 @@ describe("the pattern fixture", () => {
   });
 
   it("prints the check count the probe actually asserts", () => {
-    // Three producers: a direct `ctx.expect*` call, `paintedBox` (which asserts
-    // the element paints before handing its box back) and `patternInk` (which
-    // asserts the shape's tint is in the frame), the last reached through the
-    // `ink` shorthand for the first-frame shapes.
     const asserted =
       Arr.length(Arr.fromIterable(steps.matchAll(/ctx\.expect[A-Za-z]+\(/g))) +
       Arr.length(Arr.fromIterable(steps.matchAll(/paintedBox\(/g))) +

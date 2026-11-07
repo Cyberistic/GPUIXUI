@@ -1,7 +1,3 @@
-/**
- * The right half of the shadcn scene: the card the code on the left describes,
- * built part by part as its lines are typed, then repainted by each builder theme.
- */
 import {
   Card,
   CardContent,
@@ -15,7 +11,7 @@ import {
   darkTheme,
   lightTheme,
   platformTheme,
-  shadcnTheme,
+  shadcnBuilderTheme,
   type Theme,
 } from "@gpuixui/tokens";
 import { ThemeProvider } from "@gpuixui/tokens/react";
@@ -32,7 +28,7 @@ const macDark = platformTheme(darkTheme, "darwin");
 const themed: ReadonlyArray<{ readonly frame: number; readonly theme: Theme }> =
   Arr.map(THEMES, ({ frame, css, mode }) => ({
     frame,
-    theme: shadcnTheme(css, mode === "dark" ? macDark : mac, mode).theme,
+    theme: shadcnBuilderTheme(css, mode === "dark" ? macDark : mac, mode).theme,
   }));
 
 const themeAt = (frame: number): Theme =>

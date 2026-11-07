@@ -9,31 +9,18 @@ import {
 } from "@/lib/shell-logic";
 import { usePlatform } from "./platform-toggle";
 
-/**
- * Browser preview for the Status bar page.
- *
- * `@gpuixui/shell`'s `StatusBar` is a GPUix host row, so the page cannot mount
- * it and this drawing is a labelled approximation. The tone rule is the
- * package's: `statusToneOf` names the status tone a bar tone stands for and
- * `toneForeground` paints the readable role that tone wears, so an item never
- * mixes a readable colour by hand. Only the paint is the browser's.
- */
-
-/** One item in a status bar group. */
 export interface StatusBarItem {
   readonly id: string;
   readonly label: string;
-  /** The item's colour tone; `default` keeps the bar's foreground. */
+
   readonly tone?: StatusBarTone;
 }
 
-/** The tones a reader can give an item, the bar's own first. */
 export const STATUS_BAR_TONES: ReadonlyArray<StatusBarTone> = [
   "default",
   ...statusTones,
 ];
 
-/** The items the drawing opens with, left and right. */
 export const STATUS_BAR_LEFT: ReadonlyArray<StatusBarItem> = [
   { id: "branch", label: "main" },
   { id: "position", label: "Ln 12, Col 4" },
@@ -48,14 +35,12 @@ export const STATUS_BAR_RIGHT: ReadonlyArray<StatusBarItem> = [
   { id: "errors", label: "3 errors", tone: "destructive" },
 ];
 
-/** The role a tone's text paints in, for the readout. */
 export const toneRole = (tone: StatusBarTone): string =>
   Option.match(statusToneOf(tone), {
     onNone: () => "the bar's own foreground",
     onSome: (named) => `the ${named} tone's readable role`,
   });
 
-/** The drawing itself: the two groups, their separators and their items. */
 export interface StatusBarFrameProps {
   readonly theme: Theme;
   readonly label: string;
@@ -64,7 +49,6 @@ export interface StatusBarFrameProps {
   readonly right: ReadonlyArray<StatusBarItem>;
 }
 
-/** The bar, its groups and its items. */
 export function StatusBarFrame({
   theme,
   label,
@@ -100,7 +84,6 @@ export function StatusBarFrame({
   );
 }
 
-/** The page's preview: the bar and the tone its right-hand item wears. */
 export function StatusBarDemo() {
   const { theme } = usePlatform();
   const [tone, setTone] = useState<StatusBarTone>("destructive");
@@ -112,8 +95,7 @@ export function StatusBarDemo() {
 
   return (
     <div className="gx-shell-demo gx-status-demo">
-      {/* The tone is the demo's control, so it sits above the strip the way a
-          toolbar sits above a status bar — never inside it. */}
+      {}
       <div aria-label="Item tone" className="gx-tgroup" role="group">
         {STATUS_BAR_TONES.map((candidate) => (
           <button

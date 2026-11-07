@@ -13,33 +13,16 @@ import {
   type WorkspacePackage,
 } from "./public-symbols.ts";
 
-/**
- * The workspace's public symbols, read from the source behind the manifests.
- *
- * The reference page has to answer "what does `@gpuixui/tokens` give me", and
- * the answer is in the source: the `exports` map says which module a consumer
- * may import, the module says which names it carries. This module reads both
- * and hands the page one index.
- *
- * Node-only, and deliberately so: this runs inside the Vite plugin, once, at
- * build time, over a fixed set of files. The page receives the result as data
- * (`public-symbols-data.ts`) and never imports this module, so the browser
- * bundle carries neither the reader nor a filesystem call.
- */
-
-/** The repository root, from this file's location. */
 export const repoRoot = fileURLToPath(
   new URL("../../../../", import.meta.url),
 ).replace(/\/$/, "");
 
-/** True when the value is a plain object of unknown contents. */
 const isRecord = (value: unknown): value is Readonly<Record<string, unknown>> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
-/** The packages that publish something, with their manifest entry points. */
 interface WorkspaceEntry {
   readonly pkg: WorkspacePackage;
-  /** The entry points the manifest declares. */
+
   readonly entries: ReadonlyArray<{
     readonly specifier: string;
     readonly target: string;
@@ -47,12 +30,6 @@ interface WorkspaceEntry {
   }>;
 }
 
-/**
- * The packages that publish an entry point.
- *
- * A package with no source entry point — the shared config, the deploy worker
- * — publishes nothing to index.
- */
 export const readWorkspace = (root: string): ReadonlyArray<WorkspaceEntry> => {
   const packagesDir = join(root, "packages");
   if (!existsSync(packagesDir)) return [];
@@ -85,13 +62,6 @@ export const readWorkspace = (root: string): ReadonlyArray<WorkspaceEntry> => {
     });
 };
 
-/**
- * The source file a manifest target names.
- *
- * A package that ships a build publishes `dist/`; the source behind it is
- * `src/`, and the index reads the source so the symbols carry their doc
- * comments.
- */
 const sourceOf = (
   root: string,
   pkgDir: string,
@@ -110,7 +80,6 @@ const sourceOf = (
     .find((candidate) => existsSync(candidate));
 };
 
-/** The files a pattern entry such as `./src/*.tsx` publishes. */
 const patternFiles = (
   root: string,
   pkgDir: string,
@@ -124,13 +93,6 @@ const patternFiles = (
     .map((name) => join(absolute, name));
 };
 
-/* -- the scanner ---------------------------------------------------------- */
-
-/**
- * The end of a quoted string, the closing quote included.
- *
- * A backslash escapes the next character, so `\"` does not end the string.
- */
 const skipQuoted = (source: string, index: number, quote: string): number => {
   let cursor = index + 1;
   while (cursor < source.length) {
@@ -145,7 +107,6 @@ const skipQuoted = (source: string, index: number, quote: string): number => {
   return source.length;
 };
 
-/** The end of a `${…}` substitution, the closing brace included. */
 const skipSubstitution = (source: string, index: number): number => {
   let cursor = index;
   let depth = 1;
@@ -174,7 +135,6 @@ const skipSubstitution = (source: string, index: number): number => {
   return cursor;
 };
 
-/** The end of a template literal, the closing backtick included. */
 const skipTemplate = (source: string, index: number): number => {
   let cursor = index + 1;
   while (cursor < source.length) {
@@ -193,15 +153,12 @@ const skipTemplate = (source: string, index: number): number => {
   return source.length;
 };
 
-/** One export statement, with the doc comment above it. */
 interface ScannedExport {
-  /** The statement's code. */
   readonly text: string;
-  /** The doc comment above it, empty when there is none. */
+
   readonly doc: string;
 }
 
-/** True when only whitespace separates `index` from the start of its line. */
 const atLineStart = (source: string, index: number): boolean => {
   let cursor = index - 1;
   while (cursor >= 0) {
@@ -213,18 +170,25 @@ const atLineStart = (source: string, index: number): boolean => {
   return true;
 };
 
-/**
- * A regular-expression literal, and where it ends.
- *
- * The scanner reads the source the way the compiler does, and a **regex
- * literal** is a fifth thing beside code, comments, strings and templates. Its
- * brackets are pattern syntax, not code: `[^)]` holds a closing parenthesis
- * that never closes anything, and `\(` holds an opening one.
- *
- * A regex is told from a division by what precedes it — a regex may follow
- * `(`, `=`, `,`, `:`, `return` or an operator, and a division may not — so the
- * scan looks back at the last code character.
- */
+const REGEX_KEYWORDS = new Set([
+  "await",
+  "case",
+  "delete",
+  "do",
+  "else",
+  "in",
+  "instanceof",
+  "new",
+  "of",
+  "return",
+  "typeof",
+  "void",
+  "yield",
+]);
+
+const isWordChar = (char: string | undefined): boolean =>
+  char !== undefined && /[A-Za-z0-9_$]/.test(char);
+
 const isRegexStart = (source: string, index: number): boolean => {
   let cursor = index - 1;
   while (cursor >= 0) {
@@ -239,23 +203,20 @@ const isRegexStart = (source: string, index: number): boolean => {
       cursor -= 1;
       continue;
     }
-    // A slash after something that can **end an expression** is a division:
-    // `a / b`, `(x + 1) / 2`, `foo() / bar`. A regex cannot follow one.
-    if (/[A-Za-z0-9_$)\]}]/.test(char)) return false;
-    // A **closing tag** — `</div>` — is not a regex: the `<` before the
-    // slash opens a tag, and the slash begins its name.
+
+    if (isWordChar(char)) {
+      let start = cursor;
+      while (isWordChar(source[start - 1])) start -= 1;
+      return REGEX_KEYWORDS.has(source.slice(start, cursor + 1));
+    }
+    if (/[)\]}]/.test(char)) return false;
+
     if (char === "<" || char === ">") return false;
     return true;
   }
   return true;
 };
 
-/**
- * The end of a regular-expression literal that starts at `index`.
- *
- * The literal ends at a slash that is not escaped and is not inside a
- * character class. A **flag** may follow it.
- */
 const skipRegex = (source: string, index: number): number => {
   let cursor = index + 1;
   let inClass = false;
@@ -287,29 +248,15 @@ const skipRegex = (source: string, index: number): number => {
   return source.length;
 };
 
-/**
- * Whether the `<` at `index` opens a **JSX element**.
- *
- * A `<` is a tag when a name, a `/` or a `>` follows it. It is **not** a
- * tag when it is a comparison — `a < b` — and not when it is a **generic
- * type argument list** — `Partial<TextStyle>` — whose `<` follows a type
- * name.
- *
- * The two are told apart by the code **before** the `<`: a generic follows
- * the type it belongs to, so the `<` sits right after an identifier, while a
- * tag follows an operator, a bracket or a keyword: `(`, `=`, `,`, `return`.
- */
 const isJsxStart = (source: string, index: number): boolean => {
   const next = source[index + 1];
   if (next === undefined) return false;
-  // A closing tag — `</div>` — or an opening one.
+
   if (next === "/") return true;
-  // A fragment — `<>`.
+
   if (next === ">") return true;
   if (!/[A-Za-z_$]/.test(next)) return false;
-  // A **generic type argument list** — `Partial<TextStyle>` — follows a type
-  // name, so the `<` sits right after an identifier or a `>`. A tag's `<`
-  // follows an operator, a bracket or a keyword: `(`, `=`, `,`, `return`, `?`.
+
   let before = index - 1;
   while (before >= 0) {
     const char = source[before];
@@ -326,30 +273,17 @@ const isJsxStart = (source: string, index: number): boolean => {
     if (/[A-Za-z0-9_$>]/.test(char)) return false;
     break;
   }
-  // A tag's own `>` is found by reading the tag: an attribute may hold an
-  // expression, and that expression's `>` is not the tag's end. So the scan
-  // reads the tag's strings and expressions, and stops at the tag's `>`.
+
   const close = tagEnd(source, index);
   if (close === -1) return false;
   const after = source.slice(close + 1).match(/^\s*(.)/)?.[1];
-  // A generic's `>` is followed by the generic's **use**: its parameter list
-  // (`(`). A type's `>` is followed by the type's use: a `;`, a `,` or a `)`.
-  // A tag's `>` is followed by the tag's body, which often opens with the
-  // next sibling's `<` — so a `<` after the `>` says nothing.
+
   if (after === "(") return false;
   if (after !== undefined && ";,)=".includes(after)) return false;
   if (after === undefined) return false;
   return true;
 };
 
-/**
- * The `>` that ends the tag at `index`.
- *
- * The tag's attributes may hold an expression — `style={{ width: 1 }}` — and
- * that expression's own `>` is not the tag's end. So the scan reads the
- * tag's **strings** and **expressions** as it goes, and stops at the `>` that
- * is the tag's own.
- */
 const tagEnd = (source: string, index: number): number => {
   let cursor = index + 1;
   while (cursor < source.length) {
@@ -382,49 +316,28 @@ const tagEnd = (source: string, index: number): number => {
   return -1;
 };
 
-/**
- * The end of a **JSX element** that starts at `index`.
- *
- * JSX is the fifth thing beside code, comments, strings and templates, and
- * it is the one that changes the shape of a statement: a tag's `{}` is an
- * **expression**, not a block, and a tag's text may hold a `<` or a `{` that
- * means nothing to the grammar. The scanner read those braces as blocks, so
- * a component that returned JSX ended its export at the first `}` inside a
- * tag — and every export after it was lost.
- *
- * So the scanner skips a JSX element whole. A tag ends at its own `>`; a
- * nested tag is skipped in turn; an expression inside a tag is skipped as
- * **code**, braces and all, so its own `}` cannot end anything.
- */
 const skipJsx = (source: string, index: number): number => {
   let cursor = index;
-  // The tags this element holds, so a nested element's close does not end
-  // the outer one.
+
   const open: string[] = [];
   while (cursor < source.length) {
     const char = source[cursor];
     if (char === "{") {
-      // An expression in a tag: its braces are balanced, so skip to its close.
       cursor = skipBalanced(source, cursor);
       continue;
     }
     if (char === "<") {
-      // A nested tag, or the close of one. The tag's own `>` is found by
-      // scanning it: an attribute may hold an expression, and that
-      // expression's own `>` is not the tag's end.
       const close = tagEnd(source, cursor);
       if (close === -1) return source.length;
       const body = source.slice(cursor + 1, close);
       const name = /^\/?([A-Za-z_$][\w.$]*)/.exec(body)?.[1];
       if (body.startsWith("/")) {
-        // A closing tag: it closes the last tag this element opened.
         open.pop();
         cursor = close + 1;
         if (open.length === 0) return cursor;
         continue;
       }
       if (body.trimEnd().endsWith("/")) {
-        // A self-closing tag: it opens and closes at once.
         cursor = close + 1;
         if (open.length === 0) return cursor;
         continue;
@@ -438,12 +351,6 @@ const skipJsx = (source: string, index: number): number => {
   return source.length;
 };
 
-/**
- * The end of the balanced group that starts at `index`.
- *
- * The group is delimited by braces, brackets or parentheses, and a string or
- * a template inside it holds its own delimiters.
- */
 const skipBalanced = (source: string, index: number): number => {
   const open = source[index];
   const close =
@@ -481,12 +388,6 @@ const skipBalanced = (source: string, index: number): number => {
   return source.length;
 };
 
-/**
- * The code that follows `index`, with whitespace and comments skipped.
- *
- * A statement that closes a brace may still carry a `from` clause or another
- * declarator, so the scanner looks at what comes next before it stops.
- */
 const nextCode = (source: string, index: number): string => {
   let cursor = index;
   while (cursor < source.length) {
@@ -510,28 +411,13 @@ const nextCode = (source: string, index: number): string => {
   return "";
 };
 
-/**
- * The export statements of a module.
- *
- * A scanner, not a regular expression: an `export` inside a comment, a string
- * or a template literal is not an export, and a statement can span lines. The
- * scanner walks the source the way the compiler does — code, comments, strings
- * and templates are four different things — and hands back each statement with
- * the doc comment that describes it.
- */
 export const scanExports = (source: string): ReadonlyArray<ScannedExport> => {
   const found: ScannedExport[] = [];
   let index = 0;
   let start = -1;
   let doc = "";
   let pendingDoc = "";
-  /**
-   * How many brackets the current statement holds open.
-   *
-   * A statement ends when its own brackets are all closed, so the count is
-   * what tells a `;` that ends the statement from a `;` that sits inside a
-   * parameter list, an array or an object literal.
-   */
+
   let open = 0;
 
   while (index < source.length) {
@@ -564,10 +450,6 @@ export const scanExports = (source: string): ReadonlyArray<ScannedExport> => {
       continue;
     }
 
-    // A **JSX element** is code, but its braces are expressions and its text
-    // is not grammar. The scanner skips it whole, so a component that returns
-    // JSX ends its export at the end of the element and not at the first `}`
-    // inside a tag.
     if (char === "<") {
       const isJsx = isJsxStart(source, index);
       if (isJsx) {
@@ -576,18 +458,11 @@ export const scanExports = (source: string): ReadonlyArray<ScannedExport> => {
       }
     }
 
-    // A regex literal is code, but its brackets are pattern syntax: the
-    // scanner must not count them, or a character class holding a bracket
-    // leaves the depth off and swallows the rest of the module.
     if (char === "/" && isRegexStart(source, index)) {
       index = skipRegex(source, index);
       continue;
     }
 
-    // Every bracket counts, not only the braces: a parameter list's `(` and
-    // an array's `[` hold the braces they open. A scanner that counted only
-    // the braces closed a destructured parameter's list at the pattern's
-    // brace, and every export after it was lost with it.
     if (char === "(" || char === "[" || char === "{") open += 1;
     if (char === ")" || char === "]" || char === "}") open -= 1;
     if (start < 0) {
@@ -605,9 +480,6 @@ export const scanExports = (source: string): ReadonlyArray<ScannedExport> => {
       continue;
     }
 
-    // The statement ends at a `;` when no bracket is open, and at the `}`
-    // that closes the declaration's own body when the body is the only
-    // bracket left open.
     const endsAtSemicolon = char === ";" && open === 0;
     const endsAtBrace = char === "}" && open === 0;
     if (!endsAtSemicolon && !endsAtBrace) {
@@ -615,8 +487,6 @@ export const scanExports = (source: string): ReadonlyArray<ScannedExport> => {
       continue;
     }
 
-    // `export { a } from "./x.js"` and `export const a = { … }, b = 2`
-    // continue past the brace that closed their list.
     const after = nextCode(source, index + 1);
     if (endsAtBrace && (after.startsWith(",") || /^from\s/.test(after))) {
       index += 1;
@@ -633,19 +503,14 @@ export const scanExports = (source: string): ReadonlyArray<ScannedExport> => {
   return found;
 };
 
-/* -- the statement reader ------------------------------------------------- */
-
-/** One name an export statement publishes. */
 interface NamedExport {
-  /** The name a consumer imports. */
   readonly exported: string;
-  /** The name in the source module, when it is a re-export. */
+
   readonly local: string;
-  /** True when the statement marks the name as a type. */
+
   readonly typeOnly: boolean;
 }
 
-/** A parsed export statement. */
 type ParsedExport =
   | { readonly type: "star"; readonly module: string }
   | {
@@ -666,7 +531,6 @@ type ParsedExport =
       }>;
     };
 
-/** The name a declaration publishes, with the kind it carries. */
 const declarationKind = (
   name: string,
   initializer: string,
@@ -683,7 +547,6 @@ const declarationKind = (
   return isComponentName(name) ? "component" : "function";
 };
 
-/** The first `=` of a declaration that assigns, not one that compares. */
 const assignmentOf = (text: string): number => {
   for (let index = 0; index < text.length; index += 1) {
     const char = text[index];
@@ -705,24 +568,6 @@ const assignmentOf = (text: string): number => {
   return -1;
 };
 
-/**
- * The declarators of a `const`, `let` or `var` statement.
- *
- * The split is on the commas **between** declarators, and a declarator's own
- * name comes before its `=`. So the scan stops at the first top-level `=`: a
- * comma after it belongs to the **initialiser**, not to another declarator.
- *
- * That matters because an initialiser is often a component's **JSX**, and the
- * scanner is not a JSX parser: a `<div>` raises the angle counter and a
- * `</div>` lowers it, but the text between them — a list of props, or a
- * child's own comma — is read as code. A comma in a JSX body therefore
- * reached the split and cut the declaration in half, and the export's name
- * was lost with it.
- *
- * A `const` whose initialiser is a plain expression is unaffected: the `=` is
- * still the first top-level one, and the declarators before it are the ones
- * the statement publishes.
- */
 const declarators = (text: string): ReadonlyArray<string> => {
   const body = text.replace(/^export\s+(?:const|let|var)\s+/, "");
   const parts: string[] = [];
@@ -737,8 +582,7 @@ const declarators = (text: string): ReadonlyArray<string> => {
     else if (char === ">" && next !== "=" && angle > 0) angle -= 1;
     else if (char === "(" || char === "[" || char === "{") depth += 1;
     else if (char === ")" || char === "]" || char === "}") depth -= 1;
-    // The **first** top-level `=` ends the declarator's name; after it the
-    // text is the initialiser, and a comma there is the initialiser's.
+
     if (char === "=" && next !== "=" && depth === 0 && angle === 0) {
       assigned = true;
     }
@@ -753,7 +597,6 @@ const declarators = (text: string): ReadonlyArray<string> => {
   return parts.map((part) => part.trim()).filter((part) => part !== "");
 };
 
-/** The names a `const`, `let` or `var` statement publishes. */
 const variableNames = (text: string): ParsedExport => {
   const names = declarators(text).flatMap((declarator) => {
     const name = /^([A-Za-z_$][\w$]*)/.exec(declarator)?.[1];
@@ -772,7 +615,6 @@ const variableNames = (text: string): ParsedExport => {
   return { type: "declaration", names };
 };
 
-/** The names an `export { … }` list publishes. */
 const namedExports = (list: string): ReadonlyArray<NamedExport> =>
   list
     .split(",")
@@ -787,7 +629,6 @@ const namedExports = (list: string): ReadonlyArray<NamedExport> =>
       return { exported, local, typeOnly };
     });
 
-/** The statement's shape. */
 export const parseExport = (raw: string): ParsedExport | undefined => {
   const text = raw.replace(/;\s*$/, "");
   const namespace =
@@ -884,7 +725,6 @@ export const parseExport = (raw: string): ParsedExport | undefined => {
   return undefined;
 };
 
-/** The first sentence of a doc comment, as one line of prose. */
 const summaryOf = (doc: string): string => {
   const text = doc
     .replace(/^\s*\*\s?/gm, " ")
@@ -895,14 +735,6 @@ const summaryOf = (doc: string): string => {
   return end === -1 ? text : text.slice(0, end + 1);
 };
 
-/* -- the reader ----------------------------------------------------------- */
-
-/**
- * Reads a workspace's public symbols.
- *
- * The reader memoises every module it parses, so a package root that
- * re-exports forty modules costs forty parses, not forty per entry point.
- */
 export const createSymbolReader = (root: string) => {
   const sources = new Map<string, string | undefined>();
   const exports = new Map<string, ReadonlyArray<PublicSymbol>>();
@@ -918,7 +750,6 @@ export const createSymbolReader = (root: string) => {
     return source;
   };
 
-  /** The module a specifier names, when it is inside the workspace. */
   const resolve = (from: string, specifier: string): string | undefined => {
     const containing = join(root, from);
     const candidates = specifier.startsWith(".")
@@ -1009,12 +840,6 @@ export const createSymbolReader = (root: string) => {
   return { symbolsOf };
 };
 
-/**
- * The files a relative specifier names.
- *
- * The packages write `./x.js` for a TypeScript module, so the `.js` is
- * rewritten and the directory form is tried as well.
- */
 const relativeCandidates = (
   root: string,
   from: string,
@@ -1030,12 +855,6 @@ const relativeCandidates = (
   ].map((candidate) => candidate.replace(`${root}/`, ""));
 };
 
-/**
- * The files a workspace specifier names.
- *
- * `@gpuixui/tokens` is the package's root entry and `@gpuixui/tokens/react`
- * one of its subpaths; the manifest decides which file each one is.
- */
 const workspaceCandidates = (
   root: string,
   specifier: string,
@@ -1066,13 +885,6 @@ const workspaceCandidates = (
   );
 };
 
-/**
- * The published modules of the workspace.
- *
- * Every published module is one entry point: a pattern such as `./src/*.tsx`
- * publishes one specifier per file, and each of those files is read for the
- * symbols it carries.
- */
 export const readPublishedModules = (
   root: string,
 ): ReadonlyArray<PublishedModule> => {
@@ -1109,7 +921,6 @@ export const readPublishedModules = (
   );
 };
 
-/** The index the reference page renders. */
 export const buildWorkspaceSymbolIndex = (root: string): PublicSymbolIndex =>
   buildSymbolIndex(
     readWorkspace(root).map(({ pkg }) => pkg),

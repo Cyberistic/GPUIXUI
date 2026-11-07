@@ -1,15 +1,3 @@
-/**
- * The live host: `AsyncSmokeHost` over a real window's automation API.
- *
- * A window is driven through `@gpuix/native/automation`, whose calls are
- * promises. Every verb is lifted with `Effect.tryPromise` and named, so a
- * protocol failure reads as `click save: ...` instead of as a missing element.
- *
- * Focus and paint come from the **renderer** the runner created
- * (`getFocusedElementId`, `getAutomationTree`) rather than from the protocol:
- * the protocol addresses elements, but only the renderer knows which one the
- * window focused and how it is named in the tree.
- */
 import { Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -19,7 +7,6 @@ import type { App } from "@gpuix/native/automation";
 import { Pixels, Smoke } from "@gpuixui/testing";
 import { testIdOf, type LiveNode } from "./tree.js";
 
-/** The renderer surface a live host reads; nothing else is needed. */
 export type LiveRenderer = Pick<
   GpuixRenderer,
   | "getFocusedElementId"
@@ -38,34 +25,27 @@ export type LiveRenderer = Pick<
   | "activateWindow"
 >;
 
-/**
- * The renderer surface that installs a font file, unnamed so a fake can stand in
- * for a real renderer in a unit test.
- */
 export type LiveFontRegistrar = Pick<GpuixRenderer, "registerFont">;
 
-/** What the host needs from the runner. */
 export interface LiveHostOptions {
   readonly app: App;
   readonly renderer: LiveRenderer;
-  /** Resolves a capture name into an absolute path inside the run's artifacts. */
+
   readonly capturePath: (name: string) => string;
-  /** Reads a capture's PNG bytes; the runner owns the filesystem effect. */
+
   readonly readCapture: (
     name: string,
   ) => Effect.Effect<Uint8Array, Smoke.SmokeHostError>;
-  /** Inflates a PNG's compressed data; the runner injects the platform's zlib. */
+
   readonly inflate: (bytes: Uint8Array) => Uint8Array;
 }
 
-/** Lifts a protocol call, keeping the cause for the verb that names it. */
 const raw = <A>(run: () => Promise<A>): Effect.Effect<A, unknown> =>
   Effect.tryPromise({ try: run, catch: (cause) => cause });
 
 const sync = <A>(run: () => A): Effect.Effect<A, unknown> =>
   Effect.try({ try: run, catch: (cause) => cause });
 
-/** Names a failure by the verb that broke. */
 const named = <A>(
   verb: string,
   effect: Effect.Effect<A, unknown>,
@@ -77,11 +57,9 @@ const call = <A>(
   run: () => Promise<A>,
 ): Effect.Effect<A, Smoke.SmokeHostError> => named(verb, raw(run));
 
-/** The protocol's "exists but never painted" answer; every other failure is real. */
 const isUnpainted = (cause: unknown): boolean =>
   cause instanceof AutomationError && cause.code === "NotFound";
 
-/** The tree the automation protocol reports, or `None` before the first frame. */
 const treeOf = (
   app: App,
 ): Effect.Effect<Option.Option<LiveNode>, Smoke.SmokeHostError> =>
@@ -89,12 +67,6 @@ const treeOf = (
     Effect.map((result) => Option.fromNullishOr(result.tree)),
   );
 
-/**
- * Installs a font file in a renderer, after the first paint.
- *
- * The renderer takes a Node `Buffer`; a probe names bytes, so the conversion
- * lives here at the platform boundary and the probe stays platform-free.
- */
 export const fontInstaller =
   (registrar: LiveFontRegistrar): Smoke.AsyncSmokeHost["registerFont"] =>
   (bytes) =>
@@ -103,10 +75,6 @@ export const fontInstaller =
       sync(() => registrar.registerFont(Buffer.from(bytes))),
     );
 
-/**
- * The locator surface a cursor press needs, named so a fake can stand in for
- * the automation protocol in a unit test.
- */
 export interface PressableLocator {
   readonly click: (options: {
     readonly button?: number;
@@ -114,57 +82,24 @@ export interface PressableLocator {
   }) => Promise<void>;
 }
 
-/**
- * The locator surface a text press needs: the protocol resolves the words to
- * the element that paints them, and the press carries no options of its own.
- */
 export interface TextLocator {
   readonly getByText: (text: string) => {
     readonly click: () => Promise<void>;
   };
 }
 
-/**
- * Presses the element whose painted words are `text`.
- *
- * A part a shipped component renders itself carries no `testId` to address:
- * `DockLayout`'s tab triggers are the labels they paint. The text is the whole
- * contract, so it passes through unchanged — a probe that trimmed or lowercased
- * it would press a phrase the window never painted, or the wrong one when two
- * labels differ only in case.
- */
 export const textPress = (app: TextLocator, text: string): Promise<void> =>
   app.getByText(text).click();
 
-/**
- * Presses a locator's element with the right button.
- *
- * The button number is the whole contract: a primary press (0) fires `onClick`
- * and never `onAuxClick`, so a context menu would silently never open — the
- * failure mode this verb exists to make measurable.
- */
 export const rightPress = (locator: PressableLocator): Promise<void> =>
   locator.click({ button: 2 });
 
-/**
- * Presses a locator's element while holding `modifiers`.
- *
- * The chord is the whole contract: a press that drops `shift` still selects a
- * row, so a probe comparing only the selection would read a range it never
- * asked for. `formatModifiers` is the protocol's one spelling.
- */
 export const modifiedPress = (
   locator: PressableLocator,
   modifiers: ReadonlyArray<Smoke.PointerModifier>,
 ): Promise<void> =>
   locator.click({ modifiers: Smoke.formatModifiers(modifiers) });
 
-/**
- * Reads the renderer's `[itemIndex, offsetInItem, viewportHeight]` anchor.
- *
- * A tuple is a positional shape, so a short one is not an anchor: returning
- * `null` keeps a probe from asserting an index the runtime never reported.
- */
 export const listAnchorOf = (
   anchor: ReadonlyArray<number> | null,
 ): Smoke.ListAnchor | null =>
@@ -188,14 +123,6 @@ export const listAnchorOf = (
       ),
   });
 
-/**
- * A window size read back from the renderer, or `None` when it cannot lay out.
- *
- * `getWindowSize` used to answer a hardcoded 800x600, so the number is a
- * boundary rather than a fact: a zero, negative or non-finite dimension is not
- * a window a probe can assert a layout against, and reporting it as missing is
- * better than measuring against a size the renderer never laid out.
- */
 export const windowSizeOf = (
   raw: Option.Option<{ readonly width: number; readonly height: number }>,
 ): Option.Option<Smoke.Size> =>
@@ -211,7 +138,6 @@ export const windowSizeOf = (
     (size) => ({ width: size.width, height: size.height }),
   );
 
-/** An `AsyncSmokeHost` over a connected window. */
 export const createLiveHost = ({
   app,
   renderer,
@@ -236,12 +162,7 @@ export const createLiveHost = ({
         );
         return bounds;
       }),
-    /**
-     * The renderer's own paintable size. A probe compares it with the app's
-     * `useWindowSize()` readout and with the box a flexible pane paints, so a
-     * hardcoded answer from the binding fails the layout check instead of
-     * passing as a plausible number.
-     */
+
     windowSize: () =>
       Effect.gen(function* () {
         const raw = yield* named(
@@ -299,24 +220,16 @@ export const createLiveHost = ({
       Effect.gen(function* () {
         const box = yield* call(`clickAt ${testId}`, () => at(testId).bounds());
         const point = { x: box.x + offset.x, y: box.y + offset.y };
-        // A reader moves the pointer onto a part and then presses it, and the
-        // move is what gives the renderer a hit test at that point: a click
-        // delivered without one lands on whatever the last move hovered
-        // (`file-tree-lifecycle` measured a row miss after a scroll).
+
         yield* call(`clickAt ${testId}`, () => app.mouse.move(point));
         yield* call(`clickAt ${testId}`, () => app.mouse.click(point));
       }),
     drag: (testId, deltaX, deltaY, options) =>
       call(`drag ${testId}`, () => at(testId).dragBy(deltaX, deltaY, options)),
-    /**
-     * The protocol's locator aims one wheel event at the element's painted
-     * centre, which is the hit-tested path a pointer takes. `app.call` would
-     * need window coordinates the probe does not know; the locator resolves
-     * them from the last frame.
-     */
+
     wheel: (testId, deltaX, deltaY) =>
       call(`wheel ${testId}`, () => at(testId).wheel(deltaX, deltaY)),
-    /** The renderer's scroll pair for the element the locator names, or `null`. */
+
     scrollOffset: (testId) =>
       Effect.gen(function* () {
         const node = yield* call(`scrollOffset ${testId}`, () =>
@@ -355,12 +268,7 @@ export const createLiveHost = ({
       call(`key ${keystroke}`, () =>
         app.call("keystrokes", { keys: keystroke }),
       ),
-    /**
-     * A key down with the platform's repeat flag, through the protocol's own
-     * `keyDown` command. Aimed at the focused element (`elementId` 0), so a
-     * probe focuses the control it measures first — the same path a held key
-     * takes when the OS repeats it.
-     */
+
     keyDown: (keystroke, isHeld) =>
       call(`keyDown ${keystroke} held=${isHeld}`, () =>
         app.call("keyDown", { key: keystroke, isHeld }),

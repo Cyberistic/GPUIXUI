@@ -1,34 +1,3 @@
-/**
- * Guards the elevation scale fixed in plan 018: the runtime's `BoxShadow` has
- * five fields and the scale is designed as one shadow per level. The old tokens
- * shipped a level that could hold several shadows and an `inset` field the
- * runtime ignored, so part of a design silently did not paint. 0.11.0 accepts a
- * shadow list, but the scale still ships one entry by design, and the test keeps
- * it that way plus the exact five runtime fields.
- *
- * The tint is the other half: a level used to carry a literal colour, so a brand
- * that retinted `shadow` kept the library's grey shadows. A level is now its
- * geometry plus a share of the role, and `extendTheme` restates the inherited
- * levels when the role moves. The `shadow role` and `brand retint` suites fail
- * if a literal returns or an override stops following the role.
- *
- * A **stored** scale is the case the retint was not written for, and the suite's
- * last one. A theme restored from storage may have lost the whole scale, one
- * level, or carry a level a JSON store wrote as `null` — absences every report
- * already names and every paint seam already answers — and `extendTheme` read the
- * scale by level, so a brand retinting `colors.shadow` over such a theme threw
- * `Cannot read properties of undefined (reading 'sm')` (the absent scale),
- * `(reading 'map')` (an absent or null level) or
- * `elevation[name].map is not a function` (a level written as a number). Worse,
- * an entry whose colour the seam cannot measure — an `oklch()` a design tool
- * exported, one that states no colour at all — read as a **full** share, so the
- * retint painted it in the tint at full opacity and `invalidShadowColors` stopped
- * naming it: an opaque halo where the store asked for nothing, and a report
- * erased by the very step that was meant to keep the geometry. `a scale a store
- * wrote` holds both halves: the retint is total, and it restates only a colour it
- * can measure.
- */
-
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
@@ -61,7 +30,6 @@ import {
   type Theme,
 } from "./theme.js";
 
-/** The five fields the installed runtime's `BoxShadow` has, and nothing else. */
 const runtimeFields = [
   "blurRadius",
   "color",
@@ -119,8 +87,6 @@ describe("elevation levels", () => {
   });
 
   it("lists the levels in the order a theme declares them", () => {
-    // The index is what `scales.ts` walks to compare the elevation ladder, so it
-    // has to be the order the catalogue prints and the shipped themes write.
     expect(elevationLevels).toEqual(Object.keys(lightElevation));
     expect(elevationLevels).toEqual(Object.keys(highContrastDarkElevation));
   });
@@ -154,18 +120,13 @@ describe("elevationShadow", () => {
   });
 
   it("reads a level this release does not ship as the default lift", () => {
-    // The cast is the storage boundary: a saved workspace or a panel layout
-    // raises a surface with the level it stored, and a release that renames or
-    // drops a level hands the paint a name the union no longer carries.
     const stored = "xl" as ElevationLevel;
 
     expect(elevationShadow(lightTheme, stored)).toBe(
       lightTheme.elevation.md[0],
     );
     expect(elevationShadow(darkTheme, stored)).toBe(darkTheme.elevation.md[0]);
-    // A level this release *ships* keeps its own answer: `overlay` is a name,
-    // not an absence, and a theme that lost `md` stays absent rather than
-    // inventing a shadow the store never carried.
+
     expect(elevationShadow(lightTheme, "overlay")).toBeUndefined();
     expect(elevationShadow({ elevation: {} }, stored)).toBeUndefined();
   });
@@ -177,7 +138,6 @@ describe("elevationShadow", () => {
   });
 });
 
-/** The share each shipped level paints of its theme's `shadow` role. */
 const strengths = {
   light: { sm: 0.08, md: 0.12, lg: 0.16 },
   dark: { sm: 0.4, md: 0.65, lg: 0.8 },
@@ -220,11 +180,6 @@ describe("shadow role", () => {
   });
 
   it("gives every shipped theme a scale in its own shadow role", () => {
-    // The claim the catalogue makes — a level is a geometry plus a share of the
-    // `shadow` role — has to hold for the themes the library ships, not only
-    // for the palettes the tables came from: a high-contrast theme that kept
-    // the ordinary palette's grey shadow would paint a shadow its own role does
-    // not describe.
     const themes = [
       ["light", lightTheme, strengths.light],
       ["dark", darkTheme, strengths.dark],
@@ -247,8 +202,6 @@ describe("shadow role", () => {
   });
 
   it("keeps the shipped shadow look", () => {
-    // The role is the source of truth now; this pins the values it produces, so
-    // a palette edit that changes a shadow is a deliberate change with a diff.
     expect(lightElevation.sm[0]?.color).toBe("#191D2514");
     expect(lightElevation.md[0]?.color).toBe("#191D251F");
     expect(lightElevation.lg[0]?.color).toBe("#191D2529");
@@ -342,11 +295,9 @@ describe("brand retint", () => {
 describe("a scale a store wrote", () => {
   const tint = "#0B1220";
 
-  /** A theme as storage hands it back: the type says complete, the value is not. */
   const stored = (elevation: unknown): Theme =>
     ({ ...lightTheme, elevation }) as Theme;
 
-  /** One level of a scale the retint answered, or nothing when it carries none. */
   const levelOf = (
     source: ReturnType<typeof elevationWithTint>,
     level: (typeof levels)[number],
@@ -358,7 +309,7 @@ describe("a scale a store wrote", () => {
 
     expect(rgb(brand.elevation.sm[0]?.color ?? "")).toBe(tint);
     expect(rgb(brand.elevation.md[0]?.color ?? "")).toBe(tint);
-    // The lost level stays lost: the report still names it, and nothing paints.
+
     expect(brand.elevation.lg).toBeUndefined();
     expect(invalidShadowColors(brand)).toEqual([
       { level: "lg", index: 0, color: undefined },
@@ -386,16 +337,12 @@ describe("a scale a store wrote", () => {
       expect(invalidShadowColors(brand), String(written)).toEqual([
         { level: "md", index: 0, color: undefined },
       ]);
-      // The levels either side are untouched by the stored one.
+
       expect(rgb(brand.elevation.lg[0]?.color ?? "")).toBe(tint);
     });
   });
 
   it("leaves an entry whose colour it cannot measure as the store wrote it", () => {
-    // A perceptual colour is one the runtime paints but this seam cannot read,
-    // so `alphaOf` answers a **full** share: restated in the tint, a 12% shadow
-    // would paint opaque. Left as written it keeps the share it was designed
-    // with.
     const oklch = "oklch(0.5 0 0)";
     const brand = extendTheme(
       stored({
@@ -409,10 +356,6 @@ describe("a scale a store wrote", () => {
   });
 
   it("keeps a colour the renderer cannot paint in the report", () => {
-    // A value outside the paint grammar is the second half: `alphaOf` reads it as
-    // opaque too, so the retint used to replace it with the tint — a paintable
-    // colour, which **erased** the line `invalidShadowColors` reported and painted
-    // a shadow where the store asked for none.
     const unpaintable = "#00000";
     const brand = extendTheme(
       stored({
@@ -448,8 +391,6 @@ describe("a scale a store wrote", () => {
   });
 
   it("still restates a colour the seam can measure", () => {
-    // The positive control: a functional colour is measured, so its share is
-    // kept and the entry is retinted exactly as a shipped one.
     const brand = extendTheme(
       stored({
         ...lightElevation,
@@ -471,11 +412,8 @@ describe("a scale a store wrote", () => {
     const catalogue = read("../../../docs/tokens.md");
     const designSystem = read("../../../docs/design-system.md");
     const readme = read("../README.md");
-    const source = read("./elevation.ts");
 
-    // The scale the retint keeps is read **level by level**, and a colour it
-    // cannot measure is left as written rather than read as a full share.
-    [catalogue, designSystem, readme, source].forEach((page) => {
+    [catalogue, designSystem, readme].forEach((page) => {
       expect(page).toContain("level by level");
       expect(page).toContain("cannot measure");
     });
@@ -509,8 +447,6 @@ describe("unpaintable shadow colours", () => {
   });
 
   it("reads a level a brand supplies whole, not only its first shadow", () => {
-    // `elevationShadow` resolves the first entry, so an invalid colour behind a
-    // valid one is the case a reader would otherwise never see.
     const brand = extendTheme(darkTheme, {
       elevation: { lg: [shadow("#00000066"), shadow("#0000006")] },
     });
@@ -540,8 +476,6 @@ describe("unpaintable shadow colours", () => {
   });
 
   it("reports a retint through the shadow role only once the role itself is invalid", () => {
-    // A valid role keeps every inherited level paintable; an invalid one is
-    // already `invalidColorRoles`' report, and the shadow report follows it.
     const retinted = extendTheme(lightTheme, { colors: { shadow: "#0B1220" } });
     const broken = extendTheme(lightTheme, { colors: { shadow: "#0B122" } });
 

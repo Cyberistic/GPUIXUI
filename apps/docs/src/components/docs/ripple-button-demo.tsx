@@ -1,10 +1,3 @@
-/**
- * Browser preview for the Ripple button page.
- *
- * The native action spreads a wash from the press point; the preview records
- * the point and expands a wash circle from it, one layer per press.
- */
-
 import { useRef, useState, type MouseEvent } from "react";
 
 interface Ripple {

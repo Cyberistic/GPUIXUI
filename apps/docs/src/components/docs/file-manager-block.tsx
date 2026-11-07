@@ -2,19 +2,6 @@ import { useReducer } from "react";
 import { BlockIcon } from "./block-icons";
 import { RailToggle } from "./sidebar-rail";
 
-/**
- * File manager block — `/blocks/file-manager`.
- *
- * A three-pane browser: a folder tree, a folder of image tiles and the selected
- * file's facts. Like every block, `FileManagerRender` reproduces the native
- * geometry in the browser; `fileManagerSource` is the `@gpuixui/*` recipe a
- * consumer copies.
- *
- * The state lives in `fileManagerReducer`, so the preview's two promises — a
- * tile select repaints the information pane, and a view button changes the
- * layout — are table-tested without a DOM.
- */
-
 export type FileView = "eye" | "list" | "grid" | "columns";
 
 export const fileFolders = [
@@ -28,7 +15,6 @@ export const fileFolders = [
 
 export type FileFolder = (typeof fileFolders)[number];
 
-/** The tree's root; it has no files of its own. */
 export type FileLocation = "My files" | FileFolder;
 
 export interface ManagedFile {
@@ -47,7 +33,6 @@ const carDriving: ManagedFile = {
   tone: 1,
 };
 
-/** The Pictures folder, in the order the grid lays it out. */
 export const managedFiles: ReadonlyArray<ManagedFile> = [
   {
     id: "cadillac.jpg",
@@ -144,7 +129,6 @@ export const fileManagerReducer = (
   return { ...state, view: action.view };
 };
 
-/** The file the information pane describes; `carDriving` is always present. */
 export const selectedFile = (state: FileManagerState): ManagedFile =>
   managedFiles.find((file) => file.id === state.selected) ?? carDriving;
 
@@ -175,7 +159,6 @@ export interface FileManagerSurfaceProps {
   readonly onToggleRail: () => void;
 }
 
-/** The browser at a given state; `FileManagerRender` owns the reducer. */
 export function FileManagerSurface({
   state,
   onSelectFile,
@@ -372,7 +355,6 @@ export function FileManagerSurface({
   );
 }
 
-/** The block's preview: the reducer, then the surface at its current state. */
 export function FileManagerRender() {
   const [state, dispatch] = useReducer(
     fileManagerReducer,
@@ -398,7 +380,6 @@ export const fileManagerPackages = [
   "@gpuixui/icons",
 ] as const;
 
-/** The recipe a consumer copies. */
 export const fileManagerSource = `import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@gpuixui/components/breadcrumb";
 import { SearchInput } from "@gpuixui/components/search-input";
 import { Box, Button, Progress, ScrollArea, Stack, Text, useTheme } from "@gpuixui/primitives";

@@ -1,20 +1,9 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * One-time-code example: two-factor verification.
- *
- * The code is caller-owned state, the field only reports it, and the action
- * that consumes it is a real button with a real failure path: the demo accepts
- * `123456`, and anything else paints the field invalid. A code field that has
- * never been wired to a submit step proves nothing.
- */
-
 import { useState, type ReactElement } from "react";
 import { Box, Button, OTPField, Separator, Stack, Text } from "../src/index.js";
 
-/** The only code the demo accepts. */
 const DEMO_CODE = "123456";
 
-/** Two-factor verification: a six-cell code, a submit step and a reset. */
 export const OtpExample = (): ReactElement => {
   const [code, setCode] = useState("");
   const [status, setStatus] = useState<"idle" | "verified" | "rejected">(

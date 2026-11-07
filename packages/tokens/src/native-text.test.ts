@@ -1,25 +1,3 @@
-/**
- * Guards the native text-host seam.
- *
- * A GPUix `<input>`, `<textarea>` or `<code>` takes its palette through a
- * `theme` prop, not through the properties `styles.ts` resolves — and a host
- * given no theme layers on the runtime's **built-in dark theme** (the pinned
- * typings say so). Before this seam existed the components package's fields
- * passed no host theme, so their placeholder and caret were painted for a dark
- * surface in a light theme: a role the contrast table measures was skipped, and
- * the caret was a mark nobody checked.
- *
- * `nativeTextTheme` is the one place the answer lives, and it names the fill the
- * host's value and placeholder sit on, because the library's fields paint two:
- * `input` for a plain field, the page role for a composite one. The cases below
- * hold the mapping, the fill, the floors the roles must clear on that fill, and
- * the adoption both packages carry.
- *
- * `node:fs` is deliberate, as in `docs.test.ts`: the last cases read the
- * catalogue and the two packages' sources, and the package keeps zero runtime
- * dependencies by design.
- */
-
 import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { auditTheme } from "./audit.js";
@@ -67,7 +45,6 @@ import {
   type Theme,
 } from "./theme.js";
 
-/** Every theme the library ships: both base modes, both contrast variants, each platform and each authored look. */
 const shipped = [
   { label: "light", theme: lightTheme },
   { label: "dark", theme: darkTheme },
@@ -111,7 +88,6 @@ const ones = [
 ] as const;
 const tens = ["", "", "twenty", "thirty", "forty"] as const;
 
-/** The spelled count the catalogue prints, or the numeral past the list. */
 const spelled = (count: number): string =>
   count < 20
     ? (ones[count] ?? String(count))
@@ -119,12 +95,6 @@ const spelled = (count: number): string =>
       ? (tens[Math.floor(count / 10)] ?? String(count))
       : `${tens[Math.floor(count / 10)] ?? ""}-${ones[count % 10] ?? ""}`;
 
-/**
- * The three surfaces a rendered document paints from the theme: inline code's
- * ink on its chip, the chip on the page, and a table rule. Each is measured on
- * the surface it is drawn on, so a brand that makes its chip the ink is reported
- * rather than silently painting one block.
- */
 const documentPlacements = (theme: Theme) => {
   const host = nativeTextTheme(theme);
   const floors = contrastFloorsFor(theme);
@@ -209,14 +179,11 @@ describe("nativeTextTheme", () => {
     expect(nativeTextTheme(darkTheme).appearance).toBe("dark");
     expect(nativeTextTheme(highContrastLightTheme).appearance).toBe("light");
     expect(nativeTextTheme(highContrastDarkTheme).appearance).toBe("dark");
-    // The premise: the runtime's built-in default is the dark one. A host has
-    // to be told which appearance to paint, not only which colours.
+
     expect(darkColors.background).not.toBe(lightTheme.colors.background);
   });
 
   it("reads a mode this release does not ship from the page it carries", () => {
-    // The cast is the storage boundary: a theme restored from a store is
-    // unknown input, and an upper-cased mode is what such a store writes.
     const stored = (mode: unknown): Theme => ({ ...darkTheme, mode }) as Theme;
 
     expect(nativeTextTheme(stored("Dark")).appearance).toBe("dark");
@@ -230,8 +197,7 @@ describe("nativeTextTheme", () => {
     expect(onInput.bg).toBe(lightTheme.colors.input);
     expect(onPage.text).toBe(onInput.text);
     expect(onPage.textFaint).toBe(onInput.textFaint);
-    // The fill is read, not decorative: the base theme's page and field whites
-    // give the placeholder two different ratios.
+
     expect(contrastRatio(onPage.textFaint, onPage.bg)).not.toBeCloseTo(
       contrastRatio(onInput.textFaint, onInput.bg) ?? 0,
       2,
@@ -288,10 +254,6 @@ describe("nativeTextTheme", () => {
   });
 
   it("gives the document hosts the scale's own type", () => {
-    // A native host lays its rows out from the runtime theme's `metrics`, not
-    // from a style property, so a seam that fills only the palette paints the
-    // runtime's own numbers — 12.5/18 for a code block, 12/21 for a diff line,
-    // 14/22 with 19/16/15/14 headings for a document — whatever the theme says.
     const host = nativeTextTheme(lightTheme);
     const { typography } = lightTheme;
 
@@ -344,8 +306,6 @@ describe("nativeTextTheme", () => {
     expect(branded.mdCodeRadius).toBe(10);
     expect(branded.mdInlineCodeRadius).toBe(3);
 
-    // Every shipped style resolves its own scale: the four hosts read the same
-    // roles, so one comparison per theme covers the metrics a fill cannot move.
     const drifted = shipped.flatMap(({ label, theme }) => {
       const { metrics } = nativeTextTheme(theme);
       const { typography } = theme;
@@ -420,11 +380,6 @@ describe("nativeTextTheme", () => {
   });
 
   it("paints inline code as prose in a chip, and a document's rules", () => {
-    // A `<markdown>` host draws inline code in its own violet ink over a 10%
-    // violet wash — a second syntax palette no token owns. The seam hands it the
-    // page ink on the `muted` surface instead, which is the pair the contrast
-    // table already measures at the body floor, and the table rule the `border`
-    // role a divider is held to.
     const failures = shipped.flatMap(({ label, theme }) =>
       documentPlacements(theme)
         .filter(({ ratio, floor }) => ratio === undefined || ratio < floor)
@@ -436,7 +391,6 @@ describe("nativeTextTheme", () => {
 
     expect(failures).toEqual([]);
 
-    // A brand whose chip is its own ink paints one block: the report names it.
     const flat = extendTheme(lightTheme, {
       colors: { muted: lightTheme.colors.foreground },
     });
@@ -477,8 +431,6 @@ describe("nativeTextTheme", () => {
   });
 
   it("keeps the placeholder visibly fainter than secondary text", () => {
-    // A placeholder is a hint, not a label; matching `mutedForeground` would
-    // make an empty field read as a filled one.
     shipped.forEach(({ label, theme }) => {
       nativeTextFills.forEach((fill) => {
         const host = nativeTextTheme(theme, fill);
@@ -490,8 +442,6 @@ describe("nativeTextTheme", () => {
   });
 
   it("matches the shipped placeholder the palette moved for", () => {
-    // The pair found Aero light's placeholder at 4.35:1 on its own window and
-    // the inherited base value at 4.49:1 on macOS's, both under the 4.5:1 floor.
     const aero = retroTheme(lightTheme, "aero");
     const darwin = platformTheme(lightTheme, "darwin");
     const catalogue = readFileSync(
@@ -507,9 +457,7 @@ describe("nativeTextTheme", () => {
       4.49,
       2,
     );
-    // The page prints the tightest placement, computed here, so a palette edit
-    // or a stale sentence fails by number — and by name, because which style is
-    // tightest moves with the palette.
+
     const tightest = shipped
       .flatMap(({ theme }) =>
         nativeTextFills.map((fill) => {
@@ -532,11 +480,6 @@ describe("nativeTextTheme", () => {
   });
 
   it("sizes a code card's language strip from the scale", () => {
-    // A fence's language strip is a label over the block, and the runtime sizes
-    // it from `md_code_header_text_size` — `11` at the pinned release
-    // (`packages/native/src/theme.rs`) — which no role in the scale carries. A
-    // seam that left it to the runtime painted a brand's code card header at a
-    // size the brand never chose, while the block under it followed the scale.
     const metrics = nativeTextTheme(lightTheme).metrics;
     expect(metrics.mdCodeHeaderTextSize).toBe(
       lightTheme.typography.caption.fontSize,
@@ -552,11 +495,6 @@ describe("nativeTextTheme", () => {
   });
 
   it("gives a document host's insets the spacing scale", () => {
-    // A host's insets are padding, so they are the spacing scale's — the
-    // runtime's own are Comet's numbers (`theme.rs`'s `Metrics`), and two of
-    // them are not steps here at all, so a brand that retunes `spacing` grew the
-    // component tree and left a rendered document at another rhythm. Every
-    // inset is read against the theme's own steps rather than a literal.
     const insets = (theme: Theme) => {
       const { metrics } = nativeTextTheme(theme);
       return {
@@ -580,8 +518,6 @@ describe("nativeTextTheme", () => {
 
     expect(offScale).toEqual([]);
 
-    // The inset is chosen, not one number for every surface: a language strip is
-    // tighter than a code card's own padding, which is tighter than a diff row's.
     const base = insets(lightTheme);
     expect(base.mdCodeHeaderPaddingY).toBeLessThan(base.mdCodePaddingY);
     expect(base.mdCodePaddingY).toBeLessThan(base.mdCodePaddingX);
@@ -603,7 +539,6 @@ describe("nativeTextTheme", () => {
       };
     };
 
-    // A brand that doubles every step moves every inset with it.
     const doubled = extendTheme(lightTheme, {
       spacing: {
         "2xs": lightTheme.spacing["2xs"] * 2,
@@ -626,8 +561,6 @@ describe("nativeTextTheme", () => {
       ),
     );
 
-    // A brand that raises one step moves only the insets that read it, so the
-    // mapping is a choice per surface rather than one shared number.
     const wider = insets(extendTheme(lightTheme, { spacing: { lg: 20 } }));
     expect(wider.mdCodePaddingX).toBe(20);
     expect(wider.mdTableCellPadding).toBe(20);
@@ -654,8 +587,6 @@ describe("nativeTextTheme", () => {
       "| `metrics.codeGutterPaddingRight` | `spacing.lg` — the gutter's gap |",
     ].forEach((row) => expect(catalogue).toContain(row));
 
-    // The retracted claim, on each surface that carried it: the paddings are a
-    // spacing step, and only the row model is left to the runtime.
     expect(catalogue).not.toContain("a diff's paddings and accent bar");
     expect(catalogue).toContain("the block gap are not a row model");
     expect(readme).toContain("insets and gaps are the spacing scale's");
@@ -665,9 +596,6 @@ describe("nativeTextTheme", () => {
   });
 
   it("teaches the code host's type, not only its palette", () => {
-    // A `<code>` host is the one host whose type comes from the theme object, so
-    // a reader has to know both what the seam fills in and why the runtime's own
-    // number is not the library's scale.
     const catalogue = readFileSync(
       new URL("../../../docs/tokens.md", import.meta.url),
       "utf8",
@@ -684,13 +612,6 @@ describe("nativeTextTheme", () => {
   });
 
   it("prints the type a window measured, not only the source read", () => {
-    // The cases above hold what the seam hands a host. Whether a host *paints*
-    // those numbers was a read of the pinned Rust source until the playground's
-    // `document-type` probe measured it off a captured frame on 0.11.0 (11
-    // checks). This page is the one that says the seam carries a document host's
-    // type, so it has to carry the measurement: the probe's own record and the
-    // page's table are compared row by row, and the theme pairs are derived from
-    // the fixture, so a stale page number or a moved probe value fails.
     const catalogue = readFileSync(
       new URL("../../../docs/tokens.md", import.meta.url),
       "utf8",
@@ -722,7 +643,6 @@ describe("nativeTextTheme", () => {
     const runtimeHeaderSize = constant("RUNTIME_HEADER_SIZE");
     const checks = constant("DOCUMENT_TYPE_CHECKS");
 
-    // The pairs the page opens with, read off the fixture rather than retyped.
     expect(catalogue).toContain("### The type a window measured");
     expect(catalogue).toContain(`${codeSize}/${codeLeading}`);
     expect(catalogue).toContain(`${runtimeCodeSize}/${runtimeCodeLeading}`);
@@ -732,9 +652,6 @@ describe("nativeTextTheme", () => {
     expect(catalogue).toContain(`${checks} checks`);
     expect(readme).toContain(`${checks} checks`);
 
-    // The four rows are the probe's record; the page cites it with the same
-    // numbers, in the same order. A palette or font move that changes a band
-    // fails here instead of leaving the sentence true of nothing.
     const rows = [
       "| `<code>`, themed |",
       "| `<code>`, no theme |",
@@ -752,37 +669,21 @@ describe("nativeTextTheme", () => {
       );
     });
 
-    // The two leading gains are arithmetic, not measurements.
     expect(catalogue).toContain(
       `${4 * (codeLeading - runtimeDiffLeading)}** taller`,
     );
     expect(catalogue).toContain(`${2 * codeLeading} tall`);
     expect(catalogue).toContain(`${2 * runtimeCodeLeading} tall`);
 
-    // The honest half: the host, the scale and the antialias slack.
     expect(catalogue).toContain("macOS at scale 2");
     expect(catalogue).toContain("one-row antialias slack");
   });
 
   it("teaches that a field's value is the element's colour, not the object's text", () => {
-    // The bug this holds: this page and the seam's own snippet showed
-    // `<input theme={nativeTextTheme(theme)} />` and said the object carries the
-    // value. At the pinned `@gpuix/native@0.11.0` an `<input>`/`<textarea>`
-    // paints its value from the element's `style.color`
-    // (`custom_elements/input.rs`), so `text` never reaches a field: the
-    // playground's `field-ink` probe typed into a host given only the seam and
-    // its brightest pixel was the field's **47.5** border luminance — darker than
-    // its own fill — while the same host with `color: inputForeground` peaked at
-    // **240.7**, the ink's own. Following the page shipped a near-black value on
-    // a dark fill.
     const catalogue = readFileSync(
       new URL("../../../docs/tokens.md", import.meta.url),
       "utf8",
     ).replace(/\s+/g, " ");
-    const seam = readFileSync(
-      new URL("./native-text.ts", import.meta.url),
-      "utf8",
-    );
 
     expect(catalogue).toContain("### What a field's value actually paints");
     expect(catalogue).toContain(
@@ -791,34 +692,15 @@ describe("nativeTextTheme", () => {
     expect(catalogue).toContain("color: theme.colors.inputForeground");
     expect(catalogue).toContain("47.5");
     expect(catalogue).toContain("240.7");
-    // The seam's own example is what a consumer copies, so it carries the role
-    // too, and its `text` field says which hosts read it.
-    expect(seam).toContain("color: theme.colors.inputForeground");
-    expect(seam).toContain("paints its value from the element's");
   });
 });
 
-/**
- * A `<diff>` host paints its own colours unless the theme object carries them:
- * at `@gpuix/native@0.11.0` an added line's ink and the 5.5% wash under it are
- * one field (`diffAdd`), a removed line's the other, a hunk header a fill and
- * its file path the dim chrome role. So one value does two jobs, and the
- * contract has to measure both: the ink as text, and the wash it derives as a
- * surface — an ink that matches the pane erases the line, and a wash that
- * matches the pane hides that the line changed at all.
- */
 describe("the diff host's colours", () => {
-  /**
-   * A field the shipped themes all carry; `""` is a role the seam dropped, and
-   * the placements below then measure nothing, so the sweep fails by name.
-   */
   const ink = (value: string | undefined): string => value ?? "";
 
-  /** The wash the runtime paints under a changed line: its own ink at 5.5%. */
   const rowWash = (ink: string, fill: string) =>
     blend(ink, fill, 1 - nativeDiffWash);
 
-  /** Every placement the diff contract measures, with the ratio and floor. */
   const placements = (theme: Theme) =>
     nativeTextFills.flatMap((fill) => {
       const host = nativeTextTheme(theme, fill);
@@ -875,9 +757,6 @@ describe("the diff host's colours", () => {
     });
 
   it("holds the runtime's own wash share", () => {
-    // The share is the runtime's, not a design choice: a `<diff>` row tints
-    // itself 0.055 of its ink over the fill (`custom_elements/diff.rs` at the
-    // pinned release), so the contract measures the wash it actually paints.
     expect(nativeDiffWash).toBe(0.055);
   });
 
@@ -896,10 +775,6 @@ describe("the diff host's colours", () => {
   });
 
   it("lets the tone's readable role carry the ink, not its solid fill", () => {
-    // The premise: a status *fill* is designed to carry its own on-colour, not
-    // to be read on the page. Light `success` measures 4.26:1 there, under the
-    // secondary floor a 11px count needs, while the tone's readable role clears
-    // the body floor by a wide margin.
     expect(
       contrastRatio(lightTheme.colors.success, lightTheme.colors.background),
     ).toBeCloseTo(4.26, 2);
@@ -918,10 +793,6 @@ describe("the diff host's colours", () => {
   });
 
   it("found the faint role without room on a chrome stripe", () => {
-    // The hunk header's text is the runtime's `text_faint`, so the faint role
-    // sits on the `muted` stripe it paints, not only on the page it sits on.
-    // Measured before the fix: the dark base's placeholder on its own toolbar,
-    // and every light style's on the platform toolbars and the two looks.
     expect(contrastRatio("#7C8595", darkTheme.colors.muted)).toBeCloseTo(
       4.29,
       2,
@@ -988,28 +859,18 @@ describe("the diff host's colours", () => {
       new URL("../../../docs/tokens.md", import.meta.url),
       "utf8",
     ).replace(/\s+/g, " ");
-    const seam = readFileSync(
-      new URL("./native-text.ts", import.meta.url),
-      "utf8",
-    );
 
-    // The page names the share the contract composites and the roles the host
-    // takes, so a reader can build the same check for a brand.
     expect(catalogue).toContain("### The diff host");
     expect(catalogue).toContain("`nativeDiffWash` (0.055)");
     expect(catalogue).toContain("`diffHunkBg`");
-    // The document host: a rendered document's type and its chip both come from
-    // the theme, and the page says which numbers still do not.
+
     expect(catalogue).toContain("### The document host");
     expect(catalogue).toContain("prose in a chip");
     expect(catalogue).toContain("`diffTextSize`");
-    // The syntax palette is the package's now: the page says so, and the old
-    // "not filled" claim would send a reader to the runtime's own dark table.
+
     expect(catalogue).toContain("syntax palette is this package's");
     expect(catalogue).not.toContain("is not filled by `nativeTextTheme`");
-    // The placeholder is fixed by the runtime, so the seam and the page must say
-    // so instead of promising a role the host never reads.
-    expect(seam).toContain("#8F8F8F");
+
     expect(catalogue).toContain("`#8F8F8F`");
     expect(catalogue).toContain("2.84:1");
     expect(catalogue).not.toContain(
@@ -1018,14 +879,6 @@ describe("the diff host's colours", () => {
   });
 });
 
-/**
- * The seam is only worth its mapping if the hosts actually take it. Both
- * packages carry it now: the primitives re-export the functions rather than
- * copying them, and every components host passes the theme and names the fill it
- * paints. The catalogue used to say the components' fields "pass no host theme
- * at all", which would have sent a reader to fix a defect that was already
- * closed, so the page is held to the sources here.
- */
 describe("the adoption both packages carry", () => {
   const componentsDir = new URL("../../components/src/", import.meta.url);
   const sources = readdirSync(componentsDir)
@@ -1040,9 +893,6 @@ describe("the adoption both packages carry", () => {
       /<(input|textarea|code)[\s>]/.test(text),
     );
 
-    // A rule that finds no host would pass by measuring nothing. The floor moved
-    // 9 → 8 with the Arc-shaped ColorPicker: its hex field is the primitives'
-    // `Input`, which paints its own text, so the picker no longer hosts one.
     expect(hosts.length).toBeGreaterThanOrEqual(8);
     const missing = hosts
       .filter(({ text }) => !text.includes("nativeTextTheme("))
@@ -1052,9 +902,6 @@ describe("the adoption both packages carry", () => {
   });
 
   it("names one of the two fills at every call site", () => {
-    // The pattern is built rather than written as a literal: `scripts/check-tests.ts`
-    // walks a regex written mid-expression into the code after it and reports the
-    // whole test as assertionless.
     const call = new RegExp("nativeTextTheme\\(([^)]*)\\)", "g");
     const quoted = new RegExp('"(\\w+)"');
     const named = sources.flatMap(({ file, text }) =>
@@ -1068,7 +915,6 @@ describe("the adoption both packages carry", () => {
         fill !== undefined && !nativeTextFills.some((known) => known === fill),
     );
 
-    // One fewer call site for the same reason as the host floor above.
     expect(named.length).toBeGreaterThanOrEqual(9);
     expect(unknown).toEqual([]);
   });
@@ -1081,7 +927,7 @@ describe("the adoption both packages carry", () => {
 
     expect(primitives).toContain("nativeTextTheme");
     expect(primitives).toContain("nativeTextFills");
-    // A local re-implementation would be the duplication the boundaries forbid.
+
     expect(primitives).not.toMatch(/function nativeTextTheme/);
   });
 
@@ -1108,8 +954,6 @@ describe("the adoption both packages carry", () => {
       "utf8",
     );
 
-    // The page taught an owed adoption ("the fields pass the host's placeholder
-    // today") after every hinted host had moved to the painted seam.
     expect(catalogue).toContain("render the hint through the published");
     expect(catalogue).toContain("`fieldHint`/`renderFieldHint`");
     expect(catalogue).not.toContain(
@@ -1117,8 +961,6 @@ describe("the adoption both packages carry", () => {
     );
     expect(catalogue).not.toContain("adopting the painted hint is recorded");
 
-    // The seam is the paint the page names, and every host that takes a
-    // placeholder paints through it — bare of the exceptions the page records.
     expect(seam).toContain("export const fieldHint");
     const hinted = sources.filter(
       ({ text }) =>
@@ -1137,22 +979,11 @@ describe("the adoption both packages carry", () => {
   });
 });
 
-/**
- * Guards the accent a **document** host paints its own marks in. The runtime
- * draws an ordered list's number and a bullet as `opacity(accent, 0.85)`, a
- * block quote's rail as `0.6` and the wash behind its copy as `0.05`
- * (`packages/native/src/markdown/render.rs` at the pinned release), so the role
- * is read through the composite rather than as a solid mark — and the fill role
- * is not readable there. Measured over the sixteen shipped styles, `primary` at
- * the marker share lands under the 4.5:1 label floor in every light style (the
- * tightest, Windows XP (Luna) light on `muted`, is 3.09:1) while the same role
- * as a solid mark clears the 3:1 floor that the mark contract measures.
- */
 describe("the accent a document host paints", () => {
   it("holds a list number and a bullet to the label floor on every fill", () => {
     const under = shipped.flatMap(({ label, theme }) => {
       const floors = contrastFloorsFor(theme);
-      // Read the seam, not the helper: the host is handed `accent`.
+
       const accent = nativeTextTheme(theme).accent;
       return nativeAccentSurfaces.flatMap((surface) => {
         const fill = theme.colors[surface];
@@ -1179,7 +1010,7 @@ describe("the accent a document host paints", () => {
     });
 
     expect(under).toEqual([]);
-    // Every style resolves, and the derivation returns an opaque colour.
+
     expect(
       shipped.every(({ theme }) => (nativeAccent(theme) ?? "").startsWith("#")),
     ).toBe(true);
@@ -1193,8 +1024,7 @@ describe("the accent a document host paints", () => {
   it("steps only the fills the marker share leaves under the floor", () => {
     const measured = shipped.map(({ label, theme }) => {
       const floors = contrastFloorsFor(theme);
-      // The derivation answers the least readable strip, so the premise is the
-      // worst of them rather than the page alone.
+
       const worst = nativeAccentSurfaces.reduce((low, surface) => {
         const fill = theme.colors[surface];
         const ratio = contrastRatio(
@@ -1213,8 +1043,6 @@ describe("the accent a document host paints", () => {
     const under = measured.filter(({ worst, floor }) => Number(worst) < floor);
     const over = measured.filter(({ worst, floor }) => Number(worst) >= floor);
 
-    // The derivation is the exception, not a repaint: every style the fill role
-    // cannot carry steps, and every style it can carry keeps the brand.
     expect(
       under.filter(({ stepped }) => !stepped).map(({ label }) => label),
     ).toEqual([]);
@@ -1223,8 +1051,7 @@ describe("the accent a document host paints", () => {
         .filter(({ stepped }) => stepped)
         .map(({ label, worst }) => `${label} ${worst}`),
     ).toEqual([]);
-    // Eleven of the eighteen styles cannot carry it — every light one, and the two
-    // dark platform rows whose accent is a light blue on a near-black page.
+
     expect(under.map(({ label, worst }) => `${label} ${worst}`)).toEqual([
       "light 4.00",
       "high-contrast light 6.54",
@@ -1239,17 +1066,6 @@ describe("the accent a document host paints", () => {
       "omarchy light 3.90",
     ]);
 
-    // The seam's own JSDoc prints the same set and share, so a style that joins
-    // it cannot leave the documentation teaching the previous count.
-    const seam = readFileSync(
-      new URL("./native-text.ts", import.meta.url),
-      "utf8",
-    ).replace(/\s+/g, " ");
-
-    expect(seam).toContain(`Measured over the ${shipped.length} shipped,`);
-    expect(seam).toContain(`in **${under.length} of them**`);
-
-    // The three pages print the same count and the two dark rows it names.
     const worstOf = (label: string) =>
       under.find((entry) => entry.label === label)?.worst;
     const pages = [
@@ -1275,10 +1091,6 @@ describe("the accent a document host paints", () => {
   });
 
   it("steps by the smallest share that clears, never past it", () => {
-    // The derivation promises the **smallest** 2% step (`nativeAccent`'s JSDoc):
-    // a search that started above the brand would dull a mark that already read,
-    // and one that over-shot would paint the ink. Nothing held that — only "the
-    // brand was not enough" and "the result clears" were measured.
     const source = readFileSync(
       new URL("./native-text.ts", import.meta.url),
       "utf8",
@@ -1321,9 +1133,6 @@ describe("the accent a document host paints", () => {
   });
 
   it("keeps the caret a mark on the field, not the document's label", () => {
-    // A caret is drawn solid on the field's own fill and held to the 3:1 mark
-    // floor, so it stays the fill role: stepping it would dull the one colour a
-    // reader tracks while typing.
     expect(nativeTextTheme(lightTheme).caret).toBe(lightTheme.colors.primary);
     expect(nativeTextTheme(lightTheme).accent).not.toBe(
       lightTheme.colors.primary,
@@ -1343,20 +1152,7 @@ describe("the accent a document host paints", () => {
   });
 });
 
-/**
- * Guards the fill a **fenced code block** paints inside a rendered document.
- *
- * The syntax contract measures a token on the two fills a caller can hand a
- * host (`syntaxSurfaces`), but a `<markdown>` host's fence is a surface of its
- * own: the runtime lays `0.035` of a neutral ink over the document's fill
- * (`packages/native/src/markdown/render.rs` at the pinned
- * `@gpuix/native@0.11.0`) and another `0.02` under the language strip. Nothing
- * named that composite, so a token that cleared the page could miss its floor on
- * the fence the same theme paints — and the dark `keyword` did, in macOS, Linux
- * and Windows dark.
- */
 describe("the fence a document host paints", () => {
-  /** Every token and the language label on the fence, with the ratio and floor. */
   const fencePlacements = (theme: Theme) =>
     nativeTextFills.flatMap((fill) => {
       const fence = nativeFenceFill(theme.colors[fill]);
@@ -1383,10 +1179,6 @@ describe("the fence a document host paints", () => {
       ];
     });
 
-  /**
-   * The strip's fill against the block it sits on, and the block against the
-   * page: the two washes, and the surface the fence itself is.
-   */
   const stripPlacements = () =>
     shipped.flatMap(({ label, theme }) =>
       nativeTextFills.map((fill) => ({
@@ -1406,21 +1198,19 @@ describe("the fence a document host paints", () => {
   it("holds the runtime's own shares and composites them over the fill", () => {
     expect(nativeFenceInk).toBe(0.035);
     expect(nativeFenceHeaderInk).toBe(0.02);
-    // The ink is neutral and its direction is the host's own `bg` lightness: a
-    // light fill takes black, a dark one white.
+
     expect(nativeFenceFill(lightTheme.colors.background)).toBe(
       blend(lightTheme.colors.background, "#000000", nativeFenceInk),
     );
     expect(nativeFenceFill(darkTheme.colors.background)).toBe(
       blend(darkTheme.colors.background, "#FFFFFF", nativeFenceInk),
     );
-    // The strip is a second wash over the block, not over the page.
+
     const body = nativeFenceFill(lightTheme.colors.background);
     expect(nativeFenceHeaderFill(lightTheme.colors.background)).toBe(
       blend(body ?? "", "#000000", nativeFenceHeaderInk),
     );
-    // A value the contract cannot measure is answered with absence, the rule
-    // every derived colour in this package follows.
+
     expect(nativeFenceFill("oklch(0.5 0.1 250)")).toBeUndefined();
     expect(nativeFenceHeaderFill("oklch(0.5 0.1 250)")).toBeUndefined();
   });
@@ -1436,12 +1226,9 @@ describe("the fence a document host paints", () => {
     );
 
     expect(failures).toEqual([]);
-    // 18 styles × 2 fills × (24 tokens + the strip's label): a sweep that
-    // measured nothing would otherwise pass.
+
     expect(shipped.length * nativeTextFills.length * 25).toBe(900);
 
-    // The tightest is the smallest margin over its own floor: the comment sits
-    // at a lower ratio but answers the secondary floor.
     const cells = shipped.flatMap(({ label, theme }) =>
       fencePlacements(theme).map((placement) => ({
         label,
@@ -1459,9 +1246,6 @@ describe("the fence a document host paints", () => {
   });
 
   it("found the dark keyword without room on the fence", () => {
-    // The identity's dark keyword cleared the page in every style and missed the
-    // body floor on the fence the three platform styles paint — a page lighter
-    // than the base theme's is what lifts it.
     const identity = darkSyntax.keyword;
     const place = (theme: Theme, fill: NativeTextFill, colour: string) => {
       const fence = nativeFenceFill(theme.colors[fill]);
@@ -1476,20 +1260,19 @@ describe("the fence a document host paints", () => {
     expect(place(windowsDark, "background", identity)).toBeCloseTo(6.85, 2);
     expect(place(windowsDark, "input", identity)).toBeCloseTo(6.94, 2);
     expect(place(macOSDark, "input", identity)).toBeCloseTo(6.92, 2);
-    // Each of them clears its own page, so only the fence placement sees it.
+
     for (const style of [linuxDark, windowsDark, macOSDark]) {
       expect(
         contrastRatio(identity, style.colors.background),
       ).toBeGreaterThanOrEqual(contrastFloorsFor(style).body);
     }
-    // A style that repaints the page owns the table for it: the three platforms
-    // carry the smallest 2% step toward white, and the identity keeps its own.
+
     for (const theme of [linuxDark, windowsDark, macOSDark]) {
       expect(syntaxColors(theme).keyword).toBe("#B0B2FF");
     }
     expect(darkSyntax.keyword).toBe(identity);
     expect(syntaxColors(darkTheme).keyword).toBe(identity);
-    // Every dark style clears the fence now.
+
     const dark = shipped.filter(({ theme }) => theme.mode === "dark");
     const under = dark.flatMap(({ label, theme }) =>
       nativeTextFills
@@ -1510,9 +1293,6 @@ describe("the fence a document host paints", () => {
   });
 
   it("reports a brand whose page lifts the fence under its keyword", () => {
-    // A brand owns the page the fence is drawn over, so the contract is about
-    // the composite and not about the shipped palettes: this page is light
-    // enough to lift the fence past the token that clears the base theme's.
     const brand = extendTheme(darkTheme, {
       colors: { background: "#1C1F26" },
     });
@@ -1524,8 +1304,7 @@ describe("the fence a document host paints", () => {
     expect(failures.map(({ claim }) => claim)).toContain(
       "keyword on the fence over background",
     );
-    // The same token clears the page it was measured on before, so only the
-    // fence placement sees this.
+
     expect(
       contrastRatio(syntaxColors(brand).keyword, brand.colors.background),
     ).toBeGreaterThanOrEqual(contrastFloorsFor(brand).body);
@@ -1539,17 +1318,13 @@ describe("the fence a document host paints", () => {
     );
     const hidden = strips.filter(({ ratio }) => (ratio ?? 0) < decorativeFloor);
 
-    // Two washes three points apart are not a boundary, and the runtime does not
-    // ask them to be: the rule under the strip and around the block is. The
-    // number is recorded so a page cannot claim the fill divides anything.
     expect(hidden.length).toBeGreaterThan(0);
     expect([low.label, low.fill, Number((low.ratio ?? 0).toFixed(3))]).toEqual([
       "high-contrast dark",
       "background",
       1.031,
     ]);
-    // The fence itself *is* a surface: every style's block is perceivable
-    // against the page it sits on.
+
     expect(
       strips.filter(({ overPage }) => (overPage ?? 0) < decorativeFloor),
     ).toEqual([]);
@@ -1564,9 +1339,6 @@ describe("the fence a document host paints", () => {
       "utf8",
     ).replace(/\s+/g, " ");
 
-    // The figure is "the set the sweep walks": a style counts once when either
-    // of its two fills is under the floor, and every fill is a placement, so the
-    // pair is styles-then-placements rather than a product nobody derives.
     expect(washedStyles.size).toBeGreaterThan(0);
     expect(washedStyles.size).toBeLessThan(shipped.length);
     expect(catalogue).toContain(
@@ -1575,7 +1347,7 @@ describe("the fence a document host paints", () => {
     expect(catalogue).toContain(
       `The tightest placement over the ${spelled(shipped.length)} styles`,
     );
-    // The pre-Omarchy pair stays retired: a look added to the sweep moved it.
+
     expect(catalogue).not.toContain("nine of the sixteen");
     expect(catalogue).not.toContain("thirty-two fill placements");
   });
@@ -1598,13 +1370,11 @@ describe("the fence a document host paints", () => {
       "utf8",
     ).replace(/\s+/g, " ");
 
-    // The shares and the composite, so a reader can build the same check.
     expect(catalogue).toContain("### The fence a document paints");
     expect(catalogue).toContain("`nativeFenceInk` (0.035)");
     expect(catalogue).toContain("`nativeFenceFill(fill)`");
     expect(catalogue).toContain("6.49:1");
-    // The strip is a wash the rule carries, and the page says so rather than
-    // counting it as a boundary.
+
     expect(catalogue).toContain("1.031:1");
     expect(design).toContain("fence");
     expect(design).toContain("7.66:1");
@@ -1641,8 +1411,6 @@ describe("the fence a document host paints", () => {
     expect(checks).toBeDefined();
     expect(page).toContain(`(**${checks}** checks)`);
 
-    // Every paint the two themed blocks own, derived from the seam the probe
-    // paints through: a palette or wash change moves the page with it.
     const macOSDark = platformTheme(themes.dark, "darwin");
     const paints = [themes.dark, macOSDark].flatMap((theme) =>
       [
@@ -1658,9 +1426,6 @@ describe("the fence a document host paints", () => {
       expect(record).toContain(colour);
     });
 
-    // The printed rows are the record's rows: the block's page, body, strip and
-    // keyword, and the pixel counts a window counted. The section is sliced so
-    // an unrelated table's `base dark` cell cannot answer for it.
     const start = page.indexOf("What a window measured");
     const section = page.slice(start, page.indexOf("### What a field", start));
     const row = (text: string, block: string) => {
@@ -1678,11 +1443,9 @@ describe("the fence a document host paints", () => {
       expect(row(section, block).counts.length).toBe(3);
     });
 
-    // The unthemed control is what keeps a missing handover visible.
     expect(record).toContain("`#8F96ED`");
     expect(page).toContain("`#8F96ED` (**988** px)");
 
-    // The rule a consumer needs, where they read it.
     const rule = "a fence composites over the fill behind the host";
     expect(page).toContain(rule);
     expect(page).toContain("nativeFenceFill(card)");
@@ -1694,28 +1457,7 @@ describe("the fence a document host paints", () => {
   });
 });
 
-/**
- * Guards the seam against the theme a store gives back.
- *
- * The bug this holds: `nativeTextTheme` read `statusTone(theme, "success")
- * .foreground` and `theme.colors[fill]` directly. `auditTheme` **reports** a
- * colour role a stored theme lost rather than refusing the theme, so a consumer
- * that ran the gate and painted anyway reached a crash: `statusTone` answers
- * `undefined` when a tone has lost any of its three roles, and the seam read
- * `.foreground` off that answer — `TypeError: Cannot read properties of
- * undefined (reading 'foreground')` at a `<diff>`'s first paint — while a theme
- * that lost the whole `colors` group threw on `theme.colors[fill]` before the
- * host was built. Measured on the shipped light theme with one role removed.
- *
- * The decision is the absence rule the other paint seams follow: every role is
- * read through `themeColors`, a field whose role is gone is left out of the
- * object, and the host paints its own default for a property it was not handed.
- * `nativeAccent` answers `undefined` when there is no `primary`. The type scale
- * is not part of the rule — the gate refuses a lost numeric group — and neither
- * is the palette, which resolves from the shipped table.
- */
 describe("a theme a store gave back", () => {
-  /** `record` without `key` — the shape a stored theme older than a key has. */
   const without = <Record_ extends object>(
     record: Record_,
     key: keyof Record_,
@@ -1725,7 +1467,6 @@ describe("a theme a store gave back", () => {
     return partial;
   };
 
-  /** A theme as storage hands it back: the type says complete, the value is not. */
   const stored = (overrides: Partial<Record<keyof Theme, unknown>>): Theme =>
     ({ ...lightTheme, ...overrides }) as Theme;
 
@@ -1742,8 +1483,6 @@ describe("a theme a store gave back", () => {
   });
 
   it("drops a diff ink the tone it reads lost, instead of throwing", () => {
-    // A tone is three roles, and the ink is the readable one: losing any of them
-    // is a tone the host has no ink for.
     const tones = (["success", "destructive"] as const).flatMap((tone) =>
       [tone, `${tone}Soft`, `${tone}SoftForeground`].map((role) => ({
         tone,
@@ -1754,7 +1493,7 @@ describe("a theme a store gave back", () => {
     const wrong = tones.flatMap(({ tone, role }) => {
       const host = nativeTextTheme(colorsWithout(role), "background");
       const ink = tone === "success" ? host.diffAdd : host.diffDel;
-      // The other tone's ink is untouched: one tone is not the pair.
+
       const other = tone === "success" ? host.diffDel : host.diffAdd;
       return ink === undefined && typeof other === "string"
         ? []
@@ -1793,8 +1532,7 @@ describe("a theme a store gave back", () => {
     expect(host.text).toBeUndefined();
     expect(host.diffAdd).toBeUndefined();
     expect(host.accent).toBeUndefined();
-    // Not the colour group: the type scale is refused by the gate, and the
-    // palette resolves from the shipped table.
+
     expect(host.appearance).toBe("light");
     expect(host.metrics.codeTextSize).toBe(
       lightTheme.typography.codeBlock.fontSize,
@@ -1802,16 +1540,6 @@ describe("a theme a store gave back", () => {
     expect(host.syntax).toBe(lightSyntax);
   });
 
-  /**
-   * The bug this guards: `nativeTextTheme` read `typography.sans`,
-   * `typography.codeBlock`, `radius.lg` and `spacing.xl` straight off the theme,
-   * so a theme a store truncated past the type, radius or spacing group threw
-   * `TypeError: Cannot read properties of undefined (reading 'sans')` from the
-   * first field, code block or document a window mounted. The gate refuses such
-   * a theme (`missingTokens`), but a surface can paint one nobody has audited
-   * yet, so the host is handed the library's own scale — the rule the
-   * primitives' paint seams already follow — instead of taking the window down.
-   */
   it("answers the library's type for a theme that lost it", () => {
     const host = nativeTextTheme(stored({ typography: undefined }));
     const complete = nativeTextTheme(lightTheme);
@@ -1820,8 +1548,6 @@ describe("a theme a store gave back", () => {
     expect(host.fontMono).toBe(lightTheme.typography.mono);
     expect(host.metrics).toEqual(complete.metrics);
 
-    // The same for a group a store nulled, a role it blanked, and a step it
-    // wrote as something the renderer drops.
     const nulled = nativeTextTheme(stored({ radius: null, spacing: null }));
     expect(nulled.metrics).toEqual(complete.metrics);
     const blank = nativeTextTheme(
@@ -1840,7 +1566,6 @@ describe("a theme a store gave back", () => {
       lightTheme.typography.h1.lineHeight,
     );
 
-    // A complete brand still hands over its own type and geometry.
     const brand = nativeTextTheme(
       extendTheme(lightTheme, {
         typography: { codeBlock: { fontSize: 20, lineHeight: 28 } },
@@ -1854,18 +1579,6 @@ describe("a theme a store gave back", () => {
     expect(brand.metrics.diffRowPaddingX).toBe(24);
   });
 
-  /**
-   * The source is what a store handed back, not a `Theme`.
-   *
-   * The seam was total on the groups — a lost type, radius or spacing group
-   * painted the library's own values — but its parameter was `Theme`, so a
-   * consumer holding the value `JSON.parse` returned could hand it over only
-   * through a cast, which `AGENTS.md` §2 forbids. `NativeTextSource` is the
-   * storage port: the colour, type, radius and spacing groups may be absent or
-   * `null`, and the mode may be a name this release does not ship. The calls
-   * below compile without a cast; deleting the port and restoring the `Theme`
-   * parameter fails `check-types` on them (TS2305 and TS2345).
-   */
   it("paints the shape a store hands back, without a cast", () => {
     const stored: NativeTextSource = {
       colors: { background: "#11141A" },
@@ -1879,28 +1592,16 @@ describe("a theme a store gave back", () => {
     };
     const host = nativeTextTheme(stored);
 
-    // The page decides the mode when the stored name is one this release does
-    // not ship, and each lost group paints the library's own value.
     expect(host.appearance).toBe("dark");
     expect(host.fontSans).toBe("Inter");
     expect(host.metrics.mdTextSize).toBe(18);
     expect(host.metrics.mdCodeRadius).toBe(lightTheme.radius.lg);
     expect(host.metrics.diffRowPaddingX).toBe(lightTheme.spacing.xl);
-    // No brand role means no derived accent: the host paints its own mark.
+
     expect(host.accent).toBeUndefined();
     expect(nativeAccent(stored)).toBeUndefined();
   });
 
-  // 47 roles × both fills: the broad guard a role added to the colour group must
-  // pass without a new case. It reads the paint report and the seam, not a whole
-  // `auditTheme` per role: 846 audits took 29.7 s against the twenty-second
-  // timeout this case asked for and fifteen times the package's two-second
-  // budget, and the gate's own naming, pair rule and `passed` conjunction are
-  // `incomplete.test.ts`'s and `audit.test.ts`'s. The absent role is dropped from
-  // the base theme where the absence rule is stated — the seam's answer to a
-  // missing role is the same code for every palette, and both the complete sweep
-  // above and `nativeAccent`'s own shipped-style sweep carry the palette
-  // dimension.
   it("never throws for a role any shipped style lost", () => {
     const wrong = colorRoles.flatMap((role) => {
       const broken = {

@@ -1,21 +1,10 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Glyph example: a character wall behind a launch panel, and the same wall
- * stilled under the reduced preference.
- *
- * Composition, not a gallery: the wall's job is to give a quiet surface texture
- * while the content keeps the words and the presses. The second strip shows the
- * two decisions the field leaves to its caller — the mark set and the reduced
- * preference.
- */
-
 import { Card } from "../src/card.js";
 import { Glyph } from "../src/glyph.js";
 import { Button } from "../src/internal/button.js";
 import { textStyle, useTheme } from "../src/internal/theme.js";
 import { MotionProvider } from "../src/motion.js";
 
-/** A launch panel over a wall of marks. */
 export const GlyphExample = () => {
   const theme = useTheme();
 

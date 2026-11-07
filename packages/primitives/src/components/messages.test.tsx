@@ -1,22 +1,3 @@
-/**
- * The words a control announces, in the caller's language.
- *
- * The bug this suite guards: every state word was an English literal baked into
- * a component (`checked`/`mixed`, `pressed`, `Scroll region`, `Code digit 1`,
- * and a rating star's `checked`/`half`/`unchecked` plus its `N of max` name),
- * so a localised interface had no seam and heard English from its own controls —
- * the same defect `loadingLabel` fixed for the busy state. A per-control prop
- * would repeat one vocabulary at every instance, so the seam is a `messages`
- * table on the provider and the pure render functions take the resolved table as
- * their last argument. This file proves both halves that can be proved without a
- * window: the merge rule a nested provider relies on, and that **every** render
- * path announces the table it is handed. `runtime/messages.runtime.test.tsx`
- * proves the provider reaches them through `useMessages`.
- *
- * The default direction is held too: a caller who names no words gets exactly
- * what the library shipped, so adopting the seam changes no existing screen.
- */
-
 import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
 import * as Arr from "effect/Array";
@@ -57,7 +38,6 @@ import {
   hostPropString,
 } from "./testing/element.js";
 
-/** A caller's table: the words a French interface announces. */
 const french: PrimitiveMessages = {
   selection: { checked: "coché", unchecked: "décoché", mixed: "partiel" },
   press: { pressed: "enfoncé", notPressed: "relâché" },
@@ -70,14 +50,6 @@ const french: PrimitiveMessages = {
     `${end === "start" ? "minimum" : "maximum"} de ${label}`,
 };
 
-/**
- * A table whose three sentences answer nothing.
- *
- * A localised table is written once and indexed per row, so a row that was not
- * translated answers `""` — the same shape a formatter with no entry for one
- * value has. The sentences are the only names a star, a code cell and a range's
- * two thumbs have.
- */
 const silent: PrimitiveMessages = {
   ...french,
   starName: () => "",
@@ -91,11 +63,9 @@ const flag = (value: boolean): ValueState<boolean> =>
 const text = (value: string): ValueState<string> =>
   initValueState(Option.some(value), "");
 
-/** The announced state word of an element. */
 const announced = (element: ReactElement) =>
   expectSome(hostProp(element, "aria-valuetext"));
 
-/** The announced state words of a group's option rows. */
 const rows = (element: ReactElement) =>
   Arr.map(elementChildren(element), announced);
 
@@ -108,8 +78,6 @@ const options = [
 
 describe("resolveMessages", () => {
   it("hands back the shipped table itself when nothing is overridden", () => {
-    // A copy per provider would be a second table to compare; the shipped one
-    // is the identity a caller who names no words should get.
     expect(resolveMessages()).toBe(defaultMessages);
     expect(defaultMessages.scrollRegion).toBe("Scroll region");
   });
@@ -124,9 +92,6 @@ describe("resolveMessages", () => {
   });
 
   it("extends the table above it, which is what a nested provider does", () => {
-    // The bug guarded: a nested provider that names only the words it changes
-    // used to reset every other group, so a dialog's own vocabulary silenced the
-    // page around it.
     const resolved = resolveMessages({ selection: french.selection }, french);
     expect(resolved.selection).toEqual(french.selection);
     expect(resolved.press).toEqual(french.press);
@@ -134,14 +99,6 @@ describe("resolveMessages", () => {
   });
 
   it("keeps a key a forwarded table leaves undefined", () => {
-    // The bug guarded: the merge spread the caller's keys over the inherited
-    // table, so a group a caller forwarded as `undefined` (an optional prop it
-    // never received) erased it. A localised tree dropped back to the shipped
-    // English for that group, and the two keys that are sentences made their
-    // component throw during render — `messages.starName is not a function`
-    // from Rating and `messages.codeDigit is not a function` from OTPField —
-    // which a window paints as an empty area, not an error. A key written
-    // `undefined` inherits, the rule `extendTheme` applies to a theme's groups.
     const resolved = resolveMessages(
       {
         selection: undefined,
@@ -162,17 +119,8 @@ describe("resolveMessages", () => {
   });
 
   it("reads a words table a store handed back, without a cast", () => {
-    // The bug guarded: `messages` is interface copy an application may keep in
-    // a settings record, and JSON writes `null` for the field it never carried —
-    // so a provider handed the decoded table read `messages.selection` straight
-    // off it and threw `TypeError: Cannot read properties of null (reading
-    // 'selection')` out of the render, which took every control in the tree
-    // with it. A `null` table is absence, the rule `extendTheme` follows for a
-    // stored theme: the table above the provider stands, unchanged.
     expect(resolveMessages(null)).toBe(defaultMessages);
-    // A stored pack carries only the string groups: JSON cannot encode the
-    // three sentences, so they are absent (and inherit), and a group the pack
-    // never filled is `null` (and inherits whole).
+
     const stored: MessagesSource = {
       selection: { checked: "coché", unchecked: null, mixed: null },
       press: null,
@@ -180,8 +128,7 @@ describe("resolveMessages", () => {
       scrollRegion: null,
     };
     const resolved = resolveMessages(stored, french);
-    // The row the pack translated is the caller's; the rows it lost — and the
-    // group it never carried — stay the table above the provider, not English.
+
     expect(resolved.selection.checked).toBe("coché");
     expect(resolved.selection.unchecked).toBe("décoché");
     expect(resolved.selection.mixed).toBe("partiel");
@@ -189,8 +136,7 @@ describe("resolveMessages", () => {
     expect(resolved.starName(1, 3)).toBe("étoile 1 sur 3");
     expect(resolved.codeDigit(0, undefined)).toBe("Code chiffre 1");
     expect(resolved.scrollRegion).toBe("Zone de défilement");
-    // A stored row written blank is the other absence: the shipped word stands,
-    // so a control's only announcement is never empty.
+
     expect(
       selectionWord(
         "checked",
@@ -199,15 +145,6 @@ describe("resolveMessages", () => {
     ).toBe("checked");
   });
   it("reads a slot a store wrote as data as the table above it", () => {
-    // The bug guarded: a slot inherited only when it was `null`/`undefined`
-    // (`??`), and the table is data an application keeps in a settings record.
-    // An app that stores its copy as a template string wrote one where a
-    // function belongs, and the render then called it — `TypeError:
-    // messages.starName is not a function` out of Rating (and `codeDigit` from
-    // OTPField, `rangeEnd` from RangeSlider) — which a window paints as an empty
-    // area rather than an error. A row written as a number reached the words
-    // seam the same way and threw `self.trim is not a function`. Only a function
-    // is a sentence and only text is a row; anything else inherits.
     const stored: MessagesSource = {
       starName: "star {index} of {max}",
       codeDigit: 42,
@@ -220,15 +157,13 @@ describe("resolveMessages", () => {
     expect(resolved.codeDigit(0, undefined)).toBe("Code chiffre 1");
     expect(resolved.rangeEnd("Prix", "start")).toBe("minimum de Prix");
     expect(resolved.scrollRegion).toBe("Zone de défilement");
-    // The row the store wrote as text is still the caller's; only the shape a
-    // word cannot be is the table's above it.
+
     expect(resolved.selection).toEqual({
       checked: french.selection.checked,
       unchecked: "décoché",
       mixed: french.selection.mixed,
     });
-    // The paint that used to throw: a rating handed the resolved table names
-    // every star.
+
     expect(
       Arr.map(
         elementChildren(
@@ -254,16 +189,11 @@ describe("resolveMessages", () => {
 
 describe("every control announces the table it is handed", () => {
   it("names a range's two ends in the caller's sentence", () => {
-    // The bug this guards: both thumb names were built as `<label> minimum` /
-    // `<label> maximum` inside the component, so a localised range announced an
-    // English suffix with no seam at all — not even a per-instance prop, unlike
-    // the busy word. A sentence over the name is what a language that puts the
-    // end first needs.
     expect(rangeThumbNames("Prix", french.rangeEnd)).toEqual([
       "minimum de Prix",
       "maximum de Prix",
     ]);
-    // A blank group name names nothing, rather than " minimum".
+
     expect(rangeThumbNames(undefined, french.rangeEnd)).toEqual([
       undefined,
       undefined,
@@ -272,8 +202,7 @@ describe("every control announces the table it is handed", () => {
       "Price minimum",
       "Price maximum",
     ]);
-    // The component asks the table for the sentence: the painted thumbs carry
-    // the caller's words, not a suffix.
+
     const range = renderRangeSlider(
       { label: "Prix" },
       testTheme,
@@ -344,12 +273,6 @@ describe("every control announces the table it is handed", () => {
   });
 
   it("names each star and announces its fill in the caller's words", () => {
-    // The bug this guards: a star's name was the template `"N of max"` and its
-    // state was the fill vocabulary `checked`/`half`/`unchecked`, both English
-    // literals inside the component, so a localised rating spoke English while
-    // every other control followed the provider's table. A star's fill is not a
-    // selection state — every star of a rated group is "checked" — which is why
-    // it is its own group and its own sentence.
     const stars = elementChildren(
       renderRating(
         { max: 3, allowHalf: true },
@@ -424,7 +347,7 @@ describe("every control announces the table it is handed", () => {
       "Zone de défilement",
     );
     expect(expectSome(hostProp(region("Chat"), "aria-label"))).toBe("Chat");
-    // A non-focusable viewport is not a region at all, named or not.
+
     expect(
       hostProp(
         renderScrollAreaViewport(
@@ -469,10 +392,6 @@ describe("every control announces the table it is handed", () => {
   });
 
   it("announces a busy action and an indeterminate bar in the caller's words", () => {
-    // The bug this guards: the busy word and the indeterminate word were the
-    // only announced copy outside the table, so a French tree that named every
-    // state word still heard "Loading" from each action and "loading" from each
-    // bar until it repeated a prop on every instance.
     const button = renderButton(
       { loading: true },
       testTheme,
@@ -481,8 +400,7 @@ describe("every control announces the table it is handed", () => {
       french,
     );
     expect(expectSome(hostProp(button, "aria-description"))).toBe("Chargement");
-    // The busy spinner is handed the same word; its own case below proves the
-    // word becomes the status name.
+
     const [spinner] = elementChildren(button);
     expect(
       expectSome(elementProp(spinner ?? expect.fail("no spinner"), "label")),
@@ -495,7 +413,7 @@ describe("every control announces the table it is handed", () => {
     expect(
       announced(renderProgress({ label: "Import" }, testTheme, 0, french)),
     ).toBe("chargement");
-    // A determined bar reports a share, so the loading word cannot reach it.
+
     expect(announced(renderProgress({ value: 42 }, testTheme, 0, french))).toBe(
       "42%",
     );
@@ -530,11 +448,6 @@ describe("every control announces the table it is handed", () => {
 
 describe("a sentence a caller's table says nothing for", () => {
   it("names a range's ends from the shipped sentence", () => {
-    // The bug guarded: `rangeEnd` is a sentence the range calls with the
-    // caller's own label, and a table with a missing row answers `""` — the
-    // exact shape `spokenText` exists for. Both thumbs published an empty name,
-    // so a reader heard two unnamed sliders. A blank answer is absence, so the
-    // shipped sentence names the ends; a real answer is trimmed and used.
     expect(rangeThumbNames("Prix", silent.rangeEnd)).toEqual([
       "Prix minimum",
       "Prix maximum",
@@ -549,9 +462,7 @@ describe("a sentence a caller's table says nothing for", () => {
         (label, end) => ` ${end === "start" ? "min" : "max"} ${label} `,
       ),
     ).toEqual(["min Prix", "max Prix"]);
-    // The group's own name is the other blank: a caller who has not named the
-    // control names neither end, which is what the helper's own doc promises
-    // and what `accessibleName` decides for every other name site.
+
     expect(rangeThumbNames("", french.rangeEnd)).toEqual([
       undefined,
       undefined,
@@ -560,8 +471,7 @@ describe("a sentence a caller's table says nothing for", () => {
       undefined,
       undefined,
     ]);
-    // The painted thumbs carry the fallback too, so the rule is not the
-    // helper's alone.
+
     const range = renderRangeSlider(
       { label: "Prix" },
       testTheme,
@@ -593,10 +503,6 @@ describe("a sentence a caller's table says nothing for", () => {
   });
 
   it("names each star from the shipped sentence", () => {
-    // The bug guarded, one control over: a star's `starName` answer was
-    // published as it arrived, so a table with a missing row left every star of
-    // the group an unnamed radio — a reader heard "checked" with no idea which
-    // star. The shipped sentence is the fallback, and a real answer is trimmed.
     const stars = (messages: PrimitiveMessages): ReadonlyArray<string> =>
       Arr.map(
         elementChildren(
@@ -628,10 +534,6 @@ describe("a sentence a caller's table says nothing for", () => {
   });
 
   it("names each code cell from the shipped sentence", () => {
-    // The bug guarded, the third sentence: `codeDigit` is called per cell with
-    // the field's own name, and a blank answer named every cell with nothing —
-    // six unnamed inputs a reader can only count by pressing Tab. The field's
-    // name still leads the shipped sentence, so the cells stay groupable.
     const cells = (
       label: string | undefined,
       messages: PrimitiveMessages,
@@ -677,13 +579,6 @@ describe("a sentence a caller's table says nothing for", () => {
   });
 });
 
-/**
- * A table whose state words are there but blank.
- *
- * A translation is written once and filled per state, so a row nobody reached
- * is `""` — the same blank a formatter or a sentence answers, and the shape
- * every rule in this package reads as absence.
- */
 const hollow: PrimitiveMessages = {
   ...french,
   selection: { checked: "", unchecked: "", mixed: "" },
@@ -695,13 +590,6 @@ const hollow: PrimitiveMessages = {
 
 describe("a state word a caller's table says nothing for", () => {
   it("answers the shipped word for the state that is blank", () => {
-    // The bug guarded: `selectionWord`, `pressWord` and `starWord` published a
-    // caller's word as it arrived, so one state a localised table never reached
-    // (`""`) announced **nothing** on `aria-valuetext` — the only channel this
-    // runtime gives a checkbox, a switch, a toggle or a rating star, because it
-    // has no `aria-checked`/`aria-pressed`. A blank answer is absence, the rule
-    // `spokenText` already applies to a formatter and `spokenSentence` to a
-    // sentence, so the shipped word stands; a real one is trimmed and used.
     expect(selectionWord("checked", hollow.selection)).toBe("checked");
     expect(selectionWord("unchecked", hollow.selection)).toBe("unchecked");
     expect(selectionWord("indeterminate", hollow.selection)).toBe("mixed");
@@ -710,12 +598,10 @@ describe("a state word a caller's table says nothing for", () => {
     expect(starWord("checked", hollow.star)).toBe("checked");
     expect(starWord("half", hollow.star)).toBe("half");
     expect(starWord("unchecked", hollow.star)).toBe("unchecked");
-    // The loading words are the same kind of word: `busy` names a busy action
-    // and its spinner, `indeterminate` is a bar's only report.
+
     expect(busyWord(hollow.loading)).toBe("Loading");
     expect(indeterminateWord(hollow.loading)).toBe("loading");
-    // Resolution is per word, not per group: the rows a table did translate
-    // keep the caller's language.
+
     expect(
       selectionWord("checked", {
         checked: "coché",
@@ -730,7 +616,7 @@ describe("a state word a caller's table says nothing for", () => {
         mixed: "partiel",
       }),
     ).toBe("partiel");
-    // A real word is trimmed, the rule every name site follows.
+
     expect(
       selectionWord("checked", {
         checked: "  coché  ",
@@ -785,9 +671,7 @@ describe("a state word a caller's table says nothing for", () => {
       ),
     );
     expect(Arr.map(stars, announced)).toEqual(["half", "unchecked"]);
-    // A focusable scroller is a tab stop, and a tab stop with no name is one
-    // assistive technology cannot describe — the defect `DEFAULT_SCROLL_NAME`
-    // exists to prevent.
+
     expect(
       expectSome(
         hostProp(
@@ -824,10 +708,6 @@ describe("a state word a caller's table says nothing for", () => {
   });
 
   it("keeps a busy prop's blank as the silence it documents", () => {
-    // The opt-out is the **prop**, not the table: a blank `loadingLabel` is a
-    // deliberate silence on an action whose own text still says what is
-    // happening, while a blank table row is a missing translation. The two must
-    // not collapse into one rule.
     const silentButton = renderButton(
       { loading: true, loadingLabel: "" },
       testTheme,
@@ -847,8 +727,6 @@ describe("a state word a caller's table says nothing for", () => {
 
 describe("a caller who names no words", () => {
   it("gets exactly the words the library shipped", () => {
-    // The compatibility direction: adopting the seam must not change a screen
-    // that names nothing.
     expect(
       announced(
         renderCheckbox({ checked: true }, testTheme, flag(true), idle, vi.fn()),
@@ -881,7 +759,7 @@ describe("a caller who names no words", () => {
       Arr.map(stars, (star) => expectSome(hostProp(star, "aria-label"))),
     ).toEqual(["1 of 2", "2 of 2"]);
     expect(Arr.map(stars, announced)).toEqual(["half", "unchecked"]);
-    // The loading words ship as the library's own English too.
+
     const button = renderButton({ loading: true }, testTheme, idle);
     expect(expectSome(hostProp(button, "aria-description"))).toBe("Loading");
     expect(announced(renderProgress({}, testTheme, 0))).toBe("loading");

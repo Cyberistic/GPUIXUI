@@ -1,16 +1,3 @@
-/**
- * The file tree's pure half: what a path is, how it nests, and the glyph a row
- * paints.
- *
- * A file tree is the generic `@gpuixui/data` tree with a **kind** — a folder, a
- * source file, an image, a data file, a config file — so a row can paint the
- * right glyph. {@link buildFileTree} turns a flat list of `/`-separated paths
- * into the nested {@link FileNode} tree the generic controller flattens;
- * {@link fileKindOf} and {@link fileIcon} answer the glyph. Expansion, the
- * cursor, type-ahead and the keyboard stay the generic tree's rules
- * (`@gpuixui/data`), which this package reuses rather than re-implements.
- */
-
 import {
   findRow,
   flattenTree,
@@ -26,22 +13,18 @@ import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
 
-/** What a file tree distinguishes, for the glyph a row paints. */
 export type FileKind = "folder" | "file" | "image" | "code" | "data" | "config";
 
-/** One node of a file tree: a name, a path, and children when it is a folder. */
 export interface FileNode {
-  /** The leaf name, without its ancestors. */
   readonly name: string;
-  /** The full `/`-joined path, stable across the tree. */
+
   readonly path: string;
-  /** The folder's children, in paint order. Absent on a file. */
+
   readonly children?: ReadonlyArray<FileNode>;
-  /** A glyph that overrides the kind's own — `FileTreeFile`'s `icon` slot. */
+
   readonly icon?: IconName;
 }
 
-/** Extensions painted as an image glyph. */
 const IMAGE_EXTENSIONS: ReadonlyArray<string> = [
   "png",
   "jpg",
@@ -52,7 +35,6 @@ const IMAGE_EXTENSIONS: ReadonlyArray<string> = [
   "ico",
 ];
 
-/** Extensions painted as a source glyph. */
 const CODE_EXTENSIONS: ReadonlyArray<string> = [
   "ts",
   "tsx",
@@ -74,7 +56,6 @@ const CODE_EXTENSIONS: ReadonlyArray<string> = [
   "sh",
 ];
 
-/** Extensions painted as a config glyph. */
 const CONFIG_EXTENSIONS: ReadonlyArray<string> = [
   "json",
   "yaml",
@@ -86,10 +67,8 @@ const CONFIG_EXTENSIONS: ReadonlyArray<string> = [
   "gitignore",
 ];
 
-/** Extensions painted as a data glyph. */
 const DATA_EXTENSIONS: ReadonlyArray<string> = ["csv", "sql", "db", "sqlite"];
 
-/** The extension after the last dot, or `None` when the name has no dot. */
 const extensionOf = (name: string): Option.Option<string> => {
   const segments = Str.split(".")(name);
   return segments.length > 1
@@ -97,12 +76,6 @@ const extensionOf = (name: string): Option.Option<string> => {
     : Option.none();
 };
 
-/**
- * Classify a file or folder by its name.
- *
- * A directory is always `folder`; a file's kind comes from its extension, with
- * `file` the fallback an unknown or extension-less name lands on.
- */
 export const fileKindOf = (name: string, isDirectory: boolean): FileKind => {
   if (isDirectory) return "folder";
   const extension = Option.getOrElse(extensionOf(name), () => "");
@@ -113,18 +86,9 @@ export const fileKindOf = (name: string, isDirectory: boolean): FileKind => {
   return "file";
 };
 
-/**
- * The glyph a row paints.
- *
- * shadcn's file tree paints one folder and one file glyph; the chevron says
- * whether a folder is open, so the glyph does not also have to. The kind is
- * still classified (an app can ask for it), but it does not change the paint:
- * a column of six different glyphs read as decoration, not as a file list.
- */
 export const fileIcon = (kind: FileKind, _expanded: boolean): IconName =>
   kind === "folder" ? "folder" : "file";
 
-/** A path into its non-empty segments, failing on a blank path. */
 const toSegments = (
   path: string,
 ): Result.Result<ReadonlyArray<string>, void> => {
@@ -134,7 +98,6 @@ const toSegments = (
     : Result.failVoid;
 };
 
-/** The segments after the first, failing when a path is a single segment. */
 const nonEmptyTail = (
   segments: ReadonlyArray<string>,
 ): Result.Result<ReadonlyArray<string>, void> =>
@@ -146,7 +109,6 @@ const nonEmptyTail = (
         : Result.failVoid,
   });
 
-/** Folders first, then by name — the order a file tree reads. */
 const byFolderThenName: Order.Order<FileNode> = Order.combine(
   Order.mapInput(Order.Number, (node: FileNode) =>
     node.children === undefined ? 1 : 0,
@@ -178,41 +140,21 @@ const build = (
     sortNodes,
   );
 
-/**
- * A nested file tree from a flat list of `/`-separated paths.
- *
- * A path that has descendants is a folder, even when it also appears bare
- * (`"src"` beside `"src/a.ts"`), and a duplicated path paints one node. The
- * result is sorted folders-first, then by name, so the same input always
- * answers the same tree.
- */
 export const buildFileTree = (
   paths: ReadonlyArray<string>,
 ): ReadonlyArray<FileNode> => build([], Arr.filterMap(paths, toSegments));
 
-/** The hierarchy the generic tree walks: a node's path is its key. */
 export const fileTreeSpec: TreeSpec<FileNode> = {
   keyOf: (node) => node.path,
   childrenOf: (node) => node.children ?? [],
 };
 
-/**
- * The rows a reader can see, from the open folder paths.
- *
- * A stored expansion is read by the caller (`expandedSet`) before it reaches
- * this walk, so a list that is not a list never opens a row.
- */
 export const visibleFileRows = (
   roots: ReadonlyArray<FileNode>,
   expanded: Iterable<string>,
 ): ReadonlyArray<TreeRow<FileNode>> =>
   flattenTree(roots, fileTreeSpec, HashSet.fromIterable(expanded));
 
-/**
- * The row the tab stop sits on: the selected file while it paints, else the
- * first visible row. A selection hidden inside a closed folder is not a tab
- * stop, because the keyboard cannot stand on a row that is not painted.
- */
 export const fileTreeTab = <T>(
   rows: ReadonlyArray<TreeRow<T>>,
   selected: string | undefined,
@@ -221,7 +163,6 @@ export const fileTreeTab = <T>(
     Arr.head(rows),
   );
 
-/** The open paths as a stable, store-friendly list: sorted, one copy each. */
 export const fileTreePaths = (
   expanded: Iterable<string>,
 ): ReadonlyArray<string> =>

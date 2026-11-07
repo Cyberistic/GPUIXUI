@@ -1,15 +1,3 @@
-/**
- * Tier 3 probes: `table-select-sort` and `table-column-resize`.
- *
- * GPUix has no table primitive, so the question is whether the composition it
- * does have can carry a data grid: fixed-width cells in flex rows, a vertical
- * scroller, sort/select in React state, and a drag-resized column. The probes
- * assert numbers; a `failed` verdict is a valid outcome the data-grid plan must
- * then design around (plan `130`).
- *
- * Deviation from plan `130` §3.1: `style.gridTemplateColumns` is a **column
- * count** in 0.10.0, not a CSS track list, so cells use explicit flex widths.
- */
 import { useState } from "react";
 import { Effect, Order } from "effect";
 import * as Arr from "effect/Array";
@@ -45,10 +33,8 @@ const ordered = (descending: boolean): ReadonlyArray<Row> => {
   return descending ? Arr.reverse(sorted) : sorted;
 };
 
-/** Shared cell metrics; the border colour comes from the active theme. */
 const cell = { padding: 6, borderBottomWidth: 1 } as const;
 
-/** A sortable, selectable table with a drag-resized name column. */
 const TableProbe = () => {
   const theme = useTheme();
   const [descending, setDescending] = useState(false);
@@ -232,9 +218,6 @@ export const tableSelectSortScenario: ScenarioBody = {
         "rows=200 sorted=name-asc selected=none",
       );
 
-      // Select and navigate *before* sorting: row 3 is visible in ascending
-      // order, but after a descending sort it sits ~4 700px down, outside the
-      // 220px scroller, so a click on it would hit nothing (plan `140` §4).
       ctx.host.click("table-row-3");
       yield* ctx.expectContains(
         "row click selected it",

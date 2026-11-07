@@ -1,33 +1,3 @@
-/**
- * The `sidebar-clip-lifecycle` probe: does a collapsing sidebar's **outer
- * clipping box** hide its content in the paint and in the hit test, or only in
- * the layout report?
- *
- * Tier 4's *Collapsible sidebars* row names the mechanism — `motion` width on an
- * outer clipping container rather than an inner reflow — and the evidence behind
- * it is layout arithmetic: `motion-geometry` sampled a raw box's size and
- * `docking-nested` collapsed a caller-owned width to 0. A layout read cannot
- * answer the question, because a clipped child still **reports** its full box
- * (`dock-focus-lifecycle` measured a control keeping its 12pt box inside a
- * zero-width parent). The paint is what a sidebar depends on: a 120pt sidebar
- * that still paints its 240pt content covers the document it is collapsing next
- * to, and if the hit test follows the paint, every control in the hidden half
- * keeps taking presses from the pane beside it.
- *
- * The fixture: a fixed 240pt content (a 200pt spacer then a 40pt **marker**)
- * inside a width-tweened box, beside a document pane. The document is an
- * **absolutely positioned** pane painted *before* the sidebar and filling the
- * row, so the sidebar's overflow would land on top of it. That is what makes the
- * negative control honest: with the row laid out document-after-sidebar, an
- * overflowing marker is simply covered by the next sibling's opaque fill — the
- * probe would pass with no clipping at all. Here the marker can only be invisible
- * because the clip hides it.
- *
- * The travelling frame is found on the renderer's **motion clock**: frozen
- * before the press, stepped until the sidebar sits below the marker's start,
- * then captured. `duration` is seconds in the runtime's grammar, but the probe
- * **finds** a frame rather than assuming an offset from the number.
- */
 import { Duration, Effect } from "effect";
 import * as Option from "effect/Option";
 import { motion, useWindowSize } from "@gpuix/react";
@@ -61,16 +31,13 @@ import {
   type SidebarBox,
 } from "./sidebar-clip.js";
 
-/** The margin a sample keeps from the clip's edge. */
 const SAMPLE_MARGIN = 6;
 
-/** The captures a reader can look at, one per measured state. */
 const OPEN = "sidebar-open";
 const MID = "sidebar-mid";
 const CLOSED = "sidebar-closed";
 const AGAIN = "sidebar-again";
 
-/** The view: one clipping sidebar over one document pane. */
 export const SidebarClipProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -85,7 +52,7 @@ export const SidebarClipProbe = (): ReactNode => {
     display: "flex" as const,
     flexDirection: "row" as const,
   };
-  /** The document is painted first and fills the row, so overflow lands on it. */
+
   const document = {
     position: "absolute" as const,
     left: 0,
@@ -94,7 +61,7 @@ export const SidebarClipProbe = (): ReactNode => {
     height: SIDEBAR_ROW_HEIGHT,
     backgroundColor: SIDEBAR_FILLS.main,
   };
-  /** The fixed content, so a clip hides it instead of reflowing it. */
+
   const content = {
     width: SIDEBAR_CONTENT_WIDTH,
     height: SIDEBAR_ROW_HEIGHT,
@@ -131,8 +98,7 @@ export const SidebarClipProbe = (): ReactNode => {
           onClick={() => setMainPresses((count) => count + 1)}
           style={document}
         />
-        {/* The wrapper shrink-wraps the animated box, so its own box is the
-            animated width; `motion.div` takes no `testId`. */}
+        {}
         <div
           testId={SIDEBAR_IDS.clip}
           style={{
@@ -196,15 +162,12 @@ export const SidebarClipProbe = (): ReactNode => {
   );
 };
 
-/** The probe's steps: open, a frozen tween, the travelling frame, closed. */
 export const sidebarClipSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor(SIDEBAR_IDS.toggle);
-    // A previous probe's screenshot stalls the animation clock, so the window is
-    // settled before the first press — the rule `motion-geometry` records.
+
     yield* Effect.sleep(Duration.millis(600));
 
-    /** The box `testId` paints, failing by name when it paints nothing. */
     const box = (
       testId: string,
     ): Effect.Effect<
@@ -218,15 +181,8 @@ export const sidebarClipSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         );
       });
 
-    // The row never moves, so its left edge is read once; the search below then
-    // polls one box and asserts nothing until it has a frame to measure.
     const row = yield* box(SIDEBAR_IDS.row);
 
-    /**
-     * The clip's width, read from the wrapper that shrink-wraps the animated
-     * box. It is the one box that follows the tween without the content
-     * reporting the clip's own limit.
-     */
     const widthNow = (): Effect.Effect<number, Smoke.SmokeHostError> =>
       Effect.map(
         Effect.map(ctx.host.bounds(SIDEBAR_IDS.clip), Option.fromNullishOr),
@@ -236,7 +192,6 @@ export const sidebarClipSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         }),
       );
 
-    /** The readout once it names `expected`, which a press reports by a frame. */
     const expectState = (
       label: string,
       expected: string,
@@ -251,7 +206,6 @@ export const sidebarClipSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         );
       });
 
-    /** Captures `name` and hands back the frame with its device scale. */
     const captureFrame = (
       name: string,
     ): Effect.Effect<
@@ -269,7 +223,6 @@ export const sidebarClipSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         return { frame, scale };
       });
 
-    /** A logical point's exact colour, failing by name when it lies outside. */
     const sample = (
       frame: Pixels.Pixels,
       scale: number,
@@ -280,7 +233,6 @@ export const sidebarClipSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       Smoke.SmokeAssertionError | Smoke.SmokeHostError
     > => ctx.expectSome(label, colourAt(frame, point, scale));
 
-    /** How many pixels of the marker paint inside `region`. */
     const markerPaint = (
       frame: Pixels.Pixels,
       scale: number,
@@ -294,13 +246,11 @@ export const sidebarClipSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         countPaint(frame, region, scale, SIDEBAR_FILLS.marker),
       );
 
-    /** The point at the marker's own centre, over a given clip edge. */
     const markerCentre = (): { readonly x: number; readonly y: number } => ({
       x: row.x + SIDEBAR_MARKER_X + SIDEBAR_MARKER_WIDTH / 2,
       y: row.y + SIDEBAR_ROW_HEIGHT / 2,
     });
 
-    // ── Open: the control the hidden band is read against ────────────────────
     yield* ctx.expectNear(
       "the sidebar rests on the open width",
       yield* settleNumber(widthNow()),
@@ -357,7 +307,6 @@ export const sidebarClipSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // ── The tween, on the renderer's motion clock ────────────────────────────
     const pauseClock = yield* ctx.expectSome(
       "the window exposes a motion clock",
       Option.fromNullishOr(ctx.host.clockPause),
@@ -376,8 +325,7 @@ export const sidebarClipSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       "the collapsed sidebar",
       sidebarReadout({ ...SIDEBAR_REST, open: false }),
     );
-    // The clock is frozen, so the press changes the target and not the frame:
-    // a width that moved here would be a tween no clock controls.
+
     yield* ctx.expectNear(
       "a frozen clock leaves the tween at the width it started from",
       yield* widthNow(),
@@ -385,7 +333,6 @@ export const sidebarClipSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    /** Steps the frozen clock until a frame lies below the marker's start. */
     const travel = (
       left: number,
     ): Effect.Effect<number, Smoke.SmokeHostError> =>
@@ -445,15 +392,13 @@ export const sidebarClipSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       ),
       true,
     );
-    // A press aimed at the marker's centre is a press over the document at this
-    // width: the hit test either follows the paint or it does not.
+
     yield* ctx.host.click(SIDEBAR_IDS.marker);
     yield* expectState(
       "a press at the clipped marker",
       sidebarReadout({ open: false, markerPresses: 0, mainPresses: 1 }),
     );
 
-    // ── Closed: the width the row is left with ───────────────────────────────
     yield* resumeClock();
     const closedWidth = yield* settleNumber(widthNow());
     yield* ctx.expectNear(
@@ -497,7 +442,6 @@ export const sidebarClipSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       sidebarReadout({ open: false, markerPresses: 0, mainPresses: 2 }),
     );
 
-    // ── Reopened: the box returns, and the marker answers its own press ──────
     yield* ctx.host.click(SIDEBAR_IDS.toggle);
     yield* expectState(
       "the reopened sidebar",

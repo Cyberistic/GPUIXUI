@@ -1,15 +1,8 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * The desktop's ground, drawn here — no bitmap. Luna's is a blue sky over one
- * rolling green hill; Aero's is a deep blue field with soft blooms of light.
- * The runtime paints two-stop gradients only, so every shape is one gradient,
- * and a hill is the top arc of a very large circle.
- */
 import type { LinearGradientBackground, StyleDesc } from "@gpuix/react";
 import * as Arr from "effect/Array";
 import type { DesktopLook } from "./data.js";
 
-/** A two-stop linear gradient, `angle` in CSS degrees (180 runs top to bottom). */
 export const gradient = (
   angle: number,
   from: string,
@@ -28,7 +21,6 @@ const fill = (style: StyleDesc): StyleDesc => ({
   ...style,
 });
 
-/** A circle of `size` centred at (`x`, `y`). */
 const disc = (
   x: number,
   y: number,
@@ -44,7 +36,6 @@ const disc = (
     ...style,
   });
 
-/** Clouds: rounded runs of white, wider than tall. */
 const clouds: ReadonlyArray<readonly [number, number, number, number]> = [
   [0.12, 0.12, 0.22, 0.05],
   [0.2, 0.17, 0.16, 0.04],
@@ -119,7 +110,6 @@ const Bloom = ({ width, height }: { width: number; height: number }) => (
   </>
 );
 
-/** The ground for `look`, filling a `width` × `height` desktop. */
 export const Wallpaper = ({
   look,
   width,

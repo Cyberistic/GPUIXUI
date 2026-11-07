@@ -15,17 +15,6 @@ import {
   themeFindings,
 } from "../components/docs/theme-editor-logic";
 
-/**
- * The theme editor probe's premise, held to the site it presses.
- *
- * `scripts/theme-editor-probe.ts` opens `/themes` in a browser whose
- * `localStorage` throws on every call, edits one colour, reads the audit and
- * presses **Reset**. Its expectation has to be the gate's own answer, not a
- * second copy of it: the probe writes the page's `background` value into
- * `primary`, and the case below asks `themeFindings` whether that edit is the
- * failure the probe expects.
- */
-
 const app = new URL("../../", import.meta.url);
 const read = (path: string): string => readFileSync(new URL(path, app), "utf8");
 const policy = read("../../docs/preview-strategy.md").replace(/\s+/g, " ");
@@ -33,7 +22,6 @@ const page = read("content/docs/themes.mdx").replace(/\s+/g, " ");
 
 describe("the theme editor probe", () => {
   it("expects the finding the gate itself reports for its edit", () => {
-    // The probe's edit is `primary` painted in the page's own `background`.
     const findings = themeFindings("light", {
       colors: { primary: themes.light.colors.background },
     });
@@ -53,14 +41,12 @@ describe("the theme editor probe", () => {
     expect(editor).toContain("aria-label={`${role} value`}");
     expect(editor).toContain("gx-te-audit");
     expect(editor).toContain("data-kind={finding.kind}");
-    // The selectors are the page's, not the probe's own invention.
+
     expect(editorSelector.replace(".", "")).toContain("gx-theme-editor");
     expect(typeValue("primary", "#ffffff")).toContain("input[aria-label=");
   });
 
   it("refuses every storage call before the page's own scripts run", () => {
-    // A refusal installed after load is too late: the editor's mount effect has
-    // already read the store by then. The probe passes this as `preload`.
     ["getItem", "setItem", "removeItem"].forEach((call) => {
       expect(storageRefusal).toContain(`Storage.prototype.${call}`);
     });
@@ -82,8 +68,6 @@ describe("the theme editor probe", () => {
   });
 
   it("refuses a readout that is not the shape the probe wrote", () => {
-    // A truncated line must not read as an empty page: the assertions compare
-    // fields, so a missing one has to fail here rather than compare two blanks.
     expect(Option.isNone(parseReadout('{"primary":"#fff"}'))).toBe(true);
     expect(Option.isNone(parseReadout('{"primary":"#fff"'))).toBe(true);
 
@@ -100,8 +84,6 @@ describe("the theme editor probe", () => {
   });
 
   it("teaches the refusal on the page and the policy", () => {
-    // The page promises persistence; it has to say what a refused store does,
-    // the rule `/theming` already states for the platform switch.
     expect(page).toContain("refuses site storage");
     expect(policy).toContain("theme-editor-probe.ts");
     expect(read("README.md")).toContain("scripts/theme-editor-probe.ts");

@@ -1,14 +1,3 @@
-/**
- * The star field's arithmetic, without a renderer.
- *
- * The bugs these guard: a sky that reshuffles between mounts; a star placed
- * outside the box it was measured in (clipped at the edge); a field where every
- * star blinks on the same beat, which reads as a strobe rather than a sky; a
- * "twinkle" whose peak is dimmer than its floor, so it never brightens at all;
- * a delay longer than the twinkle it belongs to; and an unmeasured box painting
- * a sky anyway.
- */
-
 import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
 import {
@@ -21,7 +10,6 @@ import {
   type StarSpec,
 } from "./logic.js";
 
-/** A 360×240 sky of twelve stars on a 2 second twinkle. */
 const sky = (
   overrides: Partial<StarFieldInput> = {},
 ): ReadonlyArray<StarSpec> =>
@@ -87,7 +75,7 @@ describe("starField", () => {
 
     expect(Arr.every(durations, (ms) => ms >= 1_400)).toBe(true);
     expect(Arr.every(durations, (ms) => ms <= 2_600)).toBe(true);
-    // One shared duration would make the sky blink as a single light.
+
     expect(Arr.length(Arr.dedupe(durations))).toBeGreaterThan(1);
   });
 
@@ -100,7 +88,7 @@ describe("starField", () => {
         Math.round(spec.durationMs * 0.6),
       );
     });
-    // Some stars are lit at the first frame; the rest arrive in their own time.
+
     expect(Arr.some(delays, (ms) => ms > 0)).toBe(true);
   });
 

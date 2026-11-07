@@ -11,29 +11,15 @@ import {
 } from "../../lib/style-reference";
 import { StyleReferenceBody } from "./style-reference";
 
-/**
- * The class reference on `/themes`.
- *
- * The page taught ten representative classes, so a consumer writing a recipe
- * had to read `packages/tw` to learn the other eighty. The table is now
- * compiled: every row is `classesToStyle`'s own answer. This suite holds it in
- * both directions — a class the compiler accepts must be taught (the vocabulary
- * is parsed out of `utilities.ts`), and a class the table teaches must compile
- * (a typo would otherwise render a reason instead of a height) — then holds the
- * painted cells and the platform switch to the theme the page resolves.
- */
-
 const utilities = readFileSync(
   new URL("../../../../../packages/tw/src/utilities.ts", import.meta.url),
   "utf8",
 );
 
-/** The literal classes `resolveUtility` names (`name === "border"`). */
 const literals = [...utilities.matchAll(/name === "([^"]+)"/g)].flatMap(
   (match) => (match[1] === undefined ? [] : [match[1]]),
 );
 
-/** The families it resolves by prefix (`name.startsWith("gap-")`). */
 const prefixes = [
   ...utilities.matchAll(/name\.startsWith\("([^"]+)"\)/g),
 ].flatMap((match) => (match[1] === undefined ? [] : [match[1]]));
@@ -49,7 +35,6 @@ const groupNamed = (name: string): ReadonlyArray<string> => {
 const markupFor = (theme: typeof themes.light): string =>
   renderToStaticMarkup(<StyleReferenceBody theme={theme} />);
 
-/** The second cell of one row, so a printed value is read where it lands. */
 const paintedCell = (markup: string, className: string): string | undefined => {
   const escaped = className.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const match = new RegExp(
@@ -67,7 +52,6 @@ const expectedCell = (resolved: ResolvedClass): string =>
 
 describe("the class reference", () => {
   it("teaches every utility the compiler resolves", () => {
-    // Floors, so a parse that stopped matching cannot pass on an empty list.
     expect(literals.length).toBeGreaterThanOrEqual(50);
     expect(prefixes.length).toBeGreaterThanOrEqual(30);
 
@@ -94,7 +78,7 @@ describe("the class reference", () => {
 
     expect(refusedRows).toEqual([]);
     expect(paintedRefusals).toEqual([]);
-    // A class in both tables would teach two answers for one name.
+
     expect(refusedClasses.filter((c) => documented.includes(c))).toEqual([]);
   });
 
@@ -122,7 +106,7 @@ describe("the class reference", () => {
     });
 
     expect(empty).toEqual([...groupNamed("A class that paints nothing")]);
-    // Every other row paints something, so a dropped style is visible.
+
     expect(documented.length - empty.length).toBeGreaterThanOrEqual(80);
   });
 
@@ -161,8 +145,6 @@ describe("the class reference", () => {
     const cells = (theme: typeof themes.light, className: string) =>
       paintedCell(markupFor(theme), className);
 
-    // The two platform styles differ in density and radius, so a table frozen
-    // at one of them would answer the same number for both.
     expect(cells(darwin, "h-9")).not.toBe(cells(linux, "h-9"));
     expect(cells(darwin, "rounded-lg")).not.toBe(cells(linux, "rounded-lg"));
     expect(cells(darwin, "h-9")).toBe(

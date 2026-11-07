@@ -12,10 +12,6 @@ import {
   SbShell,
 } from "./sidebar-kit";
 
-/**
- * Sidebar 02 — the same docs nav with every section collapsible, and a page
- * long enough to scroll under a sticky header.
- */
 const GROUPS = [...DOCS_NAV, DOCS_COMMUNITY];
 
 export const Sidebar02Render = () => (

@@ -1,16 +1,3 @@
-/**
- * Browser preview for the Theme toggler page.
- *
- * The native icon control flips the application between its light and dark
- * theme. The preview paints the same classic crossover the component does: a
- * sun that shrinks into the centre while it fades and a crescent that grows out
- * of it, on one button, over the motion table's `slow` level.
- *
- * The readout reserves the width of both labels in one grid cell, because a
- * caption that changes width would move the button beside it — the layout shift
- * the component's fixed glyph box avoids.
- */
-
 import { useState } from "react";
 import { BrowserIcon } from "./browser-icon";
 

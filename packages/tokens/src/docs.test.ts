@@ -1,31 +1,3 @@
-/**
- * Guards the catalogue against drift. `docs/tokens.md` is the page a consumer
- * reads and states that a token absent from it is not public, so the package is
- * the source and the page must keep up: an export with no line in the catalogue,
- * or a colour role with no table row, is a reader who cannot find the value
- * their theme already carries.
- *
- * The second drift is an import: a README or catalogue snippet that imports a
- * helper this package no longer exports sends a reader to a name that does not
- * exist, and nothing at runtime catches it because the snippet is prose. Every
- * name imported from `@gpuixui/tokens` in either document must be a real runtime
- * or type export.
- *
- * The third is a claim about other packages: the catalogue states which focus
- * ring the component packages paint, and it kept stating the old answer after
- * both adopted the new one. The page is held to the sources that decide it.
- *
- * The fourth is the gate's own report list in the inventory: `auditTheme` grew
- * `syntax` as its eleventh report and the `Contrast contract` row still printed
- * ten, leaving out the check a code block is held to, and it still taught a
- * `secondaryForeground` wash pair the table had retired. The row is read against
- * the gate and the pair table, so a report or a pair cannot outlive the row.
- *
- * `node:fs` is deliberate, as in `exports.test.ts`: this is a check over the
- * repository's own Markdown, and the package keeps zero runtime dependencies by
- * design.
- */
-
 import { readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { fadedPair } from "./fade.js";
@@ -39,7 +11,6 @@ const readme = read("../README.md");
 const designSystem = read("../../../docs/design-system.md");
 const inventory = read("../../../.agents/slop/COMPONENTS.md");
 
-/** One `.agents/slop/COMPONENTS.md` row, by its first cell. */
 const inventoryRow = (name: string): string => {
   const start = inventory.indexOf(`| ${name} |`);
   const end = inventory.indexOf("\n", start);
@@ -48,7 +19,6 @@ const inventoryRow = (name: string): string => {
     : inventory.slice(start, end === -1 ? undefined : end);
 };
 
-/** The package's source files a document may import from — no tests, no examples. */
 const sourceFiles: ReadonlyArray<string> = readdirSync(
   new URL("./", import.meta.url),
 ).filter(
@@ -58,7 +28,6 @@ const sourceFiles: ReadonlyArray<string> = readdirSync(
     !name.includes(".example."),
 );
 
-/** Every name the package declares as an export, value or type. */
 const declared: ReadonlySet<string> = new Set(
   sourceFiles.flatMap((file) =>
     [
@@ -69,7 +38,6 @@ const declared: ReadonlySet<string> = new Set(
   ),
 );
 
-/** The names one document imports from `@gpuixui/tokens` or its React entry. */
 const importedNames = (document: string): ReadonlyArray<string> =>
   [
     ...document.matchAll(
@@ -88,21 +56,14 @@ const importedNames = (document: string): ReadonlyArray<string> =>
 
 const roleRow = (role: string): string => `| \`${role}\` |`;
 
-/** One `## ` section of the catalogue, whitespace flattened so prose can be read as a sentence. */
 const section = (heading: string): string => {
   const start = catalogue.indexOf(heading);
   const end = catalogue.indexOf("\n## ", start + 1);
   return catalogue.slice(start, end).replace(/\s+/g, " ");
 };
 
-/** The runtime exports of the package, excluding nothing: every one is public. */
 const exportedValues = Object.keys(Tokens);
 
-/**
- * Every source file of a package, tests excluded. Two page claims read the
- * component packages' own trees — which focus ring a seam paints, and whether
- * anything consumes the motion package — so the walk lives here once.
- */
 const packageSources = (directory: string): ReadonlyArray<string> =>
   readdirSync(new URL(directory, import.meta.url), {
     withFileTypes: true,
@@ -130,8 +91,6 @@ describe("token catalogue", () => {
   });
 
   it("gives every colour role a row in both colour tables", () => {
-    // The default and high-contrast tables list the same roles; a role present
-    // in only one of them is a reader comparing modes with a missing line.
     const missing = Tokens.colorRoles.filter(
       (role) => catalogue.split(roleRow(role)).length - 1 < 2,
     );
@@ -156,16 +115,6 @@ describe("token catalogue", () => {
   });
 });
 
-/**
- * Guards the denominator every sweep shares. Each contract measures one list —
- * the four built-in themes, a light and a dark theme per platform style and per
- * authored look — and a page that claims the whole set is clean prints how many
- * that is. The Omarchy look made it eighteen while sixteen places across the
- * four documents still printed sixteen, two of them beside a tightest placement
- * the look itself owned, which is the kind of claim a reader checks by counting.
- * The number is the list's length here, so a new style fails until the pages
- * count it.
- */
 describe("the styles a sweep walks", () => {
   const styles = [
     ...Object.values(Tokens.themes),
@@ -183,9 +132,6 @@ describe("the styles a sweep walks", () => {
   const prose = (text: string): string => text.replace(/\s+/g, " ");
 
   it("counts the set its lists name, once per style", () => {
-    // A list that stopped iterating would make every printed count agree on a
-    // number nobody measures, and two styles sharing a name would let one row
-    // stand for two results.
     expect(all).toBe(
       4 + Tokens.platformNames.length * 2 + Tokens.retroNames.length * 2,
     );
@@ -232,14 +178,6 @@ describe("the styles a sweep walks", () => {
   });
 });
 
-/**
- * Guards the audit's report list. `auditTheme` grows a report whenever a
- * contract lands, and the three pages that list them are how a consumer learns
- * what `passed` actually covers: a report with no line is a check the reader
- * never looks at, and a line for a report the gate no longer returns sends them
- * to a property that is `undefined`. The count word is derived from the gate
- * itself, so neither direction can drift.
- */
 describe("the audit's report list", () => {
   const reports = Object.keys(Tokens.auditTheme(Tokens.lightTheme)).filter(
     (key) => key !== "passed",
@@ -262,11 +200,7 @@ describe("the audit's report list", () => {
     "fourteen",
   ] as const;
   const count = words[reports.length] ?? `${reports.length}`;
-  /**
-   * Every sentence that states how many checks the gate runs. A page that
-   * prints a count is telling the reader what `passed` covers, so each phrase
-   * carries the gate's own word rather than one page's copy of it.
-   */
+
   const surfaces = [
     {
       name: "docs/tokens.md",
@@ -317,7 +251,6 @@ describe("the audit's report list", () => {
 
   it("prints the report count the gate has", () => {
     const silent = surfaces.flatMap(({ name, text, phrases }) => {
-      // A page wraps its prose, so a phrase is read across a line break.
       const flat = text.replace(/\s+/g, " ");
       return phrases
         .filter((phrase) => !flat.includes(phrase))
@@ -347,24 +280,12 @@ describe("the audit's report list", () => {
   it("does not teach the secondary action's retired wash pair", () => {
     const row = inventoryRow("Contrast contract");
 
-    // The fill the pointer sees is derived, not a `hover`/`active` role, so the
-    // wash pair was retired from `contrastPairs` when the variant adopted
-    // `filledHover`/`filledPressed` — a row that still prints it sends a reader
-    // to a contract nothing measures.
     expect(row).not.toContain("keeps on the `hover`/`active` wash");
     expect(row).toContain("`filledHover`/`filledPressed`");
     expect(row).toContain("actionFeedbackFailures");
   });
 });
 
-/**
- * Guards the catalogue's claim about which ring the component packages paint.
- * That claim went stale once: the page said they still painted the shadow on
- * every focus path long after both adopted `keyboardFocusRing` at rest. The
- * page is the only place a consumer reads it, so it is held to the sources that
- * decide it — and if a package ever paints the shadow again, this fails and
- * asks for the page to move with it.
- */
 describe("focus adoption claim", () => {
   it("no longer says the packages paint the shadow ring on every focus path", () => {
     expect(catalogue).not.toContain(
@@ -386,16 +307,6 @@ describe("focus adoption claim", () => {
   });
 });
 
-/**
- * Guards the catalogue's **motion** note. This package deliberately ships no
- * motion tokens — `@gpuixui/motion` owns the timing and the reduced-motion
- * policy — and the note explained the split by saying no component consumed the
- * package. That stopped being true when `internal/presence.tsx` became the seam
- * every entering and leaving surface composes, so a page still saying it sends a
- * reader to duplicate timing that is already wired through 41 component files.
- * The note is held to the tree: the seam composes the package's timing, the
- * components import the seam, and the animated ones read a level directly.
- */
 describe("the motion claim", () => {
   it("no longer says nothing consumes the motion package", () => {
     expect(catalogue).not.toContain("No component consumes it yet");
@@ -413,21 +324,13 @@ describe("the motion claim", () => {
   it("matches the sources: the seam composes the timing and components use it", () => {
     const seam = read("../../../packages/components/src/internal/presence.tsx");
 
-    // The seam's timing moved to the motion package's `presence` entry when the
-    // provider landed; the preference and the mounted window are the React
-    // entry's. The seam composes them rather than restating a frame, so the
-    // guard names the symbols it actually uses — a rename upstream fails here
-    // instead of leaving a page that describes a seam nobody can find.
     expect(seam).toContain('from "@gpuixui/motion/presence"');
     expect(seam).toContain("transitionWindowMs");
-    // The preference and the mounted window are the React entry's presence
-    // half: published without the physics hooks, which a fade never samples.
+
     expect(seam).toContain('from "@gpuixui/motion/react/presence"');
     expect(seam).toContain("useSurfaceTiming");
     expect(seam).toContain("useMotionPreference");
 
-    // The retracted claim was "none"; a floor is enough to keep the page honest
-    // without pinning a count that a new component would move.
     const consumers = componentSources.filter((source) =>
       source.includes("internal/presence"),
     );
@@ -439,15 +342,6 @@ describe("the motion claim", () => {
   });
 });
 
-/**
- * Guards the catalogue's statement of a **control's** ring. `controlFocusRing`
- * has two states a consumer chooses between, and the page is how they learn
- * them: a failed validation recolours the outline to `destructive`, and a
- * disabled control declares no ring at all. A page that dropped either would
- * send a reader to a ring their invalid field paints in the wrong colour, or to
- * one that stays on a control that refuses every key — the two defects the
- * helper exists to prevent.
- */
 describe("the control ring's claim", () => {
   const focus = section("## Focus");
 
@@ -459,9 +353,6 @@ describe("the control ring's claim", () => {
   });
 
   it("holds the page to the paint the helper resolves", () => {
-    // The sentence above is a claim about two branches in `styles.ts`: the
-    // outline takes the `destructive` role, and a disabled state returns before
-    // a ring is built. A page cannot outlive either.
     const source = read("../src/styles.ts");
 
     expect(source).toContain("themeColors(theme).destructive");
@@ -469,16 +360,6 @@ describe("the control ring's claim", () => {
   });
 });
 
-/**
- * Guards the catalogue's statement that the two ring seams **delegate** to
- * `controlFocusRing`. The page said they were "where that rule was first
- * written" and that "a seam that has not delegated to it yet is tracked in
- * `.agents/slop/TODO.md`" — true while the helper was new, false the moment both packages
- * adopted it: a reader went looking for a task that no longer existed, and a
- * seam that regressed to its own copy of the rule would have kept the page
- * green. Both directions are read here, so the sentence and the sources move
- * together.
- */
 describe("the ring seams delegate", () => {
   const seams = [
     "../../../packages/primitives/src/core/focus.ts",
@@ -500,28 +381,9 @@ describe("the ring seams delegate", () => {
 
     expect(own).toEqual([]);
   });
-
-  it("says the same thing in the helper's own JSDoc", () => {
-    // The published API doc is the other place a consumer reads the rule, and it
-    // said the two packages "decide the same rule in their own ring seam today"
-    // with the adoption "tracked in .agents/slop/TODO.md" long after both delegated.
-    const source = read("../src/styles.ts");
-
-    expect(source).toContain("both **delegate**");
-    expect(source).not.toContain("tracked in `.agents/slop/TODO.md`");
-  });
 });
 
 describe("filled action adoption claim", () => {
-  /**
-   * The catalogue said the derived fills were "shipped and documented" while
-   * "the component packages still paint a translucent hover", and named the
-   * components package's button — which had already moved to
-   * `filledHover`/`filledPressed`. Both buttons now paint the derived fills;
-   * the page is held to the sources: a package that adopts the fills must move
-   * off the deviation list, and the clause that remains must name the code that
-   * is still there (the `@gpuixui/tw` recipe).
-   */
   const limitation = (() => {
     const start = catalogue.indexOf("- The derived fills");
     const end = catalogue.indexOf("\n- ", start + 1);
@@ -529,10 +391,6 @@ describe("filled action adoption claim", () => {
   })();
 
   it("names the components package as the adopter", () => {
-    // The components' action delegates to the primitives' button (plan 160), so
-    // the fills it paints are the primitives' variant table's; the page must
-    // name the delegation rather than a paint the components' file no longer
-    // holds.
     const source = read("../../../packages/components/src/internal/button.tsx");
     const variants = read("../../../packages/primitives/src/core/variants.ts");
 
@@ -560,10 +418,6 @@ describe("filled action adoption claim", () => {
   });
 
   it("says the tw recipe is the copyable one, not the library's action", () => {
-    // The clause read "the `@gpuixui/tw` `button` recipe the components package
-    // compiles against", which invites a reader to treat the copyable upstream
-    // recipe as the action a shipped control paints. The components' action
-    // imports the primitives' button, so no tw recipe is on its path.
     expect(
       read("../../../packages/components/src/internal/button.tsx"),
     ).toContain("@gpuixui/primitives/button");
@@ -572,10 +426,6 @@ describe("filled action adoption claim", () => {
   });
 
   it("names the toggle's accent as an adopter, not a deviation", () => {
-    // The page once recorded a pressed `Toggle`'s 0.9/0.8 alpha wash as the
-    // remaining deviation; the primitives now paint the derived fills for the
-    // accent face too, so both halves are read from the sources and the page
-    // must name the adopter beside the two buttons.
     const source = read("../../../packages/primitives/src/core/variants.ts");
 
     expect(source).toContain('filledHover(theme, "accent")');
@@ -595,13 +445,6 @@ describe("filled action adoption claim", () => {
 });
 
 describe("the tonal action's edge", () => {
-  /**
-   * The pages called `secondary` "fill-only" and "the tonal one with no border"
-   * long after both packages' action painted `borderStrong`, and they measured
-   * its fill on "every strip it can sit on" though a row's wash is the edge's
-   * claim. Both statements are held to the sources that decide them, and the
-   * numbers the pages print are derived from the sixteen shipped styles.
-   */
   const retracted = [
     "paints no border",
     "fill-only",
@@ -617,8 +460,7 @@ describe("the tonal action's edge", () => {
     expect(recipe).toContain(
       "bg-secondary text-secondary-foreground border border-strong",
     );
-    // The components' arm is a class string today and was a recipe object a
-    // release ago; the claim is the `secondary` action carrying the edge.
+
     expect(components).toMatch(
       /secondary:\s*(?:"[^"]*border border-strong[^"]*"|\{[^}]*border border-strong[^}]*\})/,
     );
@@ -704,17 +546,12 @@ describe("the tonal action's edge", () => {
 });
 
 describe("the fade's page scope", () => {
-  /** The two pages that teach the disabled state. */
   const pages: Readonly<Record<string, string>> = {
     "docs/tokens.md": catalogue,
     "docs/design-system.md": designSystem,
   };
 
   it("prints the range the fade misses on a card", () => {
-    // The scope is a measurement, not a preference: the pages print the four
-    // light styles where the faded `primary` label lands under the floor on its
-    // own card. Deriving the range keeps a palette edit from leaving a printed
-    // number behind.
     const measured = (
       [
         ["macOS", Tokens.platformTheme(Tokens.themes.light, "darwin")],
@@ -758,7 +595,6 @@ describe("the fade's page scope", () => {
 });
 
 describe("documents import what the package exports", () => {
-  /** The two documents a consumer copies a snippet from. */
   const documents: Readonly<Record<string, string>> = {
     "docs/tokens.md": catalogue,
     "README.md": readme,
@@ -775,23 +611,12 @@ describe("documents import what the package exports", () => {
   });
 
   it("finds an import to check in both documents", () => {
-    // A guard that reads no imports would pass by finding nothing.
     Object.entries(documents).forEach(([name, text]) => {
       expect(importedNames(text).length, name).toBeGreaterThan(5);
     });
   });
 });
 
-/**
- * The pages promised the variant rule before every report had it.
- *
- * `docs/tokens.md` §Text selection said the legibility floors were "of the
- * theme's own contrast variant, so a high-contrast brand is measured at AAA
- * without naming a floor set" while `selectionFailures(theme)` defaulted to the
- * ordinary floors — the page taught a check the code did not run. The reports
- * select the theme's variant now, and this holds the three pages to saying so:
- * a rewrite that drops the rule sends a brand back to the false pass.
- */
 describe("the variant default the reports share", () => {
   const catalogueFlat = catalogue.replace(/\s+/g, " ");
   const designFlat = designSystem.replace(/\s+/g, " ");
@@ -822,15 +647,6 @@ describe("the variant default the reports share", () => {
   });
 });
 
-/**
- * Guards the density override the pages teach against the merge the package
- * runs. `ThemeOverrides.density` takes a partial `controlHeight`, and the
- * documented brand raises one size (`invalidNumbers`' own example is
- * `{ controlHeight: { sm: 20 } }`), so the merge has to keep the sizes the
- * override does not name. It used to overlay the record whole: the two unnamed
- * sizes vanished, the audit gate refused the theme for a missing step, and the
- * snippet a reader copied produced a thrown audit instead of one report.
- */
 describe("the density override the pages teach", () => {
   const themeSource = read("./theme.ts");
   const pages = [
@@ -863,13 +679,6 @@ describe("the density override the pages teach", () => {
     expect(catalogue).toContain("`DensityOverrides`");
   });
 
-  /**
-   * A preset name is a stored preference, and the page taught only the merge —
-   * so a reader whose settings row carried a preset this release dropped had no
-   * way to know the lookup answered `undefined` and handed back a theme with no
-   * density group. The rule is read back from the page and from the source that
-   * makes it.
-   */
   it("says a preset name this release does not ship is refused", () => {
     const flat = catalogue.replace(/\s+/g, " ");
 
@@ -879,16 +688,6 @@ describe("the density override the pages teach", () => {
   });
 });
 
-/**
- * The catalogue's Persisted choices section says the theme resolvers refuse a
- * value outside an index, and the claim is read back from the code that decides
- * it: the lookups answered `undefined` for a dropped mode, the **default**
- * palette for an unrecognised contrast (a restored `HIGH` silently losing its
- * contrast), and `Cannot read properties of undefined (reading 'contrast')` for
- * a style the release does not ship. The type scale is the one axis whose paint
- * seam is total instead — a role name is content, and throwing mid-render empties
- * the window — so the page must say which rule each seam follows.
- */
 describe("the resolvers refuse an axis they do not ship", () => {
   const themeSource = read("./theme.ts");
   const retroSource = read("./retro.ts");
@@ -921,16 +720,6 @@ describe("the resolvers refuse an axis they do not ship", () => {
     );
   });
 
-  /**
-   * A stored role is the axis a **paint** seam reads, so the rule is the
-   * opposite one and the failure was the opposite too: the lookup answered
-   * `undefined`, and `textStyle` threw
-   * `TypeError: Cannot read properties of undefined (reading 'fontSize')` in the
-   * middle of a render — a document with one role this release renamed emptied
-   * the window. The page, the README and the design system each state the
-   * fallback, the guard, and the measured error it replaced; the source is held
-   * to the same sentence.
-   */
   it("reads a stored role as the body role, and says so on every page", () => {
     expect(stylesSource).toContain(
       'const name = isTextRole(role) ? role : "body";',
@@ -956,18 +745,7 @@ describe("the resolvers refuse an axis they do not ship", () => {
     );
   });
 
-  /**
-   * The control-size axis is the second paint seam, and its failure was quieter
-   * than the type role's: `density.controlHeight[size]` and `switchScale[size]`
-   * answered `undefined` where both callers declare a number, so a saved `"xs"`
-   * spread `height: undefined` (dropped by the serializer, the box laid out at
-   * its content's height) or scaled a switch's box into `NaN` — no throw, no
-   * report, just a control that is the wrong size. `md` is the default step, the
-   * rule `iconPixels` follows, and every surface that teaches the density says so.
-   */
   it("reads a stored control size as the default step, and says so", () => {
-    // Both metrics read the step through the seam that answers a density group
-    // the theme lost as well, so this is the one place the default lands.
     expect(stylesSource).toContain('isControlSize(size) ? size : "md"');
     expect(stylesSource).toContain(
       'densityMetric(theme, "controlHeight", size)',
@@ -997,15 +775,6 @@ describe("the resolvers refuse an axis they do not ship", () => {
     );
   });
 
-  /**
-   * A density group is the numeric group a surface can still reach: the gate
-   * refuses a theme that lost it, but a paint happens before an audit, and both
-   * metrics read `theme.density.controlHeight[size]` off the group they were
-   * never given — `TypeError: Cannot read properties of undefined (reading
-   * 'controlHeight')` from the first control laid out, out of two helpers whose
-   * job is a number. They take a `DensitySource` now and answer no box, the rule
-   * every colour seam follows, and each surface says so.
-   */
   it("answers a density the theme lost as no box, and says so", () => {
     expect(stylesSource).toContain("export interface DensitySource");
     expect(stylesSource).toContain("theme.density?.[metric]");
@@ -1031,15 +800,6 @@ describe("the resolvers refuse an axis they do not ship", () => {
     expect(inventory).toContain("**The pair is total on the group as well**");
   });
 
-  /**
-   * An elevation level is the fourth name a paint seam reads, and its failure
-   * was silent too: `elevationLevels` was the ordered index a surface picker
-   * iterates, but it had no guard, so a saved workspace that stored a level
-   * this release dropped could only be narrowed with a cast — and
-   * `elevationShadow` answered `undefined`, a raised panel that painted flat
-   * while every report stayed empty. The three pages state the fallback and the
-   * guard beside the control-size rule they belong to.
-   */
   it("reads a stored elevation level as the default lift, and says so", () => {
     expect(read("./elevation.ts")).toContain(
       'isElevationLevel(level) ? level : "md"',
@@ -1058,16 +818,6 @@ describe("the resolvers refuse an axis they do not ship", () => {
     });
   });
 
-  /**
-   * A status tone is the fifth name a paint seam reads, and it failed in the
-   * worst of the two ways: the lookup asked for `dangerSoft` — no role — so
-   * `statusTone` answered `undefined` where its `Theme` overload promises a
-   * tone, the message painted nothing, and a caller destructuring the result
-   * threw `Cannot read properties of undefined (reading 'background')` mid-render.
-   * `info` is the default family, the tone the boundary narrowing substitutes,
-   * so the seam and the boundary agree. The pages state the fallback and the
-   * guard beside the other four.
-   */
   it("reads a stored tone as the default tone, and says so", () => {
     expect(stylesSource).toContain(
       "const name = isStatusTone(tone) ? tone : defaultStatusTone;",
@@ -1093,14 +843,6 @@ describe("the resolvers refuse an axis they do not ship", () => {
   });
 });
 
-/**
- * The avatar scale is the tenth persisted axis, and the last one without an
- * index and a guard: a saved contact list, settings row or inspector panel
- * stores the step its mark was drawn at, so a name this release dropped could
- * only reach `avatarSize` through a cast — and a bare lookup answered
- * `undefined`, which the renderer drops, so the mark painted with no side. The
- * resolver reads the dropped step as `md` and every page says so.
- */
 describe("the avatar step", () => {
   const scaleSource = read("./scale.ts");
 
@@ -1108,8 +850,7 @@ describe("the avatar step", () => {
     expect(scaleSource).toContain(
       "isAvatarSize(size) ? avatarSize[size] : avatarSize.md",
     );
-    // The guard reads the index, not the record: `name in avatarSize` also
-    // answers true for `toString`.
+
     expect(scaleSource).toContain("avatarSizes.some((step) => step === value)");
 
     const pages = [catalogue, readme, designSystem].map((page) =>
@@ -1133,17 +874,6 @@ describe("the avatar step", () => {
   });
 });
 
-/**
- * The persisted-choice contract is one list, and the surfaces that teach it
- * drifted apart: the catalogue's table named ten axes while the design system
- * enumerated seven, and the two layout scales the catalogue documents as stored
- * names — a saved inset, a restored corner — had no index or guard in the package
- * that owns the contract, so a token consumer could only cast one (the
- * primitives hand-rolled their membership). The catalogue's table is the source
- * here: every row's index and guard must be a real export and must run in
- * `guards.test.ts`, the README and design system must name every index, and both
- * pages must teach the two layout axes' absence rule.
- */
 describe("the persisted-choice axes", () => {
   const section = (page: string, heading: string): string => {
     const start = page.indexOf(heading);
@@ -1161,8 +891,7 @@ describe("the persisted-choice axes", () => {
         !line.startsWith("| ---"),
     )
     .map((line) => line.split("|").map((cell) => cell.trim()))
-    // The axis table is the one whose third column is a guard; the resolver
-    // table below it has no `is*` cell and is a different list.
+
     .filter((cells) => (cells[3] ?? "").startsWith("`is"))
     .map((cells) => ({
       axis: cells[1] ?? "",
@@ -1176,8 +905,7 @@ describe("the persisted-choice axes", () => {
     rows.forEach(({ axis, index, guard }) => {
       expect(declared, axis).toContain(index);
       expect(declared, axis).toContain(guard);
-      // The prose table and the executed sweep are one contract: an axis the
-      // table teaches with no guard in the suite is a value nobody holds.
+
       expect(guardsSuite, axis).toContain(guard);
     });
   });
@@ -1193,12 +921,6 @@ describe("the persisted-choice axes", () => {
     expect(section(readme, "## Persisted choices")).toContain("Thirteen axes");
   });
 
-  /**
-   * A layout step is not a paint name: a paint seam substitutes its documented
-   * default because the window must paint, while an inset or a corner decides
-   * geometry the caller owns, so a dropped name is absence. Both pages say so,
-   * and the catalogue teaches each scale's index where it prints it.
-   */
   it("teaches the two layout axes as absence, and their indexes", () => {
     expect(section(catalogue, "## Spacing")).toContain(
       "`spacingSteps` is the scale as an ordered index",
@@ -1211,8 +933,7 @@ describe("the persisted-choice axes", () => {
     );
 
     const flatten = (page: string): string => page.replace(/\s+/g, " ");
-    // The design system enumerates the indexes; the catalogue and the README
-    // carry the guard column, and the design system names the two new pairs.
+
     [catalogue, readme, designSystem].forEach((page, index) => {
       expect(flatten(page), `page ${index}`).toContain("`spacingSteps`");
       expect(flatten(page), `page ${index}`).toContain("`radiusSteps`");
@@ -1230,11 +951,6 @@ describe("the persisted-choice axes", () => {
     );
   });
 
-  /**
-   * The icon scale is the one a component's `size` prop selects, so the section
-   * that prints its numbers teaches the index and guard beside them — the rule
-   * the avatar paragraph already claimed for "every other persisted axis".
-   */
   it("teaches the icon scale's index and guard where it prints the scale", () => {
     const icons = section(
       catalogue,
@@ -1247,13 +963,6 @@ describe("the persisted-choice axes", () => {
   });
 });
 
-/**
- * `bodyStrong` is `body`'s emphasis at the same size and leading, and the
- * typography merge is per role, so an example that raises the body size has to
- * raise the pair — and the gate now says so: `invalidNumbers` reports a strong
- * role that does not follow as `emphasis`. The catalogue's executed shape and
- * the rule beside the merge list are the two surfaces this guard keeps honest.
- */
 describe("the emphasis pair the extension example raises", () => {
   it("moves bodyStrong with the body size", () => {
     expect(catalogue.replace(/\s+/g, " ")).toContain(
@@ -1265,18 +974,14 @@ describe("the emphasis pair the extension example raises", () => {
     expect(catalogue.replace(/\s+/g, " ")).toContain(
       "`bodyStrong` is its own role, so a brand that changes the body size names it too — the pair is one emphasis at one size, and `invalidNumbers` reports a strong role that does not follow as `emphasis`;",
     );
-    // The retracted sentence: no report holds the two together, so the example
-    // was the only guard. The gate returns the report now, so the page must not
-    // still call it an open interlock.
+
     expect(catalogue.replace(/\s+/g, " ")).not.toContain(
       "no report holds the two together yet",
     );
   });
 });
 
-/** A placement as the page states it: the pair, and the ratio the reader is shown. */
 interface VerifiedPlacement {
-  /** The pair as the contract names it — the half of the sentence a palette cannot move. */
   readonly pair: string;
   readonly ratio: number;
 }
@@ -1288,7 +993,6 @@ const tightest = <Placement extends VerifiedPlacement>(
   return placements.reduce((a, b) => (b.ratio < a.ratio ? b : a));
 };
 
-/** The ratio a sentence prints after `needle`, or `undefined` when it prints none. */
 const printedRatio = (text: string, needle: string): number | undefined => {
   const at = text.indexOf(needle);
   if (at < 0) {
@@ -1314,27 +1018,8 @@ const words = [
   "twelve",
 ] as const;
 
-/** The spelled count the catalogue prints, or the numeral past the list. */
 const word = (count: number): string => words[count] ?? String(count);
 
-/**
- * The verification section is the page a reader checks a contract against, and
- * it made two claims the tables had outgrown: the mark contract was described as
- * "eight roles on the four strips" after `indicatorSurfaces` carried nine (the
- * four resting strips, the four washes a row wears and a field's `input` fill),
- * with the tightest placement named as Luna light's 3.30:1 after macOS dark's
- * primary on a list row's `accent` had taken the place at 3.06:1; and the
- * decorative paragraph listed eight of the eleven surface kinds and called the
- * tightest **skeleton** "the tightest of every placement" after a look's progress
- * rail had become the closest placement in the table.
- *
- * Every sentence below is derived from the table that produces it — the kinds,
- * the strips, the counts and the tightest pair with its ratio — so a palette or a
- * contract that moves can fail here instead of leaving the page teaching the
- * previous answer. The prose names the placement in human terms ("Aero's dark
- * progress rail"); the guard holds the mechanical half, which is what a reader
- * verifies.
- */
 describe("the verification section's contracts", () => {
   const verification = section("## Verification");
 
@@ -1416,8 +1101,6 @@ describe("the verification section's contracts", () => {
   ];
 
   it("lists every kind of decorative surface the table measures", () => {
-    // The phrase each kind is written as on the page. A kind the table gains has
-    // no phrase here until the page is told, which is the point of the mapping.
     const phrases: Readonly<Record<string, string>> = {
       divider: "divider",
       softDivider: "soft rule",
@@ -1452,8 +1135,7 @@ describe("the verification section's contracts", () => {
 
     expect(verification).not.toContain("the tightest of every placement");
     expect(verification).toContain(`the tightest skeleton`);
-    // The page prints three decimals, so an exact read is the comparison: a
-    // palette that moves by a thousandth is a different placement and fails.
+
     expect(printed).toBe(Number(closest.ratio.toFixed(3)));
   });
 
@@ -1477,8 +1159,7 @@ describe("the verification section's contracts", () => {
     );
 
     expect(unnamed).toEqual([]);
-    // The retracted count: four resting strips were all the table carried when
-    // the sentence was written.
+
     expect(verification).not.toContain("eight roles on the four strips");
   });
 
@@ -1486,7 +1167,7 @@ describe("the verification section's contracts", () => {
     const closest = tightest(markPlacements);
 
     expect(verification).toContain(closest.pair);
-    // The mark's ratio is printed to two decimals, the precision its range needs.
+
     expect(printedRatio(verification, closest.pair)).toBe(
       Number(closest.ratio.toFixed(2)),
     );
@@ -1495,9 +1176,6 @@ describe("the verification section's contracts", () => {
   it("names the tightest chart swatch", () => {
     const closest = tightest(seriesPlacements);
 
-    // The sentence names the swatch, the surface and the ratio it was measured
-    // at, so a moved palette or a new plot strip fails here rather than leaving
-    // the page printing the previous tightest.
     expect(verification).toContain(
       `series ${closest.index + 1} at ${closest.ratio.toFixed(2)}:1 on its \`${closest.over}\` strip`,
     );
@@ -1516,17 +1194,11 @@ describe("the verification section's contracts", () => {
       "`mutedForeground` on `background`, a card and a popover",
     );
     expect(verification).toContain(`all ${styles.length}`);
-    // The retracted count: four content surfaces were all the table carried
-    // when the sentence was written.
+
     expect(verification).not.toContain("the four body roles");
   });
 
   it("names the native gallery that paints the tokens, not a TODO row", () => {
-    // The page named the gallery as the native proof and sent a reader to
-    // `.agents/slop/TODO.md` for it, although the four scenarios had landed and the
-    // playground README records them. A proof that exists cannot read as
-    // future work: the page cites the gallery, and the gallery is four
-    // scenarios registered in the playground.
     const gallery = read("../../../apps/playground/README.md");
     const registry = read("../../../apps/playground/src/scenarios/registry.ts");
     const scenarios = [
@@ -1543,7 +1215,7 @@ describe("the verification section's contracts", () => {
     });
     expect(verification).toContain("runtime's own style report");
     expect(verification).toContain("apps/playground/README.md");
-    // The retracted pointer: the bullets' native proof read as future work.
+
     expect(section("## Limitations and future work")).not.toContain(
       "Native visual proof is the playground's theme gallery",
     );

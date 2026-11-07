@@ -71,8 +71,3 @@ Switch
 | `children` | `ReactNode` | the plain filled knob | a glyph on the knob |
 | `className` | `string` | — | compiled through the recipe, joined after the thumb's rules |
 | `style` | `StyleDesc` | — | merged last |
-
-## Notes
-- The runtime's role is **`switch`**.
-- No `aria-labelledby` and no label-inside composition: `label` is the name and `description` is `aria-description` (no `aria-describedby`).
-- `disabled` removes the tab stop and the press handler; there is no `aria-disabled` and no loading or pending state.

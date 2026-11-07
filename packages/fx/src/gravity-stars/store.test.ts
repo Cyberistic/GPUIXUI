@@ -1,12 +1,3 @@
-/**
- * The gravity field store, without a renderer.
- *
- * The bugs these guard: a repeated layout report restarting a field the runtime
- * is already falling; a star that never hands its approach over to the plunge
- * (it stays lit at the well); and a star that stops after one fall because its
- * plunge never reborns it onto the edge as a fresh lap.
- */
-
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as Option from "effect/Option";

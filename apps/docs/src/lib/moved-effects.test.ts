@@ -1,8 +1,3 @@
-/**
- * The effects' old addresses (plan 726). Bug guarded: sixteen pages left
- * `/components` for `/effects`, and a link a reader saved — or a search result —
- * would land on a 404 instead of the page that moved, query and all.
- */
 import { describe, expect, it } from "vitest";
 import { curatedRedirect, movedEffects } from "./curated-twins";
 

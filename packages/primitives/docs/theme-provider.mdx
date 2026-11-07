@@ -58,19 +58,3 @@ where `starName`, `codeDigit` or `rangeEnd` belongs, and a row written as a
 number, a flag or an object is not a word. Only a function is a sentence and only
 text is a row; anything else keeps the table above, rather than being called or
 trimmed mid-render.
-
-## Notes
-- The density override is a whole group, not a partial patch. A theme restored
-  from storage is decoded JSON, where a numeric group it did not carry is
-  `null`; a lost group paints the library's own numbers rather than throwing
-  from the first layout that asks for a gap, and the gate still refuses it — run
-  `missingTokens` and rebuild it with `extendTheme`. The **override** keeps the
-  same rule: `density={null}` — the field a settings record never carried — is
-  no override, so the theme's own preset paints instead of being replaced by a
-  hole.
-- The colour group follows the same absence rule, answered instead of refused:
-  a stored theme that lost it paints **no role** — the control keeps its
-  recipe's resting fill — because a role is additive. `invalidColorRoles` names
-  what is missing; there is no library palette to substitute for a brand's.
-- No built-in light/dark toggle and no persistence, and providers do not merge:
-  the nearest `ThemeProvider` supplies the whole theme.

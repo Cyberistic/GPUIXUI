@@ -1,23 +1,3 @@
-/**
- * The inventory check.
- *
- * This suite fails when a component is marked `done` without a native behaviour
- * test, when a docs page or example named by a record does not exist, when a
- * `.agents/slop/COMPONENTS.md` row disagrees with the record's status or GPUix support, when a
- * finished Tier 2 row has no record (a `done (composed)` row excepted: it ships
- * a documented composition, not a component), when two records claim the same
- * name or docs page, when one Tier 2 component has two rows (a stray `todo` copy
- * beneath the real one used to hide there), when a row's stated native test count
- * disagrees with the behaviour suite (plan 139), and when a record or a row
- * justifies a control with a package that shipped long ago. It is the automated
- * form of plan 117 §1.
- *
- * The date picker landed in plan 119, so every Tier 2 row now has a record or
- * is composed.
- * `node:fs` is used here only because this is a test-time repository check —
- * plan 117 §3 authorises it, and nothing in the component runtime imports it.
- */
-
 import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import * as Arr from "effect/Array";
@@ -40,10 +20,8 @@ interface Row {
   readonly notes: string;
 }
 
-/** One case in a behaviour suite: the suite convention is two spaces and `it(`. */
 const TEST_CASE = /^ {2}it\(/;
 
-/** The cases a behaviour suite declares, by that convention. */
 const countBehaviourTests = (relative: string): number =>
   Arr.length(
     Arr.filter(
@@ -54,7 +32,6 @@ const countBehaviourTests = (relative: string): number =>
     ),
   );
 
-/** The Tier 2 rows of `.agents/slop/COMPONENTS.md`, parsed from its markdown table. */
 const rowsBetween = (
   startHeading: string,
   endHeading: string,
@@ -93,30 +70,23 @@ const rowsBetween = (
 const tier2Rows = (): ReadonlyArray<Row> =>
   rowsBetween("## Tier 2", "## Tier 3");
 
-/** The Tier 1 rows, whose components live in `@gpuixui/primitives`. */
 const tier1Rows = (): ReadonlyArray<Row> =>
   rowsBetween("## Tier 1", "## Tier 2");
 
-/** The animated primitives plan 600 lands, held to the same contract. */
 const animatedRows = (): ReadonlyArray<Row> =>
   rowsBetween("## Animated primitives (plan 600)", "## Effects");
 
-/** The Tier 3–5 target rows, which no component here implements yet. */
 const targetRows = (): ReadonlyArray<Row> =>
   rowsBetween("## Tier 3", "## Animated primitives (plan 600)");
 
-/** Every inventory row in the file, whatever heading or column count it has. */
 const allRows = (): ReadonlyArray<Row> => rowsBetween("## Design system", "");
 
-/** The rows one name selects, so a renamed or duplicated row fails by name. */
 const rowsNamed = (name: string): ReadonlyArray<Row> =>
   Arr.filter(allRows(), (row) => row.name === name);
 
-/** Every cell of a row, because a three-column table carries its verdict in `support`. */
 const rowText = (row: Row): string =>
   [row.status, row.support, row.notes].join(" ");
 
-/** One `###` section of the playground README, from its heading to the next. */
 const readmeSection = (heading: string): string => {
   const readme = readFileSync(
     fileURLToPath(new URL("apps/playground/README.md", repoRoot)),
@@ -129,42 +99,20 @@ const readmeSection = (heading: string): string => {
   return end < 0 ? rest : rest.slice(0, end);
 };
 
-/** Every `.agents/slop/COMPONENTS.md` row that belongs to this package's inventory. */
 const packageRows = (): ReadonlyArray<Row> => [
   ...tier2Rows(),
   ...animatedRows(),
 ];
 
-/**
- * Whether a row owes this package an inventory record.
- *
-/** The Tier 5 target rows this package's own specialised component lands in. */
 const tier5Rows = (): ReadonlyArray<Row> =>
   rowsBetween("## Tier 5 — specialised", "## Animated primitives (plan 600)");
 
-/**
- * Every row a record of this package's can name, wherever its table lives.
- *
- * The Tier 1 table is included because six components here are the shadcn-shaped
- * surface of a primitive concept: `Progress`, `Slider`, `Separators`,
- * `Skeletons`, `Toggle` and `Toggle group` own one row each, and a second row
- * for the same concept would leave the docs site's status strip resolving two
- * verdicts for one page. The primitive and the component share the row; the
- * records below still belong to this package.
- */
 const recordRows = (): ReadonlyArray<Row> => [
   ...tier1Rows(),
   ...packageRows(),
   ...tier5Rows(),
 ];
 
-/**
- * A **composed** row ships no component of its own — it is a documented
- * composition of parts from this package and the primitives, with no docs page,
- * example or behaviour suite a record could name — so it owes none. The marker
- * is the status, not a component's name, so a component row cannot claim the
- * exemption.
- */
 const owesRecord = (row: Row): boolean =>
   row.status !== "todo" && row.status !== "done (composed)";
 
@@ -195,9 +143,6 @@ describe("inventory", () => {
   });
 
   it("agrees with its .agents/slop/COMPONENTS.md row", () => {
-    // A record's row is wherever its own table lives: the Tier 2 and animated
-    // tables for this package's parts, and the Tier 5 target table for
-    // `MultiStepForm`, the one specialised component here.
     const rows = recordRows();
     const problems = Arr.flatMap(inventory, (meta) => {
       const row = Arr.findFirst(
@@ -212,9 +157,7 @@ describe("inventory", () => {
               `${meta.name}: row says ${found.status}, record says ${meta.status}`,
             ];
           }
-          // A Tier 5 row qualifies its verdict with how it was proven
-          // (`yes (measured)`); the qualifier states the evidence, not a
-          // second answer, so the verdict before it is the one compared.
+
           const verdict = found.support.replace(/\s\(.*\)$/, "");
           if (verdict !== meta.gpuixSupport) {
             return [
@@ -241,10 +184,6 @@ describe("inventory", () => {
   });
 
   it("asks a composed row for no record it cannot have", () => {
-    // `Auth` is four cards composed over `Card` and the primitives and
-    // documented as examples, so it has no page, example or suite a record
-    // could name. The exemption is the row's own status, so a component that
-    // shipped one cannot hide behind it.
     const row = (name: string, status: string): Row => ({
       name,
       status,
@@ -306,30 +245,16 @@ describe("inventory", () => {
     expect(problems).toEqual([]);
   });
 
-  /**
-   * The bug this guards: the glyph wall promised a node cap and its cell was
-   * chosen from the box's **area** alone, so a strip shorter than the computed
-   * cell floored to one column and painted every row it could fit — measured at
-   * 272 cells for 10 × 6 000 and 454 for 10 × 10 000 against `glyphMaxCells`
-   * (240). The row a reader meets has to state the bound, and the number has to
-   * be the one the layout declares, so a cap change without the row fails here.
-   */
   it("records the node cap a glyph wall keeps", () => {
     const row = rowsNamed("Glyph");
     expect(row).toHaveLength(1);
-    // The phrase is the one the row states, so a removed cap and a changed
-    // constant fail here rather than leaving the row with a stale number.
+
     expect(row[0]?.notes ?? "").toContain(
       `\`glyphMaxCells\` (${glyphMaxCells})`,
     );
   });
 
   it("records one blocked capability for every partial row", () => {
-    // A partial verdict is only useful if a reader can see what is missing and
-    // what the component does instead. The capability table at the end of
-    // `.agents/slop/COMPONENTS.md` is the one place the gaps are explained, so every row
-    // carries exactly one `blocked by … (issue) — workaround` line rather than
-    // a paragraph of measurements.
     const partialRows = Arr.filter(
       allRows(),
       (row: Row) => row.support === "partial",
@@ -355,20 +280,9 @@ describe("inventory", () => {
   });
 });
 
-/**
- * A limitation is a promise about what the library does today.
- *
- * Three records still justified a control with "until `@gpuixui/primitives`
- * lands" after the package had shipped and two of those controls had moved onto
- * it — a reader was told to wait for a capability that already existed. The
- * remaining host fields stay host fields for a reason that outlives the
- * package: this package compiles shadcn's fixed metrics while the primitives'
- * fields are density-scaled (ADR 0006).
- */
 describe("the records' limitations", () => {
   const stale = /until (?:@gpuixui\/)?primitives lands/;
 
-  /** The limitations a record declares, or none when no record claims it. */
   const limitationsOf = (name: string): ReadonlyArray<string> =>
     Option.match(
       Arr.findFirst(inventory, (meta) => meta.name === name),
@@ -407,13 +321,6 @@ describe("the records' limitations", () => {
   });
 
   it("does not promise a package that has already shipped, in a row either", () => {
-    // A row is what the generated status strip and a consumer scanning the
-    // inventory read, so the records' rule has to hold there too: `Command
-    // menus` called its input "the host element until primitives lands" after
-    // the package shipped and the seam it named had landed. The reason that
-    // host stays is this package's fixed recipe against the primitives'
-    // density-scaled chrome (ADR 0006), and a reader deserves that instead of a
-    // wait for something already delivered.
     expect(
       Arr.filter(packageRows(), (row) => stale.test(row.notes)).map(
         (row) => row.name,
@@ -475,10 +382,6 @@ describe("component API contract", () => {
   });
 
   it("records the slide the tab pill paints, not a jump", () => {
-    // The record and the source header used to say the pill "jumps between
-    // tabs instead of sliding" while `tabs-indicator` is a motion target
-    // retargeted from the box on screen, so a reader was told the opposite of
-    // the code. The limit that remains is the runtime's absent `transform`.
     const limitations = Option.match(
       Arr.findFirst(inventory, (meta) => meta.name === "Tabs"),
       { onNone: () => [], onSome: (meta) => meta.limitations },
@@ -486,29 +389,13 @@ describe("component API contract", () => {
     const claimed = Option.getOrUndefined(
       Arr.findFirst(limitations, (text) => text.includes("selected surface")),
     );
-    const header = readFileSync(
-      fileURLToPath(new URL("src/tabs.tsx", packageRoot)),
-      "utf8",
-    );
-    const intro = header.slice(0, header.indexOf("import type"));
 
     expect(claimed).toContain("slides");
     expect(claimed).toContain("transform");
     expect(Arr.some(limitations, (text) => text.includes("jumps"))).toBe(false);
-    expect(intro).toContain("slides");
-    expect(intro).not.toContain("jumps between");
   });
 });
 
-/**
- * The Tier 3–5 rows the playground's probes measured must name the probe.
- *
- * Those tiers are targets this package has not built, so the row is a future
- * plan's only pointer from a capability to the frame that measured it. A row
- * that claims "measured" without the probe cannot be checked, and an invented
- * probe id reads exactly like a measured one — the docs lane pages render these
- * rows, so a reader has nowhere else to go.
- */
 const CITATIONS: ReadonlyArray<readonly [string, string]> = [
   ["Charts", "chart-raster"],
   ["Resizable split panes", "nested-scroll-lifecycle"],
@@ -529,7 +416,6 @@ const CITATIONS: ReadonlyArray<readonly [string, string]> = [
   ["Notification centre", "notification-centre-lifecycle"],
 ];
 
-/** The `column-resize` fixture's direct numbers, read as source. */
 const columnDrag = (): Readonly<Record<string, number>> => {
   const source = readFileSync(
     fileURLToPath(
@@ -553,14 +439,6 @@ const columnDrag = (): Readonly<Record<string, number>> => {
   };
 };
 
-/**
- * The `crop-overlay` fixture's own numbers, read as source.
- *
- * The row teaches the mask, the press it must not take and the drag's two
- * bounds, so each figure is the fixture's rather than a retyped copy: a bar
- * re-measured at another size, a handle a pixel wider or a minimum that moved
- * fails the row that prints it.
- */
 interface CropFixture {
   readonly checks: number;
   readonly min: number;
@@ -599,7 +477,6 @@ const cropFixture = (): CropFixture => {
   };
 };
 
-/** The checks the `radio-group` fixture says its probe asserts. */
 const radioChecks = (): number =>
   Number(
     /\bRADIO_CHECKS = (\d+);/.exec(
@@ -612,7 +489,6 @@ const radioChecks = (): number =>
     )?.[1] ?? Number.NaN,
   );
 
-/** The live probe ids the playground registers, read from its own registry. */
 const probeIds = (): ReadonlyArray<string> => {
   const source = readFileSync(
     fileURLToPath(new URL("apps/playground/src/live/registry.ts", repoRoot)),
@@ -700,13 +576,12 @@ describe("the measured target rows", () => {
         ),
         () => "",
       );
-    // The preview row still carries the measurement; the crop is a partial row
-    // whose one-line note points at the capability record instead.
+
     Arr.forEach(["Image preview"], (name) => {
       const notes = notesOf(name);
       expect(notes, name).toContain("`image-fit`");
       expect(notes, name).toContain("161 checks");
-      // The placements a preview has to plan around.
+
       expect(notes, name).toContain("`cover`");
       expect(notes, name).toContain("`none`");
       expect(notes, name).toContain("`contain`");
@@ -742,8 +617,7 @@ describe("the measured target rows", () => {
       ),
       () => "",
     );
-    // The row names the gap and the probe; the measurements live in the
-    // capability record so the inventory stays an inventory.
+
     expect(notes).not.toContain("unverified");
     expect(notes).toContain("`crop-overlay`");
     expect(notes).toContain("blocked by");
@@ -767,9 +641,6 @@ describe("the measured target rows", () => {
     );
   });
 
-  // A Tier 1 component's behaviour lives in `@gpuixui/primitives`' suite, but
-  // the disc a press paints, the ring a keyboard focus paints and the roving
-  // base are a window's to measure: the row has to name the probe that did.
   it("cites the disc, the ring and the skip the radio probe measured", () => {
     const checks = radioChecks();
     expect(Number.isFinite(checks)).toBe(true);
@@ -826,7 +697,7 @@ describe("the measured target rows", () => {
     expect(
       [checks, open, content, markerX, margin].every(Number.isFinite),
     ).toBe(true);
-    // The clip is the box's own style, not a layout bound a layout read could see.
+
     expect(probe).toContain('overflow: "hidden"');
 
     const section = readmeSection(
@@ -864,13 +735,6 @@ describe("the measured target rows", () => {
     );
   });
 
-  /**
-   * The checks a probe prints, read from the README's own close-out line.
-   *
-   * The count is the playground's to derive — its own guard counts the
-   * assertion sites — so this suite reads the number the README promises rather
-   * than inventing a second one, and a row or page that prints another fails.
-   */
   const readmeChecks = (heading: string, probe: string): number =>
     Number(
       new RegExp(`(\\d+) checks, \`--only ${probe}\``).exec(
@@ -878,7 +742,6 @@ describe("the measured target rows", () => {
       )?.[1] ?? Number.NaN,
     );
 
-  /** One row, failing by name when the inventory holds a different count. */
   const oneRow = (name: string): Row => {
     const rows = rowsNamed(name);
     if (rows.length !== 1) {
@@ -891,11 +754,9 @@ describe("the measured target rows", () => {
     });
   };
 
-  /** One package docs page, read from disk. */
   const pageText = (file: string): string =>
     readFileSync(fileURLToPath(new URL(`docs/${file}`, packageRoot)), "utf8");
 
-  /** The claims a surface is missing, so a row and its page cannot drift apart. */
   const missingClaims = (
     label: string,
     text: string,
@@ -927,12 +788,8 @@ describe("the measured target rows", () => {
         claims,
       ),
     ).toEqual([]);
-    expect(missingClaims("drawer.mdx", pageText("drawer.mdx"), claims)).toEqual(
-      [],
-    );
-    // The honest limits the measurement does not remove.
+
     expect(rowText(oneRow("Drawer"))).toContain("no swipe-to-dismiss");
-    expect(pageText("drawer.mdx")).toContain("`aria-modal`");
   });
 
   it("cites the paint and the frame the carousel probe measured", () => {
@@ -957,11 +814,6 @@ describe("the measured target rows", () => {
         claims,
       ),
     ).toEqual([]);
-    expect(
-      missingClaims("carousel.mdx", pageText("carousel.mdx"), claims),
-    ).toEqual([]);
-    // A slide's local state cannot survive a visit: only the mounted one exists.
-    expect(pageText("carousel.mdx")).toContain("does not survive a visit");
   });
 
   it("cites the magnification and the corner the image-zoom probe measured", () => {
@@ -985,11 +837,6 @@ describe("the measured target rows", () => {
         claims,
       ),
     ).toEqual([]);
-    expect(
-      missingClaims("image-zoom.mdx", pageText("image-zoom.mdx"), claims),
-    ).toEqual([]);
-    // The measured fidelity gap: the runtime clips an overflowing child square.
-    expect(pageText("image-zoom.mdx")).toContain("magnified corner is square");
   });
 
   it("cites the area press and the refused edge the color-picker probe measured", () => {
@@ -1018,13 +865,12 @@ describe("the measured target rows", () => {
     expect(
       missingClaims("color-picker.mdx", pageText("color-picker.mdx"), claims),
     ).toEqual([]);
-    // The names are the behaviour suite's half: a window has no a11y verb.
+
     expect(pageText("color-picker.mdx")).toContain(
       "src/behaviour/color-picker.test.tsx",
     );
-    // A blank stored label is the absence the default names, in both places.
+
     expect(rowText(oneRow("Color picker"))).toContain("Color picker hex value");
-    expect(pageText("color-picker.mdx")).toContain("Color picker hex value");
   });
 
   it("cites the shipped player's own paint in its row and its page", () => {
@@ -1049,11 +895,6 @@ describe("the measured target rows", () => {
         claims,
       ),
     ).toEqual([]);
-    const page = readFileSync(
-      fileURLToPath(new URL("packages/media/docs/media-player.mdx", repoRoot)),
-      "utf8",
-    );
-    expect(missingClaims("media-player.mdx", page, claims)).toEqual([]);
   });
 
   it("cites the frame surface a media card composes", () => {
@@ -1080,7 +921,7 @@ describe("the measured target rows", () => {
     expect(section).toContain(
       `${checks} checks, \`--only media-frame-lifecycle\``,
     );
-    // The typings are the evidence for "no playback surface", not a guess.
+
     expect(section).toContain("no `video` or `audio`");
 
     const row = Option.getOrElse(
@@ -1144,8 +985,7 @@ describe("the measured target rows", () => {
       ],
       (claim) => expect(rowText(row), claim).toContain(claim),
     );
-    // The page's own hover table was pruned with the page's prose; the row and
-    // the fixture still carry every shape it painted.
+
     expect(shapes).toEqual([
       "text-unfilled",
       "text-filled",
@@ -1176,7 +1016,7 @@ describe("the measured target rows", () => {
     );
     expect(notes).toContain("`header-menu-lifecycle`");
     expect(notes).toContain("20 checks");
-    // The two rules a column menu is planned around.
+
     expect(notes).toContain("22px inside its cell");
     expect(notes).toContain("**before** the anchor");
   });
@@ -1222,8 +1062,7 @@ describe("the measured target rows", () => {
     Arr.forEach(rows, (row) =>
       expect(rowText(row), row.name).toContain("`scrollbar-thumb`"),
     );
-    // The inventory row carries the capability pointer; the readings a preview
-    // pane is planned around live in the one capability record.
+
     const capabilities = readFileSync(
       fileURLToPath(new URL("docs/gpuix-capabilities.md", repoRoot)),
       "utf8",
@@ -1239,16 +1078,14 @@ describe("the measured target rows", () => {
       "### `scrollbar-drag` — measured on 0.11.0 here",
     );
     expect(section).toContain("21 checks, `--only scrollbar-drag`");
-    // The two reads that make the rule a measurement rather than an opinion:
-    // the drags the overlay ignores, and the same drag on a real handle.
+
     Arr.forEach(["`x=0 y=0`", "`moves=8`", "`y = -100`"], (claim) =>
       expect(section, claim).toContain(claim),
     );
 
     const rows = rowsNamed("Scrollable containers");
     expect(rows.length).toBe(2);
-    // The rule rides both records: which control the paint is, which routes
-    // move the content, and the composition a draggable bar needs.
+
     Arr.forEach(rows, (row) =>
       Arr.forEach(
         [
@@ -1265,11 +1102,6 @@ describe("the measured target rows", () => {
   });
 
   it("states the notification centre's bound and the history it must own", () => {
-    // The bug this guards: the row said "composition over toasts + panels", which
-    // reads as a styling note, while the one fact a centre is planned around is
-    // storage — the store keeps three cards and expires the oldest, so the panel
-    // must record every title itself. Both the row and the page are held to the
-    // store's own bound and the probe's readouts, so neither can drift from them.
     const read = (path: string): string =>
       readFileSync(fileURLToPath(new URL(path, repoRoot)), "utf8");
     const derive = (source: string, pattern: RegExp): number =>

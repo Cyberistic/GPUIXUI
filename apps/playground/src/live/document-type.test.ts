@@ -1,18 +1,3 @@
-/**
- * Holds the document-type probe's arithmetic and the claims its README section
- * prints.
- *
- * The probe's subject is a hand-off nothing had measured: `nativeTextTheme`
- * promises a `<code>`/`<diff>`/`<markdown>` host the type scale's metrics, and
- * only the pinned source said so. The fixture derives every expected number
- * from that seam, so a role change cannot leave the probe asserting an old size,
- * and the band reader is exercised on synthetic frames here — a band that
- * merges two lines, or a wash read that misses the side border, would make the
- * window measurement meaningless.
- *
- * `node:fs` is deliberate, as in the other live fixtures: this reads the
- * repository's own probe and prose, never a runtime path.
- */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { Pixels } from "@gpuixui/testing";
@@ -49,7 +34,6 @@ const readme = readFileSync(
 
 const view = readFileSync(new URL("./scenarios.tsx", import.meta.url), "utf8");
 
-/** The `documentTypeSteps` effect, bounded by the first declaration after it. */
 const steps = (() => {
   const start = view.indexOf("const documentTypeSteps");
   if (start === -1) return "";
@@ -67,7 +51,6 @@ const steps = (() => {
 const PAGE = new Pixels.Rgba({ r: 0, g: 0, b: 0, a: 255 });
 const INK = new Pixels.Rgba({ r: 255, g: 255, b: 255, a: 255 });
 
-/** A frame of `width × height` whose listed rows paint `ink` at `columns`. */
 const frameOf = (
   width: number,
   height: number,
@@ -102,8 +85,7 @@ describe("the band reader", () => {
       { top: 4, bottom: 6 },
       { top: 9, bottom: 10 },
     ]);
-    // The contract is ascending, distinct rows; one row is one band either
-    // way, and the walk does not fuse a gap.
+
     expect(bandsOf([2, 3])).toEqual([{ top: 2, bottom: 3 }]);
     expect(bandsOf([0, 4])).toEqual([
       { top: 0, bottom: 0 },
@@ -127,8 +109,6 @@ describe("the band reader", () => {
 
 describe("the block's ink", () => {
   it("finds one band per code line against the page", () => {
-    // Two 4-row lines with a 2-row gap, both narrower than the crop so the
-    // margins are page.
     const frame = frameOf(40, 20, [2, 3, 4, 5, 8, 9, 10, 11], {
       from: 4,
       to: 20,
@@ -143,7 +123,7 @@ describe("the block's ink", () => {
 
   it("reports no band when every row is the reference", () => {
     expect(inkBands(frameOf(8, 8, []), PAGE)).toEqual([]);
-    // A frame that is entirely ink is one band, not none.
+
     expect(inkBands(frameOf(8, 8, [0, 1, 2, 3, 4, 5, 6, 7]), PAGE)).toEqual([
       { top: 0, bottom: 7 },
     ]);
@@ -152,7 +132,6 @@ describe("the block's ink", () => {
 
 describe("the language strip", () => {
   it("reads the text against the strip's wash, off the card's borders", () => {
-    // A card: white top/side borders, a grey wash, and one white text run.
     const width = 60;
     const height = 30;
     const wash = 10;
@@ -195,8 +174,6 @@ describe("the theme the probe hands over", () => {
   });
 
   it("carries that role through the seam the hosts read", () => {
-    // The one mapping the probe is evidence for: the object handed to a host
-    // names the role's numbers, not a second table.
     expect(DOCUMENT_TYPE_HOST.metrics?.codeTextSize).toBe(CODE_SIZE);
     expect(DOCUMENT_TYPE_HOST.metrics?.codeLineHeight).toBe(CODE_LEADING);
     expect(DOCUMENT_TYPE_HOST.metrics?.diffTextSize).toBe(CODE_SIZE);
@@ -253,8 +230,7 @@ describe("the document-type probe's record", () => {
     expect(flat).toContain("12.5/18");
     expect(flat).toContain("20/24");
     expect(flat).toContain("the runtime's 11");
-    // The exact band heights the window read, so a palette or font move that
-    // changes them fails the sentence rather than passing silently.
+
     expect(flat).toContain("32");
     expect(flat).toContain("26");
     expect(flat).toContain("expected 32, got 20");

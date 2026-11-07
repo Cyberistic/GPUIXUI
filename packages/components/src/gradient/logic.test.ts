@@ -1,13 +1,3 @@
-/**
- * The gradient surface's arithmetic, without a renderer.
- *
- * The bugs these guard: a ramp that hands the runtime three stops it cannot
- * paint (its shape is exactly two); an angle that is not wrapped, so `380°` and
- * `20°` paint differently on one turn; a second ramp identical to the first, so
- * a "breathing" field never changes; a leg so short it flickers or so long it
- * reads as frozen; and a radius the renderer would silently ignore.
- */
-
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
 import {
@@ -75,7 +65,7 @@ describe("shiftOf", () => {
   it("takes a wrapped quarter turn as the house shift", () => {
     expect(shiftOf(none)).toBe(gradientBaseShift);
     expect(shiftOf(some(Number.NaN))).toBe(gradientBaseShift);
-    // A whole turn is the same ramp, not a quarter turn.
+
     expect(shiftOf(some(360))).toBe(0);
   });
 });
@@ -106,7 +96,7 @@ describe("legOf", () => {
   it("holds one leg of the breath to a duration the runtime can paint", () => {
     expect(legOf(none)).toBe(gradientLegMs);
     expect(legOf(some(Number.NaN))).toBe(gradientLegMs);
-    // Below the floor a leg reads as a flicker, so it falls back to the house one.
+
     expect(legOf(some(gradientLegFloor - 1))).toBe(gradientLegMs);
     expect(legOf(some(gradientLegCap + 1))).toBe(gradientLegCap);
     expect(legOf(some(2_400))).toBe(2_400);

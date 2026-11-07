@@ -1,6 +1,3 @@
-// Record a stage scene frame-exactly: the skill's virtual clock is stepped one
-// 30 fps frame at a time and the 1920×1080 page captured at 1× (the takes inside are 2×, so they downsample).
-//
 //   node record.mjs <scene> <frames> <outDir>   (with the stage server on :5198)
 import { mkdirSync } from "node:fs";
 import { chromium } from "../.media/stageshow/node_modules/playwright-core/index.mjs";
@@ -14,7 +11,6 @@ const page = await browser.newPage({
 });
 await page.goto(`http://localhost:5198/?scene=${scene}&record`);
 await page.waitForFunction(() => window.__stageshow?.clock);
-// Time moves only when stepped, React's first commit included: step until the
 // stage exists, then count frames from there.
 await page.evaluate(async () => {
   const clock = window.__stageshow.clock;

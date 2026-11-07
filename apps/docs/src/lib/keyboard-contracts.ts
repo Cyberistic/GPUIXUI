@@ -1,22 +1,3 @@
-/**
- * The keys each component handles, and what they do.
- *
- * `.agents/slop/MISSION.md` asks every component page for its keyboard notes, and the
- * template had no shape for them: the pages are Markdown this site mounts or
- * MDX it writes, so a hand-written list would drift the first time a handler
- * moved. This model is the authored half — the sentence a key is worth — and
- * `keyboard-contracts.test.ts` is the derived half: it reads the cited modules
- * and requires every fixed key they handle to be named here, so a page cannot
- * teach a key its component dropped or stay silent about one it gained.
- *
- * A component whose keys belong to the runtime's headless surface (the
- * primitives' `Select`) handles none of them itself; it cites the installed
- * runtime module through `runtime` instead, so a release that moves a handler
- * fails the page the same way a workspace edit does. A page that writes its own
- * `## Keyboard` section keeps it: `<KeyboardStrip>` renders nothing there.
- */
-
-/** Every key name a page may print, spelled the way a keyboard reads it. */
 export const keyLabels = [
   "Enter",
   "Space",
@@ -40,26 +21,19 @@ export const keyLabels = [
 
 export type KeyLabel = (typeof keyLabels)[number];
 
-/** One row of the strip: the keys, and what pressing them does. */
 export interface KeyboardNote {
   readonly keys: readonly KeyLabel[];
   readonly action: string;
 }
 
-/** A page's keyboard contract, read from the modules that implement it. */
 export interface KeyboardContract {
-  /** The page the strip renders on. */
   readonly url: string;
-  /** The workspace modules the keys are read from, repository-relative. */
+
   readonly sources: readonly string[];
-  /**
-   * The pinned runtime module whose headless surface handles the keys, when the
-   * wrapper handles none of them itself — a path into an installed `@gpuix/*`
-   * package, read like source so a runtime release moves the page with it.
-   */
+
   readonly runtime?: string;
   readonly notes: readonly KeyboardNote[];
-  /** Keys that are not fixed names — type-ahead, a submitted value. */
+
   readonly also?: string;
 }
 
@@ -69,7 +43,6 @@ const menu: readonly string[] = [
   "packages/components/src/internal/modal.ts",
 ];
 
-/** Enter and Space activate on opposite halves: Enter on the press, Space on the release. */
 const activation: readonly KeyLabel[] = ["Enter", "Space"];
 
 export const keyboardContracts: readonly KeyboardContract[] = [
@@ -588,8 +561,7 @@ export const keyboardContracts: readonly KeyboardContract[] = [
   },
   {
     url: "/shell/toolbar",
-    // The strip's activation is the primitives' `Button`/`IconButton`; the
-    // roving and the Escape close are the toolbar's own.
+
     sources: [
       "packages/shell/src/toolbar/toolbar.tsx",
       "packages/primitives/src/components/Button.tsx",
@@ -634,7 +606,6 @@ export const keyboardContracts: readonly KeyboardContract[] = [
   },
 ];
 
-/** The contract for a page, or nothing when the page has none. */
 export const keyboardContractFor = (
   url: string,
 ): KeyboardContract | undefined =>

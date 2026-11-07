@@ -1,20 +1,13 @@
-/**
- * The calendar block's rules: the week a step lands on, and how one day's
- * overlapping events share its column.
- */
-
 import * as Arr from "effect/Array";
 import * as Order from "effect/Order";
 import type { CalendarEvent, CalendarId } from "./data.js";
 
-/** The Monday `weeks` weeks after `monday`, as an ISO date (UTC arithmetic). */
 export const weekStart = (monday: string, weeks: number): string => {
   const date = new Date(`${monday}T00:00:00Z`);
   date.setUTCDate(date.getUTCDate() + weeks * 7);
   return date.toISOString().slice(0, 10);
 };
 
-/** One event placed in its day: which of `lanes` side-by-side lanes it takes. */
 export interface Placed {
   readonly event: CalendarEvent;
   readonly lane: number;
@@ -24,11 +17,6 @@ export interface Placed {
 const overlaps = (a: CalendarEvent, b: CalendarEvent) =>
   a.start < b.end && b.start < a.end;
 
-/**
- * Lay out one day: each event takes the first lane free at its start, and
- * every event in an overlapping cluster divides the column by the cluster's
- * lane count.
- */
 export const layoutDay = (
   dayEvents: ReadonlyArray<CalendarEvent>,
 ): ReadonlyArray<Placed> => {
@@ -62,7 +50,6 @@ export const layoutDay = (
   });
 };
 
-/** The events of the calendars that are switched on. */
 export const visible = (
   all: ReadonlyArray<CalendarEvent>,
   on: ReadonlyArray<CalendarId>,

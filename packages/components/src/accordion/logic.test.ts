@@ -1,13 +1,3 @@
-/**
- * Accordion open-state transitions.
- *
- * The bugs these guard: in single mode opening a second section left the first
- * open, so two panels showed at once; toggling the open section of a
- * `collapsible: false` accordion closed everything and left the form blank; and
- * multi-mode let the same section be added twice, so one toggle closed it while
- * the header still said it was open.
- */
-
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import {
@@ -108,7 +98,6 @@ describe("openSectionsOf", () => {
   });
 
   it("reads a value that is not a list as absence", () => {
-    // A store writes `null` where a saved layout carried no open set.
     expect(openSectionsOf(null)).toEqual(Option.none());
     expect(openSectionsOf(undefined)).toEqual(Option.none());
     expect(openSectionsOf("a")).toEqual(Option.none());

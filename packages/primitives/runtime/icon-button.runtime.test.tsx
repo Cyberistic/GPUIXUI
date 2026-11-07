@@ -1,13 +1,3 @@
-/**
- * `IconButton` in the real GPUix runtime.
- *
- * The unit suite reads the element tree; this one proves the two claims only a
- * renderer can: the accessibility tree hears the label (and not the glyph), and
- * the painted box is a square at the density's control height. Activation is
- * `Button`'s contract and is re-measured here because an icon button is the
- * easiest control to ship as a decorative shape that does nothing.
- */
-
 import type { ReactNode } from "react";
 import { expect, it } from "vitest";
 import * as Arr from "effect/Array";
@@ -41,8 +31,7 @@ it("names the action by its label, with the glyph out of the tree", async () => 
       a11yNode(runtime.a11y(), { role: "Button", label: "Delete layer" }),
     ),
   ).toBe(true);
-  // The bug: an unlabelled icon became an image node, so a screen reader heard
-  // a picture instead of the action.
+
   expect(
     Arr.filter(
       a11yNodes(runtime.a11y()),

@@ -1,19 +1,3 @@
-/**
- * Browser preview for the Aspect ratio page.
- *
- * The native box paints the runtime's `aspectRatio`; a browser paints the CSS
- * property, which is the same arithmetic, so the preview is honest about the
- * shape even though the surface is the page's. The width is the reader's: the
- * height under the box is `width / ratio`, so dragging the slider shows the
- * re-layout the native box gets for free.
- *
- * The stage is exactly the box at rest — a reservation for the tallest ratio
- * would leave a band of empty page under every wide box. It grows to the
- * tallest only while the reader is in the controls, so the box they are about
- * to choose does not move the page mid-press; the readout sits above the stage
- * for the same reason.
- */
-
 import { useState, type CSSProperties } from "react";
 
 const RATIOS = [

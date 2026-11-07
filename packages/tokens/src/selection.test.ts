@@ -1,23 +1,3 @@
-/**
- * Guards the selection wash, the one translucent role painted behind text the
- * reader is looking at.
- *
- * The bug this holds: `selection` was documented as the text-selection wash,
- * carried by all four colour sets and every platform and authored style, and
- * measured by nothing — `contrastRatio` refuses a translucent colour, so the
- * text contract never saw the wash or the text inside it. Measuring it found
- * three shipped styles under the body floor: Linux dark at 6.63:1 on its card,
- * Windows dark at 6.33:1, and Luna dark at 6.80:1 on its popover. Each now
- * carries the base dark theme's 24% share instead of 30%.
- *
- * The second half — **secondary** text under the same wash — found that nine of
- * the sixteen styles had no headroom for a selection at all: the grey ramp's
- * 600 (light) and 400 (dark) steps sat close enough to the 4.5:1 floor that the
- * wash pushed them to 4.25–4.44:1 and 3.27–4.13:1. Both base palettes now carry
- * a value a step further from their surfaces, so a selected `mutedForeground`
- * line stays readable on the page, a card and a popover.
- */
-
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { alphaOf, blend, isColorRole, lightColors, palette } from "./color.js";
@@ -72,11 +52,6 @@ const measured = (over: string): boolean =>
 const read = (path: string): string =>
   readFileSync(new URL(path, import.meta.url), "utf8");
 
-/**
- * The four documents that print a figure this suite measures — the catalogue,
- * the design guide, the package README and the inventory. Each is read by name
- * so a measurement cannot move on one and stay on the others.
- */
 const everySurface = (): Readonly<Record<string, string>> => ({
   "docs/tokens.md": read("../../../docs/tokens.md"),
   "docs/design-system.md": read("../../../docs/design-system.md"),
@@ -84,10 +59,8 @@ const everySurface = (): Readonly<Record<string, string>> => ({
   ".agents/slop/COMPONENTS.md": read("../../../.agents/slop/COMPONENTS.md"),
 });
 
-/** A document's prose with its line wrapping flattened, so a sentence matches whole. */
 const flat = (text: string): string => text.replace(/\s+/g, " ");
 
-/** The text role each content surface already carries before a wash is painted. */
 const restingText: Readonly<Record<string, string>> = {
   input: "inputForeground",
   background: "foreground",
@@ -96,7 +69,6 @@ const restingText: Readonly<Record<string, string>> = {
   muted: "foreground",
 };
 
-/** The prose surfaces that also carry secondary text beside their body text. */
 const secondarySurfaces = ["background", "card", "popover"] as const;
 
 describe("the pairs a selection is measured on", () => {
@@ -118,9 +90,6 @@ describe("the pairs a selection is measured on", () => {
   });
 
   it("measures secondary text on every prose surface at its own floor", () => {
-    // A caption, a table's second line and a log row keep `mutedForeground`
-    // when the reader selects them, so the wash owes that role the floor its
-    // resting pair meets rather than the body floor the heading needs.
     const secondary = selectionPairs.filter(
       ({ foreground }) => foreground === "mutedForeground",
     );
@@ -150,12 +119,6 @@ describe("every theme the library ships", () => {
   });
 
   it("keeps the tightest bubble readable and prints that ratio", () => {
-    // The catalogue prints the tightest shipped placement so a reader can see
-    // how much room the contract has; a palette edit that lowers the floor has
-    // to move the page with it. Every surface that prints the figure is read:
-    // the inventory printed a stale 7.12 and a pre-fix 6.55 while the page and
-    // the guide had moved, so one document could teach a style the suite had
-    // already caught.
     const ratios = [...shippedThemes, ...platformThemes, ...retroThemes].map(
       (theme) => {
         const wash = blend(
@@ -171,8 +134,7 @@ describe("every theme the library ships", () => {
     expect(tightest).toBeCloseTo(7.2, 2);
     Object.entries(everySurface()).forEach(([document, text]) => {
       expect(flat(text), document).toContain(`${tightest.toFixed(2)}:1`);
-      // The pre-fix value is the one that motivates the 24% share; a document
-      // that prints a different one describes a measurement nobody made.
+
       expect(flat(text), document).toContain("6.74:1");
     });
   });
@@ -180,8 +142,6 @@ describe("every theme the library ships", () => {
 
 describe("selectionFailures", () => {
   it("reports the wash Linux dark shipped before this contract existed", () => {
-    // The regression: a 30% wash over a card lighter than the base theme's left
-    // the selected text at 6.63:1 against the 7:1 floor.
     const before = {
       colors: {
         ...platformTheme(themes.dark, "linux").colors,
@@ -197,10 +157,6 @@ describe("selectionFailures", () => {
   });
 
   it("reports the wash Aero dark painted over its own message bubble", () => {
-    // The regression: the fifth content surface is the `muted` bubble a chat
-    // user message is painted on (`BUBBLE_VARIANTS.muted` is `bg-muted`), and a
-    // selectable `Text` inside it washes its run over that fill. Aero dark's
-    // 30% wash took the bubble's body text to 6.74:1 against the 7:1 floor.
     const before = {
       colors: {
         ...retroTheme(themes.dark, "aero").colors,
@@ -217,10 +173,6 @@ describe("selectionFailures", () => {
   });
 
   it("holds the pair to the bubble that paints it", () => {
-    // A pair that outlives its painter is a contract for a colour nothing
-    // paints: the recipe is the bubble's fill, the box tone is the other host a
-    // `surface="muted"` block uses, and `selectionColor` is the property a
-    // selectable `Text` hands the runtime.
     const recipes = read("../../tw/src/recipes.ts");
     const style = read("../../primitives/src/core/style.ts");
 
@@ -234,8 +186,6 @@ describe("selectionFailures", () => {
   it("reports a wash that hides the text it selects", () => {
     const failures = selectionFailures(unreadableSelectionBrand);
 
-    // Every pair, body and secondary: an opaque wash in the text colour leaves
-    // nothing readable inside it.
     expect(failures.map(({ kind }) => kind)).toEqual([
       "legibility",
       "legibility",
@@ -259,9 +209,6 @@ describe("selectionFailures", () => {
   });
 
   it("reports secondary text the wash buries, which its resting pair passes", () => {
-    // The regression: the grey ramp's 600 step clears the secondary floor on
-    // macOS light's window, so nothing measured it inside a selection — where a
-    // 24% wash took it to 4.30:1.
     const before = {
       colors: {
         ...platformTheme(themes.light, "darwin").colors,
@@ -277,8 +224,7 @@ describe("selectionFailures", () => {
     expect(failure?.kind).toBe("legibility");
     expect(failure?.floor).toBe(contrastFloors.secondary);
     expect(failure?.ratio).toBeCloseTo(4.3, 1);
-    // The same pair is readable before the wash, which is the whole bug: the
-    // resting contrast contract cannot see that a selection buries it.
+
     expect(
       contrastRatio(resting.mutedForeground, resting.background),
     ).toBeGreaterThanOrEqual(contrastFloors.secondary);
@@ -304,8 +250,6 @@ describe("selectionFailures", () => {
   });
 
   it("reports a surface it cannot measure rather than skipping it", () => {
-    // A translucent page cannot be composited: the wash over it has no ratio,
-    // and an unverifiable wash is a failure, not a pass.
     const broken = {
       colors: { ...lightColors, background: "#F6F8FA80" },
     };
@@ -355,15 +299,12 @@ describe("the documents describe the contract they are held to", () => {
     expect(catalogue).toContain("selectionFailures");
     expect(catalogue).toContain("## Text selection");
     expect(catalogue).toContain(`${decorativeFloor}:1`);
-    // The fifth surface is the bubble the library paints; a page that stops
-    // naming it teaches the contract as the four page surfaces.
+
     expect(catalogue).toContain("message bubble");
     expect(catalogue).toContain("BUBBLE_VARIANTS.muted");
     expect(design).toContain("message bubble");
     expect(readme).toContain("message bubble");
-    // The secondary half is the contract a reader copies: the page has to name
-    // the role, its floor and the value the palette carries for it, or the next
-    // palette edit that drops the headroom is taught as fine.
+
     expect(catalogue).toContain("mutedForeground");
     expect(catalogue).toContain(`${contrastFloors.secondary}:1`);
     expect(catalogue).toContain(lightColors.mutedForeground);
@@ -374,21 +315,6 @@ describe("the documents describe the contract they are held to", () => {
   });
 });
 
-/**
- * The tones the wash is painted on, and the two it is not.
- *
- * `surfaceStyle` paints a fill for eight tones; the wash is measured on four of
- * them. The two it leaves out are the *saturated state* tones (`accent`,
- * `selected`), and the reason is structural rather than a gap: the wash is a
- * share of the accent family, so on a fill drawn from the same family it moves
- * the fill toward the text. Measured, that costs contrast in every placement and
- * 43 of the 90 fall under the floor the unwashed pair already met — the selected
- * row's title, now held to the body floor on the same role, accounts for the
- * increase. The suite
- * below holds that reasoning in both directions — a new tone fails until it is
- * measured, and a palette that made the wash help on a saturated tone fails
- * until the decision is re-read.
- */
 describe("the tones the wash is painted on", () => {
   const style = read("../../primitives/src/core/style.ts");
   const declared = [
@@ -397,7 +323,6 @@ describe("the tones the wash is painted on", () => {
     ).matchAll(/"([a-z]+)"/g),
   ].flatMap(([, tone]) => (tone === undefined ? [] : [tone]));
 
-  /** A container's content tones: `none` paints nothing and `skeleton` is a placeholder. */
   const contentTones = [
     "background",
     "card",
@@ -407,18 +332,10 @@ describe("the tones the wash is painted on", () => {
     "selected",
   ] as const;
 
-  /** The neutral content tones, where a wash moves a fill away from the text. */
   const washedTones = ["background", "card", "popover", "muted"] as const;
 
-  /** The saturated state tones, where the wash is a tint of the fill's own family. */
   const saturatedTones = ["accent", "selected"] as const;
 
-  /**
-   * A placement the wash is not measured on: the role the tone hands its text.
-   * Each is held to the floor `contrastPairs` gives the resting pair — the
-   * selected row's title is body text (`selectedForeground` on `selected`), so
-   * its washed placement is measured at the body floor too.
-   */
   const excludedPairs = [
     { foreground: "foreground", over: "accent", floor: "body" },
     { foreground: "foreground", over: "selected", floor: "body" },
@@ -462,9 +379,7 @@ describe("the tones the wash is painted on", () => {
 
   it("measures the wash on every neutral content tone", () => {
     expect(measuredOn).toEqual([...washedTones]);
-    // A tone the container gains is unmeasured until this suite is told about
-    // it — so the split is a partition of the tones the component paints, not a
-    // list that happens to match today.
+
     expect(tones(contentTones, measuredOn)).toEqual([...saturatedTones]);
     expect(tones([...contentTones, "secondary"], measuredOn)).toEqual([
       ...saturatedTones,
@@ -481,26 +396,18 @@ describe("the tones the wash is painted on", () => {
       [...shippedThemes, ...platformThemes, ...retroThemes].length *
         excludedPairs.length,
     );
-    // The wash never helps on a fill drawn from its own family. A palette edit
-    // that broke that would mean the exclusion's reason had to be re-read — not
-    // that the pair could be added quietly.
+
     expect(improved).toEqual([]);
   });
 
   it("leaves most of them under the floor they were already promised", () => {
     const under = placements.filter(({ washed, floor }) => washed < floor);
-    // Keep the first placement on a tie: the `default` platform style is the
-    // library identity, so it measures exactly like the base theme and must not
-    // rename the tightest row.
+
     const tightest = placements.reduce((a, b) => (b.washed < a.washed ? b : a));
     const tightestBody = placements
       .filter(({ floor }) => floor === 7)
       .reduce((a, b) => (b.washed < a.washed ? b : a));
 
-    // The measured reason the two tones stay out of `selectionPairs`: a single
-    // translucent role cannot be strong enough for the page and weak enough for
-    // a saturated fill. The selected row's title is the largest group: the body
-    // floor it now carries is what the wash costs it on its own fill.
     expect(under.length).toBe(43);
     expect(tightest.pair).toBe("mutedForeground on selected");
     expect(tightest.theme).toBe("Light · Omarchy");
@@ -508,21 +415,6 @@ describe("the tones the wash is painted on", () => {
     expect(tightestBody.pair).toBe("selectedForeground on selected");
     expect(tightestBody.theme).toBe("Dark");
     expect(tightestBody.washed).toBeCloseTo(5.11, 2);
-
-    // The JSDoc a consumer reads in their editor is a fourth surface, and it
-    // kept the pre-Omarchy sweep after the two pages moved.
-    const seam = read("./selection.ts").replace(/\s+/g, " ");
-    const styles = placements.length / excludedPairs.length;
-
-    expect(seam).toContain(`Measured over the ${styles}`);
-    expect(seam).toContain(`every one of the ${placements.length} placements`);
-    expect(seam).toContain(`**${under.length} under the floor`);
-    expect(seam).toContain(
-      `Light · Omarchy's secondary line on a selected row at ${tightest.washed.toFixed(2)}:1`,
-    );
-    expect(seam).toContain(
-      `selected row title at ${tightestBody.washed.toFixed(2)}:1`,
-    );
   });
 
   it("states the scope and the numbers on every surface", () => {
@@ -535,9 +427,7 @@ describe("the tones the wash is painted on", () => {
     const printed = `${under.length} of the ${placements.length} placements`;
 
     expect(catalogue).toContain(printed);
-    // The sentence before it states the set the same run measured. It said "80"
-    // while the table held 90, so the total is held to the placements the suite
-    // builds rather than to a number typed beside it.
+
     expect(catalogue).toContain(
       `every one of the ${placements.length} placements`,
     );
@@ -566,11 +456,6 @@ describe("the tones the wash is painted on", () => {
   });
 
   it("names the style each printed tightest placement belongs to", () => {
-    // The figure moved to the authored Omarchy look when that style shipped,
-    // and all four documents kept naming Windows XP (Luna) light — the
-    // runner-up at 3.68:1 — beside the Omarchy number. A reader was told which
-    // palette to fix by the wrong one, so the name is derived from the same
-    // sweep that prints the ratio.
     const tightest = placements.reduce((a, b) => (b.washed < a.washed ? b : a));
     const phrase = "secondary line on a selected row";
 
@@ -578,13 +463,11 @@ describe("the tones the wash is painted on", () => {
       const prose = flat(text);
       const at = prose.indexOf(phrase);
       expect(at, document).toBeGreaterThan(-1);
-      // The clause around the phrase has to carry both ends of the finding: the
-      // style it belongs to and the ratio it measured.
+
       const clause = prose.slice(Math.max(0, at - 240), at + 240);
       expect(clause, document).toContain(tightest.theme);
       expect(clause, document).toContain(tightest.washed.toFixed(2));
-      // The attribution that outlived the sweep: the runner-up, not the
-      // tightest, and left beside the tightest figure.
+
       expect(prose, document).not.toContain(
         "Luna light's secondary line on a selected row",
       );
@@ -592,40 +475,13 @@ describe("the tones the wash is painted on", () => {
   });
 });
 
-/**
- * The wash a status message's own copy can carry.
- *
- * The bug this guards: `selection` is authored for the content tones, and a
- * selectable run inside an `Alert` sits on the tone's `xSoft` tint — a content
- * tone, but one the designed wash cannot serve. Every light tint carries the
- * page ink; 32 of the 36 dark placements fall under the body floor (Windows
- * dark's `warningSoft` at 5.21:1), because the accent a dark wash is drawn from
- * is lighter than the tint and moves it toward the near-white text. Nothing
- * painted or measured that placement, so selectable message copy shipped
- * unreadable with every report empty. `selectionOn` derives the wash for the
- * surface the run actually paints on.
- *
- * A message carries **two** inks, and the second was the one nobody read: its
- * description is the page ink (the pair above), while its title and leading
- * glyph paint the tone's own readable role (`AlertTitle`/`AlertIcon` spread
- * `tone.foreground`). Measured, that ink sat under the body floor inside the
- * wash derived for the page ink in 35 of the 72 tint placements — Omarchy
- * light's `successSoft` at 5.71:1 — and the designed wash never carried it at
- * all (43 of the 72, the worst Windows dark's `warningSoft` at 5.18:1). The two
- * styles whose popover ink differs from the page's had the same hole: Linux
- * dark's and Luna dark's popovers held a composed `Text` painted `foreground`
- * at 6.82:1 and 6.90:1 inside the designed role. `selectionOn` reads every ink
- * the surface carries, so neither half of a message can be buried.
- */
 describe("the wash a status message can carry", () => {
   const styles = [...shippedThemes, ...platformThemes, ...retroThemes];
   const softTints = statusTones.map((tone) => `${tone}Soft` as const);
 
-  /** The tint's own readable role — the ink its title and glyph paint. */
   const copyInk = (theme: (typeof styles)[number], tint: string): string =>
     theme.colors[`${tint}Foreground` as keyof typeof theme.colors] as string;
 
-  /** The two jobs, measured on the composite a reader sees, for both inks. */
   const over = (
     theme: (typeof styles)[number],
     tint: (typeof softTints)[number],
@@ -638,19 +494,15 @@ describe("the wash a status message can carry", () => {
     return {
       theme,
       tint,
-      /** The ink the message's description paints. */
+
       body: contrastRatio(theme.colors.foreground, composed) ?? 0,
-      /** The ink its title and glyph paint. */
+
       copy: contrastRatio(copyInk(theme, tint), composed) ?? 0,
       visible: contrastRatio(composed, fill) ?? 0,
       floor: floors.body,
     };
   };
 
-  /**
-   * The derivation this seam used to run, kept as the measure of the defect: it
-   * held the page ink readable and nothing else.
-   */
   const pageInkWash = (
     theme: (typeof styles)[number],
     tint: (typeof softTints)[number],
@@ -680,8 +532,6 @@ describe("the wash a status message can carry", () => {
     const description =
       /export const ALERT_DESCRIPTION =\s*"([^"]*)"/.exec(recipes)?.[1] ?? "";
 
-    // The description overrides the tone's readable role with the page ink and
-    // the root fills the tone's soft surface, so the pair is the placement.
     expect(description).toContain("text-foreground");
     expect(alert).toContain("color={theme.colors.foreground}");
     statusTones.forEach((tone) => {
@@ -700,8 +550,6 @@ describe("the wash a status message can carry", () => {
     const under = before.filter(({ body, floor }) => body < floor);
     const tightest = under.reduce((a, b) => (b.body < a.body ? b : a));
 
-    // The light palettes are far enough from the ink; the dark ones are not:
-    // the wash only ever moves those fills toward the near-white text.
     expect(under.filter(({ mode }) => mode === "light")).toEqual([]);
     expect(under).toHaveLength(32);
     expect(tightest.tint).toBe("warningSoft");
@@ -719,8 +567,6 @@ describe("the wash a status message can carry", () => {
     const buried = before.filter(({ copy, floor }) => copy < floor);
     const tightest = buried.reduce((a, b) => (b.copy < a.copy ? b : a));
 
-    // The wash that served the description left the title under the floor in 35
-    // of the 72 tint placements, across both modes.
     expect(buried).toHaveLength(35);
     expect(
       buried.filter(({ mode }) => mode === "light").length,
@@ -729,7 +575,6 @@ describe("the wash a status message can carry", () => {
     expect(tightest.theme.name).toBe("Light · Omarchy");
     expect(tightest.copy).toBeCloseTo(5.71, 2);
 
-    // The designed role never carried that ink either.
     const designed = styles.flatMap((theme) =>
       softTints.map((tint) => over(theme, tint, theme.colors.selection)),
     );
@@ -750,8 +595,6 @@ describe("the wash a status message can carry", () => {
       b.visible < a.visible ? b : a,
     );
 
-    // Every placement resolves for both inks the tint carries; nothing is
-    // excluded, because the wash is asked to serve the surface it is painted on.
     expect(broken).toEqual([]);
     expect(after).toHaveLength(styles.length * softTints.length);
     expect(tightestBody.body).toBeCloseTo(7, 1);
@@ -762,17 +605,12 @@ describe("the wash a status message can carry", () => {
   it("keeps the designed wash wherever it already carries the surface", () => {
     const content = ["input", "background", "card", "muted"] as const;
 
-    // A content tone whose designed role already carries both inks keeps it.
     styles.forEach((theme) => {
       content.forEach((surface) => {
         expect(selectionOn(theme, surface)).toBe(theme.colors.selection);
       });
     });
 
-    // The one content surface that does not: a popover holds a composed `Text`
-    // painted the page's `foreground` while the role designed for it is
-    // `popoverForeground`, and on two styles the designed wash dropped that run
-    // under the floor (Linux dark 6.82:1, Luna dark 6.90:1).
     const moved = styles
       .filter(
         (theme) => selectionOn(theme, "popover") !== theme.colors.selection,
@@ -780,7 +618,6 @@ describe("the wash a status message can carry", () => {
       .map((theme) => theme.name);
     expect(moved).toEqual(["Dark · Linux", "Dark · Windows XP (Luna)"]);
 
-    // A tint keeps the designed role only where it already carries both inks.
     const kept = styles.flatMap((theme) =>
       softTints.filter(
         (tint) => selectionOn(theme, tint) === theme.colors.selection,
@@ -797,8 +634,6 @@ describe("the wash a status message can carry", () => {
           blend(theme.colors.selection, theme.colors.background, index / 50),
         );
 
-        // The result is the same translucent role, not an opaque fill, and it
-        // is a step on the line from the design to the page.
         expect(alphaOf(wash)).toBeCloseTo(alphaOf(theme.colors.selection), 5);
         expect(steps).toContain(wash);
       });
@@ -806,9 +641,6 @@ describe("the wash a status message can carry", () => {
   });
 
   it("keeps the designed wash when no step can serve the surface", () => {
-    // A fully transparent wash cannot be made visible by moving its hue, so the
-    // cue is not invented: the theme's own role is returned and the gate reports
-    // the pair it breaks.
     expect(selectionOn(invisibleSelectionBrand, "infoSoft")).toBe(
       invisibleSelectionBrand.colors.selection,
     );
@@ -820,7 +652,7 @@ describe("the wash a status message can carry", () => {
 
     expect(Object.keys(washes)).toEqual([...statusTones]);
     expect(washes.warning).toBe(selectionOn(darkTheme, "warningSoft"));
-    // A dark tint moves the wash; a light one keeps the designed role.
+
     expect(washes.warning).not.toBe(darkTheme.colors.selection);
     expect(tintSelectionWashes(lightTheme).warning).toBe(
       lightTheme.colors.selection,
@@ -838,10 +670,7 @@ describe("the wash a status message can carry", () => {
         ...over(theme, tint, theme.colors.selection),
       })),
     );
-    // The count the pages print is the sweep's own: the designed wash buries the
-    // copy on most of the dark tints, and the number of placements it leaves
-    // readable moved with the authored look. A hardcoded "30 of the 32" kept the
-    // pages claiming a denominator the suite had already outgrown.
+
     const dark = designed.filter(({ mode }) => mode === "dark");
     const buried = dark.filter(({ body, floor }) => body < floor);
     const buriedClaim = `${buried.length} of the ${dark.length} dark`;
@@ -864,8 +693,7 @@ describe("the wash a status message can carry", () => {
         ).indexOf(wash);
       });
     const reach = `${Math.max(...steps) * 2}%`;
-    // The second ink, and the hole the single-ink derivation left: its numbers
-    // are the sweep's too, so a palette or a seam edit moves the pages with it.
+
     const buriedCopy = designed.filter(({ copy, floor }) => copy < floor);
     const tightestCopy = buriedCopy.reduce((a, b) => (b.copy < a.copy ? b : a));
     const beforeCopy = styles
@@ -887,26 +715,24 @@ describe("the wash a status message can carry", () => {
       expect(prose).toContain("selectionOn");
       expect(prose).toContain(buriedClaim);
       expect(prose).toContain("5.21");
-      // The derived half is the whole table: every tint placement resolves once
-      // the wash is chosen for the surface it sits on.
+
       expect(prose).toContain(`All ${derived.length} tint placements resolve`);
       expect(prose).not.toContain("30 of the 32");
       expect(prose).not.toContain("All 64 tint");
-      // The second ink is on every surface, with the sweep's numbers.
+
       expect(prose).toContain(`${tightestCopy.copy.toFixed(2)}:1`);
       expect(prose).toContain(`${buriedCopy.length} of the ${derived.length}`);
       expect(prose).toContain(`${beforeCopy.length} of the ${derived.length}`);
       expect(prose).toContain(tightestBefore.copy.toFixed(2));
       expect(prose).toContain(tightestBefore.tint);
       expect(prose).toContain(`${kept} of the ${derived.length}`);
-      // The claim the fix retired: the light tints do not all keep the role.
+
       expect(prose).not.toContain("light tints keep the designed role");
       expect(prose).not.toContain(
         "(the light tints keep the theme's own wash)",
       );
     });
-    // The popover half and the one tint whose ink had no answer are spelled out
-    // where a consumer reads the rule, not only in the suite.
+
     [catalogue, design, readme].forEach((page) => {
       const prose = flat(page);
       expect(prose).toContain("6.82");
@@ -914,21 +740,17 @@ describe("the wash a status message can carry", () => {
       expect(prose).toContain("#B2CAFF");
       expect(prose).toContain("7.48");
     });
-    // The one ink that had no answer at all: its headroom on its own tint is the
-    // number the pages print, read from the palette rather than typed beside it.
+
     const omarchy = retroTheme(themes.dark, "omarchy");
     expect(
       contrastRatio(omarchy.colors.infoSoftForeground, omarchy.colors.infoSoft),
     ).toBeCloseTo(7.48, 2);
-    // The inventory's own clause names the suite's measurements, and it kept
-    // the pre-look pair after the paragraph above it moved: "30/5.21" and the
-    // "64-placement sweep" described a table the suite had already outgrown.
+
     const row = flat(inventory);
     expect(row).not.toContain("30/5.21");
     expect(row).not.toContain("64-placement");
     expect(row).toContain(`${derived.length}-placement sweep`);
-    // The page prints the values the sweep measures, so a palette edit that
-    // moves the tightest placement cannot leave the catalogue teaching an old one.
+
     expect(tightestBody.body.toFixed(2)).toBe("7.00");
     expect(tightestWash.visible.toFixed(2)).toBe(decorativeFloor.toFixed(2));
     expect(tightestWash.theme.name).toBe("Dark · Windows 7 (Aero)");
@@ -940,28 +762,13 @@ describe("the wash a status message can carry", () => {
   });
 });
 
-/**
- * The absence half of a paint seam.
- *
- * The bug this holds: `selectionOn` read the surface, the text role, the wash
- * and the page straight from `theme.colors`, so a theme a store truncated past
- * the colour group threw `TypeError: Cannot read properties of undefined
- * (reading 'selection')` from inside a message's own paint — while every sibling
- * derivation (`statusTone`, `brandText`, `dividerOn`) answers `undefined` and the
- * gate reports the absence instead of throwing. A stored theme is the one way a
- * complete theme becomes incomplete, and `messageSelection` hands the answer
- * straight into `selectionColor`.
- */
 describe("the wash a theme cannot derive", () => {
-  /** A theme as storage hands it back: the type says complete, the value is not. */
   const stored = (overrides: Partial<Record<keyof Theme, unknown>>): Theme =>
     ({ ...lightTheme, ...overrides }) as Theme;
 
   const page = (path: string): string => read(path).replace(/\s+/g, " ");
 
   it("answers undefined for a theme that lost the whole colour group", () => {
-    // Both readings of the absence: the value a store writes (`null`/none) and
-    // a source that never carried the group at all.
     expect(
       selectionOn(stored({ colors: undefined }), "background"),
     ).toBeUndefined();
@@ -978,10 +785,6 @@ describe("the wash a theme cannot derive", () => {
   });
 
   it("answers undefined for a surface name this release does not ship", () => {
-    // A surface is content: a saved preview or a record can name a role another
-    // release carried. There is no fill to composite, so the seam answers the
-    // absence — where `brandTextOn` answers its anywhere-safe colour for the
-    // same input, because a link that reads everywhere is still a promise.
     const unknown = "cardHover" as keyof typeof lightColors;
     expect(isColorRole(unknown)).toBe(false);
     expect(selectionOn(lightTheme, unknown)).toBeUndefined();
@@ -991,8 +794,6 @@ describe("the wash a theme cannot derive", () => {
   });
 
   it("still reads a complete theme's own wash", () => {
-    // The absence rule is the group, not a quieter answer: a shipped theme keeps
-    // returning the translucent role the design authored.
     Object.values(themes).forEach((theme) => {
       const wash = selectionOn(theme, "background");
 
@@ -1009,8 +810,7 @@ describe("the wash a theme cannot derive", () => {
 
     expect(catalogue).toContain("lost a role this derivation moves");
     expect(catalogue).toContain("answers `undefined` rather than throwing");
-    // The seam list a reader checks a stored theme against names every paint
-    // helper, so a page that drops this one sends them to an unlisted throw.
+
     expect(catalogue).toContain(
       "answer `undefined` when the roles they move are gone",
     );
@@ -1034,16 +834,6 @@ describe("the wash a theme cannot derive", () => {
   });
 });
 
-/**
- * The text floors follow the theme's declaration, not a caller's memory.
- *
- * The wash's own perceptibility floor is a design constant (1.05:1) and stays
- * put; the *text* floor inside it is the theme's — the body floor for a run, the
- * secondary floor for the `mutedForeground` line — and `selectionFailures` used
- * to default to the ordinary floors, so a high-contrast brand passed the gate
- * its own variant asks. `#505050` leaves the line at 5.51:1 inside the wash: above
- * the 4.5 floor, under the 7 the variant declares.
- */
 describe("the floors a selection report uses", () => {
   const brand = extendTheme(highContrastLightTheme, {
     colors: { mutedForeground: "#505050" },
@@ -1091,26 +881,9 @@ describe("the floors a selection report uses", () => {
   });
 });
 
-/**
- * The adoption half of the contract.
- *
- * A measured role is only a role if a host paints it, and the catalogue spent a
- * release telling a reader that setting `selectionColor` was "the component
- * packages' work, recorded in `.agents/slop/TODO.md` → Interlocks" after both packages had
- * done it. The page is read against the painters that put the role on a host, so
- * the sentence cannot outlive either state: a page that calls the work owed
- * fails while the hosts paint it, and a host that drops the wash fails while the
- * page says it paints it.
- *
- * The combobox's search field was the last host handing the runtime's own
- * accent default — it renders GPUix's `ComboboxInput` and passed only the recipe
- * and the ring — so its spread, the renderer case that opens the popup, and the
- * page's adopter list move together.
- */
 describe("the adoption both packages paint", () => {
   const catalogue = read("../../../docs/tokens.md");
 
-  /** One `## ` section of the catalogue, flattened so a sentence can be read. */
   const section = (heading: string): string => {
     const start = catalogue.indexOf(`${heading}\n`);
     const end = catalogue.indexOf("\n## ", start + heading.length + 1);
@@ -1139,8 +912,6 @@ describe("the adoption both packages paint", () => {
     const field = read("../../components/src/field.tsx");
     const alert = read("../../components/src/alert.tsx");
 
-    // The primitives: one declaration for a selectable host's style, and the
-    // `select-text` utility the field recipes carry.
     expect(primitiveStyle).toContain(
       'style.selectionColor = colorRole(theme, "selection");',
     );
@@ -1148,8 +919,7 @@ describe("the adoption both packages paint", () => {
     expect(primitiveRecipe).toContain(
       'selectionColor: colorRole(theme, "selection")',
     );
-    // The components: one seam, a host that spreads it, and the alert's
-    // per-surface derivation.
+
     expect(componentsSeam).toContain("export const selectionWash");
     expect(componentsSeam).toContain("selectionColor: theme.colors.selection");
     expect(field).toContain("...selectionWash(theme)");
@@ -1157,29 +927,20 @@ describe("the adoption both packages paint", () => {
   });
 
   it("holds the last selectable host to the role the others paint", () => {
-    // `ComboboxInput` renders GPUix's own input, so the wash has to be declared
-    // in its field style rather than inherited from a field the package paints.
     const combobox = read("../../components/src/combobox.tsx");
     const rendered = read("../../components/src/behaviour/selection.test.tsx");
     const text = section("## Text selection");
 
     expect(combobox).toContain("ComboboxInput as HeadlessInput");
     expect(combobox).toContain("...selectionWash(theme)");
-    // The renderer case is what proves the spread reaches the painted host; a
-    // source spread with no case is the state this page used to describe.
+
     expect(rendered).toContain("declares it on the combobox search field");
-    // The page holds it with the other adopters and claims no gap.
+
     expect(text).toContain("`ComboboxInput`");
     expect(text).not.toContain("Still open:");
   });
 
   it("reads the chat composer's textarea back in the renderer", () => {
-    // The chat composer's host is a `<textarea>` while the other hosts' are
-    // `<input>` elements, so the suite walked the inputs and the composer was
-    // declared in the source but never read back. The components suite gained
-    // the textarea case (`findByType("textarea")`), so the page says it is read
-    // rather than recording a gap; a suite that drops the case, or a page that
-    // calls it unread again, fails here.
     const rendered = read("../../components/src/behaviour/selection.test.tsx");
     const chat = read("../../components/src/chat.tsx");
     const text = section("## Text selection");

@@ -1,8 +1,3 @@
-/**
- * The desktop's rules. The bugs these guard: a raise that duplicated a window
- * or left another in front, a raise that left the Start menu over the window,
- * and a close that reopened a closed menu.
- */
 import { describe, expect, it } from "vitest";
 import {
   active,

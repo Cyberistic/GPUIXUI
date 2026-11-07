@@ -1,11 +1,3 @@
-/**
- * Browser preview for the RadioGroup page.
- *
- * A radio group is one choice from a set with a roving tab stop. The preview
- * draws a selected, an unselected and a disabled row, with the dot the selected
- * row carries. The Code tab shows the native usage.
- */
-
 import { useState } from "react";
 
 interface CadenceOption {

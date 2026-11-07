@@ -1,19 +1,3 @@
-/**
- * The toast store: one Effect service that owns the queue, the auto-dismiss
- * timers, and the cancellation of both.
- *
- * A `SubscriptionRef` is the single source of truth, so React subscribes to one
- * stream instead of polling; a `FiberMap` owns the timers, so dismissing a toast
- * cancels its timer at once and every timer dies with the scope. Ids are a
- * monotonic counter rather than a random value, so a timer can never dismiss a
- * toast other than the one it was scheduled for, and tests stay deterministic.
- *
- * `hold` is the stack's clock: while the pointer or a focus rests in the stack
- * every timer is paused, and a toast pushed or updated during that hold starts
- * paused rather than running unseen. `update` is the promise toast's one row —
- * the loading card settles in place, its timer rescheduled for the answer.
- */
-
 import { Effect, pipe } from "effect";
 import * as Arr from "effect/Array";
 import * as Clock from "effect/Clock";
@@ -30,76 +14,50 @@ import * as Stream from "effect/Stream";
 import * as SubscriptionRef from "effect/SubscriptionRef";
 import { Toast, ToastInput, type ToastDraft } from "./model.js";
 
-/** The queue and its id counter, in one value so every update is atomic. */
 interface State {
   readonly seq: number;
   readonly toasts: ReadonlyArray<Toast>;
 }
 
-/** What the store can do. */
 export interface ToastStoreService {
-  /** The queued toasts, oldest first. */
   readonly toasts: Effect.Effect<ReadonlyArray<Toast>>;
-  /** The queue, re-emitted on every change (current value first). */
+
   readonly changes: Stream.Stream<ReadonlyArray<Toast>>;
-  /** Decode a draft, append it, and schedule its auto-dismiss. */
+
   readonly push: (
     draft: ToastDraft,
   ) => Effect.Effect<Toast, Schema.SchemaError>;
-  /**
-   * Replace a queued toast's content in place and reschedule its timer, for a
-   * promise that settled. A toast that has already left is `None`: the answer
-   * arrived after the reader dismissed the loading card.
-   */
+
   readonly update: (
     id: string,
     draft: ToastDraft,
   ) => Effect.Effect<Option.Option<Toast>, Schema.SchemaError>;
-  /** Drop one toast and cancel its timer. */
+
   readonly dismiss: (id: string) => Effect.Effect<void>;
-  /** Drop every toast and cancel every timer. */
+
   readonly dismissAll: Effect.Effect<void>;
-  /** Stop the auto-dismiss clock for `id`; a no-op when it has no timer. */
+
   readonly pause: (id: string) => Effect.Effect<void>;
-  /** Restart it with the remaining time, dismissing at once when none is left. */
+
   readonly resume: (id: string) => Effect.Effect<void>;
-  /**
-   * Hold every timer while the pointer or a focus rests in the stack, and
-   * release them with the time each has left. A card queued during a hold is
-   * born held, so it cannot expire before the reader sees it.
-   */
+
   readonly hold: (held: boolean) => Effect.Effect<void>;
 }
 
-/** The store tag. One runtime, and so one store, exists per provider. */
 export class ToastStore extends Context.Service<
   ToastStore,
   ToastStoreService
 >()("gpuixui/components/ToastStore") {}
 
-/** How many toasts are kept, and how long a draft without a `duration` lives. */
 export interface ToastStoreOptions {
-  /**
-   * Toasts kept before the oldest is dropped. Default 3. A count that is not a
-   * finite number (a measurement that never arrived) reads as the default, and
-   * a finite count below one keeps one card.
-   */
   readonly max?: number;
-  /** Auto-dismiss delay for a draft with no `duration`. Default 5 seconds. */
+
   readonly defaultDuration?: Duration.Input;
 }
 
 const DEFAULT_MAX = 3;
 const DEFAULT_DURATION = Duration.seconds(5);
 
-/**
- * How many toasts are kept. A budget is often arithmetic over a measured width
- * (`Math.floor(w / 320)`), so a measurement that never arrived reaches this as
- * `NaN`; `NaN` makes the overflow arithmetic non-finite, which drops nothing
- * and expires nothing — the queue grows without bound and every card keeps its
- * own timer. An infinite budget is the same leak by another name, so both read
- * as the default; a finite count below one is one card.
- */
 const keepCount = (requested: number | undefined): number => {
   const value = requested ?? DEFAULT_MAX;
   return Number.isFinite(value) ? Math.max(1, Math.trunc(value)) : DEFAULT_MAX;
@@ -107,14 +65,9 @@ const keepCount = (requested: number | undefined): number => {
 
 const decodeDraft = Schema.decodeUnknownEffect(ToastInput);
 
-/** A duration auto-dismisses a toast only when it is positive and finite. */
 const dismisses = (duration: Duration.Duration): boolean =>
   Duration.isFinite(duration) && Duration.toMillis(duration) > 0;
 
-/**
- * Build the store. Scoped: the timers are owned by the `FiberMap`, so the
- * runtime that provides the layer also ends them.
- */
 export const makeToastStore = Effect.fn("ToastStore.make")(function* (
   options?: ToastStoreOptions,
 ): Effect.fn.Return<ToastStoreService, never, Scope.Scope> {
@@ -126,14 +79,13 @@ export const makeToastStore = Effect.fn("ToastStore.make")(function* (
 
   const state = yield* SubscriptionRef.make<State>({ seq: 0, toasts: [] });
   const timers = yield* FiberMap.make<string>();
-  /** Deadlines of the running timers, in epoch millis. */
+
   const deadlines = yield* Ref.make(HashMap.empty<string, number>());
-  /** Remaining millis of the paused timers. Absent means "not paused". */
+
   const paused = yield* Ref.make(HashMap.empty<string, number>());
-  /** Whether the stack is holding every clock. */
+
   const held = yield* Ref.make(false);
 
-  /** Drop `id` from the queue. Touches no timer, so a timer may call it. */
   const drop = Effect.fnUntraced(function* (id: string) {
     yield* SubscriptionRef.update(state, (current) => ({
       ...current,
@@ -141,17 +93,13 @@ export const makeToastStore = Effect.fn("ToastStore.make")(function* (
     }));
   });
 
-  /** Cancel `id`'s timer and forget its deadline and remaining time. */
   const forget = Effect.fnUntraced(function* (id: string) {
     yield* FiberMap.remove(timers, id);
     yield* Ref.update(deadlines, HashMap.remove(id));
     yield* Ref.update(paused, HashMap.remove(id));
   });
 
-  /** Sleep `millis`, then drop; record the deadline while it runs. */
   const schedule = Effect.fnUntraced(function* (id: string, millis: number) {
-    // A card queued or settled during a hold starts paused: its clock is the
-    // stack's, and the pointer is the reason the stack is still open.
     if (yield* Ref.get(held)) {
       yield* Ref.update(paused, HashMap.set(id, millis));
       return;
@@ -162,8 +110,6 @@ export const makeToastStore = Effect.fn("ToastStore.make")(function* (
       timers,
       id,
       Effect.sleep(Duration.millis(millis)).pipe(
-        // `drop` first, so the queue is already correct if the timer is
-        // interrupted between the sleep and this cleanup.
         Effect.andThen(drop(id)),
         Effect.ensuring(Ref.update(deadlines, HashMap.remove(id))),
       ),
@@ -232,7 +178,7 @@ export const makeToastStore = Effect.fn("ToastStore.make")(function* (
   const hold = Effect.fn("ToastStore.hold")(function* (value: boolean) {
     yield* Ref.set(held, value);
     const current = yield* SubscriptionRef.get(state);
-    // One at a time: each pause interrupts the sibling fiber it owns.
+
     yield* Effect.forEach(
       current.toasts,
       (toast) => (value ? pause(toast.id) : resume(toast.id)),
@@ -240,7 +186,6 @@ export const makeToastStore = Effect.fn("ToastStore.make")(function* (
     );
   });
 
-  /** The toast `id` after `build` replaced its content, `None` when it left. */
   const replace = Effect.fnUntraced(function* (
     id: string,
     build: (current: Toast) => Toast,
@@ -265,8 +210,7 @@ export const makeToastStore = Effect.fn("ToastStore.make")(function* (
     draft: ToastDraft,
   ) {
     const input = yield* decodeDraft(draft);
-    // Cancel the loading card's clock before the content changes, so a timer
-    // cannot dismiss the row between the replacement and the reschedule.
+
     yield* forget(id);
     const replaced = yield* replace(
       id,
@@ -315,8 +259,6 @@ export const makeToastStore = Effect.fn("ToastStore.make")(function* (
       },
     );
 
-    // At most `max - 1` timers are cancelled, and each is an interruption of a
-    // sibling fiber: one at a time, in queue order.
     yield* Effect.forEach(expired, forget, { concurrency: 1, discard: true });
 
     const duration = Option.getOrElse(input.duration, () => fallback);
@@ -346,6 +288,5 @@ export const makeToastStore = Effect.fn("ToastStore.make")(function* (
   };
 });
 
-/** A layer holding one store, scoped to the runtime that provides it. */
 export const layer = (options?: ToastStoreOptions): Layer.Layer<ToastStore> =>
   Layer.effect(ToastStore, makeToastStore(options));

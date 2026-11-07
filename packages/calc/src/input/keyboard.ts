@@ -1,13 +1,3 @@
-/**
- * Computer keys to calculator keys.
- *
- * The calculator has a physical keypad; a laptop does not. This map makes the
- * common arithmetic and scientific keys reachable without the pointer, and
- * leaves the command/option chords to the app (⌘K, ⌘1…⌘8, ⌘⇧L) so a control
- * never steals a platform shortcut. It is a pure function, tested without a
- * renderer.
- */
-
 import * as Option from "effect/Option";
 
 export interface KeyChord {
@@ -94,11 +84,9 @@ const SHIFTED: Readonly<Record<string, string>> = {
   r: "∛",
 };
 
-/** Whether the chord belongs to the application rather than the calculator. */
 export const isApplicationChord = (chord: KeyChord): boolean =>
   chord.cmd === true && chord.key.toLowerCase() === "k";
 
-/** Whether the chord is a mode switch (`⌘1`…`⌘8`). */
 export const modeChordIndex = (chord: KeyChord): Option.Option<number> => {
   if (chord.cmd !== true) return Option.none();
   const digit = Number.parseInt(chord.key, 10);
@@ -107,7 +95,6 @@ export const modeChordIndex = (chord: KeyChord): Option.Option<number> => {
     : Option.none();
 };
 
-/** The calculator key a chord names, if it names one. */
 export const calculatorKeyOf = (chord: KeyChord): Option.Option<string> => {
   if (chord.cmd === true || chord.ctrl === true) return Option.none();
   const key = chord.key.toLowerCase();

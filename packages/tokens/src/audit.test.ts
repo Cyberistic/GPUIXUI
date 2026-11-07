@@ -1,14 +1,3 @@
-/**
- * Guards the theme gate a consumer is told to run.
- *
- * The documented gate assembled its own check from two of the three reports and
- * called `contrastFailures(theme)` without floors, so it audited a theme that
- * declares `contrast: "high"` against the **default** floors: a brand derived
- * from the high-contrast palette could sit at 5:1 on its secondary text and be
- * reported shippable, and a theme whose divider matched its own card passed
- * because no decorative surface was measured at all. `auditTheme` holds a theme
- * to its own variant and reports every contract, which is what these cases pin.
- */
 import { describe, expect, it } from "vitest";
 import {
   alpha,
@@ -40,12 +29,10 @@ import {
   type ThemeColors,
 } from "./index.js";
 
-/** A high-contrast theme whose placeholder is 5:1 on white: AA, not AAA. */
 const faintPlaceholder = extendTheme(highContrastLightTheme, {
   colors: { placeholder: "#6F6F6F" },
 });
 
-/** A theme whose dividers are the page: no pair measures the `border` role. */
 const invisibleDividers = extendTheme(lightTheme, {
   colors: { border: lightTheme.colors.background },
 });
@@ -82,12 +69,8 @@ describe("the floors follow the theme's contrast variant", () => {
   });
 
   it("reports a pair the default floors would have passed", () => {
-    // The retracted gate in one line: no failures at the default floors...
     expect(contrastFailures(faintPlaceholder, contrastFloors)).toEqual([]);
-    // ...and a real one from the report's own default, because the theme's
-    // variant decides. The placeholder sits on both field fills — a plain
-    // field's `input` and the page role a composite field paints — so the one
-    // role is reported on each.
+
     expect(
       contrastFailures(faintPlaceholder).map(
         ({ foreground, background }) => `${foreground}/${background}`,
@@ -134,8 +117,6 @@ describe("every report is part of the gate", () => {
   });
 
   it("reports a selection wash the reader cannot find", () => {
-    // No contrast pair measures the wash: it is translucent, so the text
-    // contract skips it. The audit's own report is what catches it.
     const invisibleSelection = extendTheme(lightTheme, {
       colors: { selection: alpha(lightTheme.colors.card, 0) },
     });
@@ -148,10 +129,6 @@ describe("every report is part of the gate", () => {
   });
 
   it("reports an indicator mark no contrast pair covers", () => {
-    // A near-white fill with a near-black label is a readable *fill* — the
-    // on-colour pair passes — while the fill itself is the page it sits on, so a
-    // progress bar painted in it would be the one bar nobody sees. Nothing in
-    // the pair table measures a role as a mark, so only the new report finds it.
     const invisibleMark = extendTheme(lightTheme, {
       colors: {
         primary: themes.dark.colors.primary,
@@ -169,9 +146,6 @@ describe("every report is part of the gate", () => {
   });
 
   it("returns the find wash report the standalone check returns", () => {
-    // An accent that is its own card paints matches the reader cannot find.
-    // The gate's report is the standalone contract's list, not a second
-    // opinion, so a caller reading either entry point gets the same wash.
     const invisibleFind = extendTheme(lightTheme, {
       colors: { primary: lightTheme.colors.card },
     });
@@ -192,8 +166,6 @@ describe("every report is part of the gate", () => {
   });
 
   it("reports a shadow colour no role check can see", () => {
-    // The role check reads `colors`, so a level a brand supplies is outside its
-    // reach: the runtime ignores the colour and the card or dialog paints flat.
     const flatShadows = extendTheme(lightTheme, {
       elevation: {
         md: [
@@ -250,11 +222,6 @@ describe("every report is part of the gate", () => {
   });
 
   it("reports a disabled label the fade erases", () => {
-    // The enabled pair is readable (4.69:1 ≥ the 4.5 floor), so the text
-    // contract passes; `disabledOpacity` composites the label into its own
-    // faded fill at 1.04:1, which no contrast pair can see because the fade is
-    // translucent. Without this report a brand shipped a control that reads as
-    // an empty box whenever it was unavailable.
     const vanishedWhenDisabled = extendTheme(lightTheme, {
       colors: { primary: "#101010", primaryForeground: "#7E7E7E" },
     });
@@ -273,38 +240,13 @@ describe("every report is part of the gate", () => {
   });
 
   it("holds the fade to its own floor in every contrast variant", () => {
-    // A high-contrast variant's `disabled` floor is 3:1 and the fade lands at
-    // 1.74:1–2.23:1 (measured in `disabled.test.ts`), so folding the variant's
-    // floors into this report would fail every high-contrast theme for a
-    // mechanism it does not use. The report reads the same either way.
     expect(auditTheme(highContrastLightTheme).disabledFade).toEqual([]);
     expect(
       auditTheme(highContrastLightTheme, highContrastFloors).disabledFade,
     ).toEqual([]);
   });
 
-  /**
-   * Guards the tenth report: the paint the runtime applies to every focusable
-   * that is not the focused one.
-   *
-   * The bug this holds: `keyboardFocusDim` is on by default in
-   * `@gpuix/native`, so pressing Tab fades every other control, and the
-   * composite is translucent — `contrastRatio` refuses it, so no text pair
-   * measured it. The report was `keyboardDimFailures` on its own, so a theme
-   * gate that ran every contract but that one shipped a control that vanished
-   * while the reader tabbed elsewhere.
-   *
-   * The dim and the disabled fade are the same composite with two shares
-   * (`keyboardFocusDimOpacity` 0.4 and `disabledOpacity` 0.5), and the measured
-   * consequence is that no palette fails the dim alone: the dim's band sits
-   * inside the fade's, so a label the dim erases is one the fade erases too.
-   * What the dim adds is the placement and the mechanism — and its own floor,
-   * which is *not* the fade's, as the second case shows.
-   */
   it("reports a label the keyboard dim erases", () => {
-    // The enabled pair reads 7.4:1 and the fill is the darkest ink on the
-    // page, so the text contract has nothing to say: `contrastRatio` refuses
-    // the dimmed composite, and no pair in the table is translucent.
     const erasedWhenDimmed = extendTheme(lightTheme, {
       colors: { primary: "#000000", primaryForeground: "#999999" },
     });
@@ -312,7 +254,7 @@ describe("every report is part of the gate", () => {
 
     expect(audit.contrast).toEqual([]);
     expect(audit.indicators).toEqual([]);
-    // The dimmed fill is the label: the composite paints one block.
+
     expect(audit.keyboardDim).toContainEqual(
       expect.objectContaining({
         fill: "primary",
@@ -329,9 +271,6 @@ describe("every report is part of the gate", () => {
   });
 
   it("keeps the dim's own floor, which is not the disabled fade's", () => {
-    // The same composite with a lighter label: the disabled fade (1.5:1) still
-    // reports it while the dim (1.05:1) does not, so the two reports are two
-    // contracts and not one measurement twice.
     const fadedButVisible = extendTheme(lightTheme, {
       colors: { primary: "#000000", primaryForeground: "#B4B4B4" },
     });
@@ -342,13 +281,6 @@ describe("every report is part of the gate", () => {
   });
 
   it("computes passed from every report it returns", () => {
-    // The gate's contract: `passed` is the conjunction of the reports, not a
-    // separate opinion. A report that is returned but left out of the
-    // conjunction would let a theme ship with a failure printed beside a true
-    // `passed`. Two reports cannot be the only failure on a real palette — the
-    // dim's band contains the fade's, and an accent whose matches vanish also
-    // fails the mark contract — so this pins the shape rather than one
-    // isolable palette; their own cases above prove the report is returned.
     const audits = [
       themes.light,
       themes.dark,
@@ -391,15 +323,6 @@ describe("every report is part of the gate", () => {
   });
 });
 
-/**
- * The bug this holds: a brand may write the shorthand the runtime paints —
- * `#fff` for a page, `#000` for text — and the gate reported every pair those
- * roles touched **unmeasurable**, because the measurement dialect was six- and
- * eight-digit hex while the paint check already accepted the short form. The
- * renderer paints it, `invalidColorRoles` passes it, and the audit failed it, so
- * the same theme painted and was called unshippable. Shorthand resolves exactly,
- * so it is measured like the long form.
- */
 describe("a brand written in the shorthand the renderer paints", () => {
   const shorthand = createTheme({
     mode: "light",
@@ -413,9 +336,6 @@ describe("a brand written in the shorthand the renderer paints", () => {
   });
 
   it("passes the gate the shipped theme with the same palette passes", () => {
-    // `#fff` and `#000` are the shipped high-contrast light values written
-    // short, so the two themes carry one palette — a gate that cannot measure
-    // one cannot measure the other.
     expect(highContrastLightTheme.colors.background).toBe("#FFFFFF");
     expect(highContrastLightTheme.colors.foreground).toBe("#000000");
     expect(auditTheme(highContrastLightTheme).passed).toBe(true);
@@ -423,18 +343,7 @@ describe("a brand written in the shorthand the renderer paints", () => {
   });
 });
 
-/**
- * The bug this holds: `alpha(color, 1)` — the package's own helper — returns an
- * eight-digit hex whose alpha byte is `FF`. The renderer paints that form, the
- * paint check accepts it, and the measurement dialect read the byte as
- * translucent, so every pair a role written that way touched was reported
- * unmeasurable and the gate failed the same palette it passes in six digits.
- * A fully opaque byte is no share, so it measures as the colour it is.
- */
 describe("a brand whose colours carry a fully opaque alpha byte", () => {
-  // Only the roles that are opaque already: `selection`, `overlay` and `shadow`
-  // are designed as shares, and making one opaque would change the design
-  // rather than the dialect.
   const opaque = (theme: Theme): Partial<ThemeColors> =>
     Object.fromEntries(
       colorRoles
@@ -462,15 +371,6 @@ describe("a brand whose colours carry a fully opaque alpha byte", () => {
   });
 });
 
-/**
- * The gate and the report it names must answer with the same floors.
- *
- * `auditTheme` passed `contrastFloorsFor(theme)` into the contrast, selection and
- * indicator reports, while each of those defaulted to the ordinary floors — so
- * the same high-contrast brand was shippable through one entry point and a
- * failure through another, depending on which the caller reached for. The three
- * reports now select the floors the same way, and this case holds them to it.
- */
 describe("the gate and its reports agree on a high-contrast brand", () => {
   const brand = extendTheme(highContrastLightTheme, {
     colors: { mutedForeground: "#505050", primary: "#6B6B6B" },
@@ -487,22 +387,8 @@ describe("the gate and its reports agree on a high-contrast brand", () => {
   });
 });
 
-/**
- * The two contracts that measure a theme's own **structure** — the ladder it
- * declares and the switch paint it carries — shipped as public functions
- * *beside* the gate, so a consumer who ran `auditTheme` shipped a theme whose
- * `size` prop lied and a switch that vanished into the surface it stood on.
- *
- * The bug this holds: `invalidScales` and `switchFailures` were the two
- * contracts the gate did not read, so a brand whose `sm` control was taller than
- * its `lg`, or whose declared off track was the muted strip it stands in, passed
- * every colour report and every pair the gate ran.
- */
 describe("the gate holds the theme's own structure", () => {
   it("reports a scale whose steps no longer describe two sizes", () => {
-    // Every number is finite, positive and layable: the radius ladder simply
-    // stops increasing, so `radius="xl"` paints a smaller corner than
-    // `radius="lg"` and no report of a colour or a pair can see it.
     const inverted = extendTheme(lightTheme, { radius: { xl: 6 } });
 
     expect(invalidScales(inverted)).toEqual([
@@ -518,9 +404,6 @@ describe("the gate holds the theme's own structure", () => {
   });
 
   it("reports a declared switch the reader cannot find", () => {
-    // The off track is the muted strip it stands in, and a declared switch draws
-    // no edge (`switchBox` gives it `borderWidth: 0`), so the track *is* the
-    // control's silhouette — and it is the page it disappears into.
     const hidden = extendTheme(lightTheme, {
       switch: { on: "#30D158", off: lightTheme.colors.muted, knob: "#FFFFFF" },
     });
@@ -535,11 +418,6 @@ describe("the gate holds the theme's own structure", () => {
   });
 
   it("keeps a theme that declares no switch out of the report", () => {
-    // A theme without a declared paint draws its toggle from the accent family,
-    // and the roles that switch uses are measured by the mark, contrast and
-    // decorative tables — so the report is empty and the gate is unaffected. A
-    // box is measured whether or not a paint uses it, and the base theme has
-    // none: its accent switch derives one from the icon step.
     expect(auditTheme(lightTheme).switch).toEqual({
       paint: [],
       placements: [],

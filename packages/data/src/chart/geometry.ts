@@ -164,11 +164,6 @@ const monotoneTangents = (
   return tangent;
 };
 
-/**
- * The control points of a natural cubic spline through `values`: the curve shadcn's
- * charts draw (Recharts' `type="natural"`). Unlike a monotone curve it swings past
- * a sharp point, so a spike reads as a soft peak.
- */
 const naturalControls = (
   values: ReadonlyArray<number>,
 ): readonly [ReadonlyArray<number>, ReadonlyArray<number>] => {
@@ -654,12 +649,10 @@ export const radialArcs = (
   });
 };
 
-/** How far an active slice grows, and the band outside it (Recharts' `activeShape`). */
 const ACTIVE_GROW = 8;
 const ACTIVE_BAND_INNER = 10;
 const ACTIVE_BAND_OUTER = 20;
 
-/** A slice whose straight edges run parallel, `width` apart from its neighbours'. */
 const gappedArc = (
   cx: number,
   cy: number,
@@ -700,8 +693,6 @@ export const ringSegments = (
   const size = Math.min(box.width, box.height);
   const cx = box.width / 2;
   const cy = box.height / 2;
-  // An active slice grows past the ring and carries a band outside it, so the
-  // ring gives up that room rather than clipping it.
   const outer = size / 2 - (emphasis === undefined ? 0 : ACTIVE_BAND_OUTER);
   const inner = outer * Math.min(0.95, Math.max(0, innerRatio));
   const start = -Math.PI / 2;
@@ -733,8 +724,6 @@ export const ringSegments = (
         ],
       ];
     }
-    // The gap is one width from rim to hub: an angular gap narrows to nothing
-    // at the centre, which read as two slices overlapping there.
     return [
       angle + span,
       [

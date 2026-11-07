@@ -1,12 +1,7 @@
-/**
- * The shadcn scene's script, read by both sides: the take paints the component
- * each line of code describes, and the film types that line on the same frame.
- */
 import * as Arr from "effect/Array";
 
 export const CHARS_PER_FRAME = 8;
 
-/** The title holds alone this long, then the code slides in under it. */
 export const INTRO = 20;
 const THEME_AT = 64;
 const THEME_EVERY = 12;
@@ -14,7 +9,6 @@ const themeAt = (index: number): number => THEME_AT + index * THEME_EVERY;
 
 export interface CodeLine {
   readonly text: string;
-  /** The frame this line starts typing. */
   readonly frame: number;
 }
 
@@ -35,7 +29,6 @@ const LINES = [
 const framesOf = (text: string): number =>
   Math.ceil(text.length / CHARS_PER_FRAME);
 
-/** One line after another, from just after the code has slid in. */
 export const CODE: ReadonlyArray<CodeLine> = Arr.map(LINES, (text, i) => ({
   text,
   frame:

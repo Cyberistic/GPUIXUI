@@ -1,11 +1,3 @@
-/**
- * The dashboard's content: the three visitor ranges, the four KPI tiles, and
- * the document rows each tab of the report holds.
- *
- * Numbers are the reference block's (shadcn's `dashboard-01` sample data), so
- * the screen reads as the block a consumer recognises rather than a mock.
- */
-
 export const ranges = [
   { value: "3m", label: "Last 3 months" },
   { value: "30d", label: "Last 30 days" },
@@ -17,14 +9,11 @@ export type Range = (typeof ranges)[number]["value"];
 export interface Visitors {
   readonly labels: ReadonlyArray<string>;
   readonly values: ReadonlyArray<number>;
-  /** The same days on phones, the second layer of the traffic chart. */
   readonly mobile: ReadonlyArray<number>;
-  /** The period's total and its movement, printed under the chart's name. */
   readonly total: string;
   readonly change: string;
 }
 
-/** Ninety days, from shadcn's `chart-area-interactive` (MIT), newest last. */
 const LABELS: ReadonlyArray<string> = [
   "Apr 1",
   "Apr 2",

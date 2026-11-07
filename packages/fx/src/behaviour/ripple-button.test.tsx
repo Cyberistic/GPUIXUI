@@ -1,19 +1,3 @@
-/**
- * RippleButton in the real GPUix renderer.
- *
- * The bugs these guard: a disc that starts at the window origin rather than the
- * press; a tween that grows the box away from the point instead of around it; a
- * disc too small for an edge press; a layer that stays in the tree after its
- * tween; a keyboard activation that ripples from a corner; a reduced-motion
- * reader who still gets a journey; a disabled action that still paints feedback;
- * a disc that blocks the press it marks; and a wash painted in the action's own
- * fill, where it would disappear.
- *
- * The motion clock is paused for the frame readings, so the disc's radius is the
- * declared fraction rather than wherever real time had got. Its removal is a
- * real timer, so that half polls.
- */
-
 import { describe, expect, it, vi } from "vitest";
 import { actionOnColor, alpha, darkTheme } from "@gpuixui/components/authoring";
 import {
@@ -27,7 +11,6 @@ import { MotionProvider } from "@gpuixui/components/motion";
 import { RippleButton, type RippleButtonProps } from "../ripple-button.js";
 import { rippleOpacity } from "../ripple-button/logic.js";
 
-/** A primary action with the props a case needs. */
 const render = (props: Partial<RippleButtonProps> = {}) => {
   const onClick = vi.fn();
   const page = renderComponent(
@@ -44,14 +27,9 @@ const render = (props: Partial<RippleButtonProps> = {}) => {
   return { page, onClick };
 };
 
-/** The disc painted now, if any. */
 const disc = (page: ReturnType<typeof renderComponent>) =>
   page.renderer.findByTestId("ripple");
 
-/**
- * One mounted action whose preference the case can change, so a flip keeps the
- * button and the disc it is spreading rather than remounting them.
- */
 const Pressable = ({ reduced }: { readonly reduced: boolean }) => (
   <MotionProvider preference={reduced ? "reduced" : "animated"}>
     <RippleButton testId="action" variant="primary">
@@ -60,7 +38,6 @@ const Pressable = ({ reduced }: { readonly reduced: boolean }) => (
   </MotionProvider>
 );
 
-/** Every disc in the tree, for a burst of presses. */
 const discs = (page: ReturnType<typeof renderComponent>) =>
   page.renderer
     .findByType("div")
@@ -178,9 +155,6 @@ describe("RippleButton", () => {
   });
 
   it("drops a disc already spreading when the setting turns on", async () => {
-    // A disc is pure journey. The preference is read on every render, so the
-    // layer a press mounted goes with the travel the setting removed instead
-    // of staying in the tree for the rest of the level.
     const page = renderComponent(<Pressable reduced={false} />);
     try {
       const box = requireBounds(page, "action");
@@ -194,7 +168,6 @@ describe("RippleButton", () => {
       page.rerender(<Pressable reduced />);
       settle(page);
 
-      // Well inside the 500 ms window the animated disc would still be running.
       await waitFor(() => expect(disc(page)).toBeUndefined(), 80);
     } finally {
       page.unmount();

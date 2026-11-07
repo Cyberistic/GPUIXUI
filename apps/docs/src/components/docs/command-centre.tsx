@@ -1,16 +1,6 @@
 import { useState } from "react";
 import { fuzzyScore } from "./command-preview";
 
-/**
- * The command centre block — a palette over a dimmed page, plus the
- * `@gpuixui/*` recipe a consumer copies.
- *
- * The panel is open in the preview. Its matcher reuses the command palette
- * preview's subsequence score, so "which rows a query keeps" is one rule in
- * this app rather than two; the highlight arithmetic and the line `Enter`
- * prints live in exported functions because a rendering cannot be typed into.
- */
-
 export type CommandIcon =
   | "assign"
   | "assign-me"
@@ -23,7 +13,7 @@ export interface CommandEntry {
   readonly id: string;
   readonly label: string;
   readonly icon: CommandIcon;
-  /** The keycap or keycaps aligned right on the row. */
+
   readonly keys: ReadonlyArray<string>;
 }
 
@@ -41,10 +31,8 @@ export const commandEntries: ReadonlyArray<CommandEntry> = [
   { id: "label", label: "Add label…", icon: "label", keys: ["L"] },
 ];
 
-/** The row the panel opens on: the one a reader can see is highlighted. */
 export const defaultCommand = "assign-me";
 
-/** A query keeps the rows whose label it matches in order; blank keeps all. */
 export const matchCommands = (query: string): ReadonlyArray<CommandEntry> =>
   query.trim() === ""
     ? commandEntries
@@ -52,14 +40,12 @@ export const matchCommands = (query: string): ReadonlyArray<CommandEntry> =>
         (entry) => fuzzyScore(query, entry.label) !== undefined,
       );
 
-/** The highlight a query leaves behind: the current row if it survived. */
 export const highlightFor = (
   rows: ReadonlyArray<CommandEntry>,
   current: string,
 ): string | undefined =>
   rows.some((row) => row.id === current) ? current : rows[0]?.id;
 
-/** `delta` is `1` for ArrowDown and `-1` for ArrowUp; the ends wrap. */
 export const moveHighlight = (
   rows: ReadonlyArray<CommandEntry>,
   current: string | undefined,
@@ -76,7 +62,6 @@ export const moveHighlight = (
   return rows[next]?.id;
 };
 
-/** What `Enter` prints at the bottom of the panel. */
 export const runLine = (entry: CommandEntry): string => `Ran: ${entry.label}`;
 
 export interface CommandState {
@@ -91,7 +76,6 @@ export const initialCommandState: CommandState = {
   ran: undefined,
 };
 
-/** Typing re-ranks the rows; a highlight that fell out of the list lands on the first. */
 export const typeQuery = (
   state: CommandState,
   query: string,
@@ -101,10 +85,6 @@ export const typeQuery = (
   active: highlightFor(matchCommands(query), state.active) ?? defaultCommand,
 });
 
-/**
- * The panel's key rules: arrows move the highlight, `Enter` runs the
- * highlighted row, `Escape` clears the query. Every other key is the field's.
- */
 export const applyCommandKey = (
   state: CommandState,
   key: string,
@@ -155,10 +135,8 @@ const CommandGlyph = ({ name }: { readonly name: CommandIcon }) => (
   </svg>
 );
 
-/** The dock's tiles: decoration under the dimmed desktop. */
 const DOCK_TONES = ["sky", "teal", "amber", "rose", "violet", "green"] as const;
 
-/** The page behind the palette: an app outline, dimmed and out of focus. */
 const PageBehind = () => (
   <div aria-hidden="true" className="gx-cmd-page">
     <div className="gx-cmd-page-bar">

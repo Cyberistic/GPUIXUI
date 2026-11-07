@@ -15,16 +15,6 @@ import {
   selectRuntime,
 } from "./dashboard-management";
 
-/**
- * The dashboard-management block.
- *
- * The preview is a browser reproduction, but every card a reader is told to
- * look for has to reach the markup, and every control's state has to be the one
- * the state helpers produce. A section dropped from the view, a radio that
- * never changes its `aria-checked`, or a dismissed toast that stays on screen
- * would leave the block teaching a console it does not draw.
- */
-
 const here = (path: string): string =>
   readFileSync(new URL(path, import.meta.url), "utf8");
 
@@ -168,7 +158,7 @@ describe("the dashboard management state", () => {
     expect(selectBuild(state, "cc02ae").selectedBuild).toBe("cc02ae");
     expect(cancelUpload(state).upload).toBe("cancelled");
     expect(resumeUpload(cancelUpload(state)).upload).toBe("uploading");
-    // A transition never mutates the record it was handed.
+
     expect(state).toEqual(initialDashboardManagementState);
   });
 });
@@ -228,8 +218,7 @@ describe("the management layout", () => {
     expect(section).not.toMatch(/#[0-9a-fA-F]{3,8}|rgba?\(/);
     expect(section).toContain("var(--destructive-soft)");
     expect(section).toContain("var(--success)");
-    // The upload's description holds two lines in both states, so cancelling
-    // cannot change the card's height.
+
     expect(section).toContain(".gx-mgmt-upload .gx-mgmt-desc");
     expect(section).toContain("min-height: 2.9em");
   });

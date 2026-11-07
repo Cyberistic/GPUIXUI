@@ -1,16 +1,7 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Typing text example: a deploy log that types itself in.
- *
- * The strings are the application's, the reveal clock is the component's. The
- * second line runs under the reduced preference through a nested provider, so
- * the same example shows both paths.
- */
-
 import { MotionProvider } from "@gpuixui/components/motion";
 import { TypingText } from "../src/typing-text.js";
 
-/** A short status line, typed, beside one that paints at once. */
 export const TypingTextExample = () => (
   <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
     <TypingText text="Building the native binding…" speed={35} caret />

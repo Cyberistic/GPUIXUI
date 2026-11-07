@@ -1,11 +1,3 @@
-/**
- * Browser preview for the Motion grid page.
- *
- * The native grid travels its cells to their new slots when the order changes;
- * the preview lays the cells out by slot and shuffles the order, so each cell
- * slides to its new square.
- */
-
 import { useState } from "react";
 
 const tools = ["Atlas", "Console", "Logs", "Secrets", "DNS", "Edge"];

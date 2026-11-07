@@ -1,14 +1,3 @@
-/**
- * The calculator in the real GPUix renderer.
- *
- * The claims this guards: the window, the keypad and the display mount; a
- * pointer press on `1 + 2 =` paints `3`; MODE opens the device's menu and a
- * digit picks the matrix mode; the side panel folds away and comes back; the
- * whole device fits a 1024×576 terminal; and the appearance switch repaints
- * the window around the device. The first mount loads the
- * native binding and fonts, so the timeout is generous.
- */
-
 import { createTestRoot } from "@gpuix/react/testing";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { CalculatorApp } from "./App.js";

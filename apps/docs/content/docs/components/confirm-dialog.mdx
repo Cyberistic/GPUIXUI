@@ -96,8 +96,3 @@ ConfirmDialog
 | `loading` | `boolean` | `false` | disables both actions, paints the busy mark, and ignores Escape and an outside press |
 | `onConfirm` | `() => void` (required) | — | runs on activation; never closes the dialog |
 | `children` | `ReactNode` | — | extra body between the description and the actions |
-
-## Notes
-- `role="dialog"`, named by the required `title`.
-- Focus enters the dialog and then moves to Cancel; closing returns it to whatever opened the dialog.
-- **No `aria-modal` and no `aria-labelledby`**.

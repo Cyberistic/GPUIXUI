@@ -1,31 +1,3 @@
-/**
- * Guards the gate's behaviour on an **incomplete theme**.
- *
- * The bug this holds: `docs/tokens.md` §Paint-ready values promised that "a role
- * missing from a hand-built theme literal is reported too, because the runtime
- * cannot paint what is not there", and the reports instead threw.
- * `isPaintableColor` read `value.trim()` on `undefined`, so a theme restored
- * from storage that predated a role the library added since — the one way a
- * complete theme becomes incomplete — failed with
- * `TypeError: Cannot read properties of undefined (reading 'trim')` instead of
- * naming the role; a missing elevation level crashed the same way on `.flatMap`.
- * The other contracts were only accidentally safe: their colour maths is total
- * over an absent value, but their source types claimed a complete palette.
- *
- * The decision: absence is a **value the report carries**, not an exception. A
- * role is reported once by `invalidColorRoles` with `value: undefined`, a level
- * once by `invalidShadowColors` at position 0 with `color: undefined`, and the
- * contracts that measure a pair report it unmeasurable. `passed` stays false, so
- * a stored theme older than the library is one audit line rather than a crash.
- *
- * The paint path owes the same promise, and it did not keep it: `elevationShadow`
- * read the level's first entry directly, so the surface the report had just
- * explained threw `TypeError: Cannot read properties of undefined (reading '0')`
- * on its first paint. A role the renderer cannot resolve paints nothing — a
- * property dropped from the batch — so an absent level now resolves to
- * `undefined` too, and the report is the one place the absence is named.
- */
-
 import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
@@ -102,7 +74,6 @@ import {
   syntaxRoles,
 } from "./syntax.js";
 
-/** Every non-test source under a package, keyed by its path below that root. */
 const sourcesUnder = (
   root: string,
 ): ReadonlyArray<readonly [string, string]> => {
@@ -130,7 +101,6 @@ const sourcesUnder = (
   return walk(new URL(root, import.meta.url));
 };
 
-/** Every style the library ships, as the gate would be run over them. */
 const shipped: readonly Theme[] = [
   lightTheme,
   darkTheme,
@@ -144,24 +114,16 @@ const shipped: readonly Theme[] = [
   ),
 ];
 
-/**
- * One audit per shipped style, read **once**: the styles are constants and the
- * gate is a pure function, so the five cases below that ask whether every style
- * passes paid for eighteen audits each — 750 ms per case against a two-second
- * budget. Reading it at module load keeps each case to its own claim.
- */
 const shippedAudits = shipped.map((theme) => ({
   theme,
   audit: auditTheme(theme),
 }));
 
-/** The names of the styles that do not pass the gate, in shipped order. */
 const unpainted = (): readonly string[] =>
   shippedAudits
     .filter(({ audit }) => !audit.passed)
     .map(({ theme }) => theme.name);
 
-/** The four levels, so a missing one can be named without a cast. */
 const levels = [
   "sm",
   "md",
@@ -169,7 +131,6 @@ const levels = [
   "overlay",
 ] as const satisfies readonly ElevationLevel[];
 
-/** `record` without `key` — the shape a stored theme older than a key has. */
 const omit = <Record_ extends object>(
   record: Record_,
   key: keyof Record_,
@@ -185,15 +146,12 @@ const colorsWithout = (theme: Theme, role: keyof ThemeColors) =>
 const elevationWithout = (theme: Theme, level: ElevationLevel) =>
   omit(theme.elevation, level);
 
-/** Every shadow of a level in one colour, without reading a position. */
 const recolour = (level: readonly BoxShadow[], color: string): BoxShadow[] =>
   level.map((shadow) => ({ ...shadow, color }));
 
-/** A theme as storage hands it back: the type says complete, the value is not. */
 const stored = (overrides: Partial<Record<keyof Theme, unknown>>): Theme =>
   ({ ...lightTheme, ...overrides }) as Theme;
 
-/** The refusal's message, or `undefined` when the gate read the theme. */
 const refusedWith = (theme: Theme): string | undefined => {
   try {
     auditTheme(theme);
@@ -229,22 +187,12 @@ describe("an absent role", () => {
     ]);
   });
 
-  // 18 styles × 47 roles: a broad sweep, and it reads the two reports that
-  // answer the claim rather than all eleven per role. A full `auditTheme` here
-  // was 846 audits and took 29.7 s, over the twenty-second timeout it asked for
-  // and fifteen times the package's two-second budget; nothing about the two
-  // claims needs the other nine reports. The gate's own `passed` conjunction is
-  // `audit.test.ts`'s, and a theme that lost every role at once — the superset of
-  // losing one in turn — is the absent-group case below. The pair half reads only
-  // the pairs that name the role: `contrastFailures` walks every pair in the
-  // table, and a pair the absent role does not sit on cannot change.
   it("is named, and leaves no pair it sits on readable, in every shipped style", () => {
     const wrong = shipped.flatMap((theme) =>
       colorRoles.flatMap((role) => {
         const colors = themeColors({ colors: colorsWithout(theme, role) });
         const named = invalidColorRoles({ colors }).map((at) => at.role);
-        // The pairs the missing role sits on cannot be measured; the paint
-        // report is the line that says why, so none may be reported readable.
+
         const readable = contrastPairs.filter(
           ({ foreground, background }) =>
             (foreground === role || background === role) &&
@@ -267,10 +215,6 @@ describe("an absent elevation level", () => {
     );
   });
 
-  // 18 styles × 4 levels, read from the report that answers it: a whole
-  // `auditTheme` per level took 2.9 s, over the package's two-second budget. The
-  // gate's `passed` conjunction is `audit.test.ts`'s and the placements this
-  // absence makes unmeasurable are the absent-group case's.
   it("is named once, without a colour, for every level of every shipped style", () => {
     const wrong = shipped.flatMap((theme) =>
       levels.flatMap((level) => {
@@ -308,7 +252,7 @@ describe("an absent elevation level", () => {
     };
 
     expect(elevationShadow(stored, "md")).toBeUndefined();
-    // The neighbours are untouched: the absence is one level, not the scale.
+
     expect(elevationShadow(stored, "sm")).toBe(lightElevation.sm[0]);
     expect(elevationShadow(stored, "lg")).toBe(lightElevation.lg[0]);
   });
@@ -338,12 +282,6 @@ describe("an absent elevation group", () => {
   const absentScale = () => stored({ elevation: undefined });
 
   it("is every level missing, reported rather than thrown", () => {
-    // A store that predates the elevation scale has no `elevation` key at all,
-    // which is one level up from the absent level this suite already holds:
-    // `invalidShadowColors` read `theme.elevation[level]` and threw
-    // `TypeError: Cannot read properties of undefined (reading 'sm')` — the
-    // gate's own promise ("an incomplete theme does not crash") broken by the
-    // absence a whole scale is.
     expect(invalidShadowColors({})).toEqual(
       levels.map((level) => ({ level, index: 0, color: undefined })),
     );
@@ -372,9 +310,6 @@ describe("an absent elevation group", () => {
   });
 
   it("leaves the scale audit's rungs to the shadow report", () => {
-    // The numbers report walks the levels a theme carries (`Object.entries`), so
-    // the group's absence was `TypeError: Cannot convert undefined or null to
-    // object` there as well; the order audit has no rung to compare either.
     const theme = absentScale();
 
     expect(invalidNumbers(theme)).toEqual([]);
@@ -384,8 +319,6 @@ describe("an absent elevation group", () => {
   });
 
   it("keeps every shipped style's scale whole", () => {
-    // The optional group must not turn a complete theme flat: every shipped
-    // style still paints all four levels and passes the gate.
     shipped.forEach((theme) => {
       levels.forEach((level) =>
         expect(elevationShadow(theme, level), `${theme.name} · ${level}`).toBe(
@@ -413,22 +346,6 @@ describe("an absent elevation group", () => {
   });
 });
 
-/**
- * The bug this holds: the absence rule stopped at a **role**. `invalidColorRoles`
- * read `theme.colors[role]` through a required group, so a theme a store
- * truncated past `colors` threw
- * `TypeError: Cannot read properties of undefined (reading 'background')` on the
- * first report — the gate's own promise ("an incomplete theme does not crash")
- * broken by the absence one group up, and every contract that reads a role threw
- * with it. `brandText` and `statusTone` are those contracts too, so the paint
- * path lost the window as well.
- *
- * The decision: the group is read through `themeColors`, so a theme that lost it
- * is the **same report** as a role it lost, once per role. Every pair, strip and
- * mark the theme cannot paint is reported unmeasurable, `passed` is false, and
- * the two paint seams answer `undefined` — the absence rule `elevationShadow`
- * already follows for a level.
- */
 describe("an absent colour group", () => {
   const absentGroup = () => stored({ colors: undefined });
 
@@ -456,8 +373,6 @@ describe("an absent colour group", () => {
     ) =>
       failures.length > 0 && failures.every(({ ratio }) => ratio === undefined);
 
-    // A report that walks roles answers with every placement a colourless theme
-    // cannot paint; an empty report would read as a pass.
     expect(unmeasurable(report.contrast)).toBe(true);
     expect(unmeasurable(report.decorative)).toBe(true);
     expect(unmeasurable(report.selection)).toBe(true);
@@ -467,8 +382,7 @@ describe("an absent colour group", () => {
     expect(unmeasurable(report.disabledFade)).toBe(true);
     expect(unmeasurable(report.keyboardDim)).toBe(true);
     expect(unmeasurable(report.series.surfaces)).toBe(true);
-    // The report beside the gate keeps the same rule: a declared switch paints
-    // nothing on a theme with no roles.
+
     expect(unmeasurable(highlightFailures({}))).toBe(true);
     expect(
       unmeasurable(
@@ -477,8 +391,7 @@ describe("an absent colour group", () => {
         }).placements,
       ),
     ).toBe(true);
-    // The two groups that are still there keep their own reports empty, so the
-    // absence is the colour group rather than a theme the gate cannot read.
+
     expect(report.invalidNumbers).toEqual([]);
     expect(report.invalidShadows).toEqual([]);
   });
@@ -486,33 +399,25 @@ describe("an absent colour group", () => {
   it("paints nothing through the seams the reports share, instead of throwing", () => {
     const theme = absentGroup();
 
-    // A source that may have lost the group has no colour to give: the runtime
-    // drops the property and paints nothing.
     expect(brandText({})).toBeUndefined();
     expect(brandTextOn({}, "infoSoft")).toBeUndefined();
     expect(statusTone({}, "destructive")).toBeUndefined();
 
-    // The `Theme` overload still answers outright for a complete theme.
     expect(brandText(theme)).toBeUndefined();
     expect(statusTone(theme, "destructive")).toBeUndefined();
-    // The selection wash is derived per surface — the helper a message's own
-    // tint asks — and the roles it moves are read through the same seam.
+
     expect(selectionOn(theme, "background")).toBeUndefined();
-    // The action fills answer the same way, so a filled control keeps its
-    // resting paint instead of losing the window.
+
     expect(filledHover(theme, "primary")).toBeUndefined();
     expect(filledPressed(theme, "primary")).toBeUndefined();
-    // The programmatic focus ring and the disabled pair are paint seams too.
+
     expect(focusRing(theme)).toBeUndefined();
     expect(disabledAction(theme)).toBeUndefined();
-    // A control's box is the numeric pair with the same rule: a density group a
-    // store truncated past sizes nothing rather than throwing from the first
-    // control a surface lays out.
+
     const unDensed: DensitySource = omit(lightTheme, "density");
     expect(controlHeight(unDensed, "md")).toBeUndefined();
     expect(controlPaddingX(unDensed, "md")).toBeUndefined();
-    // The inventory records the pair as the seam it is, so a reader checking a
-    // stored theme finds both names beside the others.
+
     const inventory = readFileSync(
       new URL("../../../.agents/slop/COMPONENTS.md", import.meta.url),
       "utf8",
@@ -524,12 +429,6 @@ describe("an absent colour group", () => {
   });
 
   it("reads every role the primitives paint through their one seam", () => {
-    // `core/theme.ts` is the primitives' single paint point: `colorRole` answers
-    // a role the theme still carries and `undefined` for one a stored theme
-    // lost. A direct `theme.colors.x` read is the shape that threw a `TypeError`
-    // out of the first control a truncated theme painted — the absence this
-    // suite exists for — so no paint source may carry one, and the walk has to
-    // find the painters rather than pass on an empty scan.
     const painted = sourcesUnder("../../primitives/src/");
     expect(
       painted.length,
@@ -547,8 +446,6 @@ describe("an absent colour group", () => {
       "the seam is not the route the painters take",
     ).toBeGreaterThan(6);
 
-    // The catalogue teaches the seam beside the tokens' own absence rule, so a
-    // consumer reading §Paint-ready values finds the path the painters take.
     const catalogue = readFileSync(
       new URL("../../../docs/tokens.md", import.meta.url),
       "utf8",
@@ -576,8 +473,7 @@ describe("an absent colour group", () => {
     expect(catalogue).toContain("`themeColors(theme)`");
     expect(designSystem).toContain("lost the whole `colors` group");
     expect(readme).toContain("whole `colors` group");
-    // The group is additive: it is a report, not the refusal a numeric group
-    // earns, so no page may print it as a gate error.
+
     expect(catalogue).not.toContain(
       "a theme must carry every numeric group: `colors`",
     );
@@ -590,15 +486,6 @@ describe("a complete theme", () => {
   });
 });
 
-/**
- * The gate's other half of the incomplete-theme rule, and the bug this holds:
- * `docs/tokens.md` and this file said a missing numeric group was read "as the
- * groups a theme carries", while `invalidNumbers` opened `theme.typography` and
- * the consumer saw `TypeError: Cannot convert undefined or null to object` — no
- * group, no sentence, no way to know which release their theme predated. Adding
- * a group is a breaking change rather than an additive one, so absence here is
- * not a theme the reports can describe: the gate refuses it and names the group.
- */
 describe("an absent numeric group", () => {
   const numericGroups = [
     "spacing",
@@ -628,9 +515,6 @@ describe("an absent numeric group", () => {
   });
 
   it("reads a theme whose groups are all there, and whose groups are additive", () => {
-    // The refusal is the numeric half only: a stored theme missing a colour role
-    // or an elevation level is still an audit that returns, with the absence in
-    // the report (the suites above hold that half).
     const stored = {
       ...lightTheme,
       colors: colorsWithout(lightTheme, "primary"),
@@ -642,34 +526,12 @@ describe("an absent numeric group", () => {
   });
 });
 
-/**
- * The bug this holds: a stored theme can predate a **step** inside a group it
- * still carries — the release that grew the type scale added `codeBlock`, and
- * `density` gained a metric before that — and the gate passed it. The reports
- * cannot see the absence because they walk the steps a theme carries
- * (`invalidNumbers` reads `Object.entries`), so `auditTheme` returned
- * `passed: true` for a theme no component can paint: `textStyle(theme,
- * "codeBlock")` reads `typography.codeBlock.fontSize`, which was a `TypeError` at
- * the first paint that asked for the role (the seam now answers the library's
- * role, so a surface that paints before the audit survives), and a missing
- * `lineHeight` is a property the serialised batch drops, so the role paints at
- * the runtime's leading with every report empty.
- *
- * The decision is the group rule one level down: a step is what the components
- * read, so the gate refuses a theme missing one and names the path instead of
- * reporting a number that is not there. The required list is derived from the
- * scales this release ships, so a step added to one is required without a second
- * list to edit.
- */
 describe("an absent numeric step", () => {
   it("is a theme no report describes and the paint reads from the library", () => {
     const missingRole = stored({
       typography: omit(lightTheme.typography, "codeBlock"),
     });
 
-    // The number report walks the steps a theme carries, so it is silent about
-    // one that is not there; the seam answers the library's role rather than
-    // throwing, and the gate is what refuses the theme.
     expect(invalidNumbers(missingRole)).toEqual([]);
     expect(textStyle(missingRole, "codeBlock")).toEqual(
       textStyle(lightTheme, "codeBlock"),
@@ -735,7 +597,7 @@ describe("an absent numeric step", () => {
     );
 
     expect(wrong.map(([path]) => path)).toEqual([]);
-    // Every entry is refused by the step rule, not by a group or a crash.
+
     expect(
       stripped.filter(([, theme]) =>
         refusedWith(theme)?.includes("every numeric step"),
@@ -759,8 +621,6 @@ describe("an absent numeric step", () => {
       extendTheme(lightTheme, { density }),
     );
 
-    // One audit per theme: a second pass only to ask `passed` costs the whole
-    // gate again, and the two questions are one report.
     const failed = [
       ...unpainted(),
       ...presets
@@ -772,8 +632,6 @@ describe("an absent numeric step", () => {
   });
 
   it("derives its steps from a preset every other preset mirrors", () => {
-    // The required list is `defaultDensity`'s shape, so a preset that gained or
-    // lost a metric would carry a step the gate never asks about.
     const steps = (density: Density) => [
       Object.keys(density.controlHeight),
       Object.keys(density.controlPaddingX),
@@ -801,31 +659,6 @@ describe("an absent numeric step", () => {
   });
 });
 
-/**
- * The bug this holds: the three refusals above were **only** a throw. A caller
- * holding a theme a store handed back had no way to ask *whether* it predates a
- * scale, a step or a family without calling `auditTheme` and catching its
- * `Error` — which the house rules forbid in Effect code, and which turns a
- * decision about restoring a theme into control flow through an exception. The
- * lists existed inside `requireGroups`/`requireSteps`, so the knowledge was
- * there and unreadable.
- *
- * The decision: absence is **data first**, the refusal second. `missingTokens`
- * returns the three lists — a group named once (none of its steps exists to
- * name), a step named once (not once per field), and a family that is present
- * but blank — and `auditTheme` builds its three messages from the same list, so
- * the report and the error cannot drift. An additive absence (a colour role, an
- * elevation level) stays out: it is a report and a failing gate, not a refusal.
- *
- * **The bug this suite's null cases hold:** the walk asked only for `undefined`,
- * the key a store *drops*. A key it **keeps without a value** comes back as
- * `null`, and a token is never nullable: `{ spacing: { md: null } }` read as
- * present, `invalidNumbers` skips a value that is not a number, so
- * `auditTheme(...).passed` was `true` while the runtime dropped the length and
- * every gap painted as nothing. A null group is one missing group, a null role
- * field is that field's step, and a null family is the step rule's rather than a
- * blank name.
- */
 describe("the parts a theme lost, as data", () => {
   it("names a whole group once, without the steps inside it", () => {
     const stored = omit(lightTheme, "typography");
@@ -873,16 +706,13 @@ describe("the parts a theme lost, as data", () => {
     expect(missingTokens(blank)).toEqual([
       { group: "typography", path: "sans", kind: "family" },
     ]);
-    // A family that is gone is the step rule's, not a second finding.
+
     expect(missingTokens(absent)).toEqual([
       { group: "typography", path: "sans", kind: "step" },
     ]);
   });
 
   it("reads a scale token a store wrote as null as one it lost", () => {
-    // JSON keeps a key a caller set to null, and a token is never nullable: the
-    // runtime drops the length, so the gap or the glyph paints as nothing while
-    // the number report walks the entries it has and says nothing.
     const nulled = stored({
       spacing: { ...lightTheme.spacing, md: null },
       radius: { ...lightTheme.radius, md: null },
@@ -920,8 +750,6 @@ describe("the parts a theme lost, as data", () => {
       },
     });
 
-    // The number report does name this one; the data report must agree with the
-    // gate rather than call the theme whole while the gate refuses it.
     expect(missingTokens(nulled)).toEqual([
       { group: "typography", path: "body.lineHeight", kind: "step" },
     ]);
@@ -940,8 +768,6 @@ describe("the parts a theme lost, as data", () => {
   });
 
   it("leaves an additive absence to the reports", () => {
-    // The report is about the parts a component reads by name; a role or a level
-    // a theme lost is a measured absence with a failing gate, not a refusal.
     const additive = {
       ...lightTheme,
       colors: colorsWithout(lightTheme, "primary"),
@@ -991,28 +817,20 @@ describe("the parts a theme lost, as data", () => {
   });
 
   it("reads what a store handed back, including no theme at all", () => {
-    // The bug this holds: `missingTokens` took the partial group source a `Theme`
-    // structurally satisfies, so a caller holding a decoded value had to cast it —
-    // `JSON.parse(fromStorage) as typeof lightTheme`, the assertion `AGENTS.md`
-    // forbids — to ask the one report that decides whether a theme is restorable.
-    // And the value a store writes for **no saved theme**, `null`, threw
-    // `TypeError: Cannot read properties of null (reading 'spacing')` out of that
-    // decision, while every value that is not a theme at all carries no group.
     const everyGroup = missingTokens({});
 
     [null, undefined, "light", 42, true, []].forEach((stored) => {
       expect(() => missingTokens(stored)).not.toThrow();
       expect(missingTokens(stored)).toEqual(everyGroup);
     });
-    // No group exists to name a step inside, so the six groups are the whole
-    // answer rather than six groups plus every step.
+
     expect(everyGroup.map(({ path }) => path)).toEqual(
       everyGroup.map(() => ""),
     );
     expect(everyGroup.map(({ kind }) => kind)).toEqual(
       everyGroup.map(() => "group"),
     );
-    // And a complete theme is still whole: the seam did not turn into a parser.
+
     expect(missingTokens(lightTheme)).toEqual([]);
   });
 
@@ -1025,8 +843,7 @@ describe("the parts a theme lost, as data", () => {
     const seam = read("./missing.ts");
 
     expect(seam).toContain("export function missingTokens(theme: unknown)");
-    // A cast is the thing the source type makes unnecessary; a page that teaches
-    // one sends the reader back to the assertion the report exists to avoid.
+
     expect(seam).not.toContain("as typeof lightTheme");
     expect(catalogue).not.toContain("as typeof lightTheme");
     expect(catalogue).toContain("The source is what the store handed back");
@@ -1054,32 +871,15 @@ describe("the parts a theme lost, as data", () => {
   });
 });
 
-/**
- * The bug this holds: every family is a **string the theme must name**, and the
- * gate asked only that it be there. `sans: ""` is present, so `requireSteps`'
- * absence rule read it as complete while `textStyle` handed the runtime
- * `fontFamily: ""` and every text role painted the renderer's fallback — the
- * face a theme exists to state, gone with every report empty. The seam now
- * answers the library's own face for a blank family, so a surface that paints
- * before the audit keeps a real typeface; the gate is what refuses the theme.
- * The playground's
- * `register-font` probe measures what an unknown family does: the installed face
- * lays `ABm` out at its own 80px and a family no runtime knows paints the
- * fallback's 44px, so an empty name is the whole identity lost, not a cosmetic
- * detail. No report can describe it — `invalidNumbers` reads numbers,
- * `invalidColorRoles` colours — so the gate refuses it, the same rule the missing
- * step and group above follow.
- */
 describe("an unnamed font family", () => {
   it("is a theme no report measures and the paint answers the library's face", () => {
     const blank = stored({
       typography: { ...lightTheme.typography, sans: "" },
     });
 
-    // Every other contract reads its own kind of value, so each is silent.
     expect(invalidNumbers(blank)).toEqual([]);
     expect(invalidColorRoles(blank)).toEqual([]);
-    // The seam answers the library's family rather than handing the runtime "".
+
     expect(textStyle(blank, "body").fontFamily).toBe(
       lightTheme.typography.sans,
     );
@@ -1102,8 +902,7 @@ describe("an unnamed font family", () => {
     });
 
     expect(refusedWith(brand)).toBeUndefined();
-    // A family is a name, so the face a machine lacks is still a name — and the
-    // refusal is the list `missingTokens` reads, so that is the claim.
+
     expect(
       shipped
         .filter((theme) => missingTokens(theme).length > 0)
@@ -1125,41 +924,8 @@ describe("an unnamed font family", () => {
   });
 });
 
-/**
- * The bug this holds: the incomplete-theme rule stopped at the roles, the
- * levels and the numeric groups, and the two **nested tables** a theme may carry
- * were read as if the type were the value.
- *
- * A theme comes back from a store, and JSON has no `undefined`: a role that was
- * absent when the theme was saved returns `null`, and `measuredColour` called
- * `.trim()` on it, so the gate a stored theme is told to run threw
- * `TypeError: Cannot read properties of null (reading 'trim')` from
- * `invalidColorRoles`, every contrast pair and the decorative composite — the
- * one report that exists to describe a theme it does not own.
- *
- * `series` had the opposite failure. `seriesFailures` walked the entries the
- * table held rather than the five positions a chart indexes, so
- * `{ series: ["#5F4BDB"] }` reported nothing at all and `auditTheme` returned
- * `passed: true` while series 2 to 5 painted no colour: `seriesColour` assigns
- * by position, so four categories of a five-category chart were empty bars with
- * every report clean.
- *
- * `syntax` had both. A palette is a table of token names, and one is
- * `constructor`: `palette[role]` answered `Object.prototype.constructor` — a
- * function — for every token a hand-written palette omitted, so
- * `{ syntax: { keyword: "#3B2C8F" } }` failed with `value.trim is not a
- * function`. A token a store wrote as `null` threw the same way.
- *
- * The decision is the same one the suites above follow, one level down: absence
- * is a **value the report carries**, never an exception and never a skip. The
- * measuring seam accepts what a store hands back and resolves a non-string to
- * unmeasurable, the series contract measures every position the scale names, and
- * the syntax contract reads the palette's own tokens only — so a theme that lost
- * one paints one audit line rather than a crash or a false pass.
- */
 describe("a scale a store wrote", () => {
   it("reports a role a store wrote as null, instead of throwing", () => {
-    // What `JSON.stringify({ ...colors, primary: undefined })` writes back.
     const nullRole = stored({
       colors: { ...lightTheme.colors, foreground: null },
     });
@@ -1167,7 +933,7 @@ describe("a scale a store wrote", () => {
     expect(invalidColorRoles(nullRole)).toEqual([
       { role: "foreground", value: undefined },
     ]);
-    // The pair it carries is unmeasurable, not a ratio read from a crash.
+
     const report = auditTheme(nullRole);
     expect(
       report.contrast.filter(
@@ -1180,11 +946,9 @@ describe("a scale a store wrote", () => {
   it("measures every position a series names, not the entries it carries", () => {
     const short = stored({ series: lightSeries.slice(0, 1) });
 
-    // The one colour it carries is the only position that can be measured.
     const report = seriesFailures(short);
     const lost = report.surfaces.filter(({ index }) => index > 0);
 
-    // Four surfaces, each walking the five positions in the order it measures.
     expect(lost.map(({ index }) => index)).toEqual([
       1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4,
     ]);
@@ -1193,7 +957,7 @@ describe("a scale a store wrote", () => {
         ({ color, ratio }) => color === undefined && ratio === undefined,
       ),
     ).toBe(true);
-    // The pairs a lost position joins cannot be verified either.
+
     expect(
       report.distinctness.filter(({ distance }) => distance === undefined),
     ).toHaveLength(10);
@@ -1214,23 +978,20 @@ describe("a scale a store wrote", () => {
       ],
     });
 
-    // Only the null position is a report: the four colours it kept are sound.
     const surfaces = seriesFailures(holed).surfaces;
     expect(new Set(surfaces.map(({ index }) => index))).toEqual(new Set([1]));
     expect(surfaces.every(({ color }) => color === undefined)).toBe(true);
   });
 
   it("reports a syntax palette that names only some tokens", () => {
-    // A hand-written literal, so `constructor` is inherited rather than own.
     const partial = stored({ syntax: { keyword: "#3B2C8F" } });
 
     const failures = syntaxFailures(partial);
     const named = failures.filter(({ role }) => role !== "keyword");
 
-    // Every token the palette does not carry is unmeasurable, on both fills.
     expect(named).toHaveLength((syntaxRoles.length - 1) * 2);
     expect(named.every(({ ratio }) => ratio === undefined)).toBe(true);
-    // `constructor` is reported as missing, not read as the function it inherits.
+
     expect(failures.filter(({ role }) => role === "constructor")).toHaveLength(
       2,
     );
@@ -1238,7 +999,6 @@ describe("a scale a store wrote", () => {
   });
 
   it("reports a syntax token a store wrote as null, instead of throwing", () => {
-    // The dark table on the dark theme, so only the null token is reported.
     const nullToken = {
       ...darkTheme,
       syntax: { ...darkSyntax, keyword: null },
@@ -1261,7 +1021,6 @@ describe("a scale a store wrote", () => {
     const designSystem = read("../../../docs/design-system.md");
     const readme = read("../README.md");
 
-    // The series contract measures positions, and the syntax one tokens.
     expect(catalogue).toContain(
       "answers the table the theme inherits at every position it does not",
     );
@@ -1272,7 +1031,7 @@ describe("a scale a store wrote", () => {
     expect(designSystem).toContain(
       "completed from the shipped table when painted",
     );
-    // The measurement seam and both nested tables, from the package's side.
+
     expect(readme).toContain("`measuredColour`/`opaqueRgb`/`alphaOf`");
     expect(readme).toContain("every one of the five");
     expect(readme).toContain("a token the theme names is its own");
@@ -1292,15 +1051,6 @@ describe("a scale a store wrote", () => {
 });
 
 describe("a shadow a store wrote", () => {
-  // The bug this guards: a level was read as a list unconditionally. JSON has no
-  // `undefined`, and a hand-edited or generated store can write a level as one
-  // object where the type declares a list, or a list with a `null` entry — and
-  // then `invalidShadowColors` called `.flatMap` on an object and `shadow.color`
-  // on a null, so `auditTheme` reached the consumer as
-  // `TypeError: shadows.flatMap is not a function` or
-  // `Cannot read properties of null (reading 'color')`. `invalidNumbers` threw
-  // on the null entry the same way, and `elevationShadow` returned the `null` it
-  // read as if it were a shadow.
   const levelAsObject = () => {
     const [first] = lightElevation.md;
     expect(first).toBeDefined();
@@ -1318,7 +1068,7 @@ describe("a shadow a store wrote", () => {
     expect(invalidShadowColors(object)).toEqual([
       { level: "md", index: 0, color: undefined },
     ]);
-    // The paint path answers the same absence: a surface lifts nothing.
+
     expect(elevationShadow(object, "md")).toBeUndefined();
     expect(() => auditTheme(object)).not.toThrow();
     expect(auditTheme(object).passed).toBe(false);
@@ -1348,8 +1098,6 @@ describe("a shadow a store wrote", () => {
       },
     });
 
-    // A value that is not a colour is the absence it is, the same rule the
-    // role report follows for a stored role.
     expect(invalidShadowColors(wrong)).toEqual([
       { level: "sm", index: 0, color: undefined },
     ]);
@@ -1357,7 +1105,6 @@ describe("a shadow a store wrote", () => {
   });
 
   it("paints every level a store wrote as a list", () => {
-    // The counterweight: the shipped levels and a brand's own list still paint.
     expect(elevationShadow(lightTheme, "lg")).toEqual(
       lightTheme.elevation.lg[0],
     );
@@ -1378,7 +1125,6 @@ describe("a shadow a store wrote", () => {
     const inventory = read(".agents/slop/COMPONENTS.md");
     const readme = read("packages/tokens/README.md");
 
-    // Every surface states the rule, and the paint path beside it.
     expect(page).toContain("A shape a store wrote is the same absence");
     expect(page).toContain("a list holding a `null`");
     expect(system).toContain("A shape a store wrote is that same absence");
@@ -1387,24 +1133,7 @@ describe("a shadow a store wrote", () => {
   });
 });
 
-/**
- * The bug this holds: a theme's three **optional tables** were read with
- * `!== undefined`, and JSON has no `undefined` — a theme a store saved comes back
- * with `null` where it carried none. `switchFailures` then read its first slot
- * off that `null` (`TypeError: Cannot read properties of null (reading 'on')`),
- * and `seriesColors`/`syntaxColors` returned the `null` itself in a type that
- * promises a table: a chart indexed it, and a code host was handed no palette and
- * painted the runtime's dark default instead of the theme's.
- *
- * The decision is the absence rule the suites above follow. A `null` table is the
- * state every shipped theme is in — no declared switch, so the accent toggle; no
- * authored scale or palette, so the shipped table for the mode and variant — not
- * a table with no entries. An authored table is still the theme's own: whole for
- * a series, and token by token for a palette, whose unnamed tokens are the
- * shipped table's.
- */
 describe("an optional table a store nulled", () => {
-  /** The shape a store writes for a theme that declared none: `null`, not absent. */
   const nulled = (theme: Theme): Theme =>
     ({
       ...theme,
@@ -1418,7 +1147,7 @@ describe("an optional table a store nulled", () => {
 
     expect(seriesColors(light)).toBe(lightSeries);
     expect(seriesColors(nulled(darkTheme))).toBe(darkSeries);
-    // The report and the paint read one table, so an absent table is no finding.
+
     const report = seriesFailures(light);
     expect(report.surfaces).toEqual([]);
     expect(report.distinctness).toEqual([]);
@@ -1431,7 +1160,7 @@ describe("an optional table a store nulled", () => {
 
     expect(syntaxColors(light)).toBe(lightSyntax);
     expect(syntaxColors(nulled(darkTheme))).toBe(darkSyntax);
-    // The host seam is the paint path: a null palette here is the runtime default.
+
     expect(nativeTextTheme(light).syntax).toBe(lightSyntax);
     expect(syntaxFailures(light)).toEqual([]);
     expect(auditTheme(light).passed).toBe(true);
@@ -1451,7 +1180,6 @@ describe("an optional table a store nulled", () => {
   });
 
   it("still measures a switch the theme declares", () => {
-    // The counterweight: the null rule must not silence a declared paint.
     const typo = stored({
       switch: { on: "#30D158", off: "#E9E9E", knob: "#FFFFFF" },
     });
@@ -1468,15 +1196,13 @@ describe("an optional table a store nulled", () => {
       switch: { on: "#30D158", off: "#DCDCE1", knob: "#FFFFFF" },
     });
 
-    // The two positions it names are its own; the three it lost answer the
-    // light table, so a chart's third category still paints a mark.
     expect(seriesColors(stored({ series: short }))).toEqual([
       ...short,
       lightSeries[2],
       lightSeries[3],
       lightSeries[4],
     ]);
-    // The report still reads the row as the store wrote it.
+
     expect(seriesFailures(stored({ series: short })).surfaces).not.toEqual([]);
     expect(switchFailures(declared)).toEqual({
       paint: [],
@@ -1489,8 +1215,6 @@ describe("an optional table a store nulled", () => {
     const partial = { keyword: "#3B2C8F" };
     const palette = syntaxColors(stored({ syntax: partial }));
 
-    // The token it names is its own; every other token answers the light table
-    // rather than the runtime's dark-designed default for a missing key.
     expect(palette.keyword).toBe(partial.keyword);
     expect(palette.constructor).toBe(lightSyntax.constructor);
     expect(palette.number).toBe(lightSyntax.number);
@@ -1519,7 +1243,6 @@ describe("an optional table a store nulled", () => {
     const readme = read("../README.md");
     const inventory = read("../../../.agents/slop/COMPONENTS.md");
 
-    // The rule where each table is taught, and the mechanism where it is described.
     expect(catalogue).toContain(
       "A table a store wrote as `null` is the absence it is",
     );
@@ -1529,9 +1252,7 @@ describe("an optional table a store nulled", () => {
     expect(catalogue).toContain(
       'A switch a store wrote as `null` is that same "declares none"',
     );
-    // The paint path follows the report: the primitives decode the stored table
-    // at their own seam (`declaredPaint`), so no page can claim the throw the
-    // source fixed.
+
     expect(catalogue).toContain("**The paint follows the same rule.**");
     expect(catalogue).toContain("`declaredPaint`");
     expect(catalogue).not.toContain("the paint path does not yet");
@@ -1543,28 +1264,7 @@ describe("an optional table a store nulled", () => {
   });
 });
 
-/**
- * Guards the absence rule for the value JSON actually writes.
- *
- * The bug this holds: the reports learned to read a role a store **dropped**
- * (`undefined`), and the paint seams still treated the value JSON writes for
- * that same key — `null` — as a colour. `statusTone` checked its three roles
- * against `undefined` only, so `{ successSoftForeground: null }` answered
- * `{ foreground: null }` and a component handed `null` as a text colour;
- * `brandText` answered `null` for a null `primary`, `keyboardFocusRing` handed
- * the runtime `outlineColor: null`, and `nativeTextTheme` put `diffAdd: null` in
- * a field its type declares a string. Measured on the shipped light theme with
- * one role nulled.
- *
- * The decision is the rule the gate already reports by: the seam every role is
- * read through keeps only the strings, so a `null` — or a number where a colour
- * belongs — is the absence it is, and each paint seam answers the way it does
- * for a dropped role: `undefined` from the deriving helpers, no colour on the
- * ring's outline, no field in the host object. A complete theme is returned as
- * it is, so no shipped style moved.
- */
 describe("a role a store wrote as null", () => {
-  /** `record` without `key` — what the seam must answer with. */
   const without = <Record_ extends object>(
     record: Record_,
     key: keyof Record_,
@@ -1574,7 +1274,6 @@ describe("a role a store wrote as null", () => {
     return partial;
   };
 
-  /** A theme with one role written the way `JSON.stringify` writes an absent one. */
   const nulled = (role: keyof ThemeColors): Theme =>
     ({
       ...lightTheme,
@@ -1585,22 +1284,20 @@ describe("a role a store wrote as null", () => {
     expect(themeColors(nulled("primary"))).toEqual(
       without(lightTheme.colors, "primary"),
     );
-    // A complete theme is returned as it is, not copied.
+
     expect(themeColors(lightTheme)).toBe(lightTheme.colors);
-    // The report already named it with no value.
+
     expect(invalidColorRoles(nulled("primary"))).toEqual([
       { role: "primary", value: undefined },
     ]);
   });
 
   it("is dropped by every paint seam that reads a role", () => {
-    // The brand and the two derivations that move it.
     expect(brandText(nulled("primary"))).toBeUndefined();
     expect(brandTextOn(nulled("primary"), "infoSoft")).toBeUndefined();
     expect(nativeTextTheme(nulled("primary")).caret).toBeUndefined();
     expect(nativeTextTheme(nulled("primary")).accent).toBeUndefined();
 
-    // A status tone is three roles, and the ink it names is the readable one.
     expect(
       statusTone(nulled("successSoftForeground"), "success"),
     ).toBeUndefined();
@@ -1608,22 +1305,14 @@ describe("a role a store wrote as null", () => {
       nativeTextTheme(nulled("successSoftForeground")).diffAdd,
     ).toBeUndefined();
 
-    // The ring keeps its geometry and hands the runtime no colour, so the
-    // runtime paints its own outline rather than reading a `null`.
     expect(
       keyboardFocusRing(nulled("ring")).focusVisible.outlineColor,
     ).toBeUndefined();
-    // An invalid control falls back to that ring colour, not to `null`.
+
     const invalid = controlFocusRing(nulled("destructive"), { invalid: true });
     expect(invalid?.focusVisible.outlineColor).toBe(lightTheme.colors.ring);
   });
 
-  // 18 styles: every seam that reads a role, from a theme whose whole colour
-  // group came back nulled. The seams normalise absence one role at a time
-  // (`themeColors` keeps only the strings), so an all-absent theme is the
-  // superset of nulling the 18 × 47 roles in turn — and it costs one call per
-  // seam instead of 846, which is what the suite's own two-second budget can
-  // carry. The single-role cases above hold the same rule per seam.
   it("never reaches a paint seam as a value, with no role left", () => {
     const wrong = shipped.flatMap((theme) => {
       const empty = {
@@ -1645,7 +1334,6 @@ describe("a role a store wrote as null", () => {
   });
 
   it("still paints a complete theme's every role", () => {
-    // The counterweight: dropping null must not drop the shipped values.
     expect(nativeTextTheme(lightTheme).caret).toBe(lightTheme.colors.primary);
     expect(controlFocusRing(lightTheme)?.focusVisible.outlineColor).toBe(
       lightTheme.colors.ring,
@@ -1674,26 +1362,7 @@ describe("a role a store wrote as null", () => {
   });
 });
 
-/**
- * The shape a store hands back, as a **type** the gate accepts.
- *
- * The bug this holds: `StoredTheme` is the value `restoreTheme` is documented to
- * take — the labels a theme was saved from, `null` where a group or a role was
- * never carried — and the gate refused it. `auditTheme`, `invalidNumbers`,
- * `invalidScales`, `seriesColors`, `syntaxColors` and `switchFailures` declared
- * complete groups, a `ThemeMode` label and non-null tables, so the consumer
- * `restoreTheme` exists for could run the one check this library asks for only
- * through a cast, which `AGENTS.md` §2 forbids. Every body already read the
- * storage shape — `invalidNumbers`' own `@example` passes `JSON.parse`, which
- * answers `any` and hid the hole — so each seam's input is the shape it reads
- * now. These cases fail `check-types` if a group goes back to `Theme`'s (the
- * fixture below is the type, not a cast) and fail by name if a seam stops
- * answering the labels and the `null` group a store wrote.
- */
 describe("the shape a store hands back", () => {
-  // The labels are the strings a store wrote, not the union: `"HIGH"` is the
-  // strict variant and `"Dark"` the dark page's mode, the reads `restoreTheme`
-  // makes on the way in and every floor and palette makes after it.
   const saved: StoredTheme = {
     ...highContrastDarkTheme,
     mode: "Dark",
@@ -1759,24 +1428,17 @@ describe("the shape a store hands back", () => {
   });
 
   it("answers a store that kept no theme with its own refusal, not a TypeError", () => {
-    // The bug this guards: `auditTheme` read its default floors — and with them
-    // `theme.contrast` — before `requireTokens` ran, so the gate at the end of a
-    // store flow threw `TypeError: Cannot read properties of null (reading
-    // 'contrast')` for a settings row that was never written, while
-    // `missingTokens` and `restoreTheme` already answered the same value as no
-    // theme at all.
     [null, undefined].forEach((absent) => {
       expect(() => auditTheme(absent)).toThrow(
         "`spacing`, `radius`, `borderWidth`, `iconSize`, `typography`, `density` are missing",
       );
       expect(() => auditTheme(absent)).not.toThrow(TypeError);
-      // The readable half of that refusal is the same value, one seam earlier.
+
       expect(missingTokens(absent).every(({ kind }) => kind === "group")).toBe(
         true,
       );
     });
 
-    // The theme those absences stand for is a passing one.
     expect(auditTheme(restoreTheme(null)).passed).toBe(true);
   });
 
@@ -1787,7 +1449,6 @@ describe("the shape a store hands back", () => {
       catalogue: read("../../../docs/tokens.md"),
       designSystem: read("../../../docs/design-system.md"),
       readme: read("../README.md"),
-      gate: read("./audit.ts"),
     };
 
     Object.entries(surfaces).forEach(([surface, text]) => {

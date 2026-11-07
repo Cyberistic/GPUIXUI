@@ -1,12 +1,3 @@
-/**
- * Collection index arithmetic.
- *
- * The bugs these guard: arrow keys over a list with a disabled row stopped dead
- * instead of skipping to the next enabled row; moving up from the first row did
- * not wrap to the last; and a row removed from the middle left the registry in
- * declaration order only by luck, so Tab could land on a stale index.
- */
-
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import {

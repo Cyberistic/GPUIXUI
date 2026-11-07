@@ -13,23 +13,11 @@ import {
   withTag,
 } from "./inspector-preview";
 
-/**
- * The Property panels preview's model, held to the window that measured it.
- *
- * The probe's fixture is the one place the object's numbers are decided: it
- * opens on 120 × 80, its `Wide` action gives 240, and `Reset size` returns the
- * opening size while keeping the caller's edit. A drawing that stored the area
- * twice, printed an empty tag as a blank cell, or let `Reset` undo the edit
- * would still build — and would teach a composition the shipped surfaces do
- * not have. `node:fs` is the test's own read of a checked-in file.
- */
-
 const read = (path: string): string =>
   readFileSync(new URL(path, import.meta.url), "utf8");
 
 const fixture = read("../../../../../apps/playground/src/live/inspector.ts");
 
-/** The `INITIAL_OBJECT` literal the probe opens on. */
 const initialBlock = (): string => {
   const start = fixture.indexOf("export const INITIAL_OBJECT");
   return fixture.slice(start, fixture.indexOf("};", start));

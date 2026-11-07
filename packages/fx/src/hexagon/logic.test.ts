@@ -1,13 +1,3 @@
-/**
- * The hexagon grid's arithmetic, without a window.
- *
- * The bugs these guard: a grid that leaves gaps because the column pitch is
- * wrong; a radius the renderer could scale to a smear, or a cell count that runs
- * away on a large box; a stroke that paints as a fill; a box that has not been
- * laid out yet still generating geometry at the origin; and a field whose shape
- * changed between two identical renders.
- */
-
 import { describe, expect, it } from "vitest";
 import {
   hexagonField,
@@ -19,7 +9,6 @@ import {
   hexagonStrokeOf,
 } from "./logic.js";
 
-/** The closed subpaths in one generated path. */
 const cellsIn = (markup: string): number => markup.split("Z").length - 1;
 
 describe("the hexagon grid", () => {
@@ -45,8 +34,6 @@ describe("the hexagon grid", () => {
       stroke: 1,
     });
 
-    // A flat-top hexagon's first vertex is level with its centre, one radius
-    // to the right: (30 + 30, √3 × 30 / 2) = (60, 25.98).
     expect(field.markup).toContain("M 60 26 L");
   });
 

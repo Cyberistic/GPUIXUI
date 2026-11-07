@@ -1,12 +1,3 @@
-/**
- * The share a progress bar paints.
- *
- * The bug these guard: a `max` the bar cannot divide by silently shrank the
- * value (a stored `max: 0` or text would make every share infinite or `NaN`),
- * and a stored `null`/text `value` painted an empty determinate bar instead of
- * the indeterminate one the prop documents.
- */
-
 import { describe, expect, it } from "vitest";
 import { progressShare } from "./logic.js";
 

@@ -1,20 +1,3 @@
-/**
- * The `rating-lifecycle` probe: the shipped `Rating` in a real window.
- *
- * `Rating`'s paint is a claim in roles: a filled star is the theme's `primary`,
- * an empty one `mutedForeground`, a failure's filled star `destructive`, and a
- * **half** star is the filled glyph painted whole inside a box clipped at the
- * star's midpoint. The package's window suite reads each icon's `style.color`
- * and its `star-filled` markup, which says what was asked for; only a capture
- * says the ink reached the glass, and only the two halves of a star's own box
- * say the clip cut it where the component claims.
- *
- * The probe gives each static reading a `max={1}` rating — the group's box is
- * then exactly one star, so a count confined to it cannot borrow another row's
- * ink — and drives a five-star group with a press at its centre, the arrow
- * contract, `Home`/`End`, the clamp at five and `Delete`'s clear. A disabled
- * group proves a press it refuses reports nothing.
- */
 import { Duration, Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -42,14 +25,11 @@ import {
   type RatingState,
 } from "./rating.js";
 
-/** A rating's paint is one render behind the press that changed it. */
 const SETTLE = Duration.millis(80);
 
-/** The captures a reader can look at. */
 const REST = "rating-rest";
 const CHOSEN = "rating-chosen";
 
-/** One labelled rating row. */
 const Row = ({
   label,
   testId,
@@ -83,7 +63,6 @@ const Row = ({
   );
 };
 
-/** The probe's window: one star per paint role, and the group it drives. */
 export const RatingProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -151,7 +130,6 @@ export const RatingProbe = (): ReactNode => {
   );
 };
 
-/** A rating's painted box, as the runtime's layout report gives it. */
 interface StarBox {
   readonly x: number;
   readonly y: number;
@@ -159,7 +137,6 @@ interface StarBox {
   readonly height: number;
 }
 
-/** The painted box of `testId`, failing by name when the runtime omitted it. */
 const paintedBox = (
   ctx: Smoke.AsyncSmokeContext,
   testId: string,
@@ -171,7 +148,6 @@ const paintedBox = (
     );
   });
 
-/** A capture and the scale its logical points convert by. */
 const capture = (
   ctx: Smoke.AsyncSmokeContext,
   name: string,
@@ -190,7 +166,6 @@ const capture = (
     return { pixels, scale } as const;
   });
 
-/** How many pixels of `region` are `ink`. */
 const countInk = (region: Pixels.Pixels, ink: Pixels.Rgba): number =>
   Arr.reduce(
     Arr.range(0, Math.floor(region.data.length / 4) - 1),
@@ -206,7 +181,6 @@ const countInk = (region: Pixels.Pixels, ink: Pixels.Rgba): number =>
         : count,
   );
 
-/** A rectangle of a logical box, in the capture's own device pixels. */
 const regionOf = (
   box: StarBox,
   scale: number,
@@ -226,7 +200,6 @@ const regionOf = (
   });
 };
 
-/** The ink count inside one crop of a box, failing by name off the frame. */
 const inkIn = (
   ctx: Smoke.AsyncSmokeContext,
   frame: Pixels.Pixels,
@@ -241,7 +214,6 @@ const inkIn = (
     return countInk(crop, ink);
   });
 
-/** The two halves of a `max={1}` rating's box, in capture pixels. */
 const splitOf = (
   box: StarBox,
   scale: number,
@@ -292,14 +264,12 @@ export const ratingSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       ),
     );
 
-    // 1. The controlled group starts unrated.
     yield* ctx.expectEqual(
       "the interactive rating starts unrated",
       yield* readout(),
       ratingReadout({ value: RATING_INITIAL, reports: 0, disabled: 0 }),
     );
 
-    // 2. Each paint role is read from one star's own box.
     const empty = yield* paintedBox(ctx, RATING_IDS.empty);
     const full = yield* paintedBox(ctx, RATING_IDS.full);
     const half = yield* paintedBox(ctx, RATING_IDS.half);
@@ -377,7 +347,6 @@ export const ratingSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       0,
     );
 
-    // 3. A press at the group's centre lands on its middle star.
     yield* ctx.host.click(RATING_IDS.interactive);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -386,7 +355,6 @@ export const ratingSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       ratingReadout({ value: 3, reports: 1, disabled: 0 }),
     );
 
-    // 4. The arrow contract: halves, both ends clamps and the clear key.
     yield* ctx.host.key("right");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -416,7 +384,6 @@ export const ratingSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       ratingReadout({ value: 5, reports: 5, disabled: 0 }),
     );
 
-    // 5. The paint follows the value.
     const chosen = yield* capture(ctx, CHOSEN);
     yield* ctx.expectEqual(
       "the chosen group paints the primary ink",
@@ -429,7 +396,6 @@ export const ratingSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 6. A step past the end changes nothing, and Delete clears the rating.
     yield* ctx.host.key("right");
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -445,7 +411,6 @@ export const ratingSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       ratingReadout({ value: 0, reports: 6, disabled: 0 }),
     );
 
-    // 7. A press a disabled group refuses reports nothing.
     yield* ctx.host.click(RATING_IDS.disabled);
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(

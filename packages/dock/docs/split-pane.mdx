@@ -36,8 +36,3 @@ const [size, setSize] = useState(240);
 | `first` / `second` | `ReactNode` | — | the two panes |
 | `dividerLabel` | `string` | — | the divider's accessible name |
 | `disabled` | `boolean` | `false` | refuses the drag and the keys |
-
-## Notes
-- The divider carries a `label`; an unnamed divider is anonymous in the tree.
-- The value reaches assistive technology through `aria-valuetext` only, because 0.11.0 has no `aria-valuenow`.
-- The preview's divider is a 6px box bounded 220–380 px, so its arrows, Home and End meet those bounds; the shipped control clamps to the caller's.

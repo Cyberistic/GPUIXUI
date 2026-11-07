@@ -1,13 +1,3 @@
-/**
- * The Mac-app blocks' rules (plan 729), one guard each.
- *
- * Bugs guarded: a folder that shows another folder's notes or an excerpt that
- * keeps a line break; a settings search that is case-sensitive; a launcher that
- * lets a contains-match outrank a prefix-match; a menu-bar status that counts
- * the wrong watches; an agent that sends a blank prompt; overlapping events
- * drawn on top of each other and a week step across a month that slips a day;
- * a welcome that runs past its last step; a viewer step that wraps.
- */
 import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
 import { transcript } from "./agent/data.js";
@@ -59,8 +49,7 @@ describe("preferences", () => {
 describe("launcher", () => {
   it("ranks a prefix match first within a group", () => {
     expect(rank(results, "rel")[0]?.id).toBe("releases");
-    // "New release" contains "re" but does not start with it, so the Apps
-    // prefix match leads and the groups keep their order.
+
     expect(Arr.map(rank(results, "re"), (r) => r.id)).toEqual([
       "releases",
       "new-release",

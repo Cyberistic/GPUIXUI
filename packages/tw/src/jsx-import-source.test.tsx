@@ -1,10 +1,4 @@
 /** @jsxImportSource @gpuixui/tw */
-
-/**
- * End-to-end guard for the JSX runtime: this file opts into
- * `@gpuixui/tw` and writes the same host markup shadcn writes.
- */
-
 import { describe, expect, it } from "vitest";
 import * as P from "effect/Predicate";
 import { TwHost } from "./host.js";

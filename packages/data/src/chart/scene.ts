@@ -51,7 +51,6 @@ export interface HierarchySceneRow extends SceneRow {
 }
 
 export interface SceneChartOptions {
-  /** The surface colour a polar mark's edges are stroked in, so neighbours separate. */
   readonly gapColour?: string;
   readonly series: ReadonlyArray<ChartSeries>;
   readonly labels: ReadonlyArray<string>;
@@ -135,10 +134,6 @@ const seriesMark = (
   );
 };
 
-/**
- * A row's own weight: a parent's value is its children's sum, and the layout adds
- * the two, so a parent counted again left a hole the size of its subtree.
- */
 const ownValue =
   (rows: ReadonlyArray<HierarchyRow>) =>
   (row: HierarchyRow): number =>
@@ -252,7 +247,6 @@ const cartesianDefinition = (
   const marks = Arr.map(options.series, (one, index) =>
     seriesMark(kind, rows, one, options.colours[index] ?? "#000000"),
   );
-  // at a value, and the value axis is one scale. A chart with no series has
   const measure = options.series[0];
   const ticks =
     measure === undefined

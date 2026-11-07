@@ -1,17 +1,3 @@
-/**
- * Browser previews for the Timeline page.
- *
- * The shipped timeline is a read-only rail: it paints the status the app passes
- * and stops the connector at the last direct child. The preview cannot mount it
- * (the library renders through GPUix), so it mirrors the contract with HTML and
- * says so: the dot takes the fill `dotFill` names per status, the connector is a
- * real 1px element that the last event does not paint, and the statuses are the
- * app's — the run's cursor is marked onto each event before the rail holds it.
- *
- * The rules live in `timeline-preview.ts` so a test can fail on them; this file
- * only renders them. The Code tab always shows the native usage.
- */
-
 import { useState } from "react";
 import {
   advance,
@@ -24,7 +10,6 @@ import {
   type TimelineEvent,
 } from "./timeline-preview";
 
-/** One event: its dot and connector on the rail, its words beside them. */
 const Event = ({
   event,
   last,
@@ -39,7 +24,7 @@ const Event = ({
   >
     <div className="gx-timeline-rail">
       <span className="gx-timeline-dot" />
-      {/* The rail stops with the last event: no connector is painted after it. */}
+      {}
       {last ? null : <span className="gx-timeline-connector" />}
     </div>
     <div className="gx-timeline-content">
@@ -52,7 +37,6 @@ const Event = ({
   </li>
 );
 
-/** The rail alone, for both previews. */
 const Rail = ({
   events,
   label,
@@ -71,7 +55,6 @@ const Rail = ({
   </ol>
 );
 
-/** A deploy run: the app marks each event as the cursor passes it. */
 export const TimelineWorkflow = () => {
   const [cursor, setCursor] = useState(0);
   const events = plan(cursor);
@@ -116,7 +99,6 @@ export const TimelineWorkflow = () => {
   );
 };
 
-/** One labelled rail, for the states preview. */
 const StateGroup = ({
   cursor,
   label,
@@ -130,7 +112,6 @@ const StateGroup = ({
   </div>
 );
 
-/** The three marks, the cursor past the end, and a single event's rail. */
 export const TimelineStates = () => (
   <div className="gx-demo gx-demo-column gx-timeline-scene">
     <StateGroup cursor={1} label="Cursor 1 — tests current, deploy upcoming" />

@@ -1,12 +1,3 @@
-/**
- * Guards the recipe provenance.
- *
- * The bug this prevents is silent drift: someone "fixes" `h-9` to `h-8` in our
- * source, and the library quietly stops matching shadcn. The test reads the
- * read-only reference clone and fails when the copied string is no longer in
- * upstream (or when upstream moved to a different value).
- */
-
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as R from "effect/Record";

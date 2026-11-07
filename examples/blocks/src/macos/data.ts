@@ -1,7 +1,3 @@
-/**
- * The macOS desktop's labels: what the menu bar's menus carry, and the apps the
- * dock holds. Labels only — nothing here claims to act.
- */
 import type { IconName } from "@gpuixui/icons";
 
 /** A menu the bar can open. The first one is the app's own menu. */

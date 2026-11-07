@@ -47,20 +47,3 @@ drawing: it paints the same geometry and steps it on the same cadence.
 | `style` | `StyleDesc` | — |
 | `testId` | `string` | — |
 | `ref` / `aria-id` / `onLayout` | host props | — |
-
-## Accessibility
-
-- The mark is a `status` node named by `label`, so a reader hears "Loading" (or
-  the caller's own words) rather than a decorative ring.
-- A blank `label` paints the ring as decoration: a `status` node with no name is
-  still a node an assistive technology walks into.
-- The action that owns a busy spinner carries the same word as its
-  `aria-description`; this runtime has no `aria-busy`.
-
-## Notes
-- Cannot rotate: the ring is static and its lit arc steps.
-- No smooth sweep: the head advances one tick per interval; at `sm` the twelve
-  ticks are close enough that the steps read as a turn, at `lg` the stepping is
-  visible.
-- The ring is a fixed box and cannot sit inside a text run; put it in a `Stack`
-  or a button.

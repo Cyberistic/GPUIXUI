@@ -1,14 +1,3 @@
-/**
- * Item in the real GPUix renderer.
- *
- * The bugs these guard: an actions slot painted before the text it acts on (or
- * media after it) when the row wraps; a header that shares the media/content
- * line instead of taking its own; a stored `variant`/`size` the tables do not
- * carry dropping the surface instead of painting the documented default; and a
- * row that paints its own hover although it is a layout primitive with no
- * state.
- */
-
 import { describe, expect, it } from "vitest";
 import { Button } from "../internal/button.js";
 import { requireBounds, settle } from "../internal/interaction.js";
@@ -25,7 +14,6 @@ import {
   ItemTitle,
 } from "../item.js";
 
-/** A row with media, text and an action. */
 const Row = ({
   variant,
   size,
@@ -51,7 +39,6 @@ const Row = ({
   </div>
 );
 
-/** A row whose header and footer take their own lines. */
 const HeaderRow = () => (
   <div style={{ padding: 20, width: 400 }}>
     <Item testId="row">

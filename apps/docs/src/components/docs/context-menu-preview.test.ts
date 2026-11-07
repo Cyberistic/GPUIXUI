@@ -19,19 +19,6 @@ import {
   type TypedRow,
 } from "./context-menu-preview";
 
-/**
- * The context menu model has to say four things the component does: the
- * keyboard route opens at the trigger's bottom-left, only a keyboard-opened
- * menu restores focus, a right press outside the trigger cannot open a surface,
- * and a typed prefix searches after the current row with a 500 ms window.
- *
- * Each is invisible in a drawing and easy to get subtly wrong: a menu restored
- * after a pointer press steals focus from where the reader pressed, and a
- * type-ahead that does not advance makes `s` stick on the first row beginning
- * with `s`. The last case reads the shipped `context-menu.tsx` and
- * `typeahead.ts`, so this model cannot drift from them.
- */
-
 const component = readFileSync(
   new URL(
     "../../../../../packages/components/src/context-menu.tsx",
@@ -71,7 +58,6 @@ const demo = readFileSync(
 
 const flat = (source: string): string => source.replace(/\s+/g, " ");
 
-/** The rows the preview's menu lists, in declaration order. */
 const rows: ReadonlyArray<TypedRow> = [
   { label: "Open" },
   { label: "Rename" },
@@ -95,8 +81,6 @@ describe("where a context menu opens", () => {
   });
 
   it("opens at the origin when the payload carries no point", () => {
-    // The component falls back to `?? 0` rather than refusing to open, so the
-    // drawing must not invent a fallback of its own.
     expect(pointerAnchor({})).toEqual({ x: 0, y: 0 });
     expect(pointerAnchor({ x: null, y: null })).toEqual({ x: 0, y: 0 });
   });
@@ -108,7 +92,7 @@ describe("where a context menu opens", () => {
     expect(source).toContain(
       "openFromKeyboard({ x: bounds.x, y: bounds.y + bounds.height })",
     );
-    // The right press is the only path that opens from a pointer.
+
     expect(source).toContain("event.isRightClick !== true");
     expect(source).toContain("if (isMenuKey(event)) openFromKey();");
   });
@@ -122,8 +106,6 @@ describe("what one press does", () => {
   });
 
   it("opens on the trigger and closes an open surface behind it", () => {
-    // `openAt` sets the new point before it opens, so a second right click on
-    // the trigger moves the surface rather than stacking a second one.
     expect(
       rightPress({ isRightClick: true, onTrigger: true, open: false }),
     ).toBe("open");
@@ -156,8 +138,6 @@ describe("where focus goes after a close", () => {
   });
 
   it("mirrors the component's restore gate", () => {
-    // The gate is one condition in the component: a recorded restore target and
-    // one of the two reasons that use it.
     const source = flat(component);
 
     expect(source).toContain("restoreFocus.current = true;");
@@ -175,8 +155,6 @@ describe("type-ahead", () => {
   });
 
   it("searches after the current row, so a repeat advances", () => {
-    // Two rows begin with `s`; the second `s` is the desktop convention for
-    // "the next one", not a wider prefix.
     const first = typeChar(rows, undefined, idleTyped, "s", 1_000);
     expect(first.index).toBe(3);
     const second =
@@ -189,16 +167,14 @@ describe("type-ahead", () => {
   it("appends a different letter and wraps to an earlier match", () => {
     const start = typeChar(rows, undefined, idleTyped, "c", 1_000);
     expect(start.index).toBe(2);
-    // `co` still matches "Copy path" — and because the match is *before* the
-    // current row, the search wraps rather than starting a second one.
+
     const longer =
       start.index === undefined
         ? start
         : typeChar(rows, start.index, start.buffer, "o", 1_100);
     expect(longer.index).toBe(2);
     expect(longer.buffer.text).toBe("co");
-    // A prefix no row carries clears the buffer instead of poisoning the next
-    // keystroke with an unmatched search.
+
     const miss =
       longer.index === undefined
         ? longer
@@ -229,23 +205,16 @@ describe("type-ahead", () => {
   });
 });
 
-/**
- * The measured shift: opening the drawing scrolled its frame 84px, so the file
- * rows jumped, because the surface took focus by default and lay outside the
- * frame. These cases hold the two things that cause it — the surface's placement
- * inside the frame and the focus call that must not scroll.
- */
 describe("opening the drawing moves nothing", () => {
   it("rests the surface inside the frame it is drawn in", () => {
     const frame = { width: 520, height: 206 };
     const surface = { width: 208, height: 156 };
 
-    // A press near the bottom edge would put the surface 70px outside the frame.
     expect(placeSurface({ x: 300, y: 120 }, surface, frame)).toEqual({
       x: 300,
       y: 50,
     });
-    // A press that fits keeps the pointer's own point.
+
     expect(placeSurface({ x: 40, y: 20 }, surface, frame)).toEqual({
       x: 40,
       y: 20,
@@ -263,10 +232,6 @@ describe("opening the drawing moves nothing", () => {
   });
 
   it("flips the second level inside the frame it opens beside", () => {
-    // Bug guarded: the submenu opened at the parent's right edge plus 4px and
-    // was never clamped, so a menu opened near the frame's right edge painted
-    // 167px of its second level outside the card (clipped) and grew the scene's
-    // scroll box under the row's chevron.
     const frame = { width: 520, height: 320 };
     const submenu = { width: 208, height: 60 };
     const parent = { x: 312, y: 84, width: 208, height: 156 };
@@ -280,13 +245,11 @@ describe("opening the drawing moves nothing", () => {
       bottom: parent.y + flipped.y + submenu.height,
     };
 
-    // No room on the right: it opens on the left, clear of the parent.
     expect(flippedBox.right).toBe(parent.x - SUBMENU_GAP);
     expect(flippedBox.left).toBeGreaterThanOrEqual(0);
     expect(flippedBox.top).toBe(row.y);
     expect(flippedBox.bottom).toBeLessThanOrEqual(frame.height);
 
-    // With room, the second level keeps the row's own side and the 4px gap.
     const roomy = submenuPlacement({
       parent: { ...parent, x: 40 },
       row,
@@ -298,7 +261,6 @@ describe("opening the drawing moves nothing", () => {
       y: row.y - parent.y,
     });
 
-    // The drawing takes the clamped point; the shipped submenu keeps the gap.
     expect(flat(demo)).toContain("submenuPlacement({");
     expect(flat(menuSub)).toContain("const SUBMENU_GAP = 4");
     expect(SUBMENU_GAP).toBe(4);

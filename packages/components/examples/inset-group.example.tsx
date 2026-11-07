@@ -1,13 +1,8 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Inset group example: a Notifications pane, System-Settings style.
- */
-
 import { Switch } from "@gpuixui/primitives";
 import { useState } from "react";
 import { InsetGroup, InsetGroupRow } from "../src/inset-group.js";
 
-/** Three notification settings in one grouped box. */
 export const InsetGroupExample = () => {
   const [previews, setPreviews] = useState(true);
   const [badge, setBadge] = useState(false);

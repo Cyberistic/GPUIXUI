@@ -1,25 +1,11 @@
-/**
- * Browser preview for the Bubble page — the conversation shadcn's demo draws.
- *
- * The shipped bubble is a GPUix host element, so the page mirrors its geometry
- * with HTML: the reader's surface is the primary fill on the end edge, the
- * agent's bubbles are muted on the start edge, a grouped run joins its inner
- * corners, and a reaction pill crosses the surface's bottom edge by a quarter of
- * its height (the native part's hang). Hover a bubble to reveal its reserved
- * action strip. The variants the conversation does not wear sit in the smaller
- * row beneath it.
- */
-
 import { useState } from "react";
 
-/** One bubble inside a turn. */
 interface Part {
   readonly body: string;
   readonly reactions?: string;
   readonly actions?: boolean;
 }
 
-/** One sender's turn: one bubble, or a grouped run of them. */
 interface Turn {
   readonly align: "start" | "end";
   readonly variant:
@@ -68,7 +54,6 @@ const conversation: ReadonlyArray<Turn> = [
   },
 ];
 
-/** The surfaces the conversation does not paint, as chips. */
 const otherVariants = [
   "secondary",
   "tinted",

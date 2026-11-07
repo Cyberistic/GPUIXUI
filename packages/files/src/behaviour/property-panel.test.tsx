@@ -1,13 +1,3 @@
-/**
- * The number row's label as the inspector's scrub handle.
- *
- * The bug these guard: a number row was a text field with the runtime's own
- * steppers and an inert label, so a reader adjusting a size had to aim at a
- * 22px spin column or type a number. The label is the handle now — a horizontal
- * drag moves the value, Shift coarsens it, the row's bounds clamp it, a press
- * without travel is still a click, and the field beside it keeps typing.
- */
-
 import type { TestRoot } from "@gpuix/react/testing";
 import { createTestRoot } from "@gpuix/react/testing";
 import { darkTheme } from "@gpuixui/tokens";
@@ -25,7 +15,6 @@ afterEach(() => {
   mounted = null;
 });
 
-/** One number row whose owner keeps the record the panel reports. */
 const Row = ({
   initial,
   min,
@@ -79,7 +68,6 @@ const boundsOf = (root: TestRoot, testId: string) => {
   return bounds;
 };
 
-/** Press the label's centre and drag `dx` pixels, optionally with Shift. */
 const drag = (root: TestRoot, dx: number, shift = false): void => {
   const box = boundsOf(root, "panel-label-width");
   const x = box.x + box.width / 2;
@@ -95,14 +83,12 @@ const drag = (root: TestRoot, dx: number, shift = false): void => {
   root.renderer.flush();
 };
 
-/** The field's native input, through the field's chrome and its hint frame. */
 const inputOf = (root: TestRoot): number => {
   const chrome = element(root, "field-width");
   const frame = chrome.children[0] ?? 0;
   return root.renderer.getElement(frame)?.children[0] ?? 0;
 };
 
-/** Every painted `<text>` run; the readout is the row's own value. */
 const readout = (root: TestRoot): ReadonlyArray<string> =>
   root.renderer.getAllText();
 
@@ -111,7 +97,7 @@ describe("the property panel's number label", () => {
     const root = renderRow(<Row initial={240} min={120} max={640} />);
 
     drag(root, 8);
-    // Eight pixels is two steps at the scrub scale.
+
     expect(readout(root)).toContain("242");
   });
 
@@ -121,7 +107,6 @@ describe("the property panel's number label", () => {
     drag(root, 0);
     expect(readout(root)).toContain("240");
 
-    // The text entry path is the field's: focus its input and type.
     root.renderer.focusElement(inputOf(root));
     root.renderer.dispatchNativeEvents();
     root.renderer.flush();

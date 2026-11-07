@@ -1,19 +1,3 @@
-/**
- * The interactive controls in the real GPUix runtime.
- *
- * This is the suite that pays for the library owning its keyboard contract.
- * `@gpuix/react` publishes no button (see `docs/gpuix-capabilities.md`), so Enter-on-key-down and
- * Space-on-key-up are `core/keyboard.ts`'s rules — and until this suite existed
- * they had only ever been proven against a decode of the React element tree
- * (`src/components/Button.test.tsx`). Here the keys go through GPUI's own
- * dispatcher and the observation is the platform's.
- *
- * Each test names the bug it guards: Enter firing on key up, Space on key down,
- * a held key activating, a disabled control activating, the roving tab stop
- * staying behind the selection, and a caller's host handler being dropped
- * instead of composed with the control's own.
- */
-
 import { expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -61,7 +45,6 @@ const boundsOf = (runtime: Runtime, testId: string): Bounds =>
     expect.fail(`the runtime painted no box for ${testId}`),
   );
 
-/** A control's announced state — `aria-valuetext` is the only state this runtime carries. */
 const announced = (runtime: Runtime, label: string): string =>
   Option.getOrElse(a11yValueOf(runtime.a11y(), { label }), () =>
     expect.fail(`no accessibility node announced ${label}`),
@@ -76,12 +59,6 @@ const byLabel = (runtime: Runtime, label: string) =>
     () => expect.fail(`the runtime retained no element labelled ${label}`),
   );
 
-/**
- * Every non-empty accessibility description in the last painted frame.
- *
- * `Arr.filterMap` is not the Option-filtering helper in Effect v4 (it takes a
- * `Result`), so this is the map-then-`getSomes` pair.
- */
 const descriptions = (runtime: Runtime): ReadonlyArray<string> =>
   Arr.getSomes(
     Arr.map(a11yNodes(runtime.a11y()), (node) =>
@@ -89,7 +66,6 @@ const descriptions = (runtime: Runtime): ReadonlyArray<string> =>
     ),
   );
 
-/** A counter, so an activation claim is about the number of calls. */
 const renderButton = async (
   props: Partial<Parameters<typeof Button>[0]> = {},
 ): Promise<{ readonly runtime: Runtime; readonly calls: () => number }> => {
@@ -120,11 +96,6 @@ it("activates a Button on a real click", async () => {
 });
 
 it("hands the activation the event the platform dispatched", async () => {
-  // The bug (plan 160's measured Phase 2 STOP): `onActivate` carried no event,
-  // so an adapter switching a trigger's `onClick` onto it dropped the press,
-  // and a ripple had no point to be born at. A pointer activation now carries
-  // the runtime's own `click` payload with the press coordinates; a keyboard
-  // activation carries the key payload the button decided on.
   const runtime = await openWindow();
   const seen: Array<EventPayload> = [];
   runtime.render(
@@ -158,10 +129,6 @@ it("hands the activation the event the platform dispatched", async () => {
 });
 
 it("paints an outlined Button's edge in the measured boundary role", async () => {
-  // The bug: the outline variant painted `border`, the decorative role a
-  // divider uses, so a control's shape sat at 1.16:1 on the light page. The
-  // runtime's own style report is the proof that the painted colour is the
-  // role, not a class name in a string.
   const runtime = await openWindow();
   runtime.render(
     <Surface>
@@ -180,12 +147,6 @@ it("paints an outlined Button's edge in the measured boundary role", async () =>
   expect(edge).not.toBe(testTheme.colors.border);
 });
 
-/**
- * The fill the runtime reports for an element's `hover` or `active` bucket.
- *
- * The runtime's style report carries the whole style record for the bucket, so
- * the fill is read out of it rather than assumed.
- */
 const bucketFill = (
   style: Record<string, unknown>,
   bucket: "hover" | "active",
@@ -206,11 +167,6 @@ const bucketFill = (
   );
 
 it("paints a filled Button's hover as the theme's opaque derived fill", async () => {
-  // The bug: the hover lifted the fill's alpha, so the surface behind the
-  // control showed through — the same action read as two colours on a card and
-  // on a dialog — and a translucent fill cannot be measured for label contrast
-  // at all. The runtime's own style report is the proof that the derived fill
-  // reaches the paint, not a class name in a string.
   const runtime = await openWindow();
   runtime.render(
     <Surface>
@@ -225,20 +181,13 @@ it("paints a filled Button's hover as the theme's opaque derived fill", async ()
   );
   expect(bucketFill(style, "hover")).toBe(filledHover(testTheme, "primary"));
   expect(bucketFill(style, "active")).toBe(filledPressed(testTheme, "primary"));
-  // The old recipe lifted the fill's alpha; the derived fill does not.
+
   expect(bucketFill(style, "hover")).not.toBe(
     alpha(testTheme.colors.primary, 0.9),
   );
 });
 
 it("paints a ghost Button's press on the wash it replaces", async () => {
-  // The bug: a control that paints no fill at rest kept the raw `active` role
-  // as its press. A press replaces the hover wash the control is already
-  // wearing, so it must be seen against *that* wash: in Light · macOS the raw
-  // role sat 1.037:1 from its own hover, under the perceptibility floor, and a
-  // ghost action did not answer the pointer. The style this suite paints is the
-  // one the defect was measured in, and the runtime's style report is where the
-  // derived wash is read back.
   const macos = platformTheme(themes.light, "darwin");
   const runtime = await openWindow();
   runtime.render(
@@ -256,18 +205,11 @@ it("paints a ghost Button's press on the wash it replaces", async () => {
   );
   expect(bucketFill(style, "hover")).toBe(macos.colors.hover);
   expect(bucketFill(style, "active")).toBe(pressWash(macos));
-  // The raw role is the one the defect painted; the wash the window receives is
-  // the derived one.
+
   expect(bucketFill(style, "active")).not.toBe(macos.colors.active);
 });
 
 it("paints a checked Checkbox's feedback as the theme's opaque derived fill", async () => {
-  // The bug: the box's hover and press were an alpha lift, exactly like the
-  // filled button's were — the surface behind the box showed through, so the
-  // same checked box read as two colours on a card and on a dialog, and the
-  // mark painted on that fill could not be measured for contrast. The drawing
-  // is the element that paints the fill (the target around it is transparent),
-  // so the runtime's own style report is where the fill is read back.
   const runtime = await openWindow();
   runtime.render(
     <Surface>
@@ -293,23 +235,13 @@ it("paints a checked Checkbox's feedback as the theme's opaque derived fill", as
   );
   expect(bucketFill(style, "hover")).toBe(filledHover(testTheme, "primary"));
   expect(bucketFill(style, "active")).toBe(filledPressed(testTheme, "primary"));
-  // The old recipe lifted the fill's alpha; the derived fill does not.
+
   expect(bucketFill(style, "hover")).not.toBe(
     alpha(testTheme.colors.primary, 0.9),
   );
 });
 
 it("skips a disabled busy Button in the tab order, and focuses it from code", async () => {
-  // The bug: `loading` won the tab-stop condition, so a button that was
-  // disabled **and** busy stayed a stop — while the disabled rule declares no
-  // ring, so a Tab traversal landed on a control with no cue that refuses every
-  // key. `disabled={pending} loading={pending}` is the common pair.
-  //
-  // The second direction is the stop the disabled button *keeps*: it paints
-  // `-1`, which the runtime builds as `tab_stop(false)`, so Tab skips it while
-  // `focusElement` still reaches it. A trigger's focus target and a
-  // `ConfirmDialog`'s cancel target depend on that; without the property the
-  // element has no focus handle other than its event listeners'.
   const runtime = await openWindow();
   runtime.render(
     <Surface>
@@ -332,13 +264,6 @@ it("skips a disabled busy Button in the tab order, and focuses it from code", as
 });
 
 it("walks past an action a leaving surface has taken out of the Tab order", async () => {
-  // The bug this guards: the runtime decides the Tab order element by element,
-  // and the stop was hardcoded to `disabled ? -1 : 0`. A surface that keeps its
-  // box painted for its exit tween therefore kept its own action a walkable
-  // stop after it was dismissed, and a traversal then left the window's focus on
-  // an element that unmounted with the surface. `tabIndex` is the caller's now.
-  //
-  // A `-1` stop is not a disabled control: the action still takes a press.
   const runtime = await openWindow();
   let calls = 0;
   runtime.render(
@@ -363,8 +288,7 @@ it("walks past an action a leaving surface has taken out of the Tab order", asyn
   expect(stop).toStrictEqual(Option.some(-1));
   runtime.focusNext();
   expect(runtime.focused()).toStrictEqual(Option.some("after"));
-  // Out of the Tab order, still addressable from code — the stop a trigger's
-  // focus target needs once its surface is a ghost.
+
   runtime.focus("leaving");
   expect(runtime.focused()).toStrictEqual(Option.some("leaving"));
   runtime.click("leaving");
@@ -372,10 +296,6 @@ it("walks past an action a leaving surface has taken out of the Tab order", asyn
 });
 
 it("paints a disabled filled Button with the measured pair, not a fade", async () => {
-  // The bug: a disabled filled action faded itself to 50%, which composites the
-  // label into the surface behind the control — under the disabled floor on the
-  // card of four light styles. The neutral pair is opaque, so the runtime's own
-  // style report shows the fill and the label it paints on the card.
   const runtime = await openWindow();
   runtime.render(
     <Surface>
@@ -401,15 +321,11 @@ it("paints a disabled filled Button with the measured pair, not a fade", async (
   expect(styleOf("filled").backgroundColor).toBe(testTheme.colors.disabled);
   expect(styleOf("filled").color).toBe(testTheme.colors.disabledForeground);
   expect(styleOf("filled").opacity).toBeUndefined();
-  // An unfilled action has no fill to collapse into and keeps the fade.
+
   expect(styleOf("ghost").opacity).toBe(0.5);
 });
 
 it("keeps a filled Button's label while another control has keyboard focus", async () => {
-  // The runtime dims every other focusable element to 40% while one control has
-  // keyboard focus, which on a filled action composites the label into its own
-  // fill (5.0–10.5:1 at rest, 1.3–3.2:1 dimmed, `keyboardDimFailures`). The
-  // declaration has to reach the painted element, not just the React tree.
   const runtime = await openWindow();
   runtime.render(
     <Surface>
@@ -426,7 +342,7 @@ it("keeps a filled Button's label while another control has keyboard focus", asy
       Option.fromNullishOr(element.style.keyboardFocusDim),
     );
   expect(optOut("filled")).toStrictEqual(Option.some(false));
-  // No fill to collapse into, so the where-can-Tab-go cue stays.
+
   expect(Option.isNone(optOut("ghost"))).toBe(true);
 });
 
@@ -474,7 +390,7 @@ it("drops a focused control's ring and keys when it becomes disabled", async () 
       />
     </Surface>
   );
-  /** Whether the element still declares the keyboard ring the runtime paints. */
+
   const declaresRing = (): boolean =>
     Option.match(runtime.element("cb"), {
       onNone: () => false,
@@ -490,8 +406,6 @@ it("drops a focused control's ring and keys when it becomes disabled", async () 
   expect(changes).toBe(1);
   expect(declaresRing()).toBe(true);
 
-  // Disabling the element that holds the focus does not move that focus, so the
-  // bug was a ring left painted on a control that refuses every key.
   runtime.render(<View disabled={true} />);
   expect(runtime.focused()).toStrictEqual(Option.some("cb"));
   expect(declaresRing()).toBe(false);
@@ -499,7 +413,6 @@ it("drops a focused control's ring and keys when it becomes disabled", async () 
   runtime.keyUp("cb", "space");
   expect(changes).toBe(1);
 
-  // Re-enabling restores both the declaration and the activation contract.
   runtime.render(<View disabled={false} />);
   expect(declaresRing()).toBe(true);
   runtime.keyDown("cb", "space");
@@ -527,8 +440,6 @@ it("delivers a caller's handlers through the runtime, and still acts on the even
     </Surface>,
   );
 
-  // The bug: the control owned every host event and a consumer could not
-  // observe one. Here GPUI's own focus, pointer and key dispatch reach both.
   runtime.focusNext();
   expect(runtime.focused()).toStrictEqual(Option.some("cb"));
   expect(seen).toStrictEqual(["focus"]);
@@ -587,9 +498,6 @@ it("refuses to activate a loading Button, and still announces itself busy", asyn
 });
 
 it("announces a busy Button in the caller's words", async () => {
-  // Bug guarded: the runtime's accessibility dump carried the hardcoded English
-  // "Loading" as the button's description, so a localised action was announced
-  // in a language its interface never uses.
   const { runtime } = await renderButton({
     loading: true,
     label: "Save",
@@ -606,8 +514,7 @@ it("names a Button by its text child", async () => {
       <Button testId="b">Save changes</Button>
     </Surface>,
   );
-  // The bug: a role="button" div named only by its painted text was unnamed in
-  // the accessibility tree.
+
   expect(
     Option.isSome(
       a11yNode(runtime.a11y(), { role: "Button", label: "Save changes" }),
@@ -616,16 +523,8 @@ it("names a Button by its text child", async () => {
 });
 
 it("hands a trigger's ref, state and pointer pair to the element", async () => {
-  // The bug guarded (plan 160's measured Phase 1 STOP): the components
-  // package's six triggers pass a `ref` so the surface they open is anchored to
-  // the action, five pass `aria-expanded`, pagination passes `aria-selected`
-  // and the hover-opened surfaces pass the pointer pair — and none of them
-  // could reach the element while `Button` accepted only its own fields, so a
-  // second button implementation had to exist. This is the half a unit test
-  // cannot reach: the ref receives the runtime's own instance, the state lands
-  // in the accessibility tree, and GPUI's own pointer dispatch calls the pair.
   const runtime = await openWindow();
-  // A ref callback is a nullish boundary, so each call is lifted once here.
+
   const refs: Array<Option.Option<number>> = [];
   const hovers: string[] = [];
   runtime.render(
@@ -694,10 +593,6 @@ it("keeps a ButtonGroup attached with no gap and separated by the theme's gap", 
 });
 
 it("stacks a vertical group's actions with no gap and one shared width", async () => {
-  // The bug this guards: a group was a row only, so a column of attached
-  // actions had to be hand-built outside the component and the shared width a
-  // group gives its actions was lost. `items-stretch` is what makes two
-  // differently-labelled actions end at the same edge.
   const layoutOf = async (
     mode: "attached" | "separated",
   ): Promise<{ gap: number; widths: ReadonlyArray<number> }> => {
@@ -727,9 +622,6 @@ it("stacks a vertical group's actions with no gap and one shared width", async (
 });
 
 it("keeps a square action square inside a vertical group", async () => {
-  // The claim the page makes: the column shares one width *unless* an action
-  // has an explicit size. A square `IconButton` must stay 32x32 rather than
-  // being stretched to the text action's width beside it.
   const runtime = await openWindow();
   runtime.render(
     <Surface>
@@ -750,9 +642,6 @@ it("keeps a square action square inside a vertical group", async () => {
 });
 
 it("squares an attached group's children so its seams do not show the page", async () => {
-  // The bug: `attached` only rounded and clipped the container, so each child
-  // kept the recipe's radius and two adjacent rounded fills left a notch at
-  // every seam where the page showed through.
   const radii = async (mode: ButtonGroupMode) => {
     const runtime = await openWindow();
     runtime.render(
@@ -777,12 +666,11 @@ it("squares an attached group's children so its seams do not show the page", asy
     Option.some(testTheme.radius.md),
     Option.some(testTheme.radius.md),
   ]);
-  // A stored mode name reads as the documented `attached`, so its children are
-  // squared too: the paint and the context it feeds resolve one answer.
-  expect(
-    // The cast is the storage boundary: a saved mode is one string.
-    await radii("segmented" as ButtonGroupMode),
-  ).toStrictEqual([Option.some(0), Option.some(0)]);
+
+  expect(await radii("segmented" as ButtonGroupMode)).toStrictEqual([
+    Option.some(0),
+    Option.some(0),
+  ]);
 });
 
 it("names a ButtonGroup for assistive technology", async () => {
@@ -803,11 +691,6 @@ it("names a ButtonGroup for assistive technology", async () => {
 });
 
 it("keeps a restored toolbar's gap when its stored step is absent", async () => {
-  // The bug guarded: a toolbar is saved with its gap as readily as its mode,
-  // and the group read the step raw — `gap: null` (JSON's field a record never
-  // set) and a step this release dropped became classes the compiler records as
-  // unsupported, so a **separated** group painted its actions flush while the
-  // prop documents `sm`. Measured as the distance between two painted actions.
   const gapOf = async (gap: SpaceStep | null): Promise<number> => {
     const runtime = await openWindow();
     runtime.render(
@@ -822,18 +705,13 @@ it("keeps a restored toolbar's gap when its stored step is absent", async () => 
     const two = boundsOf(runtime, "two");
     return two.x - (one.x + one.width);
   };
-  // The cast is the storage boundary: a saved record's gap is whatever its
-  // decoder wrote, and a step this release does not carry has no type here.
+
   expect(await gapOf(null)).toBe(testTheme.spacing.sm);
   expect(await gapOf("huge" as SpaceStep)).toBe(testTheme.spacing.sm);
   expect(await gapOf("lg")).toBe(testTheme.spacing.lg);
 });
 
 it("addresses and measures the group's own element", async () => {
-  // The bug guarded: the group published only a `testId`, so a layout
-  // measuring a toolbar or an automation host addressing it had to wrap the
-  // group — and the wrapper is the flex item that paints. The address lands on
-  // the element the group itself paints, and its box is the toolbar's.
   const runtime = await openWindow();
   const ref = createRef<PublicInstance>();
   const measured: Array<{ readonly x: number; readonly width: number }> = [];
@@ -906,8 +784,7 @@ it("toggles a Checkbox on a click, and announces the state", async () => {
     </Surface>,
   );
   expect(announced(runtime, "Enable")).toBe("unchecked");
-  // The runtime maps our `role="checkbox"` to AccessKit's CheckBox, so the
-  // value text is not standing in for a role it lacks.
+
   expect(
     Option.isSome(
       a11yNode(runtime.a11y(), { role: "CheckBox", label: "Enable" }),
@@ -985,9 +862,6 @@ it("toggles a CheckboxGroup option on a click without clearing the others", asyn
 });
 
 it("moves a CheckboxGroup's focus with an arrow without toggling the value", async () => {
-  // The key goes through GPUI's dispatcher to the focused row, and the group's
-  // handler runs from the ancestor: this is the check that proves a real key
-  // path moves focus, not only the element-tree test that calls the wrapper.
   const runtime = await openWindow();
   runtime.render(
     <Surface>
@@ -1137,10 +1011,6 @@ it("wraps a RadioGroup's arrow navigation at the end", async () => {
 });
 
 it("reaches a radio option by the prefix a reader types, and starts the buffer over after the pause", async () => {
-  // The bug this guards: a reader who knows the option's name had to arrow to
-  // it, so a long list was unreachable by keyboard. The buffer is component
-  // state, so this is the one place it can be measured: two keys in one pause
-  // narrow the match, and the pause itself starts the next key over.
   const runtime = await openWindow();
   runtime.render(
     <Surface>
@@ -1155,28 +1025,19 @@ it("reaches a radio option by the prefix a reader types, and starts the buffer o
       />
     </Surface>,
   );
-  // The stop starts on the first row, and a search runs forward: `a` reaches
-  // the second "Al..." option rather than the one it is already on.
+
   runtime.keyDown("rg", "a");
   expect(announced(runtime, "Alpha")).toBe("checked");
-  // A second character inside the pause narrows instead of starting over.
+
   runtime.keyDown("rg", "l");
   expect(announced(runtime, "Alpine")).toBe("checked");
   await sleep(TYPE_AHEAD_RESET_MS + 100);
-  // Past the pause the buffer is empty, so a lone `p` matches nothing and the
-  // group stays put; with a stale "al" buffer it would have read "alp" and
-  // moved to Alpha.
+
   runtime.keyDown("rg", "p");
   expect(announced(runtime, "Alpine")).toBe("checked");
 });
 
 it("leaves a shortcut chord's key to the platform", async () => {
-  // The bug this guards: every control read only `event.key`, so a chord meant
-  // for the platform or the application acted as a plain key — `Cmd+A` on a
-  // radio group chose the option whose label starts with "a", and `Cmd+Enter`
-  // on a focused action activated it. The runtime's own default actions already
-  // skip a chord (`hasCommandModifier` in the pinned renderer), so a control's
-  // keys must too. Both directions are measured: the plain key still acts.
   const runtime = await openWindow();
   let activations = 0;
   runtime.render(
@@ -1256,8 +1117,7 @@ it("skips a disabled option in a RadioGroup's arrow navigation", async () => {
     </Surface>,
   );
   runtime.keyDown("rg", "down");
-  // A disabled option is not a destination: the arrow lands on the next
-  // enabled one, the way the platform behaves.
+
   expect(announced(runtime, "Beta")).toBe("unchecked");
   expect(announced(runtime, "Gamma")).toBe("checked");
 });
@@ -1281,7 +1141,7 @@ it("moves a RadioGroup's single tab stop with its selection", async () => {
       />
     </Surface>,
   );
-  /** Tab forward from the control above the group. */
+
   const tabFromBefore = (): string => {
     runtime.click("before");
     runtime.focusNext();
@@ -1299,12 +1159,6 @@ it("moves a RadioGroup's single tab stop with its selection", async () => {
 });
 
 it("keeps a declined controlled RadioGroup's arrows and tab stop on the row that holds focus", async () => {
-  // The bug guarded: the key contract read its base from the *selected* value,
-  // so a controlled group whose owner declined a choice — a save still in
-  // flight, a rule the row has to confirm — recomputed every arrow from the
-  // value it still held. The reader's focus stalled on the first row an arrow
-  // reached, and because the tab stop stayed on the old value's row, `Tab` from
-  // the focused row re-entered the group instead of leaving it.
   const reported: string[] = [];
   const runtime = await openWindow();
   runtime.render(
@@ -1330,19 +1184,12 @@ it("keeps a declined controlled RadioGroup's arrows and tab stop on the row that
   keyDownFocused(runtime, "down");
   expect(focusedLabel(runtime)).toBe("Gamma");
   expect(reported).toStrictEqual(["b", "c"]);
-  // The owner still holds Alpha: what moved is the reader's focus and the stop.
+
   expect(announced(runtime, "Alpha")).toBe("checked");
   runtime.focusNext();
   expect(runtime.focused()).toStrictEqual(Option.some("after"));
 });
 
-/**
- * A key down delivered to whatever already holds focus.
- *
- * The existing helpers focus the element named by `testId`; a radio option has
- * no `testId` of its own, and a user never focuses the wrapper. This is the
- * honest path: the key goes to the focused item, as GPUI delivers it.
- */
 const keyDownFocused = (runtime: Runtime, key: string): void =>
   Option.match(runtime.focusedElement(), {
     onNone: () => {
@@ -1353,7 +1200,6 @@ const keyDownFocused = (runtime: Runtime, key: string): void =>
     },
   });
 
-/** The accessible name of whatever holds native focus. */
 const focusedLabel = (runtime: Runtime): string =>
   Option.getOrElse(
     Option.map(runtime.focusedElement(), (element) =>
@@ -1362,7 +1208,6 @@ const focusedLabel = (runtime: Runtime): string =>
     () => "nothing",
   );
 
-/** The circle a radio option paints — decoration inside the row that is the control. */
 const circleOf = (runtime: Runtime, label: string) =>
   Option.getOrElse(
     Option.flatMap(
@@ -1372,19 +1217,10 @@ const circleOf = (runtime: Runtime, label: string) =>
     () => expect.fail(`the ${label} radio has no circle`),
   );
 
-/**
- * Whether an element declares the runtime's keyboard ring.
- *
- * The paint itself is the playground's `focus-visible` probe (plan 053): the test
- * renderer reports the declared style, not pixels. What is asserted here is the
- * contract — the ring is declared at rest as `focusVisible`, so the runtime
- * decides when to paint it, and nothing paints a shadow ring on a press.
- */
 const ringed = (element: {
   readonly style: { readonly focusVisible?: unknown };
 }): boolean => Option.isSome(Option.fromNullishOr(element.style.focusVisible));
 
-/** The old workaround: a shadow merged while a control held focus. */
 const shadowed = (element: {
   readonly style: { readonly boxShadow?: unknown };
 }): boolean => Option.isSome(Option.fromNullishOr(element.style.boxShadow));
@@ -1414,9 +1250,7 @@ it("paints no shadow ring on an option box, before or after a press", async () =
   runtime.focusNext();
   runtime.flush();
   expect(focusedLabel(runtime)).toBe("Alpha");
-  // The ring is the focused row's `focusVisible` outline (measured by
-  // `groups.runtime.test.tsx`); the box never carried a shadow workaround, and a
-  // click must not start painting one.
+
   expect(shadowed(circleOf(runtime, "Alpha"))).toBe(false);
   expect(shadowed(circleOf(runtime, "Beta"))).toBe(false);
   runtime.click("rg");
@@ -1426,9 +1260,6 @@ it("paints no shadow ring on an option box, before or after a press", async () =
 });
 
 it("declares the keyboard ring on a Checkbox and a Switch, and never a shadow", async () => {
-  // The bug this guards: a ring merged while `focused` made a mouse press paint
-  // exactly what a Tab paints. The ring is now declared at rest and the runtime
-  // paints it only after keyboard input (plan 053's probe).
   const runtime = await openWindow();
   runtime.render(
     <Surface>
@@ -1473,8 +1304,7 @@ it("moves native focus with the selection when an arrow moves it", async () => {
   expect(focusedLabel(runtime)).toBe("Alpha");
   keyDownFocused(runtime, "down");
   runtime.flush();
-  // The bug guarded: selection and tab stop moved to Beta while native focus
-  // stayed on Alpha, so the ring would have sat on the wrong option.
+
   expect(announced(runtime, "Beta")).toBe("checked");
   expect(focusedLabel(runtime)).toBe("Beta");
   expect(shadowed(circleOf(runtime, "Alpha"))).toBe(false);
@@ -1504,15 +1334,11 @@ it("follows a controlled value change with the tab stop", async () => {
   runtime.render(view("b"));
   runtime.click("before");
   runtime.focusNext();
-  // The bug guarded: the roving index was state initialised at mount, so a
-  // parent that set the value left the tab stop on the old option.
+
   expect(focusedLabel(runtime)).toBe("Beta");
 });
 
 it("selects a RadioGroupItem when its rich content is pressed", async () => {
-  // The bug this guards: GPUix hit-tests the deepest element and does not
-  // bubble, so a row whose content took the press would be selectable only on
-  // its circle. The item path must keep the row the hit target.
   const runtime = await openWindow();
   runtime.render(
     <Surface>
@@ -1538,7 +1364,7 @@ it("selects a RadioGroupItem when its rich content is pressed", async () => {
   const box = Option.getOrElse(runtime.boundsOfId(row.id), () =>
     expect.fail("the Beta row painted no box"),
   );
-  // The row's centre is over its content, not its circle.
+
   runtime.clickAt(box.x + box.width / 2, box.y + box.height / 2);
   expect(announced(runtime, "Beta")).toBe("checked");
   expect(announced(runtime, "Alpha")).toBe("unchecked");
@@ -1572,12 +1398,6 @@ it("selects a RadioGroup option when its own circle is clicked", async () => {
 });
 
 it("paints a control whose stored size name the scale no longer carries at the default height", async () => {
-  // The bug this guards: a control size is a persisted choice, so a preference
-  // restored from a release that renamed a step arrives as a string the union no
-  // longer names. Indexing the density scale with it answers `undefined`, and a
-  // control with no height paints as a label with padding — the box the reader
-  // aims at is gone while the element still takes keys. The stored name reads as
-  // `md`, the height every control documents.
   const stored = "huge" as ControlSize;
   expect(Object.keys(testTheme.density.controlHeight)).not.toContain(stored);
   const { runtime, calls } = await renderButton({ size: stored });

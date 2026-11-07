@@ -1,16 +1,3 @@
-/**
- * Guards the fixture `data-tree-lifecycle` drives the shipped `@gpuixui/data`
- * workspace tree with.
- *
- * The probe mounts the example and asserts its readout, so the row counts it
- * prints are the whole claim: a branch added to the example's `workspace`, or a
- * default expansion changed, would leave the window asserting yesterday's tree.
- * Every count is therefore **derived** from the example's own `workspace`
- * literal here, and the row ids from `TreeView`'s `${testId}-row-${key}` rule.
- *
- * `node:fs` is deliberate, as in `registry.test.ts` and `data-table.test.ts`:
- * this is a check over the repository's own TypeScript, not a runtime path.
- */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
@@ -42,18 +29,11 @@ const readme = readFileSync(
 );
 const probe = readFileSync(new URL("./scenarios.tsx", import.meta.url), "utf8");
 
-/** One node of the example's workspace, as its literal declares it. */
 interface Node {
   readonly name: string;
   readonly children?: ReadonlyArray<Node>;
 }
 
-/**
- * The example's workspace, parsed from its `file("name", […])` literal.
- *
- * A reader rather than a restatement: the source is the fixture's only
- * authority, so a branch added there moves the counts the probe prints.
- */
 const parseWorkspace = (): ReadonlyArray<Node> => {
   const start = example.indexOf("const workspace: ReadonlyArray<FileNode> = [");
   const body = example.slice(start);
@@ -62,7 +42,6 @@ const parseWorkspace = (): ReadonlyArray<Node> => {
   return scanNodes(body, open + 1, close).nodes;
 };
 
-/** Reads one `file(...)` call at `at`, and the index after it. */
 const readNode = (
   text: string,
   at: number,
@@ -86,7 +65,6 @@ const readNode = (
   };
 };
 
-/** The `]` that closes the `[` at `open`, counting the brackets between them. */
 const closingBracket = (
   text: string,
   open: number,
@@ -104,7 +82,6 @@ const closingBracket = (
     : closingBracket(text, open, depth - 1, nextClose);
 };
 
-/** Every sibling `file(...)` call from `at` up to `limit`. */
 const scanNodes = (
   text: string,
   at: number,
@@ -117,7 +94,6 @@ const scanNodes = (
   return { nodes: [read.node, ...rest.nodes], next: rest.next };
 };
 
-/** The visible rows a set of expanded keys shows. */
 const visibleRows = (
   nodes: ReadonlyArray<Node>,
   expanded: ReadonlySet<string>,
@@ -133,7 +109,6 @@ const visibleRows = (
         : 0),
   );
 
-/** Every node's key, for the expand-all count. */
 const allKeys = (nodes: ReadonlyArray<Node>): ReadonlySet<string> =>
   new Set(
     Arr.flatMap(nodes, (node) => [node.name, ...allKeys(node.children ?? [])]),
@@ -147,11 +122,11 @@ describe("the data-tree fixture", () => {
       "docs",
       "package.json",
     ]);
-    // The example expands `src` and leaves every other branch closed.
+
     expect(DATA_TREE_ROWS_OPEN).toBe(visibleRows(roots, new Set(["src"])));
     expect(DATA_TREE_ROWS_FOLDED).toBe(visibleRows(roots, new Set()));
     expect(DATA_TREE_ROWS_ALL).toBe(visibleRows(roots, allKeys(roots)));
-    // The reveal opens `src`, `components` and `table` and lands on `row.tsx`.
+
     expect(DATA_TREE_ROWS_REVEALED).toBe(
       visibleRows(roots, new Set(["src", "components", "table"])),
     );
@@ -180,7 +155,7 @@ describe("the data-tree fixture", () => {
     });
     expect(DATA_TREE).toBe("tree");
     expect(dataTreeRow("row.tsx")).toBe("tree-row-row.tsx");
-    // A row's id is the tree's id plus the node's key, in the component.
+
     const view = readFileSync(
       new URL(
         "../../../../packages/data/src/tree/tree-view.tsx",
@@ -199,12 +174,6 @@ describe("the data-tree fixture", () => {
   });
 
   it("keeps its readout id apart from the windowed tree's", () => {
-    // The live runner mounts selected probes in **one** window, so two probes
-    // that print the same test id can answer each other: a batched run of
-    // `--only virtual-tree-lifecycle --only data-tree-lifecycle` read
-    // `visible=4000 expanded=40 …` as this tree's readout and failed on its
-    // first check (measured twice on 2026-10-24). Both ids are read from their
-    // own sources, so a rename on either side cannot reintroduce the collision.
     const virtual = probe.slice(probe.indexOf("const VirtualTreeProbe"));
     const id = /<Readout testId="([^"]+)"/.exec(virtual)?.[1];
     expect(id).toBeDefined();

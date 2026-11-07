@@ -1,13 +1,3 @@
-/**
- * `ToggleGroup` — the element tree the runtime receives.
- *
- * The two contracts this suite guards: an arrow key moves focus **without**
- * toggling (a toggle sets a mode for the next action, so moving focus must not
- * change it), and the group's single tab stop never sits on a disabled option.
- * State is announced through `aria-valuetext` because 0.11.0 has no
- * `aria-pressed`.
- */
-
 import { describe, expect, it, vi } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -57,7 +47,6 @@ const options: ReadonlyArray<ToggleGroupOption> = [
 ];
 const labels = Arr.map(options, (option) => option.label);
 
-/** Type-ahead as the component wires it: the buffer is the caller's, the match is not. */
 const typeAhead = (from: number, key: string) =>
   decideTypeAhead(labels, from, key);
 
@@ -96,10 +85,6 @@ describe("toggleGroupValues", () => {
   });
 
   it("reads a stored value it cannot use as no values, not as itself", () => {
-    // The bug guarded: a saved selection is JSON, so a record that never set one
-    // carries `null` and a deleted member leaves a non-string in the array. The
-    // old read returned the value object unchanged, and `Arr.contains` threw
-    // `Cannot read properties of null (reading 'length')` out of the render.
     expect(toggleGroupValues(null)).toEqual([]);
     expect(toggleGroupValues({ bold: true })).toEqual([]);
     expect(toggleGroupValues(3)).toEqual([]);
@@ -138,9 +123,6 @@ describe("toggleSelection", () => {
 
 describe("ToggleGroup", () => {
   it("moves focus to the option a typed prefix names, without pressing it", () => {
-    // The bug this guards: a reader who knew the mode's name had to arrow to
-    // it. Arrows in this group move focus only, so type-ahead must not change a
-    // mode either.
     const onToggle = vi.fn();
     const onFocusMove = vi.fn();
     const element = render(
@@ -154,10 +136,6 @@ describe("ToggleGroup", () => {
     expect(onToggle).not.toHaveBeenCalled();
   });
   it("announces the group's help and addresses the row that holds the stop", () => {
-    // Bug guarded: a toggle group is a control a form owns, but it had no
-    // address and no announced help — the same hole one group over. The
-    // wrapper is not focusable, so the address lands on the row holding the tab
-    // stop; the help rides the group node.
     const ref = vi.fn();
     const layout = vi.fn();
     const register = vi.fn();
@@ -225,11 +203,6 @@ describe("ToggleGroup", () => {
   });
 
   it("announces an option's caption as the row's help", () => {
-    // The bug guarded: an option's `description` was painted text only — this
-    // runtime has no `aria-describedby`, so a mode that says "Applies to the
-    // next word." was heard as "Italic" alone. The row is the control, so its
-    // caption is the row's help (`aria-description`, the channel every control
-    // here uses), and a blank caption is absence like a blank name.
     const element = render(
       {
         options: [
@@ -254,11 +227,6 @@ describe("ToggleGroup", () => {
   });
 
   it("publishes a trimmed row name, and no name at all for a blank label", () => {
-    // The bug guarded: the row's `aria-label` was the option's label verbatim,
-    // so a padded label announced its padding and a blank one published `""` —
-    // an empty name in the accessibility tree rather than no name. An icon-only
-    // option with a blank label was left unnamed instead of falling back to the
-    // content it paints.
     const element = render(
       {
         options: [
@@ -311,11 +279,6 @@ describe("ToggleGroup", () => {
   });
 
   it("reads a stored orientation name as the documented horizontal axis", () => {
-    // The bug guarded: this group documents a horizontal toolbar, so a stored
-    // name it does not carry must not flip it to a column — and read raw the
-    // name reached `ARROW_KEYS[orientation]`, where destructuring threw
-    // `TypeError: Cannot destructure property 'forward'`, killing every plain
-    // key the group received.
     const onToggle = vi.fn();
     const groupHandlers = handlers(onToggle);
     const element = render(
@@ -419,9 +382,6 @@ describe("ToggleGroup", () => {
   });
 
   it("reports no focus for an option the group no longer draws", () => {
-    // The bug guarded: focus is tracked by index, so a group whose options shrank
-    // kept telling its `style` callback `focused: true` while the row that held
-    // native focus was gone.
     const groupSeen: ToggleGroupState[] = [];
     const rowSeen: ToggleItemState[] = [];
     const element = render(
@@ -484,7 +444,6 @@ describe("ToggleGroup", () => {
   });
 });
 
-/** Two items written as elements, the second one rich. */
 const itemChildren = (
   <>
     <ToggleGroupItem value="bold" label="Bold" />
@@ -504,10 +463,6 @@ describe("toggleGroupItems", () => {
   });
 
   it("reads a stored list structurally, dropping a record it cannot place", () => {
-    // The bug guarded: the data prop is a saved list, and JSON leaves `null` in
-    // an array whose record was deleted. Read raw, that entry threw
-    // `Cannot read properties of null (reading 'value')` and took every row
-    // beside it out of the render.
     const items = groupOptions([
       null,
       { value: "bold" },
@@ -537,9 +492,6 @@ describe("toggleGroupItems", () => {
 
 describe("a toggle group's row locators", () => {
   it("names each row from its value and leaves the group's own id on the wrapper", () => {
-    // The bug guarded: `testId` landed on the wrapper, so a probe could address
-    // the toolbar and never press one mode. The derived locator makes a
-    // data-option row a subject a test can name.
     const element = render(
       {
         options,

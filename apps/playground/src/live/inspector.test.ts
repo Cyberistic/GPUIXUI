@@ -1,17 +1,3 @@
-/**
- * Holds the premises the `inspector-lifecycle` probe is read against.
- *
- * The bugs these catch: an area that adds the sides instead of multiplying them
- * (the metric card could agree with a wrong readout), a reset that throws the
- * reader's edit away, a "missing" tag printed as an empty string (the readout
- * would read `tag= width=…`, which no assertion can distinguish from a lost
- * value), an inspector whose rows fit its viewport (the scroll step would then
- * pass on a box that never scrolls), and a README check count that disagrees
- * with the probe.
- *
- * `node:fs` is deliberate, as in `registry.test.ts`: this checks the
- * repository's own Markdown, not a runtime path.
- */
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
@@ -42,14 +28,12 @@ const scenarios = readFileSync(
   "utf8",
 );
 
-/** The `inspectorSteps` effect, bounded by the declaration that follows it. */
 const inspectorSteps = (() => {
   const start = scenarios.indexOf("const inspectorSteps");
   const end = scenarios.indexOf("\nconst ", start + 1);
   return start === -1 || end === -1 ? "" : scenarios.slice(start, end);
 })();
 
-/** The count the README prints for this probe, if any. */
 const printedCheckCount = (): number =>
   Number(
     /(\d+) checks, `--only inspector-lifecycle`/.exec(readme)?.[1] ??
@@ -108,8 +92,6 @@ describe("the property rows the inspector paints", () => {
   });
 
   it("overflows the viewport the probe scrolls", () => {
-    // The scroll step only measures a scroll if the content is taller than the
-    // box; a shrunken row set would turn `-200` into a clamped read or a no-op.
     const rows = Arr.length(propertyRows(INITIAL_OBJECT));
     expect(rows * INSPECTOR_ROW_HEIGHT).toBeGreaterThan(
       INSPECTOR_SCROLL_HEIGHT,
@@ -120,8 +102,6 @@ describe("the property rows the inspector paints", () => {
 
 describe("the probe's documentation", () => {
   it("prints the check count the probe actually asserts", () => {
-    // A `paintedBox` call is one `the runtime paints <id>` check as well as the
-    // box it returns, so both sites count.
     const sites =
       Arr.length(Arr.fromIterable(inspectorSteps.matchAll(/ctx\.expect/g))) +
       Arr.length(Arr.fromIterable(inspectorSteps.matchAll(/paintedBox\(/g)));

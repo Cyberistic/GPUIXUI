@@ -10,10 +10,6 @@ import {
   SbShell,
 } from "./sidebar-kit";
 
-/**
- * Sidebar 11 — the file-tree panel: three changed files with their state, then
- * the repository, its UI folder open on the active `button.tsx`.
- */
 export const Sidebar11Render = () => (
   <SbShell>
     <SbPanel className="gx-sb-panel--docs" rail>

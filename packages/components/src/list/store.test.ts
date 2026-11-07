@@ -1,16 +1,7 @@
-/**
- * The per-row store: snapshot identity is the contract.
- *
- * The bug these guard: a store that hands back a fresh object on every read
- * re-renders every row on any selection change — the exact cost the store
- * exists to remove. The identity assertions fail without the per-value cache.
- */
-
 import * as Option from "effect/Option";
 import { describe, expect, it, vi } from "vitest";
 import { makeRowStore, type ListSelection } from "./store.js";
 
-/** A selection where `value` is the active row, the tab stop and the choice. */
 const only = (value: string): ListSelection => ({
   active: Option.some(value),
   selected: [value],

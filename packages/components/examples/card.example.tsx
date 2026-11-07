@@ -1,12 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Card example: a plan card with figures and a footer.
- *
- * The footer's two actions are **labelled text, not buttons**: this card is a
- * plan summary and the example demonstrates Card's parts, not a click target. A
- * real action pairs the card with `@gpuixui/primitives`' `Button`.
- */
-
 import {
   Card,
   CardContent,
@@ -17,7 +9,6 @@ import {
 } from "../src/card.js";
 import { textStyle, useTheme } from "../src/internal/theme.js";
 
-/** One label/value row inside the card body. */
 const Row = ({
   label,
   value,
@@ -56,7 +47,6 @@ const Row = ({
   );
 };
 
-/** A plan card: what the plan includes, current usage, and the next action. */
 export const CardExample = () => (
   <Card style={{ maxWidth: 420 }}>
     <CardHeader>

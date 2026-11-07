@@ -1,12 +1,3 @@
-/**
- * The stars field store, without a renderer.
- *
- * The bugs these guard: a repeated layout report churning a field the runtime is
- * already tweening, and a twinkle that cannot turn around — a star handed one
- * target and never the other stays lit at its peak, so `turn` has to be the
- * other end of the light each time it runs.
- */
-
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as Option from "effect/Option";

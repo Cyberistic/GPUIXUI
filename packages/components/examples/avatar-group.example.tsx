@@ -1,13 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * AvatarGroup example: a team header and a comment thread's participants.
- *
- * Composition, not a gallery: the card shows the capped row a settings page
- * uses, and the quiet strip shows the same group painted on a different surface
- * — which is the one thing a facepile cannot infer, so the ring is passed the
- * role the group sits on.
- */
-
 import { AvatarGroup, type AvatarGroupMember } from "../src/avatar-group.js";
 import {
   Card,
@@ -18,7 +9,6 @@ import {
 } from "../src/card.js";
 import { textStyle, useTheme } from "../src/internal/theme.js";
 
-/** The team, in the order a reader meets them. */
 const team: ReadonlyArray<AvatarGroupMember> = [
   { name: "Ada Lovelace", status: "online" },
   { name: "Grace Hopper", status: "busy" },
@@ -28,7 +18,6 @@ const team: ReadonlyArray<AvatarGroupMember> = [
   { name: "Margaret Hamilton", status: "offline" },
 ];
 
-/** A team header with the capped group, and a thread's participants. */
 export const AvatarGroupExample = () => {
   const theme = useTheme();
   return (
@@ -57,7 +46,6 @@ export const AvatarGroupExample = () => {
             members={team.slice(0, 3)}
             size="sm"
             label="Thread participants"
-            // The strip is the surface behind the faces, so its role is the ring.
             ringColor={theme.colors.muted}
           />
           <text

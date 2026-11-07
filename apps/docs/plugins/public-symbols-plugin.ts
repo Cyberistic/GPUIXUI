@@ -4,19 +4,6 @@ import {
   repoRoot,
 } from "../src/lib/public-symbols-source.ts";
 
-/**
- * The public symbol index, as a build-time module.
- *
- * The index is the source behind every published entry point, and the source
- * is 2 MB of TypeScript. Reading it in the browser would ship the whole
- * workspace to every reader, so the plugin reads it once, at build time, and
- * hands the page the result: a table of names, kinds, modules and summaries.
- *
- * The plugin is the only place the reader runs. `public-symbols-data.ts` reads
- * the module it provides, and the browser bundle carries the index and
- * nothing else.
- */
-
 const VIRTUAL_ID = "virtual:gpuixui-public-symbols";
 const RESOLVED_ID = `\0${VIRTUAL_ID}`;
 

@@ -1,13 +1,3 @@
-/**
- * The sheen's arithmetic, without a renderer.
- *
- * The bugs these guard: a band wider or thinner than the control's quarter; a
- * lead that starts inside the control (a pop on hover); halves that drift apart
- * as they travel (a seam opens in the sheen); a trail that stops before the lead;
- * and a gradient whose halves are the wrong way round, painting a hard edge where
- * the brightest line should be.
- */
-
 import { describe, expect, it } from "vitest";
 import { sheenFrames, sheenGradient, sheenHalf } from "./logic.js";
 

@@ -1,11 +1,3 @@
-/**
- * Browser preview for the Gravity stars page.
- *
- * The native field drops `count` seeded stars in straight legs toward the
- * caller's well; the preview reproduces the scatter and falls each star the
- * same way.
- */
-
 import { scatter } from "./scatter";
 
 const points = scatter(44, 7, 1, 3);

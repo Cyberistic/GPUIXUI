@@ -12,21 +12,6 @@ import { primitiveDocsRoute } from "./shared";
 import { sitemapPaths } from "./sitemap";
 import { uniqueSearchPages } from "./search-index";
 
-/**
- * One page per component.
- *
- * Bug guarded: `Button`, `Checkbox`, `Select`, `Switch` and `Tooltip` were
- * documented twice — a curated page under `/components` and the package
- * page under `/primitives` — so the sidebar listed two entries with one
- * title, a search returned both, and the sitemap advertised two addresses for
- * one component. The curated page is canonical; the package URL redirects to it
- * and neither the sidebar, the search index, the sitemap nor `/llms.txt` may
- * list the twin.
- *
- * The duplicate set is derived from the two trees by title, so curating a sixth
- * primitive without retiring its package page fails here by name.
- */
-
 const root = new URL("../../../../", import.meta.url);
 const docsDir = new URL("content/docs/", new URL("apps/docs/", root));
 
@@ -43,7 +28,6 @@ const titleOf = (path: URL): string => {
   return title.replace(/^["']|["']$/g, "");
 };
 
-/** The curated component pages, by title. */
 const curated = new Map(
   mdx(new URL("components/", docsDir))
     .filter((name) => name !== "index.mdx")
@@ -53,7 +37,6 @@ const curated = new Map(
     ]),
 );
 
-/** The primitive pages whose title a curated page also carries. */
 const duplicates = mdx(new URL("packages/primitives/docs/", root))
   .filter((name) =>
     curated.has(
@@ -120,16 +103,13 @@ describe("the curated primitive twins", () => {
     const slider = `${primitiveDocsRoute}/slider`;
     const served = [slider, ...retired];
 
-    // The positive control: the filter drops the twins, not every package page.
     expect(servedUrls(served)).toEqual([slider]);
     expect(servedPages(served.map((url) => ({ url })))).toEqual([
       { url: slider },
     ]);
 
-    // The sitemap keeps its own two routes and nothing the site does not serve.
     expect(sitemapPaths([], retired)).toEqual(["/", "/live"]);
 
-    // Search and the agent index never see a second address for a component.
     expect(uniqueSearchPages([], [retired.map((url) => ({ url }))])).toEqual(
       [],
     );

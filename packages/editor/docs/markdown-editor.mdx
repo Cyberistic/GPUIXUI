@@ -55,18 +55,3 @@ Pagination, Stepper and Timeline controls publish for the same job. Every button
 states its own value, so the colour of the paint is not the only channel that
 says which view is showing; a reader on a screen reader gets the same fact from
 the control it is on.
-
-## Notes
-- **A stored draft that is not text reads as an empty document**: a saved
-  record writes `null` where it carried no draft, and the status line and the
-  preview read the text directly — so the value is read once through
-  `draftOf`, which keeps a string as written (whitespace included) and answers
-  `""` for anything else, rather than throwing out of the render.
-- **An unclosed fence is closed in the preview only**: the source keeps every
-  character the reader typed and the preview appends the missing marker on the
-  next line, so a document written mid-block does not swallow the page. A draft
-  that already ends on a newline gains no blank line in the block, and a blank
-  line the reader did type stays.
-- **No formatting toolbar.** It needs a selection API the runtime does not have.
-- **No caret or selection read-back.** `MarkdownEditor` cannot insert at the reader's cursor.
-- **Two panes, horizontal only.** A split divides the editor left/right and the preview takes the rest; there is no stacked split.

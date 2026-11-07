@@ -8,16 +8,6 @@ import {
   type SearchResult,
 } from "./search-results";
 
-/**
- * The search endpoint's answer, trimmed to one row per address.
- *
- * Fumadocs splits a long heading into several index chunks, and every chunk
- * carries the heading's own anchor: a query for "button" answered with
- * `/components/button#api-reference` three times and `#limitations` twice.
- * The dialog rendered each one, so a reader saw the same section under the same
- * label. The rows arrive ranked, so the first is the one to keep.
- */
-
 const row = (url: string, content: string): SearchResult => ({
   url,
   type: "text",
@@ -39,8 +29,6 @@ describe("the search result list", () => {
   });
 
   it("keeps a different heading on the same page", () => {
-    // The fragment is the destination: two sections are two answers, even when
-    // the reader lands on one page.
     const rows = [
       row("/components/tabs#api", "Tabs"),
       row("/components/tabs#keyboard", "Arrows"),
@@ -64,8 +52,6 @@ describe("the search result list", () => {
   });
 
   it("round-trips the rows and leaves fields it does not model alone", () => {
-    // The site edits the address only; `type`, the snippet and the breadcrumbs
-    // are Fumadocs' and have to come back unchanged.
     const body =
       '[{"id":"/components/button","type":"page",' +
       '"url":"/components/button","content":"Button",' +
@@ -82,7 +68,6 @@ describe("the search result list", () => {
     expect(rows.map((entry) => entry.type)).toEqual(["page", "text"]);
     expect(rows[1]?.breadcrumbs).toEqual(["Docs", "Components"]);
 
-    // The key order is the codec's, so the round trip is compared as rows.
     const encoded = encodeSearchResults(rows);
     expect(Option.isSome(encoded)).toBe(true);
     expect(
@@ -96,15 +81,12 @@ describe("the search result list", () => {
   });
 
   it("refuses a body that is not the list, rather than editing it", () => {
-    // A future endpoint with another envelope must reach the dialog whole: the
-    // route passes the response through when decoding fails.
     expect(Option.isNone(decodeSearchResults("{}"))).toBe(true);
     expect(Option.isNone(decodeSearchResults('{"results":[]}'))).toBe(true);
     expect(Option.isNone(decodeSearchResults("not json"))).toBe(true);
   });
 
   it("is the response the endpoint actually answers with", () => {
-    // The guard is only a guard if the route reads and writes through it.
     const route = readFileSync(
       new URL("../routes/api/search.ts", import.meta.url),
       "utf8",

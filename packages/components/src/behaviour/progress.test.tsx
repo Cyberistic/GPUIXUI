@@ -1,12 +1,3 @@
-/**
- * Progress behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: `max` was ignored (a bar stated in bytes painted the
- * same share as one stated in percent), a stored `null` painted an empty
- * determinate bar instead of the indeterminate one, and a bar painted a role
- * from a literal rather than the active platform theme.
- */
-
 import { platformTheme } from "@gpuixui/tokens";
 import { describe, expect, it } from "vitest";
 import { a11yNodes } from "../internal/a11y.js";
@@ -14,7 +5,6 @@ import { lightTheme } from "../internal/theme.js";
 import { renderComponent } from "../internal/test-root.js";
 import { Progress, ProgressValue } from "../progress.js";
 
-/** The background colours the tree painted, top to bottom. */
 const painted = (
   root: ReturnType<typeof renderComponent>,
 ): ReadonlyArray<unknown> =>
@@ -77,7 +67,7 @@ describe("Progress", () => {
     expect(paint(windows)).toEqual(
       expect.arrayContaining([windows.colors.muted, windows.colors.primary]),
     );
-    // The premise: the two styles do not paint the same track.
+
     expect(macOS.colors.muted).not.toBe(windows.colors.muted);
   });
 });

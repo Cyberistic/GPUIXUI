@@ -1,21 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Item: one row of a list — media, text and actions in one line.
- *
- * A layout primitive and nothing more: it holds no state, takes no presses and
- * paints no hover. shadcn's `Item` is the row a settings list, a file list or a
- * picker repeats, so the parts are named by their job and the row itself only
- * decides the surface (`variant`) and the density (`size`).
- *
- * Order is the layout's: the row is a wrapping flex line, so
- * `ItemMedia` before `ItemContent` paints before the text and `ItemActions`
- * after it paints after. `ItemHeader` and `ItemFooter` take the full width and
- * therefore their own line, above and below the media/content/actions line.
- *
- * A variant or size a release renamed paints the documented default, the rule
- * `Card` follows: the surface is read at the boundary rather than dropped.
- */
-
 import type { Props } from "@gpuix/react";
 import type { ReactNode } from "react";
 import { mergeStyles } from "@gpuix/react/floating";
@@ -46,20 +29,16 @@ import { useTheme } from "./internal/theme.js";
 
 const ItemVariants = Schema.Literals(["default", "outline", "muted"]);
 
-/** The surface a row paints. */
 export type ItemVariant = typeof ItemVariants.Type;
 
 const ItemSizes = Schema.Literals(["default", "sm"]);
 
-/** The row's density. */
 export type ItemSize = typeof ItemSizes.Type;
 
 const ItemMediaVariants = Schema.Literals(["default", "icon", "image"]);
 
-/** What the leading slot holds: anything, an icon, or a picture. */
 export type ItemMediaVariant = keyof typeof ITEM_MEDIA_VARIANTS;
 
-/** A stored name the union does not carry reads as the documented default. */
 const itemVariantOf = (value: unknown): ItemVariant =>
   Schema.is(ItemVariants)(value) ? value : "default";
 
@@ -69,37 +48,28 @@ const itemSizeOf = (value: unknown): ItemSize =>
 const itemMediaOf = (value: unknown): ItemMediaVariant =>
   Schema.is(ItemMediaVariants)(value) ? value : "default";
 
-/** Props every layout part shares: the caller's class, style and children. */
 interface PartProps extends Omit<Props, "children"> {
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
   readonly children?: PartChildren;
 }
 
-/** Props for a part that paints one line of text. */
 interface TextPartProps extends Omit<Props, "children"> {
   readonly className?: string;
   readonly children?: ReactNode;
 }
 
-/** {@link Item} props. */
 export interface ItemProps extends PartProps {
-  /** Default `"default"`. */
   readonly variant?: ItemVariant;
-  /** Default `"default"`. */
+
   readonly size?: ItemSize;
 }
 
-/** {@link ItemGroup} props. */
 export interface ItemGroupProps extends PartProps {}
 
-/** {@link ItemMedia} props. */
 export interface ItemMediaProps extends PartProps {
-  /** Default `"default"`. */
   readonly variant?: ItemMediaVariant;
 }
 
-/** One row. */
 export const Item = ({
   variant = "default",
   size = "default",
@@ -131,7 +101,6 @@ export const Item = ({
   );
 };
 
-/** The rows of one list. */
 export const ItemGroup = ({
   className,
   children,
@@ -150,7 +119,6 @@ export const ItemGroup = ({
   );
 };
 
-/** The leading slot: an icon, a picture or any mark. */
 export const ItemMedia = ({
   variant = "default",
   className,
@@ -175,7 +143,6 @@ export const ItemMedia = ({
   );
 };
 
-/** The text column. */
 export const ItemContent = ({
   className,
   children,
@@ -196,7 +163,6 @@ export const ItemContent = ({
   );
 };
 
-/** The row's name. */
 export const ItemTitle = ({
   className,
   children,
@@ -214,7 +180,6 @@ export const ItemTitle = ({
   );
 };
 
-/** The supporting line under the name. */
 export const ItemDescription = ({
   className,
   children,
@@ -235,7 +200,6 @@ export const ItemDescription = ({
   );
 };
 
-/** The trailing controls. */
 export const ItemActions = ({
   className,
   children,
@@ -256,7 +220,6 @@ export const ItemActions = ({
   );
 };
 
-/** A full-width line above the content. */
 export const ItemHeader = ({
   className,
   children,
@@ -274,7 +237,6 @@ export const ItemHeader = ({
   );
 };
 
-/** A full-width line below the content. */
 export const ItemFooter = ({
   className,
   children,
@@ -292,7 +254,6 @@ export const ItemFooter = ({
   );
 };
 
-/** Every part, so a misplaced sibling is named. */
 const itemParts: ReadonlyArray<PartComponent> = [
   Item,
   ItemGroup,
@@ -320,7 +281,6 @@ const itemContract: PartsContract = {
   hint: "Put ItemMedia, ItemContent and ItemActions directly inside Item.",
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const itemMeta = {
   name: "Item",
   tier: 2,

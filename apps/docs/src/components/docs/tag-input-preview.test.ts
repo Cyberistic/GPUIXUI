@@ -26,19 +26,6 @@ import {
   type KeywordRules,
 } from "./tag-input-preview";
 
-/**
- * The tag preview's copies of the component's rules, and the publish gate.
- *
- * A tag field looks the same whether a comma commits the words before it and
- * keeps the rest or commits the whole line, whether a duplicate is refused or
- * repeated, and whether the cap refuses the sixth token or the fifth — so the
- * preview's copies are held to `packages/components/src/tag-input/logic.ts`
- * over a sweep instead of being reviewed by eye. The gate is the app's own
- * rule: a draft is not a keyword, so a form must not save over one.
- *
- * `node:fs` is the test's own read of a checked-in file, not runtime I/O.
- */
-
 const component = readFileSync(
   new URL(
     "../../../../../packages/components/src/tag-input.tsx",
@@ -72,7 +59,6 @@ const lists: ReadonlyArray<ReadonlyArray<string>> = [
   ["design", "design"],
 ];
 
-/** The declarations of the one block a selector names, comments removed. */
 const block = (sheet: string, selector: string): string =>
   [...sheet.replace(/\/\*[\s\S]*?\*\//g, "").matchAll(/([^{}]+)\{([^{}]*)\}/g)]
     .filter(([, names]) =>
@@ -88,10 +74,6 @@ describe("the preview's chip paint", () => {
   );
 
   it("takes the recipe's fill and label roles, not a grey of its own", () => {
-    // The chip's contrast is measured on `secondary` with a `foreground` label
-    // (`chip-contrast.test.ts` in the components package). A drawing that kept
-    // the old `muted`/`muted-foreground` pair would show a chip the shipped one
-    // stopped painting.
     expect(block(css, ".gx-tag-chip")).toContain(
       "background: var(--secondary)",
     );
@@ -174,8 +156,6 @@ describe("the preview's token rules", () => {
 
 describe("the preview's field transitions", () => {
   it("commits the words before a typed comma and keeps the remainder", () => {
-    // The bug this guards: a preview that commits the whole line. Typing
-    // `design,do` must leave `do` in the field, not add it.
     const next = typed(emptyKeywords, "design,do", keywordRules);
 
     expect(next.tokens).toEqual(["design"]);
@@ -183,9 +163,6 @@ describe("the preview's field transitions", () => {
   });
 
   it("pastes a comma list in one edit and trims the empty segments", () => {
-    // A pasted list arrives through one `onChange`: only the text after the
-    // final comma is still a draft, and the empty segment between the two
-    // commas is not a token.
     const next = typed(emptyKeywords, "design, , docs,", keywordRules);
 
     expect(next.tokens).toEqual(["design", "docs"]);
@@ -193,8 +170,6 @@ describe("the preview's field transitions", () => {
   });
 
   it("clears the draft on Enter even when every token was refused", () => {
-    // A duplicate that stayed in the field would invite a second try at a token
-    // the list already holds.
     const full: Keywords = {
       tokens: ["react", "gpuix", "components", "tokens", "motion"],
       draft: "react",
@@ -223,8 +198,6 @@ describe("the preview's field transitions", () => {
   });
 
   it("names the removal control the way the component does", () => {
-    // A preview that prints `Remove docs` while the component prints
-    // `Remove design` would teach a locator no automation can find.
     expect(component).toContain("`Remove ${value}`");
     expect(removeLabel("docs")).toBe("Remove docs");
   });
@@ -242,9 +215,6 @@ describe("the preview's budget", () => {
   });
 
   it("says why a cleared draft added nothing, in a sentence", () => {
-    // The readout this replaced counted refusals (`refused=1`) beside the
-    // field, which a reader cannot act on. Below the cap the only refusal is a
-    // repeat; at the cap it is the cap.
     const repeat: Keywords = { tokens: ["react"], draft: "" };
     const full: Keywords = {
       tokens: ["a", "b", "c", "d", "e"],
@@ -275,9 +245,6 @@ describe("the preview's budget", () => {
 
 describe("the preview's publish gate", () => {
   it("refuses to publish on a draft alone, because the draft is not a token", () => {
-    // The component keeps the field's draft privately, so the gate can only
-    // read the tokens: a half-typed keyword does not open the gate, and a form
-    // that needs it to must ask the reader to commit it.
     const state: Keywords = { tokens: [], draft: "docs" };
 
     expect(describeGate(state)).toBe("Add a keyword before publishing.");
@@ -305,8 +272,6 @@ describe("the preview's publish gate", () => {
   });
 
   it("stays open on a pending draft beside a committed token", () => {
-    // The other direction: a draft must not close a gate the list already
-    // earned, because the caller cannot see it.
     const state: Keywords = { tokens: ["design"], draft: "do" };
 
     expect(canPublish(state)).toBe(true);

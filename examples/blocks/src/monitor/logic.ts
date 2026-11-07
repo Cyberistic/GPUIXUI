@@ -1,7 +1,3 @@
-/**
- * The monitor's pure part: the ring's two segments, the sample window, and the
- * next range a press selects.
- */
 import * as Arr from "effect/Array";
 import type { Range } from "./data.js";
 
@@ -10,7 +6,6 @@ const noise = (seed: number, index: number): number => {
   return x - Math.floor(x);
 };
 
-/** `count` samples around `base`, seeded so a window is stable on every render. */
 export const samples = (
   seed: number,
   base: number,

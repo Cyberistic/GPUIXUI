@@ -1,12 +1,3 @@
-/**
- * The shared runtime contract.
- *
- * The bugs these guard: a reducer that ignores its command, so a select does not
- * move the selection; a query that leaks a raw index instead of the part-shaped
- * state the parts render; and a `run` that mutates `initial` instead of folding
- * from it.
- */
-
 import { Match, Order } from "effect";
 import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";

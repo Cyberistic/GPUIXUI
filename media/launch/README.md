@@ -11,7 +11,7 @@ was rejected (`agent/launch-film-v4`).
 | --- | --- | --- | --- |
 | 0–4 s | — | Switch, Tabs, Slider, Checkbox, the camera pushing up to 1:1 and never past it | `cu-*` |
 | 4–6.5 s | nobody wants to “write” this. | one card in GPUI's Rust and in `createElement`, scrolling | film |
-| 6.5–10.5 s | it's just shadcn · paste any tweakcn theme. done. | the code slides in beside the card it builds; four real tweakcn themes, read by `shadcnTheme` | `shadcn-v8` |
+| 6.5–10.5 s | it's just shadcn · paste any tweakcn theme. done. | the code slides in beside the card it builds; four real tweakcn themes, read by `shadcnBuilderTheme` | `shadcn-v8` |
 | 10.5–13 s | the npm packages you already use | the code slides off; package tabs | film |
 | 13–16.5 s | zero web views | 60 real tiles drop onto a tilted plane; a swipe crosses it to dark | `tile-*`, `dark-tile-*` |
 | 16.5–20.5 s | — | ⌘K, "vault" typed: Launcher → Vault → Dashboard | `launcher-v8`, `vault-v8`, `dashboard-v8` |

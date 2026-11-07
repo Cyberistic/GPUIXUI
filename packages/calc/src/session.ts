@@ -1,12 +1,3 @@
-/**
- * The calculator session: the state machine behind every key and command.
- *
- * A press is a state transition, and evaluation is an Effect because it may use
- * `Random` and may fail with a documented calculator error. Expected failures
- * become `error` in the state (the LCD shows them); nothing throws. The state is
- * serialisable data apart from the parsed values it holds for display.
- */
-
 import { Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -155,7 +146,7 @@ export interface StatEditorState {
   readonly screen: "editor" | "calc";
   readonly readings: ReadonlyArray<Reading>;
   readonly title: string;
-  /** The last argument typed for an estimate or distribution reading. */
+
   readonly argument: string;
 }
 
@@ -477,10 +468,6 @@ const runEvaluation = (
     });
     return next;
   });
-
-/* ------------------------------------------------------------------ */
-/* Modes and editors                                                   */
-/* ------------------------------------------------------------------ */
 
 export const setMode = (
   state: CalculatorState,
@@ -990,10 +977,6 @@ const editTable = (
   return state;
 };
 
-/* ------------------------------------------------------------------ */
-/* Tokens for keys                                                     */
-/* ------------------------------------------------------------------ */
-
 const FUNCTION_TOKENS: Readonly<Record<string, InputToken>> = {
   sin: SIN,
   "sin⁻¹": SIN_INV,
@@ -1062,7 +1045,6 @@ const COMMAND_TOKENS: Readonly<Record<string, InputToken>> = {
   "∠": POLAR,
 };
 
-/** The token a key inserts, if it inserts one. */
 export const tokenForKey = (key: string): Option.Option<InputToken> => {
   if (/^[0-9]$/.test(key)) return Option.some(digit(key));
   if (key === ".") return Option.some(PERIOD);
@@ -1095,11 +1077,6 @@ export const tokenForKey = (key: string): Option.Option<InputToken> => {
   return Option.none();
 };
 
-/**
- * What SHIFT and ALPHA make each key do: the legends printed on the fx-991ES
- * Plus body (`models/fx991es.ts`). A value the session does not handle (the
- * app's menus, or a printed-only legend) only clears the latch.
- */
 export const SHIFT_KEYS: Readonly<Record<string, string>> = {
   CALC: "SOLVE",
   "∫": "d/dx",
@@ -1162,10 +1139,6 @@ export const ALPHA_KEYS: Readonly<Record<string, string>> = {
   ".": "RanInt",
   e10: "e",
 };
-
-/* ------------------------------------------------------------------ */
-/* Prompt handling                                                     */
-/* ------------------------------------------------------------------ */
 
 const promptLabel = (prompt: PromptState): string =>
   prompt.names[prompt.index] ?? prompt.solveVariable;
@@ -1336,10 +1309,6 @@ const pressPrompt = (
   }
   return Effect.succeed(state);
 };
-
-/* ------------------------------------------------------------------ */
-/* The main press                                                      */
-/* ------------------------------------------------------------------ */
 
 const shiftOrAlpha = (state: CalculatorState, key: string): string => {
   if (state.hyp) {
@@ -1650,7 +1619,7 @@ export const press = (
   if (key === "ENG" && state.mode === "CMPLX") {
     return Effect.succeed(insertMain(patch(state, resetLatches), "i") ?? state);
   }
-  // ENG shows engineering notation; SHIFT ENG (←) returns to the normal form.
+
   // TODO: step the exponent by 3 per press, as the device does.
   if (key === "ENG" || key === "ENG←") {
     return Effect.succeed(
@@ -1718,10 +1687,6 @@ const insertTokensAt = (
     showAlternate: false,
   });
 };
-
-/* ------------------------------------------------------------------ */
-/* Commands                                                            */
-/* ------------------------------------------------------------------ */
 
 export const runAction = (
   state: CalculatorState,
@@ -2051,10 +2016,6 @@ export const runAction = (
   }
   return Effect.succeed(state);
 };
-
-/* ------------------------------------------------------------------ */
-/* Display                                                             */
-/* ------------------------------------------------------------------ */
 
 export interface DisplayState {
   readonly expression: string;

@@ -1,13 +1,3 @@
-/**
- * Guards the ported closed-form spring: it reaches the exact target at rest, is
- * finite under non-finite physics, keeps velocity across a retarget, and the
- * over-damped branch never overshoots. Reverting `sample_spring_value` (the
- * open-gpui formulas) fails every assertion here.
- *
- * The regression it also guards: the formulas added a displacement, so two
- * finite endpoints whose difference overflows (`-1.7e308` → `1.7e308`) made
- * every answer `NaN` and the sanitiser painted the target on the first sample.
- */
 import { describe, expect, it } from "vitest";
 import {
   atRest,
@@ -47,12 +37,6 @@ describe("sampleSpring", () => {
   });
 
   it("reads a sample the caller does not have as a standstill it can retarget", () => {
-    // The bug this guards: a workspace can save a panel's mid-flight sample and
-    // hand the value a store gave back to `retarget`, and `null` is what JSON
-    // keeps for a field it never carried. Reading `.value`/`.velocity` off the
-    // absent object threw out of the render that resumed the run; a sample that
-    // is not there is a standstill, the same answer the physics already gives
-    // an unreadable field.
     expect(retarget(null, 2)).toEqual({
       value: 0,
       velocity: 0,
@@ -65,8 +49,7 @@ describe("sampleSpring", () => {
       target: 2,
       settled: false,
     });
-    // An unreadable target keeps the value the sample rests on, and a sample
-    // whose fields a store wrote as `null` is that same standstill.
+
     expect(
       retarget(
         // @ts-expect-error — a sample a decoded config can carry.
@@ -94,8 +77,6 @@ describe("sampleSpring", () => {
   });
 
   it("reads a non-finite elapsed time as the start of the run", () => {
-    // `Math.max(NaN, 0)` is `NaN`, so a caller passing a clock it could not read
-    // used to get a `NaN` sample through every formula instead of a start frame.
     const start = sampleSpring(layoutSpring, 0, 1, 0, 0);
     expect(sampleSpring(layoutSpring, 0, 1, 0, Number.NaN)).toEqual(start);
     expect(
@@ -113,11 +94,6 @@ describe("sampleSpring", () => {
   });
 
   it("travels between two readable endpoints whose difference it cannot hold", () => {
-    // The bug this guards: `from - target` is `-Infinity` for two finite
-    // endpoints, so every formula answered `NaN` and the sanitiser replaced the
-    // whole journey with the target — a surface that snapped to its resting
-    // frame in the first sample. The response is linear, so the sampler reads
-    // it against a scaled run instead, which is also the oracle here.
     const from = -1.7e308;
     const target = 1.7e308;
     const middle = sampleSpring(layoutSpring, from, target, 0, 90);
@@ -149,12 +125,6 @@ describe("atRest", () => {
   });
 });
 
-/**
- * `SpringPhysics` is structural, so a caller may hand the sampler a physics it
- * cannot read. The samplers repair what they are handed — the way
- * `sampleInertia` repairs an `Inertia` — so a hand-built spring travels,
- * settles and lands on its target instead of jumping there or never resting.
- */
 describe("a spring built by hand", () => {
   const handBuilt = (overrides: Partial<SpringPhysics>): SpringPhysics => ({
     mass: overrides.mass ?? layoutSpring.mass,
@@ -165,9 +135,6 @@ describe("a spring built by hand", () => {
   });
 
   it("settles a run whose rest threshold cannot be read", () => {
-    // `Math.abs(value - target) <= NaN` is false, so the run converged on the
-    // target and never reported itself at rest: a driver waiting for the
-    // spring to settle sampled it for the life of the tree.
     const unreadable = handBuilt({ restDelta: Number.NaN });
     const done = sampleSpring(unreadable, 0, 1, 0, 2000);
 
@@ -177,9 +144,6 @@ describe("a spring built by hand", () => {
   });
 
   it("travels to the target when a physics field cannot be read", () => {
-    // A `NaN` damping or stiffness made every formula answer `NaN`, and the
-    // sanitiser turned that into the target: the surface jumped to its resting
-    // frame instead of moving there.
     [
       handBuilt({ mass: Number.NaN }),
       handBuilt({ stiffness: Number.NaN }),
@@ -202,9 +166,6 @@ describe("a spring built by hand", () => {
   });
 
   it("reads a declaration that carries no physics as the house spring", () => {
-    // `SpringPhysicsParams` is all-optional and `Transition` is structural, so a
-    // spring decoded from storage can arrive with no physics object at all.
-    // Reading `.mass` off nothing threw a `TypeError` out of the frame loop.
     // @ts-expect-error — a physics a store wrote as `null`.
     expect(springPhysics(null)).toEqual(springPhysics());
     // @ts-expect-error — the same absent physics reaching the rest rule.

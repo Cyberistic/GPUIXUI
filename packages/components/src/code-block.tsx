@@ -1,26 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * CodeBlock: source, terminal output or a log, highlighted by `@tanstack/highlight`.
- *
- * `@tanstack/highlight` is a pure tokenizer — no DOM, no HTML — so the block
- * feeds it a source and a language id, maps each token class to the token
- * package's syntax role and paints **one `<text>` run per token**, the only
- * coloured-text primitive the runtime has. There is no `code` host behind
- * this: the block owns the highlighting, the line numbers and the horizontal
- * scroll, because the runtime paints text runs, not markup.
- *
- * The block arrives with the house entrance — a fade and a 4 px rise, the same
- * seam every overlay uses — because it is a block a reader meets on arrival. A
- * caller that would rather it simply be there passes `level="none"`, and
- * `MotionProvider preference="reduced"` paints the resting frame at once.
- *
- * The copy action is a **press**, not a clipboard write: `@gpuix/native@0.11.0`
- * publishes no clipboard API (measured; `docs/gpuix-capabilities.md`), so
- * `onCopy` owns the path — usually writing into the read-only field the platform
- * lets a reader copy from — and the block only acknowledges the press through
- * the shared `CopyButton` action.
- */
-
 import type { Props } from "@gpuix/react";
 import {
   mergeStyles,
@@ -50,86 +28,57 @@ import {
 } from "./code-block/logic.js";
 import { surfaceLevelOf, type SurfaceLevel } from "./motion.js";
 
-/** The block's resting appearance: a page-filled card with a field's edge. */
 const CODE_BLOCK_ROOT =
   "flex flex-col overflow-hidden rounded-lg border border-input bg-background";
-/** The header row: the title on the start edge, the language and action on the end. */
+
 const CODE_BLOCK_HEADER =
   "flex flex-row items-center justify-between gap-2 px-3 py-1.5";
-/** Header chrome: the file name and the language label share one small mono role. */
+
 const CODE_BLOCK_LABEL = "text-xs font-mono text-muted-foreground";
-/** The body's padding; the runs paint inside it. */
+
 const CODE_BLOCK_BODY = "px-3 py-2";
-/** The placeholder an empty source paints instead of a bare surface. */
+
 const CODE_BLOCK_EMPTY = "text-sm font-mono text-muted-foreground";
-/** The hairline under the header. The runtime has no `border-b` utility. */
+
 const CODE_BLOCK_RULE = "h-px bg-border";
 
-/** How far the block rises as it arrives, in pixels. */
 const CODE_BLOCK_RISE = 4;
 
-/** A monospace digit's advance as a share of the code type size. */
 const MONO_DIGIT = 0.6;
 
-/** What a code block paints at one frame. */
 export interface CodeBlockState {
-  /** Whether the source has anything to paint. */
   readonly hasCode: boolean;
   readonly reducedMotion: boolean;
 }
 
-/** {@link CodeBlock} props. */
 export interface CodeBlockProps extends Omit<Props, "children" | "style"> {
-  /** The source to show. Tokenized into runs and split into lines here. */
   readonly code: string;
-  /** The header's title. Defaults to `path`; a block with neither paints no title. */
+
   readonly title?: string;
-  /** The file a snippet came from: the fallback title, and its language's hint. */
+
   readonly path?: string;
-  /**
-   * The language alias (`"tsx"`, `"rust"`, `"bash"`). Defaults to the path's
-   * extension when the tokenizer knows it; anything else paints plain text.
-   */
+
   readonly language?: string;
-  /** Number every row from 1 in a gutter the block paints. Default `false`. */
+
   readonly lineNumbers?: boolean;
-  /**
-   * Cap the block's height in pixels, scrolling the rows vertically. Omit it and
-   * the block paints every line; a long file then wants `ScrollFade` around it.
-   */
+
   readonly height?: number;
-  /**
-   * The entrance's motion level, or `"none"` to paint at rest. Default
-   * `"normal"` (200 ms). Read through `surfaceLevelOf`, so a level an application
-   * restored from storage can be decoded with the same reader.
-   */
+
   readonly level?: SurfaceLevel;
-  /** What an empty source paints. Default `"No code"`. */
+
   readonly emptyLabel?: string;
-  /** The copy action's name. Default `"Copy"`. */
+
   readonly copyLabel?: string;
-  /** The name the action carries right after a press. Default `"Copied"`. */
+
   readonly copiedLabel?: string;
-  /**
-   * Copy the source. The runtime has no clipboard API, so the caller owns the
-   * write; omit the prop and the block paints no copy action at all.
-   */
+
   readonly onCopy?: (code: string) => void;
-  /** A Tailwind class string for the card, joined after the recipe so it wins. */
+
   readonly className?: string;
-  /** A style for the card, or a function of the block's state. */
+
   readonly style?: StateStyle<CodeBlockState>;
 }
 
-/**
- * A syntax-highlighted code block with a header, an optional gutter and a copy
- * action.
- *
- * The block is one part: a surface, a header and a column of text-run rows. It
- * publishes a `group` named by its title (or "Code") and described by its line
- * count, because the runs are presentational — a reader cannot read the code
- * itself, only how much of it there is.
- */
 export const CodeBlock = ({
   code,
   title,
@@ -173,7 +122,6 @@ export const CodeBlock = ({
     Option.isSome(header.language) ||
     onCopy !== undefined;
 
-  // The palette and the type scale the runs paint in, and the rows themselves.
   const syntax = syntaxColors(theme);
   const metrics = textStyle(theme, "codeBlock");
   const lines = codeLines(
@@ -335,7 +283,6 @@ export const CodeBlock = ({
   );
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 600). */
 export const codeBlockMeta = {
   name: "Code block",
   tier: 5,

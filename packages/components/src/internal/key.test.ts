@@ -1,15 +1,3 @@
-/**
- * Key predicates. The bugs these guard: `isActivation` accepted only `"enter"`
- * because `"space"` looked like the DOM's `" "`, so Space never activated a
- * focused control; it accepted a **repeat** event, so holding Enter ran the
- * focused menu row's action again on every repeat; and it took no **phase**, so
- * Space activated on the press — one keystroke did two things, and the press
- * could not be swallowed to stop the container behind the control scrolling
- * while the release was still to come. Every predicate is asserted against a
- * neighbouring key, so a typo in any key name fails here instead of in a
- * component.
- */
-
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
 import type { EventPayload, KeyEvent } from "@gpuix/react";
@@ -54,7 +42,7 @@ describe("key predicates", () => {
   it("does not activate on a repeat while the key is held", () => {
     expect(isActivation(repeated("enter"), "down")).toBe(false);
     expect(isActivation(repeated("space"), "up")).toBe(false);
-    // A first press of the same key still activates.
+
     expect(isActivation(keyEvent("enter"), "down")).toBe(true);
   });
 

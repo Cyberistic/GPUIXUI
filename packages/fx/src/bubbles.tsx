@@ -1,29 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Bubbles: a decorative field of bubbles rising through a clipped box.
- *
- * The runtime has no `transform` (upstream issue #102) and no 2D canvas, so a
- * bubble is an absolutely positioned circle whose `top` — and a few pixels of
- * `left` sway — the runtime tweens, while its fade is the one paint value the
- * runtime animates natively. The layout is a pure function of the measured box
- * and one seed (`bubbles/logic.ts`), so the same seed paints the same field on
- * every mount.
- *
- * The runtime tweens a target once, so a rise is a **lap**: the bubble starts
- * with its top edge at the box's bottom and ends with its bottom edge above the
- * box; when that tween reports `onMotionComplete` the element is re-keyed, which
- * puts a fresh bubble back at the bottom. Both ends are off-stage, so the restart
- * has no frame a reader can see. Each bubble runs its own time and waits its own
- * share first, so the field never rises in unison. `@gpuixui/motion` owns the
- * timing policy through `internal/presence.tsx`, and `MotionProvider
- * preference="reduced"` paints the field at its seeded resting places instead of
- * deleting it.
- *
- * The field is decoration: it publishes no accessibility node and takes no
- * pointer input, so the content it sits behind owns the name and the presses. It
- * also measures itself, so the caller must bound it.
- */
-
 import type { EventPayload, MotionProps, Props } from "@gpuix/react";
 import {
   mergeStyles,
@@ -61,37 +36,30 @@ import {
   type BubbleSpec,
 } from "./bubbles/logic.js";
 
-/** What a field draws at one frame. */
 export interface BubblesState {
-  /** The bubbles on screen; `0` before the box has been measured. */
   readonly count: number;
   readonly reducedMotion: boolean;
   readonly width: number;
   readonly height: number;
 }
 
-/** {@link Bubbles} props. */
 export interface BubblesProps extends Omit<Props, "children" | "style"> {
-  /** The bubbles to paint. Default `24`; `0` paints none and `60` is the cap. */
   readonly count?: number;
-  /** The layout seed. Default `1`; the same seed paints the same field. */
+
   readonly seed?: number;
-  /** The smallest bubble, in pixels. Default `6`. */
+
   readonly minSize?: number;
-  /** The largest bubble, in pixels. Default `28`. */
+
   readonly maxSize?: number;
-  /** The bubble colour. Default the theme's `primary` role. */
+
   readonly color?: string;
-  /**
-   * The base time for one rise, in milliseconds. Default `7_000`; every bubble
-   * runs `0.7…1.3` of it and waits up to `0.9` of that first.
-   */
+
   readonly riseMs?: number;
-  /** The entrance level. Default `"slow"` (320 ms). */
+
   readonly level?: MotionLevel;
-  /** A Tailwind class string for the box, merged last. */
+
   readonly className?: string;
-  /** A style for the box, or a function of the field. */
+
   readonly style?: StateStyle<BubblesState>;
 }
 
@@ -103,13 +71,6 @@ interface BubbleLapProps {
   readonly box: BubbleBox;
 }
 
-/**
- * One bubble: born below the box, rising out of the top, then another lap.
- *
- * The root element is keyed by the lap so a completed rise mounts a fresh
- * element at the bottom; the component's own state survives that remount, which
- * is what lets the next lap start without a caller-driven timer.
- */
 const BubbleLap = ({ spec, ink, radius, still, box }: BubbleLapProps) => {
   const [lap, setLap] = useState(0);
   const journey = bubbleJourney(spec, box);
@@ -148,20 +109,13 @@ const BubbleLap = ({ spec, ink, radius, still, box }: BubbleLapProps) => {
         borderColor: ink,
         backgroundColor: ink,
         opacity: still ? spec.peak : 0,
-        // A bubble is decoration too: a press lands on what is behind the field.
+
         pointerEvents: "none",
       }}
     />
   );
 };
 
-/**
- * A bounded box of rising bubbles.
- *
- * Give it a height — directly or through a sized flex parent — because the field
- * positions itself from its own measured box and paints nothing before the first
- * layout.
- */
 export const Bubbles = ({
   count,
   seed,
@@ -197,8 +151,7 @@ export const Bubbles = ({
   );
   const ink = color ?? theme.colors.primary;
   const still = preference === "reduced";
-  // The box the field is laid out in. Reporting the same size again must not
-  // churn the tree; a new size re-draws the field from the same seed.
+
   const [box, setBox] = useState<Option.Option<BubbleBox>>(Option.none());
 
   const noteBox = (event: EventPayload): void => {
@@ -250,7 +203,7 @@ export const Bubbles = ({
         mergeStyles(recipeStyle(cn(className), theme), {
           position: "relative",
           overflow: "hidden",
-          // Decoration: the content in front of the field keeps every press.
+
           pointerEvents: "none",
         }),
         resolveStyle(style, state),
@@ -270,7 +223,6 @@ export const Bubbles = ({
   );
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 600). */
 export const bubblesMeta = {
   name: "Bubbles",
   tier: 5,

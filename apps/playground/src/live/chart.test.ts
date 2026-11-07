@@ -1,12 +1,3 @@
-/**
- * The `chart-raster` fixture, held to the arithmetic the probe reads its frame
- * with.
- *
- * The probe asserts exact bytes in a capture, so every claim it makes about
- * *where* a colour sits has to be true of the buffer first: a bar that overlaps
- * its neighbour, a margin with a colour in it, or a point converted as if the
- * capture were 1× would let the probe pass while measuring the wrong thing.
- */
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import { hexOf, type Rgb } from "./content.js";
@@ -32,7 +23,6 @@ import {
   pointIn,
 } from "./chart.js";
 
-/** How many pixels of `plot` carry exactly `colour`, alpha included. */
 const countColour = (plot: Uint8Array, colour: Rgb): number =>
   Arr.reduce(
     Arr.makeBy(PLOT.width * PLOT.height, (at) => at),
@@ -46,7 +36,6 @@ const countColour = (plot: Uint8Array, colour: Rgb): number =>
         : total,
   );
 
-/** The colour of one buffer pixel, as the probe would sample it. */
 const pixelAt = (
   plot: Uint8Array,
   pixel: { readonly x: number; readonly y: number },
@@ -88,8 +77,6 @@ describe("the chart-raster fixture", () => {
   });
 
   it("shares no colour between the first frame and its replacement", () => {
-    // The probe asserts the first buffer's colours are absent after the update;
-    // one shared colour would let a stale frame pass that check.
     const first = Arr.map(SERIES, hexOf);
     const second = Arr.map(REPLACEMENT, hexOf);
     expect(Arr.filter(first, (colour) => Arr.contains(second, colour))).toEqual(
@@ -123,8 +110,7 @@ describe("the chart-raster fixture", () => {
     expect(pixelAt(over, ALPHA_POINTS.opaque)).toBe(
       `rgba(${ALPHA_OVER.r}, ${ALPHA_OVER.g}, ${ALPHA_OVER.b}, 255)`,
     );
-    // The base stops where the translucent over-mark continues: the sample
-    // over the card would otherwise be a second read of the red mark.
+
     expect(pixelAt(under, ALPHA_POINTS.overBacking)).toBe("rgba(0, 0, 0, 0)");
     expect(ALPHA_POINTS.overBase.x).toBeGreaterThanOrEqual(
       alphaBands.base.left,
@@ -149,11 +135,10 @@ describe("the chart-raster fixture", () => {
       g: 127,
       b: 127,
     });
-    // Both ends are the operands themselves, not a mixture.
+
     expect(compositeOver(ALPHA_OVER, ALPHA_BASE, 255)).toEqual(ALPHA_OVER);
     expect(compositeOver(ALPHA_OVER, ALPHA_BASE, 0)).toEqual(ALPHA_BASE);
-    // The prediction is not symmetric: a probe that swapped the operands would
-    // read a different colour.
+
     expect(compositeOver(ALPHA_OVER, ALPHA_BASE, ALPHA_SHARE)).not.toEqual(
       compositeOver(ALPHA_BASE, ALPHA_OVER, ALPHA_SHARE),
     );
@@ -166,8 +151,7 @@ describe("the chart-raster fixture", () => {
       x: 219,
       y: 129,
     });
-    // A capture is device-scaled, so the same buffer pixel moves with the box:
-    // a doubled element halves the fraction of the box it sits in.
+
     expect(
       pointIn({ ...box, width: 240, height: 160 }, { x: 0, y: 0 }),
     ).toEqual({ x: 102, y: 52 });

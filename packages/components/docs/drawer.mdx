@@ -92,47 +92,6 @@ scrolls a 30-row body and holds the control's box).
 | `DrawerDescription` | muted copy | text props, `className?` |
 | `DrawerFooter` | right-aligned actions | `children`, `className?` |
 
-## Notes
-- **Measured in a window**: the playground's `drawer-lifecycle` (34 checks,
-  0.11.0) mounts the shipped Drawer and reads the surface flush to the edge it
-  names — `500,0,400,520` for a right `md` column, `340,0,560,520` for a right
-  `lg`, `0,0,400,520` for a left `md`, and `0,100,900,420` for a bottom `lg` —
-  over a veil that measurably dims the page it leaves uncovered. A press is
-  hit-tested: one inside the surface keeps the drawer open, while the veil's
-  dismisses it, reports the close and returns the focus to the opener. The Tab
-  trap is the window's own traversal, so the opener is never a stop while the
-  drawer is open, and `dismissible={false}` removes Escape and the veil while
-  the close control still works.
-- **Slides its own span** from the named edge — a numeric `left`/`top` offset,
-  not a `transform` — and fills the window's other axis. It is still not a
-  full-width column on a vertical edge.
-- No swipe-to-dismiss, no snap points: `0.11.0` has no drag host, so the grabber
-  cannot be dragged and the surface cannot follow the pointer.
-- The veil is the page's own background at 55% (a wash). **The 6px blur shadcn's
-  veil carries is drawing-only**: `StyleDesc` has no `filter`/`backdrop-filter`,
-  so the native veil cannot blur what is behind it.
-- No `aria-modal` or `aria-labelledby` in 0.11.0: the surface is named by its own
-  `label`, and the Tab traversal is the containment a reader gets.
-- Not portalled; painted at window coordinates.
-- Sizes are layout constants, not tokens.
-- A `side` restored from persisted state that the union does not name opens the
-  house `right` edge, and travels in from it; the box, the layout and the entry
-  frame read one edge, so a panel never opens from an edge it is not on.
-- A `size` restored from persisted state that the union does not name paints the
-  house `md` box; the table lookup never hands the renderer an `undefined`, so a
-  renamed or dropped size cannot shrink the panel to its content.
-- A dismissed drawer stays painted for its exit and takes no presses; the two
-  close actions the component paints — the top-right control and a
-  `DrawerClose` in the body — leave the Tab order for that window, while a
-  control you compose yourself keeps its stop until the runtime publishes an
-  inherited `inert`.
-
-## Related
-
-- **Dialog** — the centred modal.
-- **Confirmation dialog** — a destructive decision.
-- **Popover** — a non-modal anchored panel.
-
 ## A Mac sheet
 
 On macOS a sheet drops from under the window's toolbar. Give a top sheet the

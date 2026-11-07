@@ -1,18 +1,3 @@
-/**
- * The selection page's API tables, held to the props the two boxes declare.
- *
- * The bug this guards: `docs/table-selection.mdx` documented the two boxes in
- * one merged table, so a consumer could not tell which component takes
- * `indeterminate` (the header's partial set), which requires a `label` (the
- * row's, for the record it names) or which one the page was describing at all —
- * neither `TableSelectionHeader` nor `TableSelectionCell` appeared in its API.
- * The page now carries one table per box, and this suite fails by name in both
- * directions: a declared prop with no row, and a row neither type declares.
- *
- * `node:fs` is test-only, the shape `sort/docs.test.ts` uses: this checks the
- * repository's Markdown from a plain vitest suite.
- */
-
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
@@ -23,13 +8,11 @@ const read = (path: string): string =>
 const page = read("../../docs/table-selection.mdx");
 const source = read("./column.tsx");
 
-/** The two boxes the page must document, and the type behind each table. */
 const sections = [
   { heading: "`TableSelectionHeader`", type: "TableSelectionHeaderProps" },
   { heading: "`TableSelectionCell`", type: "TableSelectionCellProps" },
 ] as const;
 
-/** The text under one `###` heading, up to the next heading at its level. */
 const sectionOf = (site: string, heading: string): string => {
   const start = site.indexOf(`### ${heading}\n`);
   if (start === -1) throw new Error(`no ${heading} section`);
@@ -38,7 +21,6 @@ const sectionOf = (site: string, heading: string): string => {
   return next === -1 ? body : body.slice(0, next);
 };
 
-/** The fields one props interface declares, in source order. */
 const declaredProps = (type: string): ReadonlyArray<string> => {
   const body = new RegExp(
     `export interface ${type} \\{([\\s\\S]*?)\\n\\}`,
@@ -49,13 +31,11 @@ const declaredProps = (type: string): ReadonlyArray<string> => {
   );
 };
 
-/** The props one section's table documents, in page order. */
 const documentedProps = (body: string): ReadonlyArray<string> =>
   [...body.matchAll(/^\| `([^`]+)` \|/gm)].flatMap((match) =>
     match[1] === undefined ? [] : [match[1]],
   );
 
-/** Every declared prop a section leaves without a row, named by section. */
 const undocumented = (
   section: (typeof sections)[number],
 ): ReadonlyArray<string> => {
@@ -69,7 +49,6 @@ const undocumented = (
   );
 };
 
-/** Every row naming a prop the section does not declare. */
 const invented = (
   section: (typeof sections)[number],
 ): ReadonlyArray<string> => {

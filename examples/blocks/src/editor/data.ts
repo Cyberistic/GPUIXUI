@@ -1,8 +1,3 @@
-/**
- * The editor's files: a small tree and the code each file opens. Short on
- * purpose — the block is the layout, the syntax paint and the open-file state,
- * not a project.
- */
 export interface CodeFile {
   readonly name: string;
   readonly language: string;

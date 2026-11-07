@@ -1,11 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Sheet example: one control per window edge.
- *
- * Uncontrolled: each trigger owns its own open state, which is what a sheet in
- * a toolbar does. A caller coordinating a workflow passes `open`/`onOpenChange`.
- */
-
 import {
   Sheet,
   SheetClose,
@@ -17,7 +10,6 @@ import {
   SheetTrigger,
 } from "../src/sheet.js";
 
-/** A sheet from the right, the default edge. */
 export const SheetExample = () => (
   <Sheet>
     <SheetTrigger>Filters</SheetTrigger>
@@ -33,7 +25,6 @@ export const SheetExample = () => (
   </Sheet>
 );
 
-/** The same surface from the top edge. */
 export const SheetTopExample = () => (
   <Sheet>
     <SheetTrigger>Command bar</SheetTrigger>

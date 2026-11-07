@@ -1,10 +1,3 @@
-/**
- * Browser preview for the Highlight text page.
- *
- * The native phrase sweeps a marker wash across every match of a query; the
- * preview splits the phrase on the query and paints each match in the wash.
- */
-
 import { useState } from "react";
 
 const text = "Native by default, fast by design";

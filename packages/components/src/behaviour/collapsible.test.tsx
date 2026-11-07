@@ -1,13 +1,3 @@
-/**
- * Collapsible behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: a closed section that left its content mounted for good
- * (and so kept running); a body that vanished on close instead of running its
- * collapse; `aria-expanded` that disagreed with the visible body; a trigger that
- * only answered the mouse, not Enter/Space; and a controlled section that opened
- * itself when the consumer kept `open={false}`.
- */
-
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
 import { decorativeFloor, contrastRatio, platformTheme } from "@gpuixui/tokens";
@@ -26,7 +16,6 @@ import {
   CollapsibleTrigger,
 } from "../collapsible.js";
 
-/** Advanced options, closed by default. */
 const Advanced = ({
   open,
   onOpenChange,
@@ -69,7 +58,6 @@ describe("Collapsible", () => {
 
     clickCentreOf(section, "trigger");
 
-    // The body is still painted for its collapse tween, then leaves.
     expect(section.renderer.findByTestId("content")).toBeDefined();
     await waitFor(() =>
       expect(section.renderer.findByTestId("content")).toBeUndefined(),
@@ -134,9 +122,6 @@ describe("Collapsible", () => {
   });
 
   it("paints a trigger press the hover it replaces can show", () => {
-    // The bug: the press repainted the raw `active` role, 1.037:1 from the
-    // `hover` wash the trigger is already wearing in Light · macOS — under the
-    // 1.05:1 floor — so pressing a section header looked like hovering it.
     const macOSLight = platformTheme(lightTheme, "darwin");
     const section = renderComponent(<Advanced />, macOSLight);
 

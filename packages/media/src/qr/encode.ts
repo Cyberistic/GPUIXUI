@@ -1,80 +1,37 @@
-/**
- * The QR encoder `QrCode` ships — numeric, alphanumeric and byte mode, versions
- * 1–10, every error correction level, Reed–Solomon over GF(256), the eight data
- * masks and the standard penalty search.
- *
- * A QR symbol is arithmetic, not a runtime capability: the playground's
- * `qr-matrix` probe settled that both paint routes (a grid of `div`s and one
- * tinted `<svg>` mask) render the module grid in a window, so what was missing
- * was an encoder. This module is it, kept out of the component so a caller can
- * draw the same symbol on paper, in a cell or in a test.
- *
- * The bit walks and the grid writes are imperative on purpose — the enforcer's
- * `imperative-loops` rule is a deliberate exception here. A byte buffer, a
- * Reed–Solomon remainder and the zigzag that fills the symbol's data area are
- * sequential state machines; expressing them as `reduce` over indices adds
- * aliasing without removing a single mutation. The same call is recorded in
- * `@gpuixui/editor`'s diff and `@gpuixui/testing`'s pixel readers. Everything
- * exported is pure, and every read is bounds-checked.
- */
-
 import { Match } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import * as Str from "effect/String";
 
-/** The four error correction levels, quietest first. */
 export const QR_LEVELS = ["L", "M", "Q", "H"] as const;
 
-/** A QR error correction level. */
 export const QrLevel = Schema.Literals(QR_LEVELS);
-/** A QR error correction level. */
+
 export type QrLevel = typeof QrLevel.Type;
 
 const isQrLevel = Schema.is(QrLevel);
 
-/**
- * The level a stored preference names, or the default.
- *
- * A level an application reads back from persisted state arrives as an unknown
- * string; every reader of the level would otherwise index the block table with
- * `undefined` and throw out of the render.
- */
 export const levelOf = (value: unknown): QrLevel =>
   isQrLevel(value) ? value : "M";
 
-/** The highest version this encoder prints. */
 export const QR_MAX_VERSION = 10;
 
-/** Every version this encoder prints. */
 export const QrVersion = Schema.Literals([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
-/** Every version this encoder prints. */
+
 export type QrVersion = typeof QrVersion.Type;
 
-/** A version-1 symbol's side, in modules. */
 const BASE_MODULES = 21;
 
-/** The quiet zone a scanner needs: four light modules on every side. */
 export const QR_QUIET_ZONE = 4;
 
-/** One block group: how many blocks, and the data codewords each holds. */
 interface EcSpec {
   readonly ec: number;
   readonly groups: ReadonlyArray<readonly [number, number]>;
 }
 
-/** The block table's shape: one spec per version and level. */
 type EcTable = Readonly<Record<QrVersion, EcSpec>>;
 
-/**
- * ISO/IEC 18004's block table, versions 1–10, by level.
- *
- * Each entry is the level's spec for its version: the EC codewords per block
- * and the groups of `[blocks, data codewords each]`. A version whose data
- * codewords do not divide evenly carries the remainder in a second group, which
- * is why a symbol's blocks are not all the same size.
- */
 const EC_BLOCKS: Readonly<Record<QrLevel, EcTable>> = {
   L: {
     1: { ec: 7, groups: [[1, 19]] },
@@ -210,7 +167,6 @@ const EC_BLOCKS: Readonly<Record<QrLevel, EcTable>> = {
   },
 };
 
-/** The alignment pattern centres each version carries; version 1 has none. */
 const ALIGNMENT_CENTRES: Readonly<Record<QrVersion, ReadonlyArray<number>>> = {
   1: [],
   2: [6, 18],
@@ -224,10 +180,8 @@ const ALIGNMENT_CENTRES: Readonly<Record<QrVersion, ReadonlyArray<number>>> = {
   10: [6, 28, 50],
 };
 
-/** Mask 0, the one a symbol falls back to when a caller names no valid mask. */
 const MASK_ZERO = (row: number, col: number): boolean => (row + col) % 2 === 0;
 
-/** The mask that painted a module, ordered as the format field numbers them. */
 const MASKS: ReadonlyArray<(row: number, col: number) => boolean> = [
   MASK_ZERO,
   (row) => row % 2 === 0,
@@ -239,7 +193,6 @@ const MASKS: ReadonlyArray<(row: number, col: number) => boolean> = [
   (row, col) => (((row + col) % 2) + ((row * col) % 3)) % 2 === 0,
 ];
 
-/** The bits the format field carries per level (ISO/IEC 18004 table 12). */
 const LEVEL_BITS: Readonly<Record<QrLevel, number>> = {
   L: 1,
   M: 0,
@@ -247,19 +200,16 @@ const LEVEL_BITS: Readonly<Record<QrLevel, number>> = {
   H: 2,
 };
 
-/** Every version this encoder prints, in order. */
 export const QR_VERSIONS: ReadonlyArray<QrVersion> = [
   1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
 ];
 
-/** A version's side in modules, before the quiet zone. */
 export const qrModules = (version: QrVersion): number =>
   BASE_MODULES + (version - 1) * 4;
 
 const spec = (version: QrVersion, level: QrLevel): EcSpec =>
   EC_BLOCKS[level][version];
 
-/** The data codewords one version/level holds, EC excluded. */
 export const qrDataCodewords = (version: QrVersion, level: QrLevel): number =>
   Arr.reduce(
     spec(version, level).groups,
@@ -267,35 +217,26 @@ export const qrDataCodewords = (version: QrVersion, level: QrLevel): number =>
     (total, [blocks, data]) => total + blocks * data,
   );
 
-/** The modes a value is carried in, in the order {@link qrModeOf} tests them. */
 export const QR_MODES = ["numeric", "alphanumeric", "byte"] as const;
 
-/** The encoding mode a value is carried in. */
 export const QrMode = Schema.Literals(QR_MODES);
 
 export type QrMode = typeof QrMode.Type;
 
-/**
- * The 45 characters alphanumeric mode carries (ISO/IEC 18004 table 5), in the
- * order that gives each its value: a pair is `45 * first + second`.
- */
 const ALPHANUMERIC = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:";
 
-/** The mode indicator each mode declares. */
 const MODE_INDICATORS: Readonly<Record<QrMode, number>> = {
   numeric: 0b0001,
   alphanumeric: 0b0010,
   byte: 0b0100,
 };
 
-/** The bits a mode's character count takes: versions 1–9, then 10–26. */
 const COUNT_BITS: Readonly<Record<QrMode, readonly [number, number]>> = {
   numeric: [10, 12],
   alphanumeric: [9, 11],
   byte: [8, 16],
 };
 
-/** The bits `mode`'s character count takes at `version`. */
 const countBits = (mode: QrMode, version: QrVersion): number =>
   version <= 9 ? COUNT_BITS[mode][0] : COUNT_BITS[mode][1];
 
@@ -305,22 +246,12 @@ const characters = (text: string): ReadonlyArray<string> =>
 const isDigit = (character: string): boolean =>
   character >= "0" && character <= "9";
 
-/** The value alphanumeric mode gives a character, when the table carries it. */
 const alphanumericValue = (character: string): Option.Option<number> =>
   Str.indexOf(character)(ALPHANUMERIC);
 
 const isAlphanumeric = (character: string): boolean =>
   Option.isSome(alphanumericValue(character));
 
-/**
- * The mode a value is carried in: numeric when every character is a digit,
- * alphanumeric when every one is in the table, byte mode otherwise.
- *
- * The whole value takes one mode. A value that mixes digits and other
- * characters is carried in byte mode rather than split into segments, so the
- * symbol is always valid though not always the smallest one the standard could
- * paint.
- */
 export const qrModeOf = (value: unknown): QrMode => {
   const text = qrTextOf(value);
   if (Str.isEmpty(text)) return "byte";
@@ -330,21 +261,17 @@ export const qrModeOf = (value: unknown): QrMode => {
   return "byte";
 };
 
-/** The units a mode counts: UTF-8 bytes in byte mode, characters otherwise. */
 const payloadLength = (text: string, mode: QrMode): number =>
   mode === "byte" ? utf8(text).length : text.length;
 
-/** A numeric payload's data bits: three digits to ten, then seven or four. */
 const numericBits = (length: number): number => {
   const rest = length % 3;
   return Math.floor(length / 3) * 10 + (rest === 2 ? 7 : rest === 1 ? 4 : 0);
 };
 
-/** An alphanumeric payload's data bits: two characters to eleven, then six. */
 const alphanumericBits = (length: number): number =>
   Math.floor(length / 2) * 11 + (length % 2 === 1 ? 6 : 0);
 
-/** The data bits a payload takes, before its mode and count indicators. */
 const payloadBits = (text: string, mode: QrMode): number =>
   Match.value(mode).pipe(
     Match.when("numeric", () => numericBits(text.length)),
@@ -353,17 +280,9 @@ const payloadBits = (text: string, mode: QrMode): number =>
     Match.exhaustive,
   );
 
-/** The bits a value takes in `mode` at `version`: indicator, count, payload. */
 const segmentBits = (text: string, mode: QrMode, version: QrVersion): number =>
   4 + countBits(mode, version) + payloadBits(text, mode);
 
-/**
- * The most units one version/level holds at `mode`.
- *
- * The inverse of {@link segmentBits}: the units whose indicator, count and
- * payload fit the version's data codewords, which is the capacity an overflow
- * reports and the boundary a version search compares against.
- */
 export const qrModeCapacity = (
   mode: QrMode,
   version: QrVersion,
@@ -387,11 +306,9 @@ export const qrModeCapacity = (
   );
 };
 
-/** The most UTF-8 bytes one version/level holds in byte mode. */
 export const qrByteCapacity = (version: QrVersion, level: QrLevel): number =>
   qrModeCapacity("byte", version, level);
 
-/** The smallest version that holds a value in `mode`, if any. */
 const versionForMode = (
   text: string,
   mode: QrMode,
@@ -403,7 +320,6 @@ const versionForMode = (
       segmentBits(text, mode, version) <= qrDataCodewords(version, level) * 8,
   );
 
-/** The smallest version whose byte capacity holds `bytes`, if any. */
 export const qrVersionFor = (
   bytes: number,
   level: QrLevel,
@@ -416,18 +332,9 @@ export const qrVersionFor = (
 const utf8 = (value: string): ReadonlyArray<number> =>
   Arr.fromIterable(new TextEncoder().encode(value));
 
-/**
- * The text a value carries.
- *
- * A value restored from storage may not be text at all, and `TextEncoder`
- * stringifies whatever it is handed — so `null` would encode the four bytes of
- * `"null"` and a scanner would read back a payload the record never carried.
- * Anything that is not a string carries nothing.
- */
 const qrTextOf = (value: unknown): string =>
   typeof value === "string" ? value : "";
 
-/** A symbol that was encoded. */
 export class QrSymbol extends Schema.Class<QrSymbol>("QrSymbol")({
   _tag: Schema.tag("symbol"),
   version: QrVersion,
@@ -435,43 +342,32 @@ export class QrSymbol extends Schema.Class<QrSymbol>("QrSymbol")({
   mask: Schema.Int,
   matrix: Schema.Array(Schema.Array(Schema.Boolean)),
 }) {
-  /** The symbol's side in modules, without the quiet zone. */
   get modules(): number {
     return qrModules(this.version);
   }
 
-  /** The dark module at `row`, `col`; a cell outside the symbol is light. */
   isDark = (row: number, col: number): boolean =>
     this.matrix[row]?.[col] ?? false;
 }
 
-/** A value that does not fit the largest symbol this encoder prints. */
 export class QrOverflow extends Schema.Class<QrOverflow>("QrOverflow")({
   _tag: Schema.tag("overflow"),
   mode: QrMode,
-  /** The value's length in the mode's unit: characters, or UTF-8 bytes. */
+
   length: Schema.Int,
-  /** The most units version 10 holds at that mode and level. */
+
   capacity: Schema.Int,
   level: QrLevel,
 }) {}
 
-/** What {@link encodeQr} answers: a symbol, or the capacity it needed. */
 export const QrEncoding = Schema.Union([QrSymbol, QrOverflow]).pipe(
   Schema.toTaggedUnion("_tag"),
 );
 
-/** What {@link encodeQr} answers: a symbol, or the capacity it needed. */
 export type QrEncoding = typeof QrEncoding.Type;
 
-/* -------------------------------------------------------------------------- */
-/* Reed–Solomon over GF(256)                                                   */
-/* -------------------------------------------------------------------------- */
-
-/** Antilog table for the field's primitive polynomial, `x^8+x^4+x^3+x^2+1`. */
 const GF_EXP = new Uint8Array(512);
 
-/** Log table for the same field. */
 const GF_LOG = new Uint8Array(256);
 
 {
@@ -490,7 +386,6 @@ const gfMul = (left: number, right: number): number =>
     ? 0
     : (GF_EXP[(GF_LOG[left] ?? 0) + (GF_LOG[right] ?? 0)] ?? 0);
 
-/** The generator polynomial of `degree` EC codewords, highest power first. */
 const generator = (degree: number): ReadonlyArray<number> => {
   let polynomial: ReadonlyArray<number> = [1];
   for (let root = 0; root < degree; root += 1) {
@@ -505,12 +400,6 @@ const generator = (degree: number): ReadonlyArray<number> => {
   return polynomial;
 };
 
-/**
- * The EC codewords for one block.
- *
- * Division by the generator polynomial's remainder: a symbol's EC part is what
- * a scanner subtracts to prove the data survived the trip.
- */
 const errorCorrection = (
   data: ReadonlyArray<number>,
   degree: number,
@@ -528,15 +417,10 @@ const errorCorrection = (
   return remainder;
 };
 
-/* -------------------------------------------------------------------------- */
-/* Data codewords                                                              */
-/* -------------------------------------------------------------------------- */
-
 const appendBits = (bits: number[], value: number, length: number): void => {
   for (let at = length - 1; at >= 0; at -= 1) bits.push((value >>> at) & 1);
 };
 
-/** A numeric payload: three digits to ten bits, then seven or four. */
 const numericPayload = (bits: number[], text: string): void => {
   Arr.forEach(Arr.chunksOf(characters(text), 3), (group) => {
     appendBits(
@@ -547,7 +431,6 @@ const numericPayload = (bits: number[], text: string): void => {
   });
 };
 
-/** An alphanumeric payload: two characters to eleven bits, then six. */
 const alphanumericPayload = (bits: number[], text: string): void => {
   Arr.forEach(Arr.chunksOf(characters(text), 2), (group) => {
     const value = Arr.reduce(
@@ -560,7 +443,6 @@ const alphanumericPayload = (bits: number[], text: string): void => {
   });
 };
 
-/** The payload's bits, in the layout its mode declares. */
 const writePayload = (bits: number[], text: string, mode: QrMode): void => {
   Match.value(mode).pipe(
     Match.when("numeric", () => {
@@ -578,7 +460,6 @@ const writePayload = (bits: number[], text: string, mode: QrMode): void => {
   );
 };
 
-/** The data codewords, terminated, bit-padded and padded to `total`. */
 const dataCodewords = (
   text: string,
   mode: QrMode,
@@ -611,13 +492,11 @@ const dataCodewords = (
   return codewords;
 };
 
-/** One block's data and its EC codewords. */
 interface Block {
   readonly data: ReadonlyArray<number>;
   readonly ec: ReadonlyArray<number>;
 }
 
-/** Split the data codewords into the version/level's blocks and add their EC. */
 const blocksOf = (
   codewords: ReadonlyArray<number>,
   version: QrVersion,
@@ -636,7 +515,6 @@ const blocksOf = (
   });
 };
 
-/** The interleaved codeword stream a symbol's data area carries. */
 const interleave = (blocks: ReadonlyArray<Block>): ReadonlyArray<number> => {
   const widest = Arr.reduce(blocks, 0, (most, block) =>
     Math.max(most, block.data.length),
@@ -661,11 +539,6 @@ const interleave = (blocks: ReadonlyArray<Block>): ReadonlyArray<number> => {
   return Arr.appendAll(data, ecc);
 };
 
-/* -------------------------------------------------------------------------- */
-/* The symbol                                                                  */
-/* -------------------------------------------------------------------------- */
-
-/** A grid being drawn: the modules and the cells a data bit may not take. */
 interface Canvas {
   readonly modules: boolean[][];
   readonly reserved: boolean[][];
@@ -684,7 +557,6 @@ const put = (canvas: Canvas, row: number, col: number, dark: boolean): void => {
   taken[col] = true;
 };
 
-/** One finder pattern and the light separator ring around it. */
 const drawFinder = (canvas: Canvas, top: number, left: number): void => {
   const size = canvas.modules.length;
   for (let dy = -1; dy <= 7; dy += 1) {
@@ -705,7 +577,6 @@ const drawFinder = (canvas: Canvas, top: number, left: number): void => {
   }
 };
 
-/** One 5×5 alignment pattern: a dark centre, a light ring, a dark ring. */
 const drawAlignment = (canvas: Canvas, row: number, col: number): void => {
   for (let dy = -2; dy <= 2; dy += 1) {
     for (let dx = -2; dx <= 2; dx += 1) {
@@ -719,7 +590,6 @@ const drawAlignment = (canvas: Canvas, row: number, col: number): void => {
   }
 };
 
-/** The 15-bit format field for a level and mask, BCH(15,5) and its XOR mask. */
 export const qrFormatBits = (level: QrLevel, mask: number): number => {
   const data = (LEVEL_BITS[level] << 3) | mask;
   let remainder = data;
@@ -729,7 +599,6 @@ export const qrFormatBits = (level: QrLevel, mask: number): number => {
   return ((data << 10) | remainder) ^ 0x5412;
 };
 
-/** The 18-bit version field for versions 7 and up, BCH(18,6). */
 export const qrVersionBits = (version: number): number => {
   let remainder = version;
   for (let at = 0; at < 12; at += 1) {
@@ -740,7 +609,6 @@ export const qrVersionBits = (version: number): number => {
 
 const bitOf = (bits: number, at: number): boolean => ((bits >>> at) & 1) !== 0;
 
-/** Write both copies of the format field, and the always-dark module. */
 const drawFormat = (canvas: Canvas, level: QrLevel, mask: number): void => {
   const size = canvas.modules.length;
   const bits = qrFormatBits(level, mask);
@@ -756,7 +624,6 @@ const drawFormat = (canvas: Canvas, level: QrLevel, mask: number): void => {
   put(canvas, size - 8, 8, true);
 };
 
-/** Write both copies of the version field, for versions 7 and up. */
 const drawVersion = (canvas: Canvas, version: number): void => {
   if (version < 7) return;
   const size = canvas.modules.length;
@@ -770,7 +637,6 @@ const drawVersion = (canvas: Canvas, version: number): void => {
   }
 };
 
-/** Every function pattern of one version, with the format field reserved. */
 const functionCanvas = (version: QrVersion, level: QrLevel): Canvas => {
   const size = qrModules(version);
   const canvas = blank(size);
@@ -796,7 +662,6 @@ const functionCanvas = (version: QrVersion, level: QrLevel): Canvas => {
   return canvas;
 };
 
-/** Place the interleaved codewords in the two-module zigzag, right to left. */
 const drawCodewords = (
   canvas: Canvas,
   codewords: ReadonlyArray<number>,
@@ -823,14 +688,12 @@ const drawCodewords = (
   }
 };
 
-/** Read a grid's cell; outside it is light. */
 const cellAt = (
   grid: ReadonlyArray<ReadonlyArray<boolean>>,
   row: number,
   col: number,
 ): boolean => grid[row]?.[col] ?? false;
 
-/** The eight masks' penalty: runs, blocks, finder look-alikes and balance. */
 export const qrPenalty = (
   grid: ReadonlyArray<ReadonlyArray<boolean>>,
 ): number => {
@@ -901,13 +764,11 @@ export const qrPenalty = (
   return total;
 };
 
-/** One candidate mask and the grid it painted. */
 interface Candidate {
   readonly mask: number;
   readonly matrix: ReadonlyArray<ReadonlyArray<boolean>>;
 }
 
-/** The masked copy of a canvas, with this mask's format field written. */
 const masked = (
   canvas: Canvas,
   paint: (row: number, col: number) => boolean,
@@ -927,23 +788,12 @@ const masked = (
   );
 };
 
-/** Options for {@link encodeQr}. */
 export interface QrEncodeOptions {
-  /** The error correction level. Default `"M"`. */
   readonly level?: QrLevel;
-  /** Force one of the eight data masks instead of searching. */
+
   readonly mask?: number;
 }
 
-/**
- * Encode a string as a QR symbol.
- *
- * The value is carried in the densest mode it wholly fits — numeric for digits,
- * alphanumeric for the 45-character table, byte mode (UTF-8) otherwise — at the
- * smallest version (1–10) that holds it. A value the largest symbol cannot hold
- * is answered with a {@link QrOverflow} naming its mode, its length and that
- * mode's capacity, never truncated.
- */
 export const encodeQr = (
   value: string,
   options: QrEncodeOptions = {},
@@ -1010,41 +860,19 @@ export const encodeQr = (
   });
 };
 
-/* -------------------------------------------------------------------------- */
-/* Markup                                                                      */
-/* -------------------------------------------------------------------------- */
-
-/** Where a symbol sits in a painted square: whole modules, quiet zone included. */
 export interface QrPlacement {
-  /** The side of one module in points. */
   readonly module: number;
-  /** The quiet zone in modules. */
+
   readonly quiet: number;
-  /** The painted side in points, quiet zone included. */
+
   readonly side: number;
-  /** The quiet zone's side in modules. */
+
   readonly cells: number;
 }
 
-/**
- * The quiet zone in whole modules. A stored preference may arrive unreadable,
- * so a count that is not finite and non-negative reads as the default rather
- * than poisoning every field it is multiplied into. Zero stays zero: a caller
- * may ask for no quiet zone, but a negative count cannot mean one.
- */
 const quietZoneOf = (quiet: number): number =>
   Number.isFinite(quiet) && quiet >= 0 ? Math.floor(quiet) : QR_QUIET_ZONE;
 
-/**
- * Resolve a painted square.
- *
- * Modules are whole points so the grid stays crisp, and the square is the
- * largest whole-module grid the caller's side can hold. A side too small for
- * one point per module paints the grid at the asked side instead — a layout
- * that reserved the box keeps it, and the symbol is merely tiny. A side that
- * cannot be laid out reads as `fallback`, and so does a quiet zone that cannot
- * be read.
- */
 export const qrPlacement = (
   symbol: QrSymbol,
   side: number,
@@ -1060,7 +888,6 @@ export const qrPlacement = (
     : { module: asked / cells, quiet: zone, side: asked, cells };
 };
 
-/** The SVG source string: one path holding every dark module, in module units. */
 export const qrSvgSource = (
   symbol: QrSymbol,
   quiet: number = QR_QUIET_ZONE,

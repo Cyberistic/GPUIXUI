@@ -1,17 +1,3 @@
-/**
- * Guards the fixture `data-table-lifecycle` drives the shipped `@gpuixui/data`
- * files table with.
- *
- * The probe mounts the **example** and asserts its readout, so the risk is a
- * fixture that restates yesterday's screen: a column added, a width changed or a
- * readout segment reordered would leave the window measuring a sentence the
- * table no longer prints. Every id, width and (here) the readout's spelling is
- * therefore read from the example's own source and the component's menu, and the
- * fixture is held to them.
- *
- * `node:fs` is deliberate, as in `registry.test.ts` and `date-picker.test.ts`:
- * this is a check over the repository's own TypeScript, not a runtime path.
- */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
@@ -72,14 +58,12 @@ describe("the data-table fixture", () => {
     });
     expect(DATA_TABLE_NAME_WIDTH).toBe(DATA_TABLE_WIDTHS["name"]);
     expect(DATA_TABLE_CONTENT_WIDTH).toBe(460);
-    // Hiding a column takes exactly its width out of the content, and a resize
-    // moves it by the drag — the arithmetic the probe's readouts rest on.
+
     expect(dataTableContent(["name", "size"])).toBe(350);
     expect(dataTableContent(DATA_TABLE_COLUMNS_ORDER, 300)).toBe(500);
   });
 
   it("prints the readout the example interpolates", () => {
-    // The example's own template, in its own order, read from the source.
     const template =
       /`\$\{table\.rows\.length\} rows · \$\{selectionSize\(table\.selection\)\} selected · cols=\$\{Arr\.join\(([\s\S]*?)\)\} · w=\$\{nameWidth\} · content=\$\{columns\.contentWidth\} · \$\{sortToken\}`/.exec(
         example,
@@ -88,14 +72,13 @@ describe("the data-table fixture", () => {
     expect(example).toContain(
       'Arr.map(columns.visible, (column) => column.id),\n          ","',
     );
-    // The order the press composition produces, not only the primary field: a
-    // Shift press prints both entries (`name-asc+size-desc`) in this segment.
+
     expect(example).toContain("onSortPress={table.pressSort}");
     expect(example).toContain("order={table.sortOrder}");
     expect(DATA_TABLE_INITIAL).toBe(
       "60 rows · 0 selected · cols=name,status,size · w=260 · content=460 · unsorted",
     );
-    // Each segment moves on its own: a selection, a hide and a resize.
+
     expect(
       dataTableReadout({
         rows: 60,
@@ -135,15 +118,13 @@ describe("the data-table fixture", () => {
         expect(`${id}: ${example.includes(`"${id}"`)}`).toBe(`${id}: true`);
       },
     );
-    // The sort control and the divider are both derived from the header cell's
-    // test id, so the fixture's spelling is held to the two derivations rather
-    // than to a literal the example never writes.
+
     expect(example).toContain('testId="files-name"');
     expect(sortHeader).toContain("`${testId}-sort`");
     expect(DATA_TABLE_NAME_SORT).toBe(`${DATA_TABLE_NAME_HEADER}-sort`);
     expect(example).toContain("testId: `files-divider-${column.id}`");
     expect(DATA_TABLE_DIVIDER.endsWith("-name")).toBe(true);
-    // The menu derives its toggle and reset ids from the trigger's test id.
+
     expect(menu).toContain("`${testId}-toggle-${column.id}`");
     expect(menu).toContain("`${testId}-reset`");
     expect(dataTableColumnToggle("status")).toBe(
@@ -157,12 +138,11 @@ describe("the data-table fixture", () => {
     expect(dataTableCell(60, "name")).toBe("files-cell-file-60-name");
     expect(example).toContain("testId={`files-row-${row.id}`}");
     expect(example).toContain("testId={`files-cell-${row.id}-${column.id}`}");
-    // The sort tokens the header press produces, from the example's own
-    // `initialDirection` and the controller's toggle.
+
     expect(example).toContain('initialDirection="desc"');
     expect(DATA_TABLE_SORT_ASC).toBe("name-asc");
     expect(DATA_TABLE_SORT_DESC).toBe("name-desc");
-    // One drag past the column's own 420 bound would clamp; 40 does not.
+
     expect(DATA_TABLE_NAME_WIDTH + DATA_TABLE_DRAG).toBeLessThan(420);
   });
 
@@ -172,24 +152,17 @@ describe("the data-table fixture", () => {
     expect(probe).toContain("dataTableContent");
     expect(probe).toContain("DATA_TABLE_DIVIDER");
     expect(probe).toContain("dataTableColumnToggle");
-    // The example itself is mounted, not a copy of the composition.
+
     expect(probe).toContain('dataExamples["table"]');
   });
 
   it("waits for the order each sort press produces", () => {
-    // A press is delivered natively and its re-render commits on a later frame.
-    // The step slept a fixed 120ms between the two presses, and on a loaded box
-    // the first commit outlived it: the second press landed before it and the
-    // readout still said `name-asc` where `name-desc` was expected (measured
-    // 2026-10-24 on `5afe679d`). Each press now polls the readout for the order
-    // it produces, so a real regression still fails — on the token it settled
-    // on — while a slow frame cannot.
     expect(probe).toContain("const pressSort = (expected: string) =>");
     expect(probe).toContain("return yield* settleUntil(readout(), (text) =>");
     expect(probe).toContain("text.includes(expected)");
     expect(probe).toContain("yield* pressSort(DATA_TABLE_SORT_ASC)");
     expect(probe).toContain("yield* pressSort(DATA_TABLE_SORT_DESC)");
-    // The retracted shape: the header pressed and slept, never waited.
+
     expect(probe).not.toContain(
       "yield* ctx.host.click(DATA_TABLE_NAME_SORT);\n    yield* Effect.sleep(SETTLE);",
     );

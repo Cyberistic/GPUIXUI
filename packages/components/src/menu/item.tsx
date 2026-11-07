@@ -1,15 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Menu rows: an action, a checkbox action, a separator, a group and a label.
- *
- * Every row registers its host id with the menu so arrow keys can move real focus
- * onto it — the highlight is never a painted state without focus behind it.
- *
- * The action is held in a ref: the registry only needs `id` and `disabled`, so an
- * inline `onSelect` cannot re-register the row on every render (which would
- * reorder a menu whose rows were declared in a different order than they render).
- */
-
 import type { Props, PublicInstance } from "@gpuix/react";
 import {
   mergeStyles,
@@ -48,83 +37,44 @@ import {
 import { useMergedRef } from "../internal/ref.js";
 import { useMenuContext, useMenuLeaving } from "./state.js";
 
-/** The two emphases a row can carry, as the guard reads them. */
 const MenuTones = Schema.Literals(["default", "destructive"]);
 
-/** How much emphasis a row carries. `destructive` asks before it is used. */
 export type MenuItemTone = typeof MenuTones.Type;
 
-/**
- * The emphasis a stored name names.
- *
- * A row is built from a record as often as from JSX — a command palette's action
- * list, a saved toolbar's menu — so a tone can arrive under another vocabulary's
- * word for the same idea (`"danger"`, the alert's name) or as the `null` a store
- * writes for a field it never set. The matcher below is exhaustive over the two
- * names, so a third threw `effect/match/Match/exhaustive: absurd` out of the
- * render and took the whole menu down. A name this release does not carry paints
- * the documented `default` row: the emphasis is decoration and the action still
- * runs, where a crash removes every action in the menu.
- */
 export const menuToneOf = (value: unknown): MenuItemTone =>
   Schema.is(MenuTones)(value) ? value : "default";
 
-/** {@link MenuItem} props. */
 export interface MenuItemProps extends Omit<Props, "style"> {
-  /** Runs on click or Enter/Space, then closes the menu. */
   readonly onSelect?: () => void;
   readonly disabled?: boolean;
-  /** Default `"default"`. */
+
   readonly tone?: MenuItemTone;
-  /** Slot before the label: a check mark, an icon. */
+
   readonly leading?: ReactNode;
-  /** Slot after the label: a shortcut. */
+
   readonly trailing?: ReactNode;
-  /**
-   * The text type-ahead matches when `children` is not a plain string (for
-   * example a label with a badge beside it). A row whose text cannot be derived
-   * is not searched.
-   */
+
   readonly textValue?: string;
-  /**
-   * Whether activating the row closes the menu. Default `true`; a checkbox row
-   * sets `false`, because toggling several settings in one visit is the point.
-   */
+
   readonly closeOnSelect?: boolean;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
-  /** A style, or a function of the row's state. */
+
   readonly style?: StateStyle<MenuItemState>;
 }
 
-/** What a row draws: the menu highlight and its input state. */
 export interface MenuItemState {
   readonly disabled: boolean;
-  /** The row the menu's highlight is on (the highlight is real focus). */
+
   readonly highlighted: boolean;
 }
 
-/** What a row paints: its emphasis, its state and whether it carries the bar. */
 export interface MenuRowState {
   readonly tone: MenuItemTone;
   readonly active: boolean;
   readonly disabled: boolean;
 }
 
-/** The row's own look, shared by actions, checkbox rows and the Command menu.
- *
- * The resting geometry and type come from the `MENU_ITEM` recipe (fixed shadcn
- * metrics); the density height and the state colours stay here because they are
- * density- and state-driven (ADR 0006).
- *
- * A highlighted row is its wash. The 2px emphasis bar it used to wear sat on the
- * row's own edge, beside the chevron or the check that already says what the row
- * is, and read as a second, unrelated mark. The measurement is why it could not
- * work: an `accent` bar on a `hover` wash sits under the boundary floor in
- * all eighteen styles (`accent` against `hover` is the pair
- * `internal/theme.test.ts` measures), so the bar was a mark a reader had to
- * hunt for — and a mark that has to be hunted for is not a mark.
- */
 export const menuRowStyle = (
   theme: ReturnType<typeof useTheme>,
   row: MenuRowState,
@@ -142,9 +92,6 @@ export const menuRowStyle = (
         Match.exhaustive,
       );
 
-  // An AppKit menu highlights its row in the accent with the accent's ink —
-  // a destructive row too, whose red would not read on it — and the highlight
-  // follows the pointer (`Theme.interaction`, plan 724).
   const appkit = theme.interaction === "appkit";
   const pointerWash = { backgroundColor: theme.colors.hover };
   const accentWash = {
@@ -156,9 +103,7 @@ export const menuRowStyle = (
   return {
     ...overlaySurfaceStyle(MENU_ITEM, className, theme),
     height: controlHeight(theme, "sm"),
-    // The 50% fade composited a disabled label into its own fill, which a
-    // high-contrast theme asks 3:1 of; the `disabled`/`disabledForeground` pair
-    // is the one `contrastPairs` measures on the popover.
+
     ...(color === undefined ? {} : { color }),
     ...(active && !disabled ? highlight : {}),
     cursor: disabled ? "not-allowed" : "pointer",
@@ -171,7 +116,6 @@ export const menuRowStyle = (
   };
 };
 
-/** The row body: leading slot, flexible label, trailing slot. */
 const Row = ({
   leading,
   trailing,
@@ -197,7 +141,6 @@ const Row = ({
   </>
 );
 
-/** One action in a menu. */
 export const MenuItem = ({
   onSelect,
   disabled = false,
@@ -217,15 +160,12 @@ export const MenuItem = ({
   ...rest
 }: MenuItemProps) => {
   const theme = useTheme();
-  // A tone saved with the row may name a word this release does not declare;
-  // the emphasis is read once here so the matcher cannot see a third name.
+
   const emphasis = menuToneOf(requestedTone);
-  // Only stable members here: the context object changes whenever a row
-  // registers, and depending on it would re-register in a loop.
+
   const { activeId, register, noteFocus, notePointer, close, closeSubmenu } =
     useMenuContext();
-  // A row of a surface that is only painted for its exit leaves the window's Tab
-  // order with it: the row cannot be pressed, so it must not be a stop either.
+
   const leaving = useMenuLeaving();
   const [instance, setInstance] = useState<PublicInstance | undefined>(
     undefined,
@@ -246,7 +186,6 @@ export const MenuItem = ({
 
   const run = useCallback(() => action.current(), []);
 
-  // Type-ahead matches the row's text. A composed label must say what it is.
   const searchable = textValue ?? (P.isString(children) ? children : "");
 
   useLayoutEffect(() => {
@@ -266,9 +205,6 @@ export const MenuItem = ({
   return (
     <div
       role="menuitem"
-      // A row's name is its label. The accessible tree does not derive a name
-      // from a container's children, so a focusable row without this reads as
-      // an unnamed menu item; a composed label says its name with `textValue`.
       aria-label={Str.isEmpty(searchable) ? undefined : searchable}
       {...rest}
       ref={setRow}
@@ -283,16 +219,11 @@ export const MenuItem = ({
         action.current();
       }}
       onMouseEnter={(event) => {
-        // Moving onto another row leaves the submenu that belonged to the row
-        // the pointer came from — but the row that opened it keeps it, so
-        // coming back to that trigger is not a close.
         notePointer(true);
         closeSubmenu(instance?.id);
         onMouseEnter?.(event);
       }}
       onMouseLeave={(event) => {
-        // A row-to-row move releases and holds again in the same gesture; a move
-        // onto anything else releases the menu, which closes after its grace.
         notePointer(false);
         onMouseLeave?.(event);
       }}
@@ -308,15 +239,6 @@ export const MenuItem = ({
   );
 };
 
-/**
- * The leading slot of a row that carries a state: a fixed icon column so a
- * checked and an unchecked row's labels start on the same x.
- *
- * The mark is the row's whole visible state, so it paints `colors.primary`, a
- * role `indicatorRoles` measures at the 3:1 mark floor on the popover and on the
- * `hover` wash a highlighted row tints — the `accent` wash it used to paint read
- * 1.26:1 on the light popover and 1.14:1 on the dark one.
- */
 const MenuCheckMark = ({ checked }: { readonly checked: boolean }) => {
   const theme = useTheme();
   return (
@@ -340,22 +262,19 @@ const MenuCheckMark = ({ checked }: { readonly checked: boolean }) => {
   );
 };
 
-/** {@link MenuCheckboxItem} props: a row that toggles a setting. */
 export interface MenuCheckboxItemProps extends Omit<MenuItemProps, "style"> {
   readonly checked: boolean;
   readonly onCheckedChange: (checked: boolean) => void;
-  /** A style, or a function of the checkbox row's state. */
+
   readonly style?: StateStyle<MenuCheckboxItemState>;
 }
 
-/** What a checkbox row draws. */
 export interface MenuCheckboxItemState {
   readonly checked: boolean;
   readonly disabled: boolean;
   readonly highlighted: boolean;
 }
 
-/** A menu row that represents an on/off setting. Shows a check icon when checked. */
 export const MenuCheckboxItem = ({
   checked,
   onCheckedChange,
@@ -399,26 +318,17 @@ export const MenuCheckboxItem = ({
   );
 };
 
-/** {@link MenuRadioGroup} props: the exclusive choice its rows belong to. */
 export interface MenuRadioGroupProps extends Omit<Props, "children"> {
-  /** The chosen row's value. The group is controlled: the menu unmounts on close. */
   readonly value: string;
-  /** Called with a row's value when it is chosen; never for the current one. */
+
   readonly onValueChange: (value: string) => void;
-  /**
-   * The choice's accessible name — what the rows are choosing between.
-   *
-   * 0.11.0 has no `aria-labelledby`, so a visible `MenuLabel` above the rows
-   * paints their caption and does not name the group a reader enters. Pass the
-   * same words here.
-   */
+
   readonly label?: string;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
   readonly children?: PartChildren;
 }
 
-/** The chosen value and its setter, for the rows inside one group. */
 interface MenuRadioGroupValue {
   readonly value: string;
   readonly choose: (value: string) => void;
@@ -428,7 +338,6 @@ const MenuRadioGroupContext = createContext<MenuRadioGroupValue | undefined>(
   undefined,
 );
 
-/** The radio group a row belongs to. Throws when there is none. */
 const useMenuRadioGroup = (): MenuRadioGroupValue => {
   const value = useContext(MenuRadioGroupContext);
   if (value === undefined) {
@@ -439,14 +348,6 @@ const useMenuRadioGroup = (): MenuRadioGroupValue => {
   return value;
 };
 
-/**
- * A run of mutually exclusive rows. One value is chosen at a time, so a menu
- * that picks a setting (an appearance, a sort order) states the choice once
- * instead of leaving the consumer to enforce it over checkbox rows.
- *
- * Controlled, like the menu itself: the popup unmounts when it closes, so a
- * group that stored its own choice would forget it on the next open.
- */
 export const MenuRadioGroup = ({
   value,
   onValueChange,
@@ -474,31 +375,21 @@ export const MenuRadioGroup = ({
   );
 };
 
-/** {@link MenuRadioItem} props: one value in a {@link MenuRadioGroup}. */
 export interface MenuRadioItemProps extends Omit<
   MenuItemProps,
   "style" | "onSelect"
 > {
-  /** The value this row chooses. */
   readonly value: string;
-  /** A style, or a function of the radio row's state. */
+
   readonly style?: StateStyle<MenuRadioItemState>;
 }
 
-/** What a radio row draws. */
 export interface MenuRadioItemState {
   readonly checked: boolean;
   readonly disabled: boolean;
   readonly highlighted: boolean;
 }
 
-/**
- * One choice in a radio group. Choosing it closes the menu — unlike a checkbox
- * row, which stays open so several settings can be visited in one visit.
- *
- * 0.11.0 has no `aria-checked`, so the row names its state with `aria-selected`
- * and a check mark, the substitution the checkbox row uses.
- */
 export const MenuRadioItem = ({
   value,
   disabled = false,
@@ -540,13 +431,10 @@ export const MenuRadioItem = ({
   );
 };
 
-/** {@link MenuSeparator} props. */
 export interface MenuSeparatorProps extends Props {
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
 }
 
-/** A hairline between groups of actions. Not focusable. */
 export const MenuSeparator = ({
   className,
   style,
@@ -565,13 +453,10 @@ export const MenuSeparator = ({
   );
 };
 
-/** {@link MenuLabel} props. */
 export interface MenuLabelProps extends Props {
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
 }
 
-/** A small heading over a group of rows. Not focusable. */
 export const MenuLabel = ({ className, style, ...rest }: MenuLabelProps) => {
   const theme = useTheme();
   return (
@@ -585,21 +470,13 @@ export const MenuLabel = ({ className, style, ...rest }: MenuLabelProps) => {
   );
 };
 
-/** A labelled group of rows. */
 export interface MenuGroupProps extends Omit<Props, "children"> {
-  /**
-   * The group's accessible name.
-   *
-   * 0.11.0 has no `aria-labelledby`, so a visible `MenuLabel` is painted text
-   * and does not name the group a reader enters. Pass the same words here.
-   */
   readonly label?: string;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
   readonly children?: PartChildren;
 }
 
-/** The group's own surface, shared by a labelled group and a radio group. */
 const MenuGroupSurface = ({
   label,
   className,
@@ -623,7 +500,6 @@ const MenuGroupSurface = ({
   );
 };
 
-/** A labelled group of rows. */
 export const MenuGroup = ({
   className,
   children,
@@ -638,7 +514,6 @@ export const MenuGroup = ({
   );
 };
 
-/** Every row part, so a misplaced sibling is named. */
 const menuRowParts: ReadonlyArray<PartComponent> = [
   MenuItem,
   MenuCheckboxItem,

@@ -1,18 +1,3 @@
-/**
- * `DropZone` — the drop payload, the pointer highlight, the pick action.
- *
- * The bug guarded: `onFileDrop` hands the zone absolute paths, and the zone must
- * report them to `onDrop` as `{ files }` with a basename each, never as the raw
- * path array. A zone disabled while the pointer was over it also kept
- * advertising a drop: the paint read the hover flag regardless of `disabled` and
- * the leave handler was gated on `!disabled`, so the flag survived a pointer
- * that left during the disabled window. The negative controls are the disabled
- * zone (which must refuse a drop) and the resting vs. hovered border (the
- * highlight is a real, distinct state). A blank label or pick label reads as
- * its documented default, so neither the group nor the fallback route is left
- * unnamed.
- */
-
 import { describe, expect, it, vi } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -131,8 +116,6 @@ describe("DropZone", () => {
   });
 
   it("reads a blank zone label as the documented default", () => {
-    // The label is both the visible headline and the group's accessible name,
-    // so a blank i18n row painted an empty line and published an unnamed group.
     const blank = renderDropZone(
       { label: "  ", onDrop: noop },
       lightTheme,
@@ -145,8 +128,6 @@ describe("DropZone", () => {
   });
 
   it("reads a blank pick label as the documented default", () => {
-    // The pick label came from a copy table, so an empty string reached the
-    // action's text and left the one reliable route on a drop-less host unnamed.
     const root = renderDropZone(
       {
         label: "Drop files",
@@ -200,7 +181,7 @@ describe("DropZone", () => {
     expect(hostStyleString(disabled, "backgroundColor")).toStrictEqual(
       Option.some(lightTheme.colors.muted),
     );
-    // The negative control: the same flag on an enabled zone is the highlight.
+
     const enabled = renderDropZone(
       { label: "Drop files", onDrop: noop },
       lightTheme,
@@ -232,10 +213,6 @@ describe("DropZone", () => {
   });
 
   it("paints no description line for a description that arrived blank", () => {
-    // The bug guarded: `description === undefined` covered only an absent prop,
-    // so a description an i18n table never filled laid out a full blank line
-    // under the zone's label (a run of spaces is 16px on the pinned runtime),
-    // while the wizard's step description already read a blank as absence.
     Arr.forEach(["", "   ", "\t\n"], (value) => {
       const root = renderDropZone(
         { label: "Drop files", onDrop: noop, description: value },
@@ -246,7 +223,7 @@ describe("DropZone", () => {
         Arr.map(textElements(root), (line) => elementProp(line, "children")),
       ).toStrictEqual([Option.some("Drop files")]);
     });
-    // The negative control: a real description is painted exactly as written.
+
     const described = renderDropZone(
       {
         label: "Drop files",

@@ -1,20 +1,3 @@
-/**
- * CodeBlock in the real GPUix renderer.
- *
- * The bugs these guard: a block that paints the source itself without
- * tokenizing it into runs (no highlighting, no gutter, no horizontal scroll); a
- * header that loses the path's title or its language; a block that publishes no
- * accessible name, or none of the line count a reader cannot see; an empty
- * source that paints a bare surface instead of its placeholder; a copy action
- * that never acknowledges the press, or acknowledges it forever; and a height
- * cap that is ignored.
- *
- * The motion half is measured on the runtime's clock: the entrance travels 4 px
- * and settles, `level="none"` and the reduced preference paint at rest on the
- * first frame. The fade itself is a paint value the tree does not expose — the
- * `surface-fade` live probe is what proves it for the seam this block shares.
- */
-
 import { describe, expect, it } from "vitest";
 import type { ReactNode } from "react";
 import * as Option from "effect/Option";
@@ -32,18 +15,15 @@ import { MotionProvider, surfaceLevelOf } from "../motion.js";
 
 const SOURCE = "const answer = 42;";
 
-/** A block inside a fixed frame, so the entrance offset is measurable. */
 const framed = (node: ReactNode): ReactNode => (
   <div testId="frame" style={{ display: "flex", flexDirection: "column" }}>
     {node}
   </div>
 );
 
-/** How far the block sits from the frame's top edge. */
 const offsetOf = (page: ReturnType<typeof renderComponent>): number =>
   requireBounds(page, "code-block").y - requireBounds(page, "frame").y;
 
-/** The one accessibility node with `role`, or `undefined` when there is none. */
 const nodeWith = (
   page: ReturnType<typeof renderComponent>,
   role: string,
@@ -171,9 +151,6 @@ describe("CodeBlock", () => {
   });
 
   it("paints at rest for a stored none read through the surface reader", () => {
-    // A saved block carries its entrance level, and `@gpuixui/motion`'s
-    // `motionLevelOf` answers the table's `normal` for `"none"` — the reader
-    // beside the prop vocabulary is the one that keeps the word.
     const saved: unknown = "none";
     const page = renderComponent(
       framed(<CodeBlock code={SOURCE} level={surfaceLevelOf(saved)} />),
@@ -221,7 +198,6 @@ describe("CodeBlock", () => {
       settle(page);
       const uncapped = requireBounds(page, "code-block").height;
 
-      // The cap clips the rows; the padding and header still paint around it.
       expect(capped).toBeGreaterThanOrEqual(40);
       expect(capped).toBeLessThan(uncapped);
     } finally {

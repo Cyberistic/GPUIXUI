@@ -1,10 +1,3 @@
-/**
- * Browser preview for the Stars page.
- *
- * The native field scatters `count` seeded lights and twinkles them in place;
- * the preview reproduces the scatter and pulses each light's opacity.
- */
-
 import { scatter } from "./scatter";
 
 const points = scatter(64, 11, 1, 3);

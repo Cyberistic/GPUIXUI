@@ -28,7 +28,6 @@ describe("the platform a stored value names", () => {
       ...platformOrder,
     ]);
 
-    // A mistyped value must not resolve to a platform the library does not have.
     expect(parsePlatform("windows")).toBeUndefined();
     expect(parsePlatform("darwin ")).toBeUndefined();
     expect(parsePlatform("")).toBeUndefined();
@@ -37,8 +36,6 @@ describe("the platform a stored value names", () => {
   });
 
   it("offers exactly the platforms the library names, so none is unreachable", () => {
-    // A platform added to `@gpuixui/tokens` without a switch entry would be a
-    // look a reader cannot see.
     expect(Object.keys(platformTypes).toSorted()).toEqual(
       [...platformOrder].toSorted(),
     );
@@ -48,7 +45,7 @@ describe("the platform a stored value names", () => {
 describe("the palette a stored value names", () => {
   it("accepts every mode the library ships and rejects anything else", () => {
     expect(modeOrder.map((mode) => parseMode(mode))).toEqual([...modeOrder]);
-    // A mistyped value must not resolve to a palette the library does not have.
+
     expect(parseMode("sepia")).toBeUndefined();
     expect(parseMode("Dark")).toBeUndefined();
     expect(parseMode("")).toBeUndefined();
@@ -57,8 +54,6 @@ describe("the palette a stored value names", () => {
   });
 
   it("offers exactly the modes the library ships, identity first", () => {
-    // A mode added to `@gpuixui/tokens` without a switch entry would be a
-    // palette a reader cannot see, and a stale entry would offer nothing.
     expect([...modeOrder].toSorted()).toEqual(Object.keys(themes).toSorted());
     expect(modeOrder[0]).toBe(previewMode);
   });
@@ -81,10 +76,6 @@ describe("choosing a platform", () => {
   });
 
   it("is what makes a platform press visible under an authored look", () => {
-    // The reported bug: with the Aero look remembered, pressing Linux moved the
-    // label while every surface kept the look's palette and density, because
-    // the look had already overridden the platform. Clearing it on the press is
-    // the difference the reader sees.
     const stale = resolvePlatformTheme("linux", "dark", "aero");
     const pressed = choosingPlatform(
       { platform: "win32", look: "aero", mode: "dark" },
@@ -122,14 +113,13 @@ describe("the platform theme", () => {
   it("keeps the base theme every role a component reads", () => {
     const themed = resolvePlatformTheme("win32");
 
-    // A platform variant may change a role's value, never drop the role.
     expect(Object.keys(themed.colors).toSorted()).toEqual(
       Object.keys(themes.dark.colors).toSorted(),
     );
     expect(Object.keys(themed.radius).toSorted()).toEqual(
       Object.keys(themes.dark.radius).toSorted(),
     );
-    // The name carries the platform, so a preview can say which one it shows.
+
     expect(themed.name).toContain(platformTypes.win32.label);
   });
 
@@ -141,9 +131,6 @@ describe("the platform theme", () => {
   });
 
   it("resolves the platform's own paint, not the docs'", () => {
-    // Whatever the library styles per platform — families today, and the
-    // palette, radius and density as the platform variants land — the preview
-    // reads it from here rather than carrying values of its own.
     const mac = resolvePlatformTheme("darwin");
     const windows = resolvePlatformTheme("win32");
 
@@ -162,7 +149,6 @@ describe("the platform theme", () => {
       (platform) => resolvePlatformTheme(platform).name,
     );
 
-    // A shared name would make two switch positions indistinguishable.
     expect(new Set(names).size).toBe(platformOrder.length);
     expect(names[0]).toContain(platformLabel("darwin"));
     expect(names[2]).toContain(platformLabel("win32"));
@@ -171,9 +157,6 @@ describe("the platform theme", () => {
 
 describe("the landing's desktops", () => {
   it("shows the three native looks and leaves Omarchy off the axis", () => {
-    // Omarchy is a Linux desktop that follows your theme, not a fourth look:
-    // the deck keeps the three windows and the platform switch keeps accepting
-    // only the library's platforms.
     expect(landingPlatformOrder).toEqual(["macos", "windows", "linux"]);
     expect(platformOrder).not.toContain("omarchy");
   });
@@ -188,8 +171,6 @@ describe("the landing's desktops", () => {
 
 describe("the authored look", () => {
   it("offers every look the library ships, and the platform's own style", () => {
-    // A look added to `@gpuixui/tokens` without a switch entry would be a style
-    // a reader cannot see; the list is the library's, not a copy of it.
     expect(lookOrder).toEqual(["native", ...retroNames]);
     expect(lookOrder.map((look) => parseLook(look))).toEqual([...lookOrder]);
   });
@@ -202,8 +183,6 @@ describe("the authored look", () => {
   });
 
   it("labels every look the library ships, with no two sharing a name", () => {
-    // The labels are `retroStyles`' own; a look added to the library must reach
-    // the page, and two looks that read as one would make the switch
     // ambiguous. `native` is the switch's own style, not an authored look.
     const labels = lookOrder
       .filter((look) => look !== "native")

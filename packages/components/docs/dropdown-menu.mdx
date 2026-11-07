@@ -60,13 +60,3 @@ DropdownMenu
 | `DropdownMenuRadioItem` | one choice; choosing it closes the menu | `value` (required), `disabled?`, `leading?`, `trailing?`, `textValue?` |
 | `DropdownMenuSub` / `DropdownMenuSubTrigger` / `DropdownMenuSubContent` | one secondary level | `DropdownMenuSubContent` takes the root surface's placement props |
 | `DropdownMenuSeparator` / `DropdownMenuLabel` / `DropdownMenuGroup` | the structure between rows | `DropdownMenuGroup` takes `label?` — the group's accessible name; a visible `DropdownMenuLabel` is painted text and does not name it |
-
-## Notes
-- No `aria-haspopup`, `aria-controls`, `aria-checked` or `aria-activedescendant`.
-- One level of submenus is tested.
-- A hover does not preview a highlight; the pointer activates on click.
-- **A stored `tone` the union does not carry paints `"default"`**: a menu built
-  from a saved action list may hold another vocabulary's word for the same idea
-  (`"danger"`) or the `null` a store writes for a field it never set, and the
-  row's emphasis is decoration — the action still runs — where a name outside
-  the two would otherwise take the whole menu down.

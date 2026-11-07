@@ -1,29 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * PageTransition: one region that swaps between views on the house entrance.
- *
- * The library has no router, so this is the transition a router would own: the
- * caller names the view on screen with `viewKey` and passes that view's
- * children, and the region runs the swap the way the overlays open — a fade plus
- * a few pixels of travel, because the runtime has no `transform` (upstream issue
- * #102).
- *
- * A swap is two halves, not a cross-fade. `@gpuix/native@0.11.0` has no
- * `aria-hidden`, so keeping the outgoing view mounted beside the incoming one
- * would put both in the accessibility tree and leave the old page's controls
- * focusable while it fades (the rule `RollingText` follows for a value). So the
- * view on screen leaves, the region is empty for no longer than one exit, and
- * the new view arrives: exactly one view is mounted at every point.
- *
- * The region clips its view, because the travel is a relative `left` on the
- * view box and would otherwise paint outside the region it belongs to. A view
- * that is leaving is a ghost: it keeps its box for the exit half but paints the
- * seam's no-press guard, so an action inside the old page cannot answer the
- * press the reader meant for the page arriving. Under
- * `MotionProvider preference="reduced"` or `level="none"` the swap happens in
- * the frame it changes, with no travel at all.
- */
-
 import type { MotionProps, Props } from "@gpuix/react";
 import {
   mergeStyles,
@@ -55,54 +30,30 @@ import {
   type PagePhase,
 } from "./page-transition/logic.js";
 
-/** What a page region paints at one frame. */
 export interface PageTransitionPaint {
-  /** The view on screen. */
   readonly view: string;
-  /** `"leaving"` while the old view leaves, `"entering"` as the new one arrives. */
+
   readonly phase: PagePhase;
   readonly direction: PageDirection;
   readonly reducedMotion: boolean;
 }
 
-/** {@link PageTransition} props. */
 export interface PageTransitionProps extends Omit<Props, "children" | "style"> {
-  /**
-   * The view on screen. A change starts the swap; the same key keeps the
-   * mounted view, so a caller that re-renders a view does not replay it.
-   */
   readonly viewKey: string;
-  /** The current view's content. */
+
   readonly children?: ReactNode;
-  /**
-   * Which way the reader is moving. `"forward"` leaves toward the left and
-   * arrives from the right. Default `"forward"`.
-   */
+
   readonly direction?: PageDirection;
-  /** Pixels travelled. Default `16`; a value that cannot run falls back to it. */
+
   readonly distance?: number;
-  /**
-   * The motion level of both halves, or `"none"` to swap in the frame it
-   * changes. Default `"normal"` (200 ms each way). Read through
-   * `surfaceLevelOf`, so a level an application restored from storage can be
-   * decoded with the same reader and passed here.
-   */
+
   readonly level?: SurfaceLevel;
-  /** A Tailwind class string for the region, joined after the resting style. */
+
   readonly className?: string;
-  /** A style for the region, or a function of the swap. */
+
   readonly style?: StateStyle<PageTransitionPaint>;
 }
 
-/**
- * A region that swaps its view with the house exit and entrance.
- *
- * The swap is driven by `viewKey`: the caller owns which view is current and
- * passes its content, and the region owns only the painting. A key changed
- * mid-exit replaces the waiting view instead of queueing it, so a reader who
- * arrows through a list sees one exit, and returning to the view still on
- * screen cancels the swap.
- */
 export const PageTransition = ({
   viewKey,
   children,
@@ -122,18 +73,15 @@ export const PageTransition = ({
   const [transition, setTransition] = useState(() =>
     initialPageTransition(viewKey),
   );
-  /** The newest content a caller passed, whether or not it is on screen yet. */
+
   const latest = useRef(children);
-  /** The view on screen when the current exit started. */
+
   const outgoing = useRef(children);
 
   useLayoutEffect(() => {
     latest.current = children;
   });
 
-  // A view change is applied in the render that delivers it, so the outgoing
-  // view is what paints on that frame — an effect would show the new view for
-  // one frame before the old one started leaving.
   const waitingForView = Option.exists(
     transition.pendingKey,
     (key) => key === viewKey,
@@ -149,7 +97,6 @@ export const PageTransition = ({
     setTransition(requestPage(transition, viewKey, instant));
   }
 
-  /** The view stays painted for its half of the swap; a wait before it counts. */
   const exitWindow = transitionWindowMs(timing.exit);
   const enterWindow = transitionWindowMs(timing.enter);
 
@@ -232,10 +179,7 @@ export const PageTransition = ({
         motion={motion}
         style={mergeStyles(
           { position: "relative" },
-          // The view on screen is a wrapper, so it paints no pointer rule; the
-          // one leaving is a ghost of the previous page and takes no presses
-          // while it fades — its controls must not answer the press the reader
-          // meant for the page arriving.
+
           presenceStyle(transition.phase !== "leaving", "wrapper"),
         )}
       >
@@ -246,7 +190,6 @@ export const PageTransition = ({
   );
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 600). */
 export const pageTransitionMeta = {
   name: "Page transition",
   tier: 5,

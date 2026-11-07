@@ -1,13 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Desktop — a whole XP-era or Aero-era desktop: the wallpaper, shortcuts down
- * the left, two windows, the taskbar and the Start menu. The chrome is drawn in
- * the era's own values; everything inside the windows is the library, themed
- * with the `luna` or `aero` look (`retroTheme`) — the theming claim.
- *
- * Paint order is tree order and the runtime has no `zIndex`, so the windows
- * render back to front, then the taskbar, then the open Start menu.
- */
 import type { StyleDesc } from "@gpuix/react";
 import {
   Tabs,
@@ -55,7 +46,6 @@ const icons: Readonly<Record<WindowId, IconName>> = {
   license: "badge-check",
 };
 
-/** The look's theme for the windows' contents; Luna's UI face is Tahoma. */
 export const desktopTheme = (look: DesktopLook): Theme => {
   const theme = retroTheme(lightTheme, look);
   return look === "luna"
@@ -97,7 +87,6 @@ const Shortcuts = ({ look }: { look: DesktopLook }) => (
   </div>
 );
 
-/** Luna's blue task pane: two collapsible-looking groups of links. */
 const TaskPane = () => (
   <div
     style={{
@@ -171,7 +160,6 @@ const TaskPane = () => (
   </div>
 );
 
-/** Aero's navigation pane: favourites over places, on a pale blue column. */
 const NavPane = ({ theme }: { theme: Theme }) => (
   <div
     style={{
@@ -313,7 +301,6 @@ const License = ({ theme }: { theme: Theme }) => (
   </div>
 );
 
-/** Where each window opens and how big it is, per look. */
 const frames: Readonly<
   Record<WindowId, readonly [number, number, number, number]>
 > = {
@@ -329,7 +316,6 @@ export interface DesktopBlockProps {
   readonly wallpaper?: string;
 }
 
-/** The desktop, as a window's whole content. */
 export const DesktopBlock = ({
   look,
   width = 1280,
@@ -364,8 +350,7 @@ export const DesktopBlock = ({
             }}
           />
         )}
-        {/* A press stops at the first element that paints a fill, so the catcher
-            that closes the menu paints one: fully transparent, over the ground. */}
+        {}
         <div
           testId="desktop-ground"
           onMouseDown={() => setState(closeMenu)}

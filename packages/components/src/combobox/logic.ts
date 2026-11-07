@@ -1,11 +1,3 @@
-/**
- * Combobox option ranking, multi-selection membership and the "create" row.
- *
- * The ranking is ours rather than the renderer's so the order is testable and
- * stable: an exact prefix beats a word prefix, which beats a substring, and
- * ties keep the order the caller declared.
- */
-
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Order from "effect/Order";
@@ -13,7 +5,6 @@ import * as P from "effect/Predicate";
 import * as Schema from "effect/Schema";
 import * as Str from "effect/String";
 
-/** One selectable option. */
 export interface ComboboxOption {
   readonly value: string;
   readonly label: string;
@@ -21,14 +12,6 @@ export interface ComboboxOption {
   readonly disabled?: boolean;
 }
 
-/**
- * An option a stored list wrote: the value it is addressed by, and the fields a
- * record may or may not have carried.
- *
- * A picker's choices are saved data as often as literals — a settings pane, a
- * picker inside a saved record, a restored toolbar — so JSON's `null` reaches
- * the component for a label, a description or the flag a record never set.
- */
 class StoredOption extends Schema.Class<StoredOption>("StoredOption")({
   value: Schema.String,
   label: Schema.optionalKey(Schema.NullOr(Schema.String)),
@@ -38,17 +21,6 @@ class StoredOption extends Schema.Class<StoredOption>("StoredOption")({
 
 const decodeStoredOption = Schema.decodeUnknownOption(StoredOption);
 
-/**
- * The options a caller's list carries, read at the boundary.
- *
- * `options` is a saved list as often as a literal, and `.flatMap`/`.map` over a
- * record's `null` threw out of the render and took the trigger and every
- * control beside it down. Only a list is a list, and an entry that does not
- * carry a text value is not an option — it is dropped, so one malformed record
- * cannot hide the rows beside it. A missing or `null` label is absence, so the
- * option's value names it (the rule {@link labelOf} already applies to a blank
- * one), and a missing flag is `false`.
- */
 export const optionsOf = (value: unknown): ReadonlyArray<ComboboxOption> =>
   Arr.isArray(value)
     ? Arr.getSomes(
@@ -72,16 +44,6 @@ export const optionsOf = (value: unknown): ReadonlyArray<ComboboxOption> =>
       )
     : [];
 
-/**
- * The selection a caller's value carries, read at the boundary.
- *
- * A selection is stored with the control, and JSON writes `null` for the field
- * a record never set. The component spread or indexed that value before it
- * painted, so an absent saved selection threw out of the render. A string is
- * one value, a list is a set (an entry that is not text carries no value), and
- * anything else is **absence**: an absent controlled value still means
- * uncontrolled, the rule every field in this package follows.
- */
 export const selectionOf = (
   value: unknown,
 ): Option.Option<string | ReadonlyArray<string>> =>
@@ -91,14 +53,6 @@ export const selectionOf = (
       ? Option.some(Arr.filter(value, P.isString))
       : Option.none();
 
-/**
- * The text shown for an option, falling back to its value.
- *
- * A label is often a column a caller decoded from a table, so a blank one is
- * absence rather than a name: a whitespace-only label would paint an empty
- * trigger and an empty row where the value is the only name there is, which is
- * the rule `AvatarGroup` and `CopyButton` apply to the names they are handed.
- */
 export const labelOf = (option: ComboboxOption): string => {
   const label = Str.trim(option.label);
   return Str.isNonEmpty(label) ? label : option.value;
@@ -115,7 +69,6 @@ const normalise = (value: string): string => Str.toLowerCase(Str.trim(value));
 const wordStarts = (haystack: string, needle: string): boolean =>
   Arr.some(Str.split(haystack, " "), (word) => Str.startsWith(needle)(word));
 
-/** Lower is better. `None` when the option does not match at all. */
 const rank = (option: ComboboxOption, query: string): Option.Option<number> => {
   const label = normalise(labelOf(option));
   if (Str.startsWith(query)(label)) return Option.some(0);
@@ -131,11 +84,6 @@ const byRankThenDeclaration = Order.combine(
   Order.mapInput(Order.Number, (entry: Ranked) => entry.index),
 );
 
-/**
- * The options to show for a query, best match first. An empty or blank query
- * returns every option in declaration order. Disabled options are kept, because
- * they stay visible and unselectable rather than disappearing.
- */
 export const filterOptions = (
   options: ReadonlyArray<ComboboxOption>,
   query: string,
@@ -156,29 +104,17 @@ export const filterOptions = (
   );
 };
 
-/**
- * The value the "create" row carries. A NUL cannot appear in a typed query, so
- * the sentinel cannot collide with an option the caller declared.
- */
 const CREATE_ROW_PREFIX = "\u0000create\u0000";
 
-/** Whether `value` is the synthetic create row rather than a caller option. */
 export const isCreateRow = (value: string): boolean =>
   Str.startsWith(CREATE_ROW_PREFIX)(value);
 
-/** The row value for a query the caller may create. */
 export const createRowValue = (query: string): string =>
   `${CREATE_ROW_PREFIX}${query}`;
 
-/** The query a create row carries. */
 export const createRowQuery = (value: string): string =>
   Str.slice(CREATE_ROW_PREFIX.length)(value);
 
-/**
- * Whether the query should offer a create row: it has text, no option matched,
- * and the caller supplied a handler. Offering it only when nothing matches keeps
- * the row from competing with a real result the user can pick instead.
- */
 export const offersCreate = (
   visible: ReadonlyArray<ComboboxOption>,
   query: string,
@@ -188,16 +124,14 @@ export const offersCreate = (
   !Str.isEmpty(Str.trim(query)) &&
   Arr.isReadonlyArrayEmpty(visible);
 
-/** Add `value` to the selection, or remove it when it is already selected. */ export const toggledSelection =
-  (selected: ReadonlyArray<string>, value: string): ReadonlyArray<string> =>
-    Arr.contains(selected, value)
-      ? Arr.filter(selected, (candidate) => candidate !== value)
-      : Arr.append(selected, value);
+export const toggledSelection = (
+  selected: ReadonlyArray<string>,
+  value: string,
+): ReadonlyArray<string> =>
+  Arr.contains(selected, value)
+    ? Arr.filter(selected, (candidate) => candidate !== value)
+    : Arr.append(selected, value);
 
-/**
- * The label shown on a single-select trigger. The component converts its
- * optional `value` prop to an `Option` at the React boundary.
- */
 export const selectedLabel = (
   options: ReadonlyArray<ComboboxOption>,
   value: Option.Option<string>,

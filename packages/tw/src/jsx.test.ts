@@ -1,12 +1,3 @@
-/**
- * Guards the className-aware JSX runtime.
- *
- * The bug guarded: shadcn TSX writes `className` on host elements. Without the
- * runtime the prop reaches a GPUix host that has no class concept and the style
- * disappears. These tests pin the wrapper boundary: only classed host elements
- * are wrapped; components and unclassed hosts pass through.
- */
-
 import { describe, expect, it } from "vitest";
 import * as P from "effect/Predicate";
 import { jsx, jsxs } from "./jsx-runtime.js";

@@ -6,11 +6,6 @@ import {
   SbShell,
 } from "./sidebar-kit";
 
-/**
- * Sidebar 08 — shadcn's inset workspace: the panel floats on the card surface,
- * the content sits in a rounded sheet beside it, and Support/Feedback are
- * pinned to the bottom of the panel.
- */
 export const Sidebar08Render = () => (
   <SbShell height="tall" variant="inset">
     <SbAppPanel />

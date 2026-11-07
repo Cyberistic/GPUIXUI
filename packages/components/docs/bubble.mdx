@@ -104,35 +104,3 @@ edge, so the next row cannot paint over it.
 | `BubbleAction` | one small ghost action, and the `Button` busy state | `label` (required), `onClick`, `disabled?`, `className?`, `loading?`, `loadingLabel?`, `leading?`, `trailing?`, `reducedMotion?` |
 | `BubbleReactions` | a named pill that hangs over the surface's edge | `label` (required), `className?`, `children` |
 | `BubbleGroup` | a tighter column | `gap?`, `className?`, `children` |
-
-## Notes
-- The reaction pill hangs a quarter of its height over the surface's edge.
-  shadcn anchors it absolutely and hangs three quarters; the runtime has no
-  parent-relative absolute positioning (`position: absolute` resolves against
-  the mount parent in `@gpuix/native@0.11.0`), so the pill stays in the column.
-  Its hanging part also lays out below the edge instead of overlapping the next
-  row, and it cannot be raised above a later sibling — leave breathing room
-  under a reacting bubble the way shadcn's docs do.
-- The pill's ring is the page fill (`background`). shadcn rings it in `card`;
-  the bubble has no way to read the surface it sits on, so a bubble hosted on a
-  card paints the page's ring.
-- The surface paints the theme's `xl` corner (12px in the default ladder, 16–18px
-  on the platform skins). shadcn computes `--radius * 1.4` — 14px with its
-  default radius — and the library's ladder has no such step.
-- The type is the recipe's `text-sm` (14px/20px). shadcn sets `leading-relaxed`
-  (22.75px); the type scale has no relaxed step.
-- The avatar is a prop slot rather than a part, because the runtime cannot wrap
-  a caller's children in the bubble's column selectively.
-- `BubbleContent` is always a `div`; the runtime has no anchor host, so there is
-  no polymorphic `render`.
-- A caller-supplied control inside `BubbleActions` that is not a `BubbleAction`
-  does not reveal the strip on keyboard focus: a focus event belongs to the
-  focused element, so the action has to report it.
-- A `variant`, `align` or `group` this release does not name reads as its
-  documented default rather than painting an unnamed surface.
-
-## Related
-
-- [Message](/components/message) — the row around a bubble.
-- [Message Scroller](/components/message-scroller) — the transcript.
-- [Chat](/components/chat) — header, transcript and composer.

@@ -10,21 +10,6 @@ import {
   SheetDrawing,
 } from "./sheet-drawer-preview";
 
-/**
- * The sheet and drawer drawings have to be pictures of the surface.
- *
- * Guarded bugs: both pages opened on an empty stage — the drawer was only
- * mounted after a press, so a reader (and the deployed page's first paint) saw
- * a geometry toolbar over a 340px box with no surface in it — and the drawer
- * page's frame hugged its content at 303px, so a 400px `md` panel could not
- * read as anchored to the window's right edge. The drawings are browser
- * reproductions, so their numbers cannot be imported from `drawer.tsx`; the
- * cases read the component and the motion table and hold the CSS, the server
- * markup and the model to them.
- *
- * `node:fs` is a test-time read of checked-in files.
- */
-
 const read = (relative: string): string =>
   readFileSync(new URL(relative, import.meta.url), "utf8");
 
@@ -33,7 +18,6 @@ const drawer = read("../../../../../packages/components/src/drawer.tsx");
 const timing = read("../../../../../packages/motion/src/timing.ts");
 const drawing = read("./sheet-drawer-preview.tsx");
 
-/** Every block whose selector list names `selector` exactly. */
 const rules = (selector: string): ReadonlyArray<string> =>
   [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
     .filter(([, selectors]) =>
@@ -41,13 +25,10 @@ const rules = (selector: string): ReadonlyArray<string> =>
     )
     .map(([, , body]) => body ?? "");
 
-/** The declarations of a selector, however many blocks name it. */
 const rule = (selector: string): string => rules(selector).join("\n");
 
-/** The declarations of the first `selector { … }` block. */
 const block = (selector: string): string => rules(selector)[0] ?? "";
 
-/** The reduced-motion block, brace-matched so a later rule cannot leak in. */
 const reducedMotion = (): string => {
   const start = css.indexOf("@media (prefers-reduced-motion: reduce)");
   if (start === -1) return "";
@@ -61,7 +42,6 @@ const reducedMotion = (): string => {
   return css.slice(open + 1, end);
 };
 
-/** The two `name: number` pairs of one exported size table in the component. */
 const sizeTable = (
   name: "WIDTH" | "HEIGHT",
 ): Readonly<Record<string, number>> =>
@@ -97,14 +77,11 @@ const surface = (side: "left" | "right" | "bottom" | "top"): string =>
     </DrawerSurface>,
   );
 
-/** The number of times `needle` appears in `text`. */
 const count = (text: string, needle: RegExp): number =>
   text.match(needle)?.length ?? 0;
 
 describe("the sheet and drawer drawings", () => {
   it("open both pages on the surface, on the component's default edge", () => {
-    // The bug this guards: `useState(false)` mounted the drawer only after a
-    // press, so the server markup and the first paint were an empty stage.
     for (const markup of [sheet, workflow]) {
       expect(count(markup, /role="dialog"/g)).toBe(1);
       expect(markup).toContain('data-side="right"');
@@ -112,13 +89,10 @@ describe("the sheet and drawer drawings", () => {
       expect(markup).toContain('aria-label="Close drawer"');
     }
 
-    // The default edge is the component's own, not a drawing's choice.
     expect(drawer.replace(/\s+/g, " ")).toContain('? side : "right"');
   });
 
   it("paints the surface inside a frame that is the window's box", () => {
-    // The veil must fill a stage that owns a fixed window height, and the
-    // surface must hug an edge of it — a centred panel is not a drawer.
     expect(block(".gx-drawer-frame")).toContain("width: 100%");
     expect(block(".gx-drawer-frame")).toContain("height: 420px");
     expect(block(".gx-drawer-backdrop")).toContain("inset: 0");
@@ -135,8 +109,6 @@ describe("the sheet and drawer drawings", () => {
       "margin-bottom: auto",
     );
 
-    // A `md` panel is 400px in a wider frame, so it cannot be the centred card
-    // the old 303px frame produced; a narrower frame clamps it instead.
     expect(block('.gx-drawer[data-size="md"]')).toContain(
       "--gx-drawer-width: 400px",
     );
@@ -149,8 +121,6 @@ describe("the sheet and drawer drawings", () => {
   });
 
   it("mirrors the component's size tables in the style sheet", () => {
-    // A preview is never the authority: if a size moves in `drawer.tsx`, this
-    // fails before the page prints the old number.
     for (const size of ["sm", "md", "lg"] as const) {
       expect(block(`.gx-drawer[data-size="${size}"]`)).toContain(
         `--gx-drawer-width: ${sizeTable("WIDTH")[size]}px`,
@@ -162,8 +132,6 @@ describe("the sheet and drawer drawings", () => {
   });
 
   it("reads the slide's travel and duration out of the library", () => {
-    // The native surface travels its own span (`entryTravel`) on the motion
-    // table's level; the drawing's keyframes are 100% of the box.
     expect(drawer).toContain("isVertical(side) ? box.height : box.width");
     const level = /useSurfaceTiming\("(\w+)"\)/.exec(drawer)?.[1];
     if (level === undefined)
@@ -194,10 +162,6 @@ describe("the sheet and drawer drawings", () => {
   });
 
   it("paints the settled frame when the reader asks for less motion", () => {
-    // The surface's settled state is its own box: only the keyframes carry the
-    // travel, so removing the animation paints the resting frame at once. A
-    // guard that names only `.gx-drawer` loses to each edge's one-attribute-more
-    // `animation-name`, so every animated drawer selector must be surrendered.
     const reduced = reducedMotion();
     const animated = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
       .filter(
@@ -218,15 +182,11 @@ describe("the sheet and drawer drawings", () => {
     );
     expect(block(".gx-drawer")).not.toContain("translate");
     expect(block(".gx-drawer")).not.toContain("opacity: 0");
-    // The journey is the stylesheet's, not a script's.
+
     expect(drawing).not.toMatch(/setTimeout|setInterval/);
   });
 
   it("travels back out and stays mounted until the exit ends", () => {
-    // The bug this guards: closing painted nothing, because the scene unmounted
-    // the surface in the frame the state flipped. The drawing keeps it in the
-    // DOM, runs the entry reversed on the exit curve, and lets the final frame
-    // hide it — the native window, not a cut.
     const closed = renderToStaticMarkup(
       <DrawerSurface
         description="preview"
@@ -263,8 +223,7 @@ describe("the sheet and drawer drawings", () => {
       "animation-name: gx-veil-out",
     );
     expect(css).toContain("@keyframes gx-veil-out");
-    // The hidden frame is the last one, not the exit's first: a closed surface
-    // must not be painted at rest before it has travelled out.
+
     expect(css).toMatch(
       /@keyframes gx-sheet-out-right \{[\s\S]*?visibility: hidden;/,
     );
@@ -278,8 +237,6 @@ describe("the sheet and drawer drawings", () => {
     expect(count(surface("top"), /gx-drawer-grabber/g)).toBe(1);
     expect(drawer).toContain("grabber && isVertical(side)");
 
-    // The handle is the component's 40 × 4 bar, `spacing.sm` from the inner
-    // edge; the drawing reads the role rather than a 10px literal.
     const width = /const GRABBER_WIDTH = (\d+)/.exec(drawer)?.[1];
     const height = /const GRABBER_HEIGHT = (\d+)/.exec(drawer)?.[1];
     expect(block(".gx-drawer-grabber")).toContain(`width: ${width}px`);
@@ -313,8 +270,6 @@ describe("the sheet and drawer drawings", () => {
       "the surface no longer names the lg level",
     ).toContain('overlaySurfaceStyle(DRAWER_CONTENT, className, theme, "lg")');
 
-    // The lift is the theme's `elevation.lg`, not a literal that only agrees
-    // with one mode.
     expect(block(".gx-drawer")).toContain("box-shadow: var(--elevation-lg)");
     const vars = toCssVars(themes.dark);
     const lg = elevationShadow(themes.dark, "lg");
@@ -329,8 +284,6 @@ describe("the sheet and drawer drawings", () => {
     expect(drawing).toContain("onClick={onBackdrop}");
     expect(drawing).toContain("onBackdrop={dismissible ? close : undefined}");
 
-    // A browser `focus()` scrolls a mid-slide surface into view and cancels the
-    // animation; the native renderer's `focusElement` never scrolls.
     const focuses = [...drawing.matchAll(/\.focus\(([^)]*)\)/g)];
     expect(focuses.length).toBeGreaterThan(0);
     expect(

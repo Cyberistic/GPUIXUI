@@ -10,16 +10,6 @@ import {
   selectedFile,
 } from "./file-manager-block";
 
-/**
- * The file manager block's rendered states.
- *
- * A browser preview can lose a pane or paint the wrong selection without any
- * build failing, and the right rail is the only place a reader sees what a tile
- * select did. These cases hold the markup to the block's two promises: the
- * three panes and all nine Pictures files are present, and the information rail
- * describes the state's selected file — not the default one.
- */
-
 const noop = () => {};
 
 const render = (state: FileManagerState): string =>
@@ -33,7 +23,6 @@ const render = (state: FileManagerState): string =>
     />,
   );
 
-/** The markup from the first element carrying `marker` to the next close. */
 const from = (markup: string, marker: string, close = "</aside>"): string => {
   const start = markup.indexOf(marker);
   return start === -1 ? "" : markup.slice(start, markup.indexOf(close, start));

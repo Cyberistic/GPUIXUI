@@ -1,14 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * A Hyprland desktop the way Omarchy ships it: a Waybar strip, then three tiles
- * in a master/stack layout with the theme's gaps — GNOME-style Settings as the
- * master, a terminal running fastfetch and a btop monitor in the stack. The
- * focused tile wears the accent border. One Omarchy palette themes all of it,
- * bar, gaps, borders and every component inside, as the desktop's theme file
- * would.
- *
- * Focus moves with a click on a stack tile or `Super+←/→`.
- */
 import type { KeyEvent } from "@gpuix/react";
 import { DonutChart, Sparkline } from "@gpuixui/data";
 import { Icon } from "@gpuixui/icons";
@@ -28,12 +18,10 @@ import {
 } from "./data.js";
 import { nextFocus, paletteTheme, titleOf } from "./logic.js";
 
-/** The palettes the desktop can wear, by Omarchy theme name. */
 export type { PaletteName } from "./data.js";
 
 export interface TilingDesktopProps {
   readonly palette?: PaletteName;
-  /** The focused tile, when the caller drives it; otherwise the desktop keeps its own. */
   readonly focus?: TileId;
   /** A wallpaper image behind the tiles; the palette's ground is the default. */
   readonly wallpaper?: string;

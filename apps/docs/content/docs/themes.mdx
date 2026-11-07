@@ -1,31 +1,42 @@
 ---
 title: Themes
-description: A token editor, the authored looks, and the CSS they compile to.
+description: Edit the tokens live, pick a look, import a shadcn theme.
 ---
 
 <ThemeEditor />
 
 ## Reading the audit
 
-One line per finding: `mutedForeground on muted — 3.90:1 (needs 4.5:1)`.
-**Unmeasurable** means the contrast cannot be computed — a translucent colour or
-a composited wash — not that it passed; the prefix names the report it came from.
+`mutedForeground on muted — 3.90:1 (needs 4.5:1)`. A ratio that **cannot be
+computed** prints **unmeasurable** — a wash, not a pass; the prefix names the
+report it came from.
 
-A switch is measured on its box too:
-`switch height — 22 cannot hold a knob that needs 32`, and
-`switch width — 0 cannot be laid out (needs a size greater than zero)`.
+Switch box:
 
-Edits are stored per mode over the selected platform style, so switching
-platform re-bases the audit and your edits stay. **Reset** clears them;
-**Copy theme** prints the resolved module. A browser that refuses site storage
-keeps the editor and the URL.
+`switch height — 22 cannot hold a knob that needs 32`
+
+`switch width — 0 cannot be laid out (needs a size greater than zero)`
+
+Edits are stored per mode over the platform style; a browser that refuses site
+storage keeps the editor. **Reset** clears them; **Copy theme** prints it.
 
 ## The looks
 
 <LookPicker />
 
-A platform style is one of four identity variants; an authored look applies a
-style over one. The picker remembers the look in the app, not the URL.
+## Bring a shadcn theme
+
+```tsx
+import { shadcnTheme } from "@gpuixui/tokens";
+
+const theme = shadcnTheme(css, "dark");
+```
+
+**Default** is shadcn's neutral theme, audited as warnings.
+
+## styles.css
+
+<ThemeStylesheet />
 
 ## The style reference
 
@@ -39,6 +50,6 @@ style over one. The picker remembers the look in the app, not the URL.
 
 <TokenScales />
 
-## No limits to customizability!
+## Blocks
 
 <BlockPreview name="desktop-01" />

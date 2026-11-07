@@ -1,13 +1,5 @@
 import { type KeyboardEvent, useRef } from "react";
 
-/**
- * The playground's source field: a plain textarea with a line-number gutter.
- *
- * It is deliberately small. Pele needs the source, not a language server, and
- * a native textarea keeps selection, undo and IME behaviour; `Tab` inserts two
- * spaces because a diagram's indentation is significant.
- */
-
 export interface DiagramEditorProps {
   readonly value: string;
   readonly onChange: (value: string) => void;

@@ -1,15 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * AppMenu pointer switching, in the real GPUix renderer.
- *
- * The bugs these guard: a pointer crossing a sibling title while a menu is open
- * left the old menu open; hovering a closed bar opened one (macOS opens on hover
- * only after a press); the pressed title stayed on the menu that just closed;
- * `aria-expanded` reported two menus open at once; a press on the open trigger
- * reopened instead of toggling it shut; and Escape closed without returning
- * focus to the title.
- */
-
 import type { TestRoot } from "@gpuix/react/testing";
 import { createTestRoot } from "@gpuix/react/testing";
 import { darkTheme } from "@gpuixui/tokens";
@@ -64,7 +53,6 @@ const element = (root: TestRoot, testId: string) => {
   return found;
 };
 
-/** Move the pointer to the centre of `testId`. */
 const hover = (root: TestRoot, testId: string): void => {
   const bounds = root.renderer.getElementBounds(element(root, testId).id);
   if (bounds === null) throw new Error(`no painted box for ${testId}`);
@@ -74,7 +62,6 @@ const hover = (root: TestRoot, testId: string): void => {
   );
 };
 
-/** Press the centre of `testId` through the runtime's hit testing. */
 const click = (root: TestRoot, testId: string): void => {
   const bounds = root.renderer.getElementBounds(element(root, testId).id);
   if (bounds === null) throw new Error(`no painted box for ${testId}`);

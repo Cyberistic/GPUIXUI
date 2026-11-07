@@ -1,78 +1,18 @@
-/**
- * The dim every other control paints while one has keyboard focus.
- *
- * `@gpuix/native` multiplies the opacity of each focusable element by 0.4 while
- * a different element holds keyboard focus (`keyboardFocusDim`, on by default);
- * an element that draws its own focus look opts out with
- * `keyboardFocusDim: false`. That is a paint mechanism every focused state in
- * the library triggers, and `contrastRatio` cannot see it — the result depends
- * on the surface behind the control, so no role pair measures it.
- *
- * The factor is the runtime's, not a theme's: `keyboardFocusDimOpacity` records
- * what `0.11.0` paints, measured from the `keyboard-focus-dim` window capture —
- * the share, and the fact that the text composites over the *dimmed* fill rather
- * than over the page, which is the composite this module shares with the
- * disabled fade. The colours a reader sees are the shipped palette's: the dark
- * `muted` fill `#1E222A` paints `#161A20` over the page, and its `foreground`
- * text `#EEF1F5` paints `#6C7075` over that fill — both
- * `blend(colour, behind, 1 - 0.4)`.
- *
- * A row **under the pointer** is dimmed as a whole: the wash it tints and the
- * label it carries fade together, so its label lands on the dimmed wash rather
- * than on the strip the row sits on. The table therefore measures the washes a
- * row wears as fills of their own, which is what the runtime composites. Over
- * the shipped, high-contrast, platform and authored styles the tightest wash
- * placement is Linux light's `accent` under a chosen row's title on a muted
- * strip at **2.07:1** — the dim moves the label and the wash toward the strip
- * together, so the pair stays well above the floor — and a brand whose wash is
- * tuned to the label's dimmed colour erases it (1.00:1), which the report names.
- */
-
 import { themeColors, type ColourSource, type ThemeColors } from "./color.js";
 import { contrastRatio } from "./contrast.js";
 import { decorativeFloor } from "./decorative.js";
 import { fadedPair, type FadeFailure, type FadePair } from "./fade.js";
 
-/**
- * The share of itself a control keeps while another control has keyboard focus.
- *
- * It is a runtime constant rather than a theme group, for the same reason
- * `disabledOpacity` is: every element the runtime dims gets this one share, so
- * a brand that set its own would describe a paint the library does not have.
- */
 export const keyboardFocusDimOpacity = 0.4;
 
-/** One control the keyboard dim is measured on. */
 export type KeyboardDimPair = FadePair;
 
-/** The surfaces a control or a row can sit on. */
 const strips = ["background", "card", "popover", "muted"] as const;
 
-/**
- * The fills a field paints: a plain field's `input`, and the page role a
- * composite field (search, tag, mention, inline edit, chat composer, the colour
- * picker's hex field) paints as its own fill.
- */
 const fieldFills = ["input", "background"] as const;
 
-/** The two labels a field carries: its value and its hint. */
 const fieldLabels = ["inputForeground", "placeholder"] as const;
 
-/**
- * The washes a row wears while the pointer is on it, and the label each carries.
- *
- * A row under the pointer is a control that **has a fill of its own** — the wash
- * it tints — so the dim composites its label over that wash rather than over the
- * strip the row sits on. The table measured a row on the strip only, so the
- * composite a reader sees while Tab is elsewhere was measured nowhere: a hovered
- * row is dimmed as a whole, wash and label together.
- *
- * The pairs are the paints, read from the rows that wear them: a ghost action or
- * a menu row tints `hover` and keeps `foreground` (`hover:bg-hover` in the
- * primitives' recipe), a list row tints `accent` under the pointer and `active`
- * while it is pressed (`list.tsx`), and a **chosen** row keeps its own title role
- * (`selectedForeground`) under both washes.
- */
 const washedRows: ReadonlyArray<
   readonly [fill: keyof ThemeColors, label: keyof ThemeColors]
 > = [
@@ -83,20 +23,6 @@ const washedRows: ReadonlyArray<
   ["active", "selectedForeground"],
 ];
 
-/**
- * Every control the keyboard dim is measured on: the three filled actions, a
- * field (both of its fills, its value and its placeholder), a focusable row's
- * own text, a selected row, and the washes a row wears while the pointer is on
- * it, on each strip a control sits on.
- *
- * A focusable row with no fill of its own — a menu row, a tab, a checkbox's
- * label — names the surface it sits on as its own fill: that composite is the
- * one the runtime paints, because the fill blends with itself and stays put
- * while the text fades over it. A composite field is not one of those: it has a
- * fill, it is just the page role, so it is listed by that fill. A row **under
- * the pointer** has a fill too — the wash it tints — so it is listed by that
- * wash.
- */
 export const keyboardDimPairs: readonly KeyboardDimPair[] = strips.flatMap(
   (over) => [
     { fill: "primary", label: "primaryForeground", over },
@@ -112,35 +38,8 @@ export const keyboardDimPairs: readonly KeyboardDimPair[] = strips.flatMap(
   ],
 );
 
-/**
- * One dimmed control whose label is too close to the dimmed fill it sits on.
- *
- * The ratio is the composited label against the composited fill, or `undefined`
- * when a role is not an opaque hex colour and the result cannot be measured.
- */
 export type KeyboardDimFailure = FadeFailure;
 
-/**
- * Every dimmed control in a theme whose label is no longer distinguishable from
- * the fill behind it.
- *
- * The floor is `decorativeFloor` (1.05:1) and deliberately **not** a
- * readability floor: the dim is the runtime's "where can Tab go" cue, so the
- * claim is only that the label is still a label. A filled action's label lands
- * between 1.27:1 and 2.99:1 while dimmed, so a control whose text must stay
- * readable while the focus is elsewhere opts out of the dim
- * (`keyboardFocusDim: false`) rather than asking the palette for a contrast the
- * mechanism cannot keep. A pair that cannot be composited — a translucent or
- * non-hex role, or a role the theme does not carry — is reported with `ratio:
- * undefined` rather than skipped.
- *
- * @example
- * ```ts
- * import { keyboardDimFailures, lightTheme } from "@gpuixui/tokens";
- *
- * keyboardDimFailures(lightTheme); // [] — every dimmed label stays visible
- * ```
- */
 export function keyboardDimFailures(
   theme: ColourSource,
   floor: number = decorativeFloor,

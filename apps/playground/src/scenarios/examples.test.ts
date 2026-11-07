@@ -1,20 +1,3 @@
-/**
- * Guards the example gallery's documentation against a drifting count.
- *
- * The header said "39 screens" while the registry had grown to 46 and nothing
- * read it: the scenario pages whatever `examples` holds, so only the prose fell
- * behind. The header must not print a count at all, and the readout must ask the
- * registry — a number written down in either place is the bug.
- *
- * Bug guarded: a registry that grows leaves a one-number claim false. The README
- * carried the other half — its gallery section pinned the size three times, the
- * check total it implied (`4 × 39 + 2`), the readout's own `of=39`, and the
- * negative control's `expected 39, got 1` — and by the time this was written the
- * registry held 72 screens, so a reader judged the suite at half its coverage.
- * The section now states the probe's *shape* instead, and this file derives that
- * shape from the assertion sites, so an assertion added without the sentence and
- * a sentence edited alone both fail.
- */
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import * as Order from "effect/Order";
@@ -22,19 +5,16 @@ import { describe, expect, it } from "vitest";
 
 const source = readFileSync(new URL("./examples.tsx", import.meta.url), "utf8");
 
-/** The components registry, read as keys so a collision is checked without loading it. */
 const componentRegistry = readFileSync(
   new URL("../../../../packages/components/examples/index.ts", import.meta.url),
   "utf8",
 );
 
-/** The files package's registry, read the same way. */
 const filesRegistry = readFileSync(
   new URL("../../../../packages/files/examples/index.ts", import.meta.url),
   "utf8",
 );
 
-/** The kebab-case ids a registry literal declares. */
 const screenIds = (registry: string): ReadonlyArray<string> =>
   Arr.fromIterable(registry.matchAll(/^  "?([a-z0-9-]+)"?:/gm)).map(
     (match) => match[1] ?? "",
@@ -50,35 +30,24 @@ const components = readFileSync(
   "utf8",
 );
 
-/**
- * The gallery's row in the inventory.
- *
- * The row names the gallery's scenarios and the suite they belong to, so it
- * carries the same coverage claim as the README — and the same two registries
- * behind it. A count here is a function of another package's registry, which is
- * why the row names both without one.
- */
 const galleryRow = (() => {
   const start = components.indexOf("| Native theme gallery |");
   const end = components.indexOf("\n", start);
   return start === -1 ? "" : components.slice(start, end);
 })();
 
-/** The prose between the gallery's heading and the next one. */
 const gallerySection = (() => {
   const start = readme.indexOf("## The example gallery");
   const end = readme.indexOf("\n## ", start + 1);
   return start === -1 || end === -1 ? "" : readme.slice(start, end);
 })();
 
-/** The gallery's line in §What is proven here, honestly. */
 const provenBullet = (() => {
   const start = readme.indexOf("- Every shipped example the docs quote");
   const end = readme.indexOf("\n- ", start + 1);
   return start === -1 || end === -1 ? "" : readme.slice(start, end);
 })();
 
-/** The `Effect.forEach` callback: the checks that run once per page. */
 const perPageSource = (() => {
   const start = source.indexOf("yield* Effect.forEach(");
   const end = source.indexOf("{ concurrency: 1 }", start);
@@ -88,7 +57,6 @@ const perPageSource = (() => {
 const sites = (text: string): number =>
   text.match(/ctx\.expect[A-Za-z]+\(/g)?.length ?? 0;
 
-/** The count in words, so the sentence and the source speak one language. */
 const WORDS = [
   "zero",
   "one",
@@ -113,15 +81,12 @@ describe("the example gallery's header", () => {
 
 describe("the example gallery's README section", () => {
   it("does not pin the registry size or a total derived from it", () => {
-    // A reader judges coverage from this section; every count in it is a
-    // function of `packages/components/examples`.
     expect(gallerySection).not.toBe("");
     expect(gallerySection).not.toMatch(
       /\b\d+\s+(?:screens?|examples?|checks?)\b/i,
     );
     expect(gallerySection).not.toMatch(/of=\d+/);
-    // A quoted negative-control message ("expected 39, got 1") carries the same
-    // registry-derived number in the other direction.
+
     expect(gallerySection).not.toMatch(/expected \d+, got \d+/);
     expect(provenBullet).not.toBe("");
     expect(provenBullet).not.toMatch(
@@ -130,11 +95,6 @@ describe("the example gallery's README section", () => {
   });
 
   it("states the per-page shape the probe actually asserts", () => {
-    // Each page asserts four things — the readout names it, its wrapper paints,
-    // the wrapper lays out a height and its subtree carries text — and the run
-    // adds two whole-run checks. The words are derived: a five-site page (or a
-    // third whole-run check) fails the sentence by name instead of passing it
-    // with a stale shape.
     const perPage = sites(perPageSource);
     expect(perPage).toBeGreaterThan(1);
     expect(gallerySection).toContain(`${WORDS[perPage]} checks per page`);
@@ -147,9 +107,6 @@ describe("the example gallery's README section", () => {
   });
 
   it("holds the two negative controls to the probe's own message", () => {
-    // The controls are the section's proof that the suite can fail; a message
-    // quoted from an older registry ("expected 39, got 1") is a failure the run
-    // can no longer produce.
     expect(gallerySection).toContain(
       "`no-such-example lays out a height of its own`",
     );
@@ -161,11 +118,6 @@ describe("the example gallery's README section", () => {
 
 describe("the example gallery's inventory row", () => {
   it("does not pin the suite's size in its evidence", () => {
-    // The row is where an inventory reader judges the gallery's coverage, and
-    // both numbers behind it are another registry's: the headless scenario
-    // registry and `packages/components/examples`. A count written here goes
-    // stale without a failing test, which is what happened (40/40 and 39 when
-    // the registries held 46 and 72).
     expect(galleryRow).not.toBe("");
     expect(galleryRow).not.toMatch(/\b\d+\s+(?:headless\s+)?scenarios?\b/i);
     expect(galleryRow).not.toMatch(
@@ -192,23 +144,17 @@ describe("the example gallery's registry", () => {
   it("merges the files package's three screens too", () => {
     expect(source).toContain('from "@gpuixui/files/examples"');
     expect(source).toContain("...fileExamples");
-    // The registry's own keys are what the gallery pages, so the merge is read
-    // rather than the import alone: a renamed example is still mounted under
-    // the id its docs use.
+
     expect(
       Arr.sort(Arr.fromIterable(screenIds(filesRegistry)), Order.String),
     ).toEqual(["file-tree", "log-viewer", "property-panel"]);
   });
 
   it("gives the merged ids no name the components registry already uses", () => {
-    // A shared id would mount one screen under two names, which the run's
-    // no-two-pages-paint-one-screen check would report after every mount instead
-    // of here.
     const componentIds = Arr.fromIterable(
       componentRegistry.matchAll(/^  "([a-z0-9-]+)":/gm),
     ).map((match) => match[1] ?? "");
-    // The sixteen effects left for `@gpuixui/fx` (plan 726), so the floor that
-    // proves the regex read the registry at all is the core's own count.
+
     expect(Arr.length(componentIds)).toBeGreaterThan(30);
     const merged = [
       "app-menu",

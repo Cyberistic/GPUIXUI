@@ -9,18 +9,6 @@ import { ReorderableTabs, type ReorderableTab } from "../docs/reorderable-tabs";
 import { closedTabs } from "../docs/reorderable-tabs-logic";
 import { usePrefersReducedMotion } from "./reduced-motion";
 
-/**
- * The terminal moment: a terminal types the command that runs GPUIxUI in
- * place, and the app it opens **inside the same frame** — a code editor drawn
- * with the library's file tree and a collapsible sidebar.
- *
- * The size is the claim: the editor is not a second window, so both stages
- * share one frame and the editor replaces the shell's body. The tree and the
- * sidebar are real controls: a file press switches the open buffer, and the
- * explorer collapses with a width transition (dropped under reduced motion).
- */
-
-/** The command the Terminal guide documents. */
 const COMMAND = "GPUIX_TERMINAL=1 code GPUIXUI";
 
 const TYPE_MS = 32;
@@ -44,7 +32,6 @@ type Token = readonly [TokenRole, string];
 
 type FileName = "page.tsx" | "button.tsx" | "theme.ts";
 
-/** The open file, tokenised so the editor paints VS Code's Dark+ colours. */
 const FILES: Readonly<Record<FileName, ReadonlyArray<ReadonlyArray<Token>>>> = {
   "page.tsx": [
     [
@@ -259,14 +246,7 @@ const fileTabs = (
 export function Terminal() {
   const reduced = usePrefersReducedMotion();
   const section = useRef<HTMLElement | null>(null);
-  /**
-   * Whether the reader has reached the block.
-   *
-   * The sequence used to start on mount, so it had finished typing before the
-   * reader scrolled to it — the terminal they arrived at was already an editor.
-   * It now waits for the section to come into view (a third of it is enough),
-   * and a replay re-runs it from where it stands.
-   */
+
   const [armed, setArmed] = useState(false);
   const [typed, setTyped] = useState(0);
   const [stage, setStage] = useState<Stage>("typing");
@@ -324,7 +304,6 @@ export function Terminal() {
 
   const lines = active === null ? [] : FILES[active];
 
-  /** Opening a closed file puts it back at the end of the strip and focuses it. */
   const openFile = (name: FileName): void => {
     setOrder((current) =>
       current.includes(name) ? current : [...current, name],
@@ -332,7 +311,6 @@ export function Terminal() {
     setActive(name);
   };
 
-  /** Closing a tab leaves the next tab (or the previous one) open. */
   const closeFile = (id: string): void => {
     const name = fileNameOf(id);
     if (name === null) return;
@@ -474,7 +452,6 @@ export function Terminal() {
   );
 }
 
-/** The explorer: the package's own tree drawing, with its fold animation. */
 function Explorer({
   active,
   onFile,
@@ -515,7 +492,6 @@ function Explorer({
   );
 }
 
-/** The Seti badge the editor's own explorer shows beside a file. */
 function fileGlyph(node: FileNode): ReactNode {
   if (node.name === "package.json") {
     return <i className="landing-vscode-json">{"{}"}</i>;
@@ -526,7 +502,6 @@ function fileGlyph(node: FileNode): ReactNode {
   return null;
 }
 
-/** The VS Code chrome: an activity bar, a minimap and a status bar. */
 function ActivityBar({
   expanded,
   onToggle,
@@ -671,7 +646,6 @@ function ReplayGlyph() {
   );
 }
 
-/** The TypeScript mark Seti shows in the explorer and on the tab. */
 function TsGlyph() {
   return <i className="landing-vscode-ts">TS</i>;
 }

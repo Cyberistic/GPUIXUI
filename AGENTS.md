@@ -22,6 +22,17 @@ context compaction and restarts.
   justify the code, the code is wrong — find a better way.
 - Order of concerns: **secure** (typesafe, fail-safe, auth) → **works and
   effectful** (Effect) → **fast** → **pretty**.
+- **Comments are exceptions, not narration.** A file gets at most three comment
+  lines, a single comment or adjacent `//` block at most two lines and 24 words.
+  Keep only a licence/copyright header, a `TODO`/`FIXME`, a tooling directive
+  (`@ts-expect-error`, `@jsxImportSource`, `check-tests-ok:`, linter pragmas) or a fact the code
+  cannot state. Delete rationale, history, plans, measurements, restatements of
+  the symbol name and "why this is shaped this way" prose. `scripts/oxlint-comments.mjs`
+  enforces this as the `comments/no-long-comments` oxlint rule: `nub run lint`
+  fails, `nub run lint:fix` removes the offending comments.
+- **Documentation lives in Markdown**, not in source comments: `docs/`, the
+  package READMEs and the page MDX. A comment that exists only to document an
+  exported symbol belongs in one of those, where it can be read and tested.
 - Shareable logic lives in `packages/` and is reused. Never copy-paste between
   apps. Hoist when a second consumer appears.
 - Prefer reading documentation over exploring package source. Most packages

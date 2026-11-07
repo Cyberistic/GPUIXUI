@@ -1,16 +1,7 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Highlight text example: a marker that sweeps across a query's matches.
- *
- * The first line is the house word search, the second marks explicit ranges a
- * caller would get from its own index and names the active match, and the third
- * paints at rest under the reduced preference.
- */
-
 import { HighlightText } from "../src/highlight-text.js";
 import { MotionProvider } from "../src/motion.js";
 
-/** A query, explicit ranges, and a reduced sweep. */
 export const HighlightTextExample = () => (
   <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
     <HighlightText

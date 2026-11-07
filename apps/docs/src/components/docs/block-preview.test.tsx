@@ -4,16 +4,6 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import { BlockPreview } from "./block-preview";
 
-/**
- * A block page's frame.
- *
- * Bug guarded: `BlockPreview` mounted the block in the component pages'
- * `.gx-component` card — a 520px-tall scroll panel about 356px wide — so the
- * page that is supposed to show the screen opened on a cropped, squeezed
- * dashboard. The scene now takes the page column's own width with no fixed
- * panel and no scroll box, and the recipe follows in a disclosure under it.
- */
-
 vi.mock("./platform-toggle", () => ({
   usePlatform: () => ({
     platform: "darwin",
@@ -31,7 +21,6 @@ const css = readFileSync(
   "utf8",
 );
 
-/** One selector's declarations from the block style sheet. */
 const cssBlock = (selector: string): string => {
   const start = css.indexOf(`${selector} {`);
   const end = css.indexOf("\n}", start);

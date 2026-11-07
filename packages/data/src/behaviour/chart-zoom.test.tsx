@@ -1,11 +1,3 @@
-/**
- * Zoom and pan on the real renderer.
- *
- * The bugs these guard: a pan that moves the strip but not the plot, a wheel
- * that reports a zoom but paints the same window, and a reset that leaves the
- * reader where the pan ended.
- */
-
 import { afterEach, describe, expect, it } from "vitest";
 import { useState } from "react";
 import { BarChart } from "../chart/chart.js";
@@ -122,7 +114,7 @@ describe("a chart's zoom strip", () => {
     expect(last).toBeDefined();
     expect(last?.[0]).toBeGreaterThan(0);
     expect(last?.[1]).toBeLessThanOrEqual(4);
-    // The categories move with the window: the first label is clipped left.
+
     expect(requireStyle(root, "chart-zoom-label-0").left).toBeLessThan(0);
   });
 

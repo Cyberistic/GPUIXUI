@@ -4,17 +4,6 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { AvatarStatesBody, AvatarWorkflowBody } from "./avatar-demo";
 
-/**
- * The avatar previews, as they render.
- *
- * The drawings are the only place a reader sees the four presence words, the
- * four diameters and the fallback edges beside the faces. A demo that dropped
- * the word beside a state, resized a disc without the token scale, or printed a
- * fallback the component does not derive would still build; these cases hold
- * the markup to the model and the style sheet to the roles the component
- * paints.
- */
-
 const workflow = renderToStaticMarkup(<AvatarWorkflowBody />);
 const states = renderToStaticMarkup(<AvatarStatesBody />);
 
@@ -23,7 +12,6 @@ const css = readFileSync(
   "utf8",
 );
 
-/** The declarations of the first `selector { … }` block in the style sheet. */
 const block = (selector: string): string => {
   const start = css.indexOf(`${selector} {`);
   return start === -1 ? "" : css.slice(start, css.indexOf("}", start));
@@ -58,7 +46,7 @@ describe("the avatar roster preview", () => {
       expect(workflow).toContain(`aria-label="${name}"`);
       expect(workflow).toContain(`>${initials}<`);
     }
-    // The card is one node per face, not a decorative box beside it.
+
     expect((workflow.match(/role="img"/g) ?? []).length).toBe(5);
   });
 
@@ -87,8 +75,6 @@ describe("the avatar states preview", () => {
   });
 
   it("keeps the astral and empty fallbacks the component derives", () => {
-    // The three edges the preview draws: a middle name is ignored, a lone
-    // separator is no letter, and two astral parts stay whole.
     expect(states).toContain(">GH<");
     expect(states).toContain(">?<");
     expect(states).toContain(">🎨A<");

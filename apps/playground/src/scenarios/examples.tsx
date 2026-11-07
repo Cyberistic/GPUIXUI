@@ -1,19 +1,3 @@
-/**
- * The example gallery: every shipped example the docs quote, in the real runtime.
- *
- * A component's behaviour suite proves its parts; nothing proved that the
- * screens a reader copies out of the docs *mount*. The components package ships
- * a registry and the shell package ships three components, so this module merges
- * both into the one list the gallery pages through: mounting every screen at
- * once would lay out a very tall tree and leave a screen's timer or `Effect`
- * fiber running behind the next one.
- *
- * Per page, all read from the renderer: the readout names the id, the example's
- * wrapper lays out a height of its own, and the wrapper's subtree carries text —
- * a screen that renders nothing paints no text, and the wrapper would be zero
- * high. The paging control is the only input; a page that never advances would
- * leave the readout on the first id and fail by name.
- */
 import { Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -35,25 +19,12 @@ import type { Smoke } from "@gpuixui/testing";
 import type { ScenarioBody } from "../types.js";
 import { Body, Pressable, Readout } from "../ui.js";
 
-/**
- * The shell package's three examples, under the kebab-case ids the docs index
- * and the components registry use.
- */
 const shellExamples: Readonly<Record<string, ComponentType>> = {
   "app-menu": AppMenuExample,
   "status-bar": StatusBarExample,
   toolbar: ToolbarExample,
 };
 
-/**
- * The one registry the gallery pages: the components', the shell's and the
- * files package's.
- *
- * The files examples were the one registry no scenario mounted: its surfaces
- * had window probes for part of the family, but the screens the docs quote — a
- * file tree, a log viewer, a property panel over one object — painted nowhere
- * until they joined the gallery.
- */
 export const examples: Readonly<Record<string, ComponentType>> = {
   ...componentExamples,
   ...dataExamples,
@@ -62,23 +33,14 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   ...fileExamples,
 };
 
-/**
- * Every example id, sorted.
- *
- * The registry's key order is the object literal's, which is a review artefact
- * rather than a plan; sorting makes the page order stable, so a failing check
- * names the same id on every run.
- */
 export const exampleIds: ReadonlyArray<string> = Arr.sort(
   R.keys(examples),
   Order.String,
 );
 
-/** The id on a page, or `None` past the end. */
 const idAt = (page: number): Option.Option<string> =>
   Option.fromNullishOr(exampleIds[page]);
 
-/** One example, in a wrapper the gallery can address and measure. */
 const ExamplePage = ({ id }: { readonly id: string }) => {
   const Example: ComponentType | undefined = examples[id];
   return (
@@ -164,17 +126,12 @@ export const examplesMountScenario: ScenarioBody = {
         { concurrency: 1 },
       );
 
-      // A registry row pointing at an example another row already mounts shows
-      // the reader one screen under two names: the wrapper and the readout would
-      // differ, so only the screen's own text catches it.
       yield* ctx.expectEqual(
         "no two examples paint the same screen",
         Arr.length(Arr.dedupe(painted)),
         Arr.length(painted),
       );
 
-      // The plan ends where the registry does: one press past the last id shows
-      // no example at all, which also unmounts the last screen's timers.
       yield* ctx.expectContains(
         "the gallery ends after the last example",
         readout(ctx),

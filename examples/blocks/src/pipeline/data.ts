@@ -1,13 +1,6 @@
-/**
- * The pipeline's sample data: a small team's release work, moving Idea → Spec
- * → Build → Review → Shipped. The people are the Hunter Association's.
- */
-
-/** The stages work moves through, in order. */
 export const stages = ["Idea", "Spec", "Build", "Review", "Shipped"] as const;
 export type Stage = (typeof stages)[number];
 
-/** The project a piece of work belongs to. */
 export const projects = [
   "Hunter Exam",
   "Greed Island",
@@ -15,20 +8,18 @@ export const projects = [
 ] as const;
 export type Project = (typeof projects)[number];
 
-/** One piece of work. */
 export interface WorkItem {
   readonly id: string;
   readonly title: string;
   readonly stage: Stage;
   readonly project: Project;
   readonly owner: string;
-  /** ISO date, so a string sort is a date sort. */
+
   readonly due: string;
   readonly estimate: number;
   readonly activity: ReadonlyArray<string>;
 }
 
-/** The person viewing the board. */
 export const viewer = "Gon Freecss";
 
 const item = (

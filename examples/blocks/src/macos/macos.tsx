@@ -1,13 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * macOS — a whole desktop in the current Mac look: the wallpaper drawn from
- * gradients, the menu bar with its menus, the dock's apps, and a floating
- * window layer the caller fills with real `@gpuixui` windows.
- *
- * The chrome is drawn in the look's own values; the app name in the bar and the
- * menus come from `data.ts`. Nothing here is an OS asset: the mark is the Gon
- * mark the rest of the library wears.
- */
 import type { StyleDesc } from "@gpuix/react";
 import { Icon } from "@gpuixui/icons";
 import {
@@ -37,7 +28,6 @@ const fill = (style: StyleDesc): StyleDesc => ({
   ...style,
 });
 
-/** A two-stop linear gradient, `angle` in CSS degrees (180 runs top to bottom). */
 const gradient = (
   angle: number,
   from: string,
@@ -51,7 +41,6 @@ const gradient = (
   ],
 });
 
-/** A disc of `size` centred at (`x`, `y`) — the wallpaper's only shape. */
 const disc = (
   x: number,
   y: number,
@@ -67,7 +56,6 @@ const disc = (
     background,
   });
 
-/** The ground: a violet field with three soft blooms of light. */
 const Wallpaper = ({ width, height }: { width: number; height: number }) => (
   <div style={fill({ left: 0, top: 0, width, height, overflow: "hidden" })}>
     <div
@@ -115,7 +103,6 @@ const Wallpaper = ({ width, height }: { width: number; height: number }) => (
 const INK = "#F4F1FF";
 const DIM = "#F4F1FFB8";
 
-/** A menu bar item's panel, painted under its title. */
 const MenuPanel = ({
   title,
   items,
@@ -183,7 +170,6 @@ const MenuPanel = ({
   </div>
 );
 
-/** Each menu title owns a fixed slot, so the bar and its panel cannot drift. */
 const SLOT = 74;
 const FIRST_SLOT = 78;
 const slotOf = (index: number): number => FIRST_SLOT + index * SLOT;
@@ -337,7 +323,6 @@ const Dock = ({
 };
 
 export interface MacosDesktopProps {
-  /** The floating window layer: real windows, placed by the caller. */
   readonly children?: ReactNode;
   readonly width?: number;
   readonly height?: number;
@@ -407,7 +392,6 @@ export const MacosDesktop = ({
   height = 800,
   wallpaper,
 }: MacosDesktopProps) => {
-  // Opaque: the offscreen renderer has no window server, so a vibrant sidebar
   // would paint flat grey instead of the wallpaper through it.
   const theme: Theme = extendTheme(platformTheme(lightTheme, "darwin"), {
     window: "opaque",

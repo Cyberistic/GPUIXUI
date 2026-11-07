@@ -1,16 +1,3 @@
-/**
- * `QrCode` — the symbol it paints, the box it reserves and the refusal it owes
- * a value that does not fit.
- *
- * The bug guarded: the component must paint the encoder's own matrix as one
- * tinted `<svg>` mask with the quiet zone inside the viewBox, never a themed
- * approximation of a QR code — a symbol whose modules are clipped or whose
- * paper follows a dark theme cannot be scanned. The over-long case must name
- * the capacity instead of painting a truncated (unreadable) symbol, announce
- * that refusal rather than an image of a symbol that is not painted, and keep
- * the box its caller reserved so the page does not jump as a value grows.
- */
-
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -71,8 +58,6 @@ describe("QrCode", () => {
   });
 
   it("reads a blank name as the default, never an unnamed image", () => {
-    // The bug guarded: a stored blank label published `role="img"` with an
-    // empty name, so assistive technology met an image that said nothing.
     Arr.forEach(["", "   "], (label) => {
       const root = render({ label });
       expect(expectSome(elementProp(root, "aria-label"))).toBe("QR code");
@@ -80,9 +65,6 @@ describe("QrCode", () => {
   });
 
   it("reads a value that is not text as nothing, never the word null", () => {
-    // The bug guarded: `TextEncoder` stringifies whatever it is handed, so a
-    // value restored from storage as `null` encoded the four bytes of "null" —
-    // a symbol a scanner reads back as a payload the record never carried.
     const stored = render({ value: null as unknown as string });
     const empty = render({ value: "" });
     expect(sourceOf(stored)).toBe(sourceOf(empty));
@@ -90,10 +72,6 @@ describe("QrCode", () => {
   });
 
   it("reads a stored ink or paper it cannot paint as the scanner pair", () => {
-    // The bug guarded: a record restored with a blank or non-text ink/paper
-    // handed the runtime a colour it cannot paint, so the quiet zone fell back
-    // to the page (dark in a dark theme) or the modules inherited a text role —
-    // the one job the symbol has, being scannable, silently lost.
     const root = render({ ink: null as unknown as string, paper: "   " });
     expect(expectSome(hostStyleString(root, "backgroundColor"))).toBe(QR_PAPER);
     expect(expectSome(hostStyleString(svgOf(root), "color"))).toBe(QR_INK);
@@ -115,8 +93,6 @@ describe("QrCode", () => {
   });
 
   it("keeps a box smaller than the module grid at the caller's side", () => {
-    // The bug guarded: a thumbnail grid that reserved 20 points for a 29-cell
-    // symbol was painted a 29-point frame, so the symbol overflowed its box.
     const root = render({ size: 20 });
     expect(expectSome(hostProp(root, "style"))).toMatchObject({
       width: 20,
@@ -129,8 +105,6 @@ describe("QrCode", () => {
   });
 
   it("reads a stored level the union does not name as the default", () => {
-    // The bug guarded: a stored level reached the encoder's block table as an
-    // unknown name and threw out of the render; the boundary reads it as `M`.
     const stored = "X" as QrLevel;
     expect(sourceOf(render({ level: stored }))).toBe(sourceOf(render()));
   });
@@ -174,9 +148,6 @@ describe("QrCode", () => {
   });
 
   it("announces the refusal as an alert, not as an image", () => {
-    // The bug guarded: the overflow box carried `role="img"` and the symbol's
-    // label, so assistive technology heard "QR code" for a state whose visible
-    // text is the capacity refusal — the one thing the reader needs.
     const capacity = qrByteCapacity(10, "M");
     const root = render({ value: "y".repeat(capacity + 1), label: "Docs QR" });
     expect(expectSome(elementProp(root, "role"))).toBe("alert");
@@ -196,9 +167,6 @@ describe("QrCode", () => {
   });
 
   it("keeps the square the caller asked for in the overflow state", () => {
-    // The bug guarded: `size` is how a thumbnail grid reserves a cell, and the
-    // refusal ignored it, so the box collapsed to its message while the symbol
-    // it replaced had held a square. The refusal reserves the same square.
     const capacity = qrByteCapacity(10, "M");
     const root = render({
       value: "y".repeat(capacity + 1),

@@ -1,28 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * `Slider` and `RangeSlider` — a value on a track.
- *
- * GPUix publishes **no slider** (see `docs/gpuix-capabilities.md`): there is a `div`, a style
- * object and real mouse/key events, and the rest is this package's. The
- * arithmetic lives in `core/value.ts`, the paint in `core/style.ts`, and this
- * file owns only what is irreducible here — reading the track's box from the
- * renderer so a pointer becomes a value, the drag flag, and focus.
- *
- * **One runtime limit is structural:** there is no
- * `aria-valuenow`/`aria-valuemin`/`aria-valuemax`, so the value reaches
- * assistive technology through `aria-valuetext` only.
- *
- * Pointer capture is **present**, and the track is what arms it: the runtime
- * captures the pointer for an element that listens to both `mouseDown` and
- * `mouseMove`, so a drag that leaves the track keeps reporting to it (clamped to
- * the ends) until the release. Measured in a window by the playground's
- * `pointer-capture` probe and held by `runtime/value.runtime.test.tsx`.
- *
- * `RangeSlider` is a different ARIA contract from `Slider` — two sliders in one
- * group rather than one slider with an array value — so it is a second
- * component, not a mode of the first.
- */
-
 import {
   Children,
   Fragment,
@@ -96,58 +72,42 @@ import {
 import { useMessages } from "./MessagesProvider.js";
 import { useTheme } from "./ThemeProvider.js";
 
-/** A single value on a track. */
 export interface SliderProps
   extends
     ValueChangeProps<number>,
     InteractionProps,
     FieldHostProps,
     HelpProps {
-  /** Controlled value. Omit to let the slider hold its own. */
   readonly value?: number;
   readonly defaultValue?: number;
-  /** Defaults to 0. A stored value that is not a number is that default. */
+
   readonly min?: number;
-  /** Defaults to 100. A stored value that is not a number is that default. */
+
   readonly max?: number;
-  /** Defaults to 1. `0` makes the slider continuous. */
+
   readonly step?: number;
-  /** Defaults to `md`. */
+
   readonly size?: ControlSize;
   readonly disabled?: boolean;
-  /** A failed validation paints the destructive role, like a field. */
+
   readonly invalid?: boolean;
-  /** Accessible name. */
+
   readonly label?: string;
-  /** How the value is announced. Defaults to `String(value)`; a blank answer keeps it. */
+
   readonly formatValue?: (value: number) => string;
-  /**
-   * The value a gesture ended on.
-   *
-   * `onValueChange` reports every frame of a drag; this reports the value the
-   * gesture finished with — once, on pointer release, or once per key that
-   * moved the value. A caller that persists or fetches does that work here
-   * instead of debouncing `onValueChange`, and a gesture that ends on the value
-   * it started with still reports one commit because it happened.
-   */
+
   readonly onValueCommit?: (value: number) => void;
-  /**
-   * The axis the value runs along. Defaults to `horizontal`.
-   *
-   * A vertical track has no natural length: give it a definite height (its
-   * width is the control's own height).
-   */
+
   readonly orientation?: SliderOrientation;
-  /** Extra style, resolved against the slider's live state and merged last. */
+
   readonly style?: StateStyle<SliderState>;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
-  /** The parts to draw. Omit for the default composition. */
+
   readonly children?: ReactNode;
   readonly testId?: string;
 }
 
-/** Two values on one track. */
 export interface RangeSliderProps
   extends
     ValueChangeProps<readonly [number, number]>,
@@ -156,46 +116,32 @@ export interface RangeSliderProps
     HelpProps {
   readonly value?: readonly [number, number];
   readonly defaultValue?: readonly [number, number];
-  /** Defaults to 0. A stored value that is not a number is that default. */
+
   readonly min?: number;
-  /** Defaults to 100. A stored value that is not a number is that default. */
+
   readonly max?: number;
-  /** Defaults to 1. `0` makes the slider continuous. */
+
   readonly step?: number;
   readonly size?: ControlSize;
   readonly disabled?: boolean;
   readonly invalid?: boolean;
-  /** The group's name; each thumb becomes the provider's `rangeEnd` sentence. */
+
   readonly label?: string;
-  /** How each thumb's value is announced. Defaults to `String(value)`; a blank answer keeps it. */
+
   readonly formatValue?: (value: number) => string;
-  /**
-   * The span a gesture ended on.
-   *
-   * `onValueChange` reports every frame of a drag; this reports the span the
-   * gesture finished with — once, on pointer release, or once per key that
-   * moved an end. A caller that persists or fetches does that work here instead
-   * of debouncing `onValueChange`.
-   */
+
   readonly onValueCommit?: (span: readonly [number, number]) => void;
-  /** The axis the value runs along. Defaults to `horizontal`. */
+
   readonly orientation?: SliderOrientation;
-  /** Extra style, resolved against the range's live state and merged last. */
+
   readonly style?: StateStyle<SliderState>;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
-  /** The parts to draw. Omit for the default composition. */
+
   readonly children?: ReactNode;
   readonly testId?: string;
 }
 
-/**
- * The range a slider was configured with, normalised.
- *
- * Each bound is read through {@link storedRange}: one that is not a number is
- * absence and takes the documented default, so a saved `max` written as text
- * cannot shrink the slider to `min + 1`.
- */
 export const sliderRange = (props: {
   readonly min?: number;
   readonly max?: number;
@@ -207,19 +153,12 @@ export const sliderRange = (props: {
     step: 1,
   });
 
-/**
- * What a slider tells a `style` callback.
- *
- * A range slider reports `focused` when either thumb holds focus: the callback
- * styles the track both components share, not an individual thumb.
- */
 export interface SliderState {
   readonly disabled: boolean;
   readonly focused: boolean;
   readonly invalid: boolean;
 }
 
-/** The state a slider is in, from its props and its focus. */
 const sliderState = (
   props: { readonly disabled?: boolean; readonly invalid?: boolean },
   focused: boolean,
@@ -229,21 +168,12 @@ const sliderState = (
   invalid: props.invalid === true,
 });
 
-/**
- * The text a slider announces.
- *
- * `aria-valuetext` is the only channel a slider has (there is no
- * `aria-valuenow`), and a formatter is interface copy: a locale table with no
- * row for this value answers `""`, which must not become an announcement of
- * nothing. A blank answer is absence, so the clamped number stands.
- */
 export const sliderValueText = (
   value: number,
   formatValue?: (value: number) => string,
 ): string =>
   spokenText(Option.fromNullishOr(formatValue?.(value)), String(value));
 
-/** What a rendered slider needs from the component that owns its state. */
 export interface SliderHandlers {
   readonly onValueChange: (next: number) => void;
   readonly registerTrack: (instance: PublicInstance | null) => void;
@@ -252,7 +182,6 @@ export interface SliderHandlers {
   readonly onPointerUp: () => void;
 }
 
-/** The resolved fill for a fraction: the recipe plus its data-driven share. */
 const fillStyle = (
   fraction: number,
   invalid: boolean,
@@ -266,7 +195,6 @@ const fillStyle = (
   );
 };
 
-/** The resolved thumb. The track is the focus target, so it declares the ring. */
 const thumbStyle = (
   size: ControlSize,
   invalid: boolean,
@@ -276,7 +204,6 @@ const thumbStyle = (
   recipeTw.classesToStyle(sliderThumbClass(size, invalid, orientation), theme)
     .style;
 
-/** The interaction a thumb owns when it is its own tab stop (the range case). */
 interface ThumbPart {
   readonly label: string | undefined;
   readonly valueText: string;
@@ -292,18 +219,17 @@ interface ThumbPart {
   readonly onKeyUp: ((event: KeyEvent) => void) | undefined;
 }
 
-/** What a slider's parts read from the slider that owns them. */
 interface SliderPart {
   readonly theme: PrimitiveTheme;
   readonly size: ControlSize;
   readonly invalid: boolean;
-  /** The axis the value runs along, which every part paints on. */
+
   readonly orientation: SliderOrientation;
-  /** The fraction each thumb sits at — one entry for a slider, two for a range. */
+
   readonly fractions: ReadonlyArray<number>;
-  /** Per-thumb interaction; `null` where the root owns it (a single slider). */
+
   readonly thumbs: ReadonlyArray<ThumbPart | null>;
-  /** The caller's press, installed where a press inside the control lands. */
+
   readonly press: ((event: EventPayload) => void) | undefined;
 }
 
@@ -317,18 +243,15 @@ const useSliderPart = (name: string): SliderPart => {
   return part;
 };
 
-/** {@link SliderTrack} props. */
 export interface SliderTrackProps {
-  /** The indicators and thumbs. Omit for an empty rail. */
   readonly children?: ReactNode;
   readonly style?: StyleDesc;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
-  /** Stable locator for the rail, when the root's `testId` is not enough. */
+
   readonly testId?: string;
 }
 
-/** The rendered children, with fragments flattened so a part is one entry. */
 const flattenParts = (children: ReactNode): ReadonlyArray<ReactNode> =>
   Arr.flatMap(Children.toArray(children), (child) =>
     isValidElement<{ readonly children?: ReactNode }>(child) &&
@@ -337,7 +260,6 @@ const flattenParts = (children: ReactNode): ReadonlyArray<ReactNode> =>
       : [child],
   );
 
-/** The rail a slider's parts sit in. The slider paints nothing else. */
 export const renderSliderTrack = (
   { children, className, style, testId }: SliderTrackProps,
   part: SliderPart,
@@ -352,36 +274,22 @@ export const renderSliderTrack = (
       style,
     )}
   >
-    {
-      // A vertical value runs up and the runtime has no `column-reverse`, so
-      // the start's parts paint at the floor: the composition order stays
-      // start-to-end for the caller, and the track mirrors it here.
-      part.orientation === "vertical"
-        ? Arr.reverse(flattenParts(children))
-        : children
-    }
+    {part.orientation === "vertical"
+      ? Arr.reverse(flattenParts(children))
+      : children}
   </div>
 );
 
-/** The rail, inside a slider. */
 export const SliderTrack = (props: SliderTrackProps): ReactElement =>
   renderSliderTrack(props, useSliderPart("SliderTrack"));
 
-/** {@link SliderIndicator} props. */
 export interface SliderIndicatorProps {
-  /** The thumb segment to paint: `0` fills from the start to the first thumb. */
   readonly index?: number;
   readonly style?: StyleDesc;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
 }
 
-/**
- * The filled span that leads to a thumb.
- *
- * `index` names the thumb, not the segment, so a range slider's two fills are
- * `index={0}` (start → first thumb) and `index={1}` (first thumb → second).
- */
 export const renderSliderIndicator = (
   { index = 0, className, style }: SliderIndicatorProps,
   part: SliderPart,
@@ -401,28 +309,18 @@ export const renderSliderIndicator = (
   );
 };
 
-/** The filled span, inside a slider. */
 export const SliderIndicator = (props: SliderIndicatorProps): ReactElement =>
   renderSliderIndicator(props, useSliderPart("SliderIndicator"));
 
-/** {@link SliderThumb} props. */
 export interface SliderThumbProps {
-  /** Which thumb to draw. Defaults to `0`. */
   readonly index?: 0 | 1;
-  /** A custom glyph inside the thumb. It cannot swallow the press. */
+
   readonly children?: ReactNode;
   readonly style?: StyleDesc;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
 }
 
-/**
- * A thumb.
- *
- * In a range slider each thumb is its own `role="slider"` tab stop, so the part
- * carries that interaction; in a single slider the root is the slider and the
- * thumb is its paint.
- */
 export const renderSliderThumb = (
   { index = 0, children, className, style }: SliderThumbProps,
   part: SliderPart,
@@ -473,7 +371,6 @@ export const renderSliderThumb = (
   );
 };
 
-/** A thumb, inside a slider. */
 export const SliderThumb = (props: SliderThumbProps): ReactElement =>
   renderSliderThumb(props, useSliderPart("SliderThumb"));
 
@@ -531,8 +428,7 @@ export const renderSlider = (
         if (props.disabled === true || !isPlainKey(event.modifiers)) return;
         Option.match(decideValueKey(value, range, event.key ?? ""), {
           onNone: () => {},
-          // A key that lands on the value already painted moved nothing, so it
-          // is not a commit: `Home` on a slider at its floor is a no-op.
+
           onSome: (next) => {
             if (next !== value) handlers.onValueChange(next);
           },
@@ -561,7 +457,6 @@ export const renderSlider = (
   );
 };
 
-/** Which thumb holds focus, and how the group learns that it moved. */
 export interface RangeSliderFocus {
   readonly focusedIndex: Option.Option<0 | 1>;
   readonly onFocus: (index: 0 | 1) => void;
@@ -589,7 +484,6 @@ const spanTuple = (span: ValueSpan): readonly [number, number] => [
   span.end,
 ];
 
-/** The two thumbs and the fill between them. */
 export const renderRangeSlider = (
   props: RangeSliderProps,
   theme: PrimitiveTheme,
@@ -603,19 +497,12 @@ export const renderRangeSlider = (
   const size = controlSize(props.size);
   const invalid = props.invalid === true;
   const orientation = props.orientation ?? "horizontal";
-  // The group's name is the subject the two ends are derived from, so it takes
-  // the package's name rule first: a padded label would otherwise announce its
-  // padding in both thumb names, and a blank one would name the ends " minimum"
-  // and " maximum" instead of leaving them unnamed like an unnamed group. The
-  // words come from the table, because a suffix is not copy in every language.
+
   const labels = rangeThumbNames(
     accessibleName(props.label),
     messages.rangeEnd,
   );
-  // The address names one element, and the group's only focusable elements are
-  // its thumbs: a form focuses the end the reader last used, or the start while
-  // neither holds focus. The group itself carries the help, because that is the
-  // node a reader hears the group's name on.
+
   const addressedIndex = Option.getOrElse(focus.focusedIndex, () => 0);
   const thumbPart = (index: 0 | 1): ThumbPart => {
     const value = index === 0 ? span.start : span.end;
@@ -710,7 +597,6 @@ export const renderRangeSlider = (
   );
 };
 
-/** A pointer position on the track, as a value, or nothing without a box. */
 const pointerOf = (
   event: EventPayload,
   renderer: NativeRenderer | null,
@@ -732,7 +618,6 @@ const pointerOf = (
   );
 };
 
-/** A value on a track, by click, drag or keyboard. */
 export const Slider = (props: SliderProps): ReactElement => {
   const theme = useTheme();
   const { renderer } = useGpuix();
@@ -747,7 +632,7 @@ export const Slider = (props: SliderProps): ReactElement => {
   );
   const inset = sliderInset(controlSize(props.size), theme);
   const orientation = props.orientation ?? "horizontal";
-  /** The value the gesture in flight has reached, so its end can report it. */
+
   const gesture = useRef<Option.Option<number>>(Option.none());
   const report = (next: number): void => {
     gesture.current = Option.some(next);
@@ -770,8 +655,6 @@ export const Slider = (props: SliderProps): ReactElement => {
     );
   return renderSlider(props, theme, state.value, focus, {
     onValueChange: (next) => {
-      // A key is a whole gesture, so it commits as it lands rather than on a
-      // release: there is no frame after it in which the caller could wait.
       state.set(next);
       props.onValueCommit?.(next);
     },
@@ -799,7 +682,6 @@ export const Slider = (props: SliderProps): ReactElement => {
   });
 };
 
-/** Two values on one track. */
 export const RangeSlider = (props: RangeSliderProps): ReactElement => {
   const theme = useTheme();
   const { renderer } = useGpuix();
@@ -813,17 +695,9 @@ export const RangeSlider = (props: RangeSliderProps): ReactElement => {
   );
   const trackId = useRef<number | null>(null);
   const thumbIds = useRef<Map<0 | 1, number>>(new Map());
-  /**
-   * The value the end being dragged must not move: the other end, held still.
-   *
-   * A drag is the moving value drawn around this anchor with `spanFrom`, which
-   * keeps the ends ordered and lets them swap roles when the pointer crosses —
-   * the dragged thumb continues on the far side instead of stopping on the
-   * other. A press on a coincident pair anchors the pair's own point, so it can
-   * be pulled apart in either direction.
-   */
+
   const anchor = useRef<Option.Option<number>>(Option.none());
-  /** The thumb the pointer held last, so a crossing moves focus once. */
+
   const followedEnd = useRef<"start" | "end">("start");
   const dragging = useRef(false);
   const [focusedIndex, setFocusedIndex] = useState<Option.Option<0 | 1>>(
@@ -843,12 +717,7 @@ export const RangeSlider = (props: RangeSliderProps): ReactElement => {
     });
     setFocusedIndex(Option.some(index));
   };
-  /**
-   * The span the gesture in flight has reached, so its end can report it.
-   *
-   * `onValueChange` reports every move; a commit is the one a caller acts on,
-   * so the value is held until the pointer is released.
-   */
+
   const gesture = useRef<Option.Option<readonly [number, number]>>(
     Option.none(),
   );
@@ -860,9 +729,6 @@ export const RangeSlider = (props: RangeSliderProps): ReactElement => {
     gesture.current = Option.none();
   };
   const change = (next: ValueSpan): void => {
-    // A tuple is rebuilt on every interaction, so `Object.is` cannot see an
-    // unchanged span: an arrow at a bound or a press on a thumb reported the
-    // value the control already held. Report only a real move.
     const span = spanOf(state.value.current, range);
     if (next.start !== span.start || next.end !== span.end) {
       gesture.current = Option.some(spanTuple(next));
@@ -883,7 +749,6 @@ export const RangeSlider = (props: RangeSliderProps): ReactElement => {
     },
     {
       onSpanChange: (next) => {
-        // A key moves one end once, so it is its own finished gesture.
         state.set(next);
         props.onValueCommit?.(next);
       },
@@ -947,9 +812,7 @@ export const RangeSlider = (props: RangeSliderProps): ReactElement => {
                 onNone: () => {},
                 onSome: (held) => {
                   change(spanFrom(held, value, range));
-                  // The thumb under the pointer is the far side of the anchor
-                  // once the drag has crossed it, so focus moves with the hand
-                  // and the keyboard continues from the thumb that was dragged.
+
                   const target = clampValue(value, range);
                   if (target === held) return;
                   const end = target < held ? "start" : "end";

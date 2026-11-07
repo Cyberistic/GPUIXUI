@@ -1,23 +1,3 @@
-/**
- * A chart whose stored data list a record wrote `null` for.
- *
- * The bug these guard: a chart's data is data as often as a literal — a saved
- * dashboard configuration, a query result a store kept before it loaded, a
- * series list JSON wrote as `null` for a field it never set — while the prop
- * types say a list is present. Every chart read its list directly (`data.map`,
- * `items.map`, `labels.length`, `Arr.map(series, …)`), so one stored absence
- * threw out of the render and took the whole surface down instead of painting
- * an empty frame. The rule the surfaces already follow is `listOf`: only a list
- * is a list, and a slot with no list paints no marks.
- *
- * A list is stored data **twice**: the slot can be absent, and an entry inside
- * it can be the hole a store wrote (`[null, { … }]` — a removed series, a
- * record an older shape saved). `listOf` guards the slot, so every part still
- * dereferenced each entry (`one.values`, `one.key`, `one.value`) and one hole
- * took the chart down. The rule is `recordsOf`: only a record that names itself
- * with a `key` is a series, a datum or a legend row.
- */
-
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it } from "vitest";
 import { paintedText } from "../internal/interaction.js";

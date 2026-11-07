@@ -1,34 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * The frame every decorative field shares.
- *
- * A field is a bounded box whose picture is generated for the size it measured,
- * arrives on the house entrance, and (unless the reader asked for less motion)
- * breathes by opacity. Two families paint through this module:
- *
- * - **Line art** (`Hexagon`) is one `<svg source>` path, which the
- *   runtime scales by the element's width alone and centres inside a content
- *   area it does not clip (the `svg-pattern` probe). `PatternField` generates a
- *   view box from the measured box so that scale is 1:1 instead.
- * - **A glyph wall** (`Glyph`) is one `<text>` host per cell. Its glyphs are
- *   paint, not content, so each is `role="presentation"` — measured: a node is
- *   in the accessibility tree only with a role, so a presentational glyph leaves
- *   no node at all.
- *
- * This module owns the three things the families would otherwise duplicate: the
- * measurement, the entrance through `internal/presence.tsx`, and the breath. A
- * field cannot move without a `transform` (upstream issue #102), so the one
- * thing it can do is dim and brighten: the layer's opacity pings between its
- * floor and full on `onMotionComplete`, because the runtime tweens a target once.
- *
- * A field is decoration: it publishes no accessibility node and takes no pointer
- * input, so the content painted above it keeps its name and its presses.
- *
- * The measured box and the breath's phase are `pattern-field/store.ts`: both are
- * state that outlives a render, and both are written by an event (a layout, a
- * completed tween) rather than by React.
- */
-
 import type { EventPayload, MotionProps, Props } from "@gpuix/react";
 import {
   mergeStyles,
@@ -48,66 +18,55 @@ import { durationOf } from "./scatter.js";
 import { paintableBox, type PatternBox } from "./svg-pattern.js";
 import { useTheme } from "./theme.js";
 
-/** The house length of one breath, in milliseconds. */
 export const patternBreatheMs = 8_000;
 
-/** The shortest breath a caller may ask for; below it the field flickers. */
 export const patternBreatheFloor = 1_000;
 
-/** The longest breath, so a field still reads as living. */
 export const patternBreatheCap = 60_000;
 
-/** The opacity a breath dims to: still visible, plainly subordinate. */
 export const patternDim = 0.55;
 
-/** What a field draws at one frame. */
 export interface PatternFieldState {
   readonly width: number;
   readonly height: number;
   readonly reducedMotion: boolean;
 }
 
-/** The picture one field paints, generated from the box it measured. */
 export type FieldArt = (box: PatternBox, testId: string) => ReactNode;
 
-/** {@link PatternField} props: the shared frame plus one field's picture. */
 export interface PatternFieldProps extends Omit<Props, "children" | "style"> {
-  /** The markup for a measured box; a field's logic builds it from its settings. */
   readonly markup: (box: PatternBox) => string;
-  /** The line colour. */
+
   readonly color: string;
-  /** One breath's length in milliseconds. Default `8_000`, floor 1 s, cap 60 s. */
+
   readonly breatheMs?: number;
-  /** The entrance level. Default `"slow"`. */
+
   readonly level?: MotionLevel;
-  /** A Tailwind class string for the box, merged last. */
+
   readonly className?: string;
-  /** A style for the box, or a function of the measured field. */
+
   readonly style?: StateStyle<PatternFieldState>;
-  /** Content painted above the line art; it owns the words and the presses. */
+
   readonly children?: ReactNode;
 }
 
-/** {@link DecorativeField} props: the shared frame plus any field's picture. */
 export interface DecorativeFieldProps extends Omit<
   Props,
   "children" | "style"
 > {
-  /** The picture for a measured box, and the test id its parts derive from. */
   readonly art: FieldArt;
-  /** One breath's length in milliseconds. Default `8_000`, floor 1 s, cap 60 s. */
+
   readonly breatheMs?: number;
-  /** The entrance level. Default `"slow"`. */
+
   readonly level?: MotionLevel;
-  /** A Tailwind class string for the box, merged last. */
+
   readonly className?: string;
-  /** A style for the box, or a function of the measured field. */
+
   readonly style?: StateStyle<PatternFieldState>;
-  /** Content painted above the art; it owns the words and the presses. */
+
   readonly children?: ReactNode;
 }
 
-/** The layer that breathes the art; the field's own box sits above it. */
 const Breath = ({
   art,
   legMs,
@@ -147,12 +106,6 @@ const Breath = ({
   );
 };
 
-/**
- * A measured, entering, breathing decorative field.
- *
- * Give it a bounded box: it paints nothing before its first layout, because the
- * picture is generated for the size it actually has.
- */
 export const DecorativeField = ({
   art,
   breatheMs,
@@ -229,12 +182,6 @@ export const DecorativeField = ({
   );
 };
 
-/**
- * A measured, breathing line-art field.
- *
- * The markup is generated for the box the field measured and painted as one
- * `<svg source>` path, which the runtime tints in the element's colour.
- */
 export const PatternField = ({ markup, color, ...rest }: PatternFieldProps) => (
   <DecorativeField
     {...rest}

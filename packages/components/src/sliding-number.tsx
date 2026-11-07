@@ -1,25 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * SlidingNumber: a number whose digits roll into place like a mechanical counter.
- *
- * The runtime cannot animate the characters of a text node and has no
- * `transform` (upstream issue #102), so the movement is a **column** per digit:
- * ten stacked digits inside a one-line clipping frame, whose plate is raised a
- * line at a time. `@gpuixui/motion` owns the duration and the reduced-motion
- * policy; `sliding-number/logic.ts` owns which column each digit belongs to.
- *
- * A column is keyed by its **decimal place**, so a value that gains a digit (9 →
- * 10) mounts one column and leaves the rest where they are, and only the column
- * whose digit changed travels. A column that mounts paints at its digit instead
- * of rolling up from zero.
- *
- * The digits are presentational: ten stacked glyphs are one value, not ten, so
- * every digit publishes no accessibility node and the row as a whole is a
- * `status` named with the reading. `0.11.0` has no `aria-hidden`, but a node is
- * in the tree only with a role — measured: `role="presentation"` on a painted
- * digit leaves no node at all.
- */
-
 import type { MotionProps, Props } from "@gpuix/react";
 import {
   mergeStyles,
@@ -41,40 +20,33 @@ import {
   type NumberCell,
 } from "./sliding-number/logic.js";
 
-/** What a sliding number draws at one frame. */
 export interface SlidingNumberState {
   readonly value: number;
-  /** The reading painted now. */
+
   readonly text: string;
   readonly reducedMotion: boolean;
 }
 
-/** {@link SlidingNumber} props. */
 export interface SlidingNumberProps extends Omit<Props, "children" | "style"> {
-  /** The number to show. A changed value rolls the columns whose digits moved. */
   readonly value: number;
-  /** Digits after the point. Default `0`; clamped to the six a value can carry. */
+
   readonly decimals?: number;
-  /** Painted and read before the sign, e.g. `"$"`. */
+
   readonly prefix?: string;
-  /** Painted and read after the last digit, e.g. `"/mo"`. */
+
   readonly suffix?: string;
-  /**
-   * The accessible name. Default the reading itself, so assistive technology
-   * hears `-3.50` rather than the ten glyphs a column stacks.
-   */
+
   readonly label?: string;
-  /** The motion level one roll runs at. Default `"normal"` (200 ms). */
+
   readonly level?: MotionLevel;
-  /** A typographic role from the theme. Default `"body"`. */
+
   readonly role?: TextRole;
-  /** A Tailwind class string, joined after the resting style so it wins. */
+
   readonly className?: string;
-  /** A style, or a function of the value painted. */
+
   readonly style?: StateStyle<SlidingNumberState>;
 }
 
-/** One column: ten stacked digits and the plate that raises to the painted one. */
 const DigitColumn = ({
   cell,
   metrics,
@@ -119,12 +91,6 @@ const DigitColumn = ({
   </div>
 );
 
-/**
- * A number that rolls its digits when the value changes.
- *
- * It publishes no tab stop and no controls: it is a reading, so the caller owns
- * the buttons that change `value`.
- */
 export const SlidingNumber = ({
   value,
   decimals,
@@ -210,7 +176,6 @@ export const SlidingNumber = ({
   );
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 600). */
 export const slidingNumberMeta = {
   name: "Sliding number",
   tier: 5,

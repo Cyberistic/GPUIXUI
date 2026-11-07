@@ -1,10 +1,3 @@
-/**
- * Browser preview for the Liquid button page.
- *
- * The native action floods a soft fill into the label on hover; the preview
- * expands a fill layer across the button under the pointer.
- */
-
 export function LiquidButtonDemo() {
   return (
     <div className="gx-liquid">

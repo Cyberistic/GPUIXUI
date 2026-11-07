@@ -60,6 +60,17 @@ Use `<ComponentPreview name="…" />` when `demos.tsx` has a demo for the page.
 - No "Installation" section when the package is already the page's dependency —
   one `nub add` line is enough.
 
+## Block pages
+
+A block is a page, not a specimen. Its page is the preview and, at most, one
+sentence naming the interaction a reader can perform. No runtime narration, no
+explanation of the reference's composition, no chart implementation story. The
+GitHub source link and the copyable recipe are rendered by `<BlockPreview>`;
+the Markdown adds neither.
+
+`apps/docs/src/lib/block-page.test.ts` budgets the prose at 40 words per page
+(the sidebar collection is exempt: its one-line section intros are navigation).
+
 ## Delete, do not compress
 
 - Implementation rationale ("the state is modelled as a tagged union…").

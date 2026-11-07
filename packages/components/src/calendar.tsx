@@ -1,23 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Calendar: a month grid with one roving tab stop, painted from theme roles.
- *
- * GPUix has no calendar primitive, so the grid and its arithmetic are this
- * package's (`calendar/logic.ts`, pure `DateTime`; `calendar/store.ts`, the view
- * month and the focused day). The public value is always an ISO day
- * (`YYYY-MM-DD`), never a `DateTime` and never a locale-formatted string: a
- * stored value must not depend on the display.
- *
- * `react-day-picker` gives shadcn three selection modes, and the same three are
- * modelled here as a discriminated union, so `selected` and `onSelect` cannot
- * disagree about the mode. A span is `{ from, to }` with `to` absent until the
- * second day is chosen; a completed span starts a new one on the next press.
- *
- * Known scope, recorded in the docs: fixed English labels (no i18n layer), no
- * time (a time of day is the separate TimePicker), no week numbers, and the
- * runtime's closed `aria-*` set (no `aria-current`, no live region).
- */
-
 import type { KeyEvent, StyleDesc } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import { Select, type SelectOption } from "@gpuixui/primitives/select";
@@ -86,87 +67,68 @@ import {
   type Theme,
 } from "./internal/theme.js";
 
-/** The measured day square, in pixels. Kept out of the recipe (see the tw doc). */
 const CELL = 34;
 
-/** The earliest year the default window offers: 1900, a human's whole life. */
 const DEFAULT_FROM_YEAR = 1900;
 
-/** How far past today the default window reaches. */
 const DEFAULT_YEARS_AHEAD = 100;
 
-/** The props every mode shares. */
 export interface CalendarBaseProps {
-  /** How many months are painted side by side. Default `1`. */
   readonly numberOfMonths?: MonthCount;
-  /** Paint the leading and trailing days of the neighbouring months. Default `true`. */
+
   readonly showOutsideDays?: boolean;
-  /** Default `"label"`: a caption, or month and year dropdowns. */
+
   readonly captionLayout?: CaptionLayout;
-  /** Default `1` (Monday). */
+
   readonly weekStartsOn?: WeekStart;
-  /** The earliest year a dropdown or a `Shift`+Page jump may reach. */
+
   readonly fromYear?: number;
-  /** The latest year a dropdown or a `Shift`+Page jump may reach. */
+
   readonly toYear?: number;
-  /** The days the calendar refuses and, through `before`/`after`, its span. */
+
   readonly disabled?: DayMatchers;
-  /**
-   * The ISO day the grid marks as today. Defaults to the runtime clock; pass it
-   * when a test or a server boundary needs a fixed day.
-   */
+
   readonly today?: string;
-  /** The ISO day whose month the grid opens on. Defaults to the selected day or today. */
+
   readonly defaultMonth?: string;
-  /** Take focus on mount, for a calendar that opens inside a popover. */
+
   readonly autoFocus?: boolean;
-  /** The grid's accessible name. Default `"Calendar"`. */
+
   readonly label?: string;
-  /** Named by `Escape`; a popover passes its close. */
+
   readonly onDismiss?: () => void;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
 }
 
-/** One day at a time; pressing the chosen day clears it. */
 export interface SingleCalendarProps extends CalendarBaseProps {
   readonly mode?: "single";
   readonly selected?: string | null;
   readonly onSelect?: (day: string | null) => void;
 }
 
-/** Any number of days; a press toggles the day. */
 export interface MultipleCalendarProps extends CalendarBaseProps {
   readonly mode: "multiple";
   readonly selected?: ReadonlyArray<string>;
   readonly onSelect?: (days: ReadonlyArray<string>) => void;
 }
 
-/** A span; `to` is absent until the second day is chosen. */
 export interface RangeCalendarProps extends CalendarBaseProps {
   readonly mode: "range";
   readonly selected?: DayRange | null;
   readonly onSelect?: (range: DayRange | null) => void;
 }
 
-/** {@link Calendar} props, one variant per selection mode. */
 export type CalendarProps =
   | SingleCalendarProps
   | MultipleCalendarProps
   | RangeCalendarProps;
 
-/** How the caller's props read as one selection and one press handler. */
 interface SelectionAdapter {
   readonly selection: Selection;
   readonly select: (day: string) => void;
 }
 
-/**
- * The mode's own selection and press handler.
- *
- * The union is narrowed once, here, so the component body speaks one shape and
- * a press can never report the wrong variant's value.
- */
 const adapterOf = (props: CalendarProps): SelectionAdapter => {
   if (props.mode === "range") {
     const range = props.selected ?? null;
@@ -189,7 +151,6 @@ const adapterOf = (props: CalendarProps): SelectionAdapter => {
   };
 };
 
-/** The day the calendar opens on: the selection's first day, else today. */
 const anchorOf = (selection: Selection, today: DateTime.Utc): DateTime.Utc =>
   pipe(
     Match.value(selection).pipe(
@@ -207,17 +168,9 @@ const anchorOf = (selection: Selection, today: DateTime.Utc): DateTime.Utc =>
     Option.getOrElse(() => today),
   );
 
-/** The month index a dropdown names, `1`–`12`. */
 const monthIndexOf = (value: DateTime.Utc): string =>
   String(DateTime.toPartsUtc(value).month);
 
-/**
- * The caption row: two dropdowns that jump the view, or the month's name.
- *
- * `react-day-picker` treats a dropdown caption as a jump control and keeps the
- * focus inside the grid; the primitives' `Select` is the package's one list
- * control, so the jump is that control rather than a second overlay.
- */
 const Caption = ({
   month,
   layout,
@@ -277,7 +230,6 @@ const Caption = ({
   );
 };
 
-/** Whether a paint fills the cell with the primary role. */
 const cellStyle = (
   theme: Theme,
   paint: ReturnType<typeof paintOf>,
@@ -312,7 +264,6 @@ const cellStyle = (
   ...controlRing(theme, { disabled: !available }),
 });
 
-/** {@link Calendar}. */
 export const Calendar = (props: CalendarProps) => {
   const theme = useTheme();
   const renderer = useGpuix().renderer;
@@ -352,10 +303,7 @@ export const Calendar = (props: CalendarProps) => {
   const cells = useRef<Record<string, number>>({});
   const months = monthWindow(view.month, numberOfMonths);
   const year = DateTime.toPartsUtc(today).year;
-  // A calendar is not limited to the decade it is looked at in: the default
-  // window is a century back — a birthday, a hire date, an invoice — and a
-  // century forward, narrowed only by the caller's own bound. Read raw, the
-  // ±10 window refused 1994 and put no year before it in the dropdown.
+
   const fromYear =
     props.fromYear ??
     Math.max(
@@ -378,9 +326,6 @@ export const Calendar = (props: CalendarProps) => {
   const monthFocus = (month: DateTime.Utc): DateTime.Utc =>
     clampToBounds(dayInMonth(view.focus, month), bounds);
 
-  // The focus the store asked for lands here, once the cell exists. It is the
-  // same commit that painted the month: a React state write inside the effect is
-  // not visible to it, which is why the target travels in the store.
   useLayoutEffect(() => {
     if (!view.pending) return;
     send(store.settle);
@@ -638,10 +583,8 @@ export const Calendar = (props: CalendarProps) => {
   );
 };
 
-/** The mode a calendar runs in, for a caller that keeps it as data. */
 export type { CalendarMode };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md`. */
 export const calendarMeta = {
   name: "Calendar",
   tier: 2,

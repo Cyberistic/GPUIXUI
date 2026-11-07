@@ -1,15 +1,3 @@
-/**
- * Guards the rule the `theme-switch-lifecycle` probe measures.
- *
- * The probe switches a window's provider between the three palettes and the
- * platform looks, then reads a role's fill off the frame and an `md` control's
- * height off the layout. This fixture is the whole premise of those checks: the
- * cycle has to reach every palette and every platform the tokens table ships, a
- * platform's density has to differ from the base one (or the height check could
- * pass on a look that was never applied), and every state's role has to be a
- * colour a captured frame can hold. Each case below fails when one of those
- * stops being true.
- */
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -39,13 +27,10 @@ import {
   themePagePoint,
 } from "./theme-switch.js";
 
-/** The palette the shell opens in, and the one the probe starts from. */
 const FIRST_PALETTE: PaletteId = "dark";
 
-/** The platform the shell opens in, and the one the probe starts from. */
 const FIRST_PLATFORM: PlatformName = "default";
 
-/** The ids a closed cycle reaches, starting at `first`, in visiting order. */
 const cycleWalk = <A extends string>(
   first: A,
   steps: number,
@@ -61,7 +46,6 @@ const cycleWalk = <A extends string>(
   return visited;
 };
 
-/** Sorted names, so a set comparison reads as one. */
 const sorted = (names: ReadonlyArray<string>): ReadonlyArray<string> =>
   Arr.sort(names, Order.String);
 
@@ -99,8 +83,7 @@ describe("the theme-switch fixture", () => {
           densityPresets[platformStyles[platform].density].controlHeight.md,
       ),
     );
-    // A look that kept the base density would make the height check unable to
-    // tell a switch from a no-op: the probe's platform presses have to move.
+
     expect(new Set(heights).size).toBeGreaterThanOrEqual(3);
   });
 
@@ -125,9 +108,6 @@ describe("the theme-switch fixture", () => {
   });
 
   it("reserves a high-contrast palette while applying a look's density", () => {
-    // `applyStyle`'s rule: accessibility outranks the look, so the page keeps the
-    // high-contrast fill while the control takes the platform's height. The
-    // probe asserts both halves after a platform press.
     const high = themeFor("high", FIRST_PLATFORM);
     const darwin = themeFor("high", "darwin");
     expect(darwin.colors.background).toBe(high.colors.background);

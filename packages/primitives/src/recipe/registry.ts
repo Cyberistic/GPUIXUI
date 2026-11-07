@@ -1,16 +1,3 @@
-/**
- * The primitives' Tailwind registry.
- *
- * `@gpuixui/tw` compiles shadcn's fixed metric values (`h-9` → 36, `px-4` →
- * 16). The primitives' geometry is theme-scale driven — control height and
- * padding come from the active density, gap from the spacing scale, type from
- * the typography scale — so this registry maps the named scale steps the
- * primitives use to those theme values and falls back to the built-in table for
- * every other class. The compiled `StyleDesc` is therefore identical to what
- * `core/style.ts` resolves, while a component's recipe stays a Tailwind class
- * string.
- */
-
 import type { StyleDesc } from "@gpuix/react";
 import type { ControlSize, FilledRole, TextRole, Theme } from "@gpuixui/tokens";
 import {
@@ -39,7 +26,6 @@ import {
   spaceValue,
 } from "../core/theme.js";
 
-/** A class-string step name → the theme key it resolves to. */
 const SPACING_STEP: Readonly<Partial<Record<string, SpaceStep>>> = {
   "2xs": "2xs",
   xs: "xs",
@@ -81,15 +67,12 @@ const TEXT_ROLE: Readonly<Partial<Record<string, TextRole>>> = {
   "code-block": "codeBlock",
 };
 
-/** A spacing step by its class-string name, or nothing for a non-step value. */
 const spacingStep = (value: string | undefined): SpaceStep | undefined =>
   value === undefined ? undefined : SPACING_STEP[value];
 
-/** A control size by its class-string name, or nothing for a non-size value. */
 const controlSize = (value: string | undefined): ControlSize | undefined =>
   value === undefined ? undefined : CONTROL_SIZE[value];
 
-/** The square icon side for a control size, read through the theme seam. */
 const iconSide = (
   theme: Theme,
   value: string | undefined,
@@ -98,7 +81,6 @@ const iconSide = (
   return size === undefined ? undefined : iconSideOf(theme, size);
 };
 
-/** Half the icon side, rounded: `round(iconSize[size] / 2)`. */
 const halfIconSide = (
   theme: Theme,
   value: string | undefined,
@@ -107,7 +89,6 @@ const halfIconSide = (
   return side === undefined ? undefined : Math.round(side / 2);
 };
 
-/** The three typographic numbers a role resolves to (family is separate). */
 const roleType = (
   theme: Theme,
   role: TextRole,
@@ -120,7 +101,6 @@ const roleType = (
   };
 };
 
-/** A role's size and leading only, for text that inherits the surrounding weight. */
 const roleSize = (
   theme: Theme,
   role: TextRole,
@@ -129,19 +109,8 @@ const roleSize = (
   return { fontSize: type.fontSize, lineHeight: type.lineHeight };
 };
 
-/** The shape of a `clamp-<role>-<lines>` class. */
 const CLAMP_TOKEN = /^(.+)-(\d+)$/;
 
-/**
- * The box a clamped run paints: its role's leading times the line count.
- *
- * A clamp is not a style the runtime paints — `lineClamp` cuts nothing in
- * 0.11.0 — so the height is definite and the overflow hidden, which is the
- * composition the `text-truncation` probe measured painting the requested
- * lines. An unknown role or a count that is not a number resolves to nothing,
- * so a typo lands in the compiler's `unsupported` list instead of painting an
- * uncut paragraph.
- */
 const clampStyle = (
   theme: Theme,
   value: string | undefined,
@@ -162,19 +131,6 @@ const clampStyle = (
       };
 };
 
-/**
- * A filled action's hover and press fill, as a derived colour.
- *
- * The fill moves toward the theme's foreground and stays **opaque**: a
- * half-alpha lift (`bg-primary/90`) let the surface behind the control
- * through, so the same action read as two colours on a card and on a dialog,
- * and its label could not be measured for contrast at all.
- *
- * The class name carries the state — `fill-primary` is the hover,
- * `fill-primary-pressed` the press — and an unknown suffix resolves to
- * nothing, so a typo lands in the compiler's `unsupported` list instead of
- * painting the resting fill.
- */
 const filledFill = (
   theme: Theme,
   role: FilledRole,
@@ -186,10 +142,8 @@ const filledFill = (
       ? { backgroundColor: filledPressed(theme, role) }
       : undefined;
 
-/** The primitives' compiler: built-in utilities plus the theme-scale steps. */
 const compiler = createTw({
   utilities: {
-    // Geometry and text chrome the built-in table lacks.
     "flex-row": () => ({ flexDirection: "row" }),
     "justify-start": () => ({ justifyContent: "flex-start" }),
     "justify-end": () => ({ justifyContent: "flex-end" }),
@@ -200,17 +154,12 @@ const compiler = createTw({
     "flex-wrap": () => ({ flexWrap: "wrap" }),
     "flex-grow": () => ({ flexGrow: 1 }),
     "cursor-text": () => ({ cursor: "text" }),
-    // A selectable run paints the design system's own wash. GPUix defaults to
-    // the theme accent at 35%, a colour no contrast pair measures; `selection`
-    // is composited and held to both floors by `@gpuixui/tokens`.
+
     "select-text": (theme) => ({
       userSelect: "text",
       selectionColor: colorRole(theme, "selection"),
     }),
-    // The runtime parses `left`/`center`/`right` and reads `start` as left, but
-    // not `end` — handed `end` it paints the default, so a right-aligned run
-    // stayed left. The class names keep the direction-neutral API and the one
-    // table in `core/style.ts` states what each means to the host.
+
     "text-start": () => ({ textAlign: textAlignValue("start") }),
     "text-end": () => ({ textAlign: textAlignValue("end") }),
     "text-ellipsis": () => ({ textOverflow: "ellipsis" }),
@@ -218,12 +167,9 @@ const compiler = createTw({
     "font-mono": (theme) => ({ fontFamily: familyOf(theme, "mono") }),
     "h-px": (theme) => ({ height: borderWidthOf(theme, "thin") }),
     "w-px": (theme) => ({ width: borderWidthOf(theme, "thin") }),
-    // The runtime paints one border style for every side. `solid` is the
-    // default, so only the dashed class carries a declaration.
+
     "border-dashed": () => ({ borderStyle: "dashed" }),
-    // A ratio is a free number, not a scale step, so it travels in the class:
-    // `aspect-ratio-1.5`. An unreadable value resolves to nothing and lands in
-    // the compiler's `unsupported` list rather than painting a square.
+
     "aspect-ratio": (_theme, value) => {
       const ratio = paintableAspectRatio(
         value === undefined ? undefined : Number(value),
@@ -236,42 +182,22 @@ const compiler = createTw({
     "overflow-x-scroll": () => ({ overflowX: "scroll" }),
     "overflow-y-hidden": () => ({ overflowY: "hidden" }),
     "overflow-y-scroll": () => ({ overflowY: "scroll" }),
-    // `border-input` is deliberately not overridden: `input` is a field *fill*
-    // in this system, and an edge takes `border` or the measured `border-strong`.
-    // Brand-coloured text is derived, not named: `primary` is a fill role, so
-    // `text-primary` paints a link at 4.30:1 on the base light theme's pressed
-    // wash and 3.10:1 in macOS dark. `brandText` moves the brand toward
-    // `foreground` until the least readable surface a link sits on clears.
+
     "text-brand": (theme) => ({ color: brandText(theme) }),
-    // The press a control paints is **derived**, not the raw `active` role.
-    //
-    // A press replaces the hover wash the control is wearing, so it has to be
-    // seen against *that* wash rather than against the strip it rests on — and
-    // the raw role could not: Light · macOS's press sat 1.037:1 from its hover,
-    // under the perceptibility floor, so a ghost action, a toggle at rest, an
-    // empty checkbox and a number field's stepper did not answer the pointer in
-    // that style. `pressWash` is the one seam (`core/pointer.ts`), so this
-    // registry and the variant table cannot drift.
-    //
-    // The class names the **state**, and the state is what the recipe asks for:
-    // `hover:bg-hover` paints the hover wash on the strip, `active:bg-active`
-    // paints the press that replaces it.
+
     "bg-active": (theme) => ({ backgroundColor: pressWash(theme) }),
-    // A filled action's feedback is derived too: the hover and the press are
-    // opaque fills the theme owns, not a half-alpha lift of the resting one.
+
     "fill-primary": (theme, value) => filledFill(theme, "primary", value),
     "fill-secondary": (theme, value) => filledFill(theme, "secondary", value),
     "fill-destructive": (theme, value) =>
       filledFill(theme, "destructive", value),
-    // A pressed toggle's face is the accent role rather than one of the three
-    // actions, and the tokens' `FilledRole` owns that fourth face.
+
     "fill-accent": (theme, value) => filledFill(theme, "accent", value),
     "ml-0": () => ({ marginLeft: 0 }),
     "mr-0": () => ({ marginRight: 0 }),
     "mt-0": () => ({ marginTop: 0 }),
     "mb-0": () => ({ marginBottom: 0 }),
 
-    // Scale-step families → theme values, falling back to the built-in table.
     gap: (theme, value) => {
       const step = spacingStep(value);
       return step === undefined ? undefined : { gap: spaceValue(theme, step) };
@@ -372,21 +298,12 @@ const compiler = createTw({
       const role = value === undefined ? undefined : TEXT_ROLE[value];
       return role === undefined ? undefined : roleSize(theme, role);
     },
-    // A clamped run's box: the line count times the role's own leading, with a
-    // hidden overflow. `lineClamp` is declared by 0.11.0 and paints every line
-    // (measured by the playground's `text-truncation` probe), so the cut has to
-    // be a definite box. The role is in the class name for that reason.
+
     clamp: clampStyle,
 
-    // Derived geometry: a number resolves to a square (`width` + `height`);
-    // a non-square value returns the shape it means. All read the theme's
-    // iconSize / spacing scales, so they follow a density or icon-size
-    // override exactly as the pre-migration `core/` resolvers did.
     "size-icon": (theme, value) => iconSide(theme, value),
     "size-dot": (theme, value) => halfIconSide(theme, value),
-    // The switch's own box, from the platform's paint and the icon step. The
-    // thumb is the box less its two insets; the track is the box whole, so a
-    // platform that declares a switch replaces both from one declaration.
+
     "size-thumb": (theme, value) => {
       const size = controlSize(value);
       return size === undefined ? undefined : switchBox(size, theme).knob;
@@ -432,7 +349,7 @@ const compiler = createTw({
         borderWidth: borderWidthOf(theme, "strong"),
       };
     },
-    // The same thumb on a track that runs up: the half-side pull is vertical.
+
     "slider-thumb-v": (theme, value) => {
       const side = iconSide(theme, value);
       if (side === undefined) return undefined;
@@ -457,8 +374,7 @@ const compiler = createTw({
         ? undefined
         : { paddingTop: half, paddingBottom: half };
     },
-    // A control's height becomes the width of a vertical track, so the same
-    // density step shapes the axis it is turned onto.
+
     "w-control": (theme, value) => {
       const size = controlSize(value);
       return size === undefined
@@ -468,8 +384,7 @@ const compiler = createTw({
     "w-stepper-column": (theme) => ({
       width: iconSideOf(theme, "md") + spaceValue(theme, "sm"),
     }),
-    // The pressable-target floor (WCAG 2.2 SC 2.5.8) a drawn control sits in.
-    // A fixed minimum, like `targetSize` itself — not a theme group.
+
     "min-target": () => ({
       minWidth: targetSize.minimum,
       minHeight: targetSize.minimum,
@@ -489,15 +404,6 @@ const compiler = createTw({
   },
 });
 
-/**
- * The primitives' compiler, with the platform's pointer model applied.
- *
- * Under the AppKit interaction (`Theme.interaction`, plan 724) a control does
- * not answer a pointer crossing it, so every recipe's `hover` record is dropped
- * here — the one place every primitive's resting style is compiled — and the
- * press, focus and disabled records stay. A toolbar's bezel is the exception,
- * added back by `Button` inside a `ToolbarScope`.
- */
 export const recipeTw: TwCompiler = {
   ...compiler,
   classesToStyle: (className, theme, state) => {

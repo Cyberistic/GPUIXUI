@@ -1,15 +1,3 @@
-/**
- * `Progress` — the bar, its parts and its accessible value.
- *
- * GPUix has no `aria-valuenow` (see `docs/gpuix-capabilities.md`), so the value rides on
- * `aria-valuetext`. The bug to guard is paint outside the track: a value above
- * 100 or below 0 must clamp, and an indeterminate bar must not look finished.
- * The parts suite guards the second failure: the value a caller renders must be
- * the same clamped number the fill paints, and the default composition must
- * stay the track alone so an existing `<Progress value={42} />` does not grow
- * text it never asked for.
- */
-
 import type { ReactElement } from "react";
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
@@ -47,10 +35,6 @@ const bar = (value: Option.Option<number>) =>
     0,
   );
 
-/**
- * The first painted element: a context provider draws nothing, so the root's
- * body is one level in before the default composition's track.
- */
 const bodyOf = (element: ReactElement): ReactElement => {
   const child =
     elementChildren(element)[0] ?? expect.fail("the progress drew nothing");
@@ -59,15 +43,12 @@ const bodyOf = (element: ReactElement): ReactElement => {
     : (elementChildren(child)[0] ?? expect.fail("the progress has no body"));
 };
 
-/** The bar's background — the default composition's only body. */
 const trackOf = bodyOf;
 
-/** The fill inside the default track. */
 const fillOf = (element: ReactElement) =>
   elementChildren(trackOf(element))[0] ??
   expect.fail("the track has no indicator");
 
-/** A text part's children, as React handed them to the host. */
 const textOf = (element: ReactElement | null): string =>
   Option.getOrElse(
     Option.flatMap(Option.fromNullishOr(element), (host) =>
@@ -78,7 +59,6 @@ const textOf = (element: ReactElement | null): string =>
     () => expect.fail("the part carried no text"),
   );
 
-/** The announced value text, decoded as the string `aria-valuetext` must be. */
 const announced = (element: ReactElement): string =>
   expectSome(
     Option.flatMap(hostProp(element, "aria-valuetext"), (value) =>
@@ -88,11 +68,6 @@ const announced = (element: ReactElement): string =>
 
 describe("Progress", () => {
   it("keeps the bar's height when its size name is one the scale does not carry", () => {
-    // The bug guarded: a progress is a widget a dashboard stores, so its size is
-    // a name from another release as often as a literal. `PROGRESS_HEIGHT_STEP`
-    // indexed raw answered `undefined`, `h-space-undefined` is a class the
-    // compiler refuses, and the track painted with no height at all — a bar
-    // collapsed to its border beside the default it documents.
     const stored = renderProgress(
       { value: 40, size: "xl" as "md" },
       testTheme,
@@ -108,9 +83,6 @@ describe("Progress", () => {
   });
 
   it("paints the fill when its tone name is one the table does not carry", () => {
-    // The bug guarded: a stored tone reached `PROGRESS_TONE_CLASS[name]` and
-    // resolved to no colour class at all, so the value's whole fill was
-    // transparent — a finished task that read as an empty track.
     const stored = renderProgress(
       { value: 40, tone: "chart" as ProgressTone },
       testTheme,
@@ -147,45 +119,27 @@ describe("Progress", () => {
   });
 
   it("reads a stored value of null as indeterminate, not as a bar at zero", () => {
-    // The bug guarded: a dashboard stores a widget as JSON, where a share it
-    // never learned is `null` rather than `undefined`. `progressPart` asked
-    // `value !== undefined`, so that record painted a determinate bar pinned at
-    // 0% and announced "0%" — the position that reads as "nothing received" —
-    // while `Progress`'s own step timer read the same field through
-    // `Option.fromNullishOr` and drove the indeterminate segment. The two seams
-    // now give one answer, the rule `useControlState` applies to every value
-    // control.
-    // The cast is the storage boundary: a saved record stores absence as null.
     const stored = { value: null } as unknown as ProgressProps;
     const element = renderProgress(stored, testTheme, 0);
     expect(expectSome(hostProp(element, "aria-valuetext"))).toBe("loading");
-    // The indeterminate composition: a lead spacer and the moving segment.
+
     expect(elementChildren(trackOf(element))).toHaveLength(2);
     expect(progressPart(stored, testTheme, 0).determinate).toBe(false);
     expect(progressPart(stored, testTheme, 0).bufferPercent).toBe(undefined);
-    // Zero is still the empty share it says it is.
+
     expect(announced(renderProgress({ value: 0 }, testTheme, 0))).toBe("0%");
   });
 
   it("reads a stored share it cannot read as absence, not as NaN%", () => {
-    // The bug guarded: a dashboard stores a widget's share, and `progressPart`
-    // read it through `Option.fromNullishOr`, which refuses only `null` and
-    // `undefined`. A record whose share arrived as text was therefore a
-    // measurement: `progressPercent` forwarded it through `Math.max`, the fill's
-    // width became "NaN%", and the bar announced "NaN%" — while `Progress`'s own
-    // step timer read the same field as determinate and never moved it. A share
-    // that is not a number is absence now, the answer this bar already gives a
-    // share it never learned.
-    // The cast is the storage boundary: a saved share is whatever the record wrote.
     const stored = { value: "half" } as unknown as ProgressProps;
     const element = renderProgress(stored, testTheme, 0);
     expect(announced(element)).toBe("loading");
     expect(progressPart(stored, testTheme, 0).determinate).toBe(false);
     expect(progressPart(stored, testTheme, 0).percent).toBe(0);
     expect(storedNumber(stored.value)).toStrictEqual(Option.none());
-    // The indeterminate composition: a lead spacer and the moving segment.
+
     expect(elementChildren(trackOf(element))).toHaveLength(2);
-    // A numeric string is text, not a measurement: nothing coerces it.
+
     expect(
       announced(
         renderProgress(
@@ -195,9 +149,7 @@ describe("Progress", () => {
         ),
       ),
     ).toBe("loading");
-    // A readable share is unchanged, an unreadable buffer is no segment, and a
-    // `NaN` is still a number whose share the clamp reads as empty — the rule
-    // this bar already kept.
+
     expect(announced(renderProgress({ value: 40 }, testTheme, 0))).toBe("40%");
     expect(announced(renderProgress({ value: Number.NaN }, testTheme, 0))).toBe(
       "0%",
@@ -213,16 +165,12 @@ describe("Progress", () => {
     expect(
       elementChildren(trackOf(renderProgress({ value: 40 }, testTheme, 0))),
     ).toHaveLength(1);
-    // The shared reader agrees with the bar's own answers.
+
     expect(storedNumber(42)).toStrictEqual(Option.some(42));
     expect(storedNumber(null)).toStrictEqual(Option.none());
   });
 
   it("says the value in the caller's words, in the announcement and the part", () => {
-    // The bug guarded: the only supported channel (`aria-valuetext`) carried a
-    // fixed `42%`/`loading` phrase, so a localised interface, a different unit,
-    // or a download that wanted its buffered share in the sentence could not
-    // say it — while its sibling `Meter` had taken a `formatValue` all along.
     const props = {
       value: 42,
       label: "Uploading",
@@ -233,16 +181,11 @@ describe("Progress", () => {
     expect(
       textOf(renderProgressValue({}, progressPart(props, testTheme, 0))),
     ).toBe("42% uploaded");
-    // The default phrase is untouched, so an existing bar is unchanged.
+
     expect(announced(bar(Option.some(42)))).toBe("42%");
   });
 
   it("keeps its own words for a formatter that says nothing", () => {
-    // The bug guarded: a caller's answer was published exactly as it arrived, so
-    // a formatter whose locale table had no row for this bar (`""`) announced an
-    // empty value — the one channel a progressbar has — while the bar still had
-    // a share to report, and `ProgressValue` painted nothing beside a 42% fill.
-    // `loadingText` had the same hole on an indeterminate bar.
     const empty = (): string => "";
     const props = { value: 42, formatValue: empty };
     expect(announced(renderProgress(props, testTheme, 0))).toBe("42%");
@@ -262,7 +205,7 @@ describe("Progress", () => {
     expect(announced(renderProgress({ loadingText: "  " }, testTheme, 0))).toBe(
       "loading",
     );
-    // A real answer still wins, trimmed, so the rule is not "use the default".
+
     expect(
       announced(
         renderProgress(
@@ -295,15 +238,13 @@ describe("Progress", () => {
     expect(
       textOf(renderProgressValue({}, progressPart(props, testTheme, 0))),
     ).toBe("Chargement");
-    // A determinate bar ignores the loading word: it has a value to say.
+
     expect(
       announced(renderProgress({ ...props, value: 42 }, testTheme, 0)),
     ).toBe("42%");
   });
 
   it("paints the held-ahead buffer in the segment between value and buffer", () => {
-    // The bug guarded: a bar reported only `value`, so a download that had
-    // buffered further ahead painted as if nothing were held.
     const element = renderProgress({ value: 40, buffer: 70 }, testTheme, 0);
     const children = elementChildren(trackOf(element));
     expect(children).toHaveLength(2);
@@ -320,9 +261,6 @@ describe("Progress", () => {
   });
 
   it("paints the buffer in a role its tone's fill does not already use", () => {
-    // The bug guarded: a `muted` bar's fill is `mutedForeground`, which was the
-    // buffer's role too, so `value={20} buffer={80}` painted one continuous
-    // 80% bar and read as finished. Every tone's held share must be its own mark.
     const segmentsOf = (
       tone: ProgressTone,
     ): { readonly fill: ReactElement; readonly buffer: ReactElement } => {
@@ -346,7 +284,7 @@ describe("Progress", () => {
     expect(colourOf(segmentsOf("muted").buffer)).toBe(
       testTheme.colors.borderStrong,
     );
-    // The three chromatic tones keep the role the indicator contract measures.
+
     Arr.forEach(["primary", "success", "destructive"] as const, (tone) => {
       expect(colourOf(segmentsOf(tone).buffer), tone).toBe(
         testTheme.colors.mutedForeground,
@@ -369,17 +307,17 @@ describe("Progress", () => {
       Option.flatMap(bufferOf(props), (element) =>
         hostStyleString(element, "width"),
       );
-    // Past the end clamps to the bar's own end.
+
     expect(widthOf({ value: 40, buffer: 250 })).toStrictEqual(
       Option.some("60%"),
     );
-    // Behind the value, there is no held segment left to paint.
+
     expect(widthOf({ value: 70, buffer: 40 })).toStrictEqual(Option.none());
-    // A buffer is a place on the bar; an indeterminate bar has none.
+
     expect(progressPart({ buffer: 70 }, testTheme, 0).bufferPercent).toBe(
       undefined,
     );
-    // An unreadable buffer is empty, like an unreadable value.
+
     expect(widthOf({ value: 40, buffer: Number.NaN })).toStrictEqual(
       Option.none(),
     );
@@ -407,7 +345,7 @@ describe("Progress", () => {
     expect(valueText(250)).toBe("100%");
     expect(valueText(-5)).toBe("0%");
     expect(valueText(Number.NaN)).toBe("0%");
-    // A value part that read the raw prop would print "250%".
+
     expect(valueText(250)).toBe(
       expectSome(hostStyleString(fillOf(bar(Option.some(250))), "width")),
     );
@@ -427,13 +365,6 @@ describe("Progress", () => {
   });
 
   it("paints no label line for a label that arrived blank", () => {
-    // The bug guarded: a bar's label is copy from an i18n table or a saved
-    // record, so a missing row arrives as `""` or a run of spaces. The label
-    // part painted `children ?? label` unconditionally, and the runtime lays a
-    // run of spaces out as a full line (16px on 0.11.0), so a bar whose name
-    // said nothing still grew a blank caption row — while its accessible name
-    // was correctly absent. The rule is `visibleCopy`'s, the one a separator's
-    // caption already follows.
     const part = progressPart({ value: 42, label: "   " }, testTheme, 0);
     expect(renderProgressLabel({}, part)).toBeNull();
     expect(textOf(renderProgressLabel({ children: "Saving" }, part))).toBe(
@@ -442,11 +373,6 @@ describe("Progress", () => {
   });
 
   it("keeps the stored label for a child that says nothing", () => {
-    // The bug guarded: `children ?? label` covered only an **absent** child, so
-    // a caption's own copy a translation table left blank — `""` or a run of
-    // spaces — both hid the bar's label and laid out a full blank line (16px on
-    // 0.11.0), while the part documents the label as its default. A child that
-    // says nothing is absence now, and the label it documents stands.
     const named = progressPart({ value: 42, label: "Uploading" }, testTheme, 0);
     expect(textOf(renderProgressLabel({ children: "" }, named))).toBe(
       "Uploading",
@@ -454,28 +380,22 @@ describe("Progress", () => {
     expect(textOf(renderProgressLabel({ children: "   " }, named))).toBe(
       "Uploading",
     );
-    // Both halves blank: no caption element at all.
+
     const unnamed = progressPart({ value: 42, label: "  " }, testTheme, 0);
     expect(renderProgressLabel({ children: "   " }, unnamed)).toBeNull();
-    // A caller's own spacing is still painted exactly as written.
+
     expect(textOf(renderProgressLabel({ children: "  Saving  " }, named))).toBe(
       "  Saving  ",
     );
   });
 
   it("lays the bar's segments in a row", () => {
-    // The bug guarded: the track was a block, so the indeterminate lead and the
-    // fill stacked — the moving fill never left the start of the bar and every
-    // segment after the first was clipped below it.
     const track = trackOf(bar(Option.some(42)));
     expect(expectSome(hostStyleString(track, "display"))).toBe("flex");
     expect(expectSome(hostStyleString(track, "flexDirection"))).toBe("row");
   });
 
   it("lets a caller's className restyle the frame", () => {
-    // The bug guarded: the frame's own column layout was merged *after* the
-    // caller's classes, so `className="flex-row"` compiled and then lost to the
-    // resting `flexDirection: column` — the documented join order never held.
     const element = renderProgress(
       { value: 42, className: "flex-row" },
       testTheme,
@@ -491,10 +411,9 @@ describe("Progress", () => {
     expect(hostStyleString(track, "backgroundColor")).toStrictEqual(
       Option.some(testTheme.colors.muted),
     );
-    // One child: an indeterminate bar adds a second moving segment, and no
-    // composition carries a value part unless the caller asks for one.
+
     expect(elementChildren(track)).toHaveLength(1);
-    // Root → provider → track: the default body has no value part.
+
     const provider =
       elementChildren(element)[0] ?? expect.fail("the progress drew nothing");
     expect(elementChildren(provider)).toHaveLength(1);
@@ -516,9 +435,6 @@ describe("Progress", () => {
   });
 
   it("holds the moving segment when the reader asked for less motion", () => {
-    // The bug guarded: `reducedMotion` stopped the timer but the segment still
-    // painted whatever step the renderer held, so a reader who asked not to see
-    // motion saw the bar advance on the next unrelated re-render.
     const leadWidth = (step: number, reducedMotion?: boolean): string =>
       expectSome(
         hostStyleString(
@@ -535,9 +451,6 @@ describe("Progress", () => {
   });
 
   it("paints its tone on the fill, determinate or not", () => {
-    // The bug guarded: the indeterminate bar ignored the tone and painted the
-    // primary role, so a destructive task and a successful one looked the same
-    // until the value arrived.
     const determinate = renderProgress(
       { value: 42, tone: "success" },
       testTheme,
@@ -547,7 +460,7 @@ describe("Progress", () => {
       expectSome(hostStyleString(fillOf(determinate), "backgroundColor")),
     ).toBe(testTheme.colors.success);
     const indeterminate = renderProgress({ tone: "success" }, testTheme, 0);
-    // The indeterminate track holds a lead segment and then the fill.
+
     const fill =
       elementChildren(trackOf(indeterminate))[1] ??
       expect.fail("the indeterminate bar painted no fill");
@@ -588,7 +501,7 @@ describe("Progress", () => {
     expect(hostStyleString(element, "flexDirection")).toStrictEqual(
       Option.some("column"),
     );
-    // The caller's style is merged last, after the frame's own width.
+
     expect(hostStyleString(element, "width")).toStrictEqual(Option.some("80%"));
     expect(hostStyleString(trackOf(element), "backgroundColor")).toStrictEqual(
       Option.some(testTheme.colors.muted),

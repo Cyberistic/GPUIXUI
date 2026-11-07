@@ -1,33 +1,3 @@
-/**
- * The React entry's first published frame.
- *
- * The bugs this guard: `options.initial` is a number the caller computed — a
- * measured height, a count that has not arrived, a drag's offset — and the hook
- * published it verbatim, so a value it could not read (`NaN`) reached the caller
- * as the frame the runtime paints: the runtime draws a `NaN` inset as nothing,
- * and a consumer that formats the number paints the word `NaN`. The retained
- * `MotionValue` repaired the same value to `0`, so the hook and the value it
- * drives could disagree about the first frame. `useInertia` accepted the same
- * option and dropped it, so a coast handed the offset a gesture released at
- * started at zero.
- *
- * `renderToStaticMarkup` renders the **first** frame and runs no effect, which
- * is the frame the defect lives in: the effect that samples the retained value
- * lands after it.
- *
- * The reduced preference is a second first-frame bug: `reducedMotion` removed
- * the tween's duration but not its start, so a hook mounted with `initial` under
- * reduced published the value the journey would have left from for one commit.
- *
- * The third is where that preference comes from: the hooks publish the one
- * `MotionProvider` and read only their own option, so a tree wrapped for a
- * reduced reader still animated every hook below it.
- *
- * The fourth is the options **object**: a hook's settings are a config as often
- * as a literal, and a record that never carried the key reads back as `null`,
- * which the hooks read field-first before anything else.
- */
-
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import type { ReactNode } from "react";
@@ -43,10 +13,8 @@ import {
   useTransition,
 } from "./react.js";
 
-/** The retained inertia every coast case reads; the hook takes a stable one. */
 const coast = inertia();
 
-/** The frame a hook publishes, as the runtime would read it. */
 const Frame = ({
   target,
   initial,
@@ -58,7 +26,6 @@ const Frame = ({
   return <>{String(value)}</>;
 };
 
-/** The frame a tween hook publishes, as the runtime would read it. */
 const TWEENFrame = ({
   target,
   initial,
@@ -70,13 +37,11 @@ const TWEENFrame = ({
   return <>{String(value)}</>;
 };
 
-/** The frame a coasting hook publishes, as the runtime would read it. */
 const COASTFrame = ({ initial }: { readonly initial?: number }) => {
   const { value } = useInertia(400, coast, { initial });
   return <>{String(value)}</>;
 };
 
-/** The frame a hook publishes when the reader asked for no journey. */
 const ReducedFrame = ({
   target,
   initial,
@@ -91,7 +56,6 @@ const ReducedFrame = ({
   return <>{String(value)}</>;
 };
 
-/** The tween hook's frame when the reader asked for no journey. */
 const ReducedTWEENFrame = ({
   target,
   initial,
@@ -110,10 +74,8 @@ const ReducedTWEENFrame = ({
   return <>{String(value)}</>;
 };
 
-/** A bounded coast whose rest is 400 × 350 ms, clamped to 50. */
 const boundedCoast = inertia(350, { min: 0, max: 50 });
 
-/** The coasting hook's frame when the reader asked for no journey. */
 const ReducedCOASTFrame = () => {
   const { value } = useInertia(400, boundedCoast, {
     initial: 0,
@@ -122,7 +84,6 @@ const ReducedCOASTFrame = () => {
   return <>{String(value)}</>;
 };
 
-/** Whether the hook reports a run the reduced mount skipped. */
 const ReducedCompletion = ({ initial }: { readonly initial?: number }) => {
   const { complete } = useMotion(100, tween(300), {
     initial,
@@ -131,7 +92,6 @@ const ReducedCompletion = ({ initial }: { readonly initial?: number }) => {
   return <>{String(complete)}</>;
 };
 
-/** The mount state a surface paints from a timing a caller may have stored. */
 const StoredTimingFrame = ({
   timing,
 }: {
@@ -141,7 +101,6 @@ const StoredTimingFrame = ({
   return <>{`${presence.mounted}:${String(presence.timing.exit.duration)}`}</>;
 };
 
-/** The tween hook's frame without an override, so the provider decides. */
 const ProviderTWEENFrame = ({ initial }: { readonly initial?: number }) => {
   const { value, complete } = useTransition(
     100,
@@ -151,13 +110,11 @@ const ProviderTWEENFrame = ({ initial }: { readonly initial?: number }) => {
   return <>{`${value}:${String(complete)}`}</>;
 };
 
-/** The coasting hook's frame without an override, so the provider decides. */
 const ProviderCOASTFrame = () => {
   const { value } = useInertia(400, boundedCoast, { initial: 0 });
   return <>{String(value)}</>;
 };
 
-/** A hook whose caller overrides a provider that states the other preference. */
 const OverriddenTWEENFrame = ({
   reducedMotion,
 }: {
@@ -174,7 +131,6 @@ const OverriddenTWEENFrame = ({
   return <>{String(value)}</>;
 };
 
-/** The tween hook's frame from a spec a caller may have stored. */
 const StoredSpecFrame = ({
   spec,
 }: {
@@ -184,7 +140,6 @@ const StoredSpecFrame = ({
   return <>{String(value)}</>;
 };
 
-/** Every hook's first frame from an options object a store did not keep. */
 const StoredOptionsFrame = () => {
   const motion = useMotion(100, tween(300), null);
   const spring = useSpring(100, undefined, null);
@@ -197,14 +152,6 @@ const StoredOptionsFrame = () => {
 
 describe("the preference the provider supplies", () => {
   it("is the frame a hook publishes when the caller states none", () => {
-    // The defect: every physics hook read `options.reducedMotion` alone, while
-    // the library publishes one `MotionProvider` for the whole tree and the
-    // presence hooks beside them already read it. An application that wrapped
-    // its tree for a reduced reader still got a count-up, a width tween and a
-    // drag release from `useMotion`/`useTransition`/`useSpring`/`useInertia`
-    // unless it repeated the flag at every call — the duplication the provider
-    // exists to remove — and a coast drifted off the projection the reader was
-    // promised.
     const reduced = (children: ReactNode) =>
       renderToStaticMarkup(
         <MotionProvider preference="reduced">{children}</MotionProvider>,
@@ -217,7 +164,7 @@ describe("the preference the provider supplies", () => {
     expect(reduced(<ProviderTWEENFrame initial={0} />)).toBe("100:true");
     expect(reduced(<Frame target={100} initial={0} />)).toBe("100");
     expect(reduced(<ProviderCOASTFrame />)).toBe("50");
-    // The animated tree keeps the journey, and a tree with no provider moves.
+
     expect(animated(<ProviderTWEENFrame initial={0} />)).toBe("0:false");
     expect(renderToStaticMarkup(<ProviderTWEENFrame initial={0} />)).toBe(
       "0:false",
@@ -225,9 +172,6 @@ describe("the preference the provider supplies", () => {
   });
 
   it("yields to a hook's own override in both directions", () => {
-    // The option is the per-run override, not a second state of the policy: a
-    // decorative animation can be silenced in an animated tree, and one that
-    // must move keeps moving under a reduced provider.
     expect(
       renderToStaticMarkup(
         <MotionProvider preference="reduced">
@@ -247,17 +191,11 @@ describe("the preference the provider supplies", () => {
 
 describe("the spec a tween hook reads", () => {
   it("mounts from a value a caller may have stored", () => {
-    // The defect: `useTransition` read `.durationMs` off the spec object, so a
-    // config that decoded with no spec at all threw `TypeError: Cannot read
-    // properties of null (reading 'durationMs')` out of the render that mounted
-    // the hook, while its siblings repaired the declaration they were handed.
-    // A spec the value does not name is the documented tween, so the hook
-    // mounts and paints the start it was given.
     expect(renderToStaticMarkup(<StoredSpecFrame spec={null} />)).toBe("0");
     expect(
       renderToStaticMarkup(<StoredSpecFrame spec={{ durationMs: null }} />),
     ).toBe("0");
-    // A readable spec keeps its own duration, and the start is still the start.
+
     expect(
       renderToStaticMarkup(<StoredSpecFrame spec={{ durationMs: 120 }} />),
     ).toBe("0");
@@ -273,13 +211,10 @@ describe("the first published frame", () => {
   });
 
   it("is the target when no initial is given", () => {
-    // The documented default: a hook mounted at rest paints without an entry
-    // run, so the first frame is the target itself.
     expect(renderToStaticMarkup(<Frame target={100} />)).toBe("100");
   });
 
   it("is a number the runtime can paint when the initial cannot be read", () => {
-    // The defect: `NaN` reached the caller as the first frame.
     expect(
       renderToStaticMarkup(<Frame target={100} initial={Number.NaN} />),
     ).toBe("100");
@@ -301,21 +236,12 @@ describe("the first published frame", () => {
   });
 
   it("is the offset a coast accumulates from", () => {
-    // The defect: `useInertia` took `MotionOptions` and dropped `initial`, so a
-    // caller that handed the offset a gesture released at got a value that
-    // started at zero. An offset it cannot read is no offset, the family's rule.
     expect(renderToStaticMarkup(<COASTFrame initial={40} />)).toBe("40");
     expect(renderToStaticMarkup(<COASTFrame />)).toBe("0");
     expect(renderToStaticMarkup(<COASTFrame initial={Number.NaN} />)).toBe("0");
   });
 
   it("is the resting frame under the reduced preference, not the start it skips", () => {
-    // The preference removes the journey, not only its duration. A hook mounted
-    // with `initial` under reduced published that start — for one commit, before
-    // its effect completed the run — so a reduced count-up or width change
-    // flashed the value it was supposed to arrive from. The first frame is the
-    // frame the preference names: the target, or a coast's projected rest (400
-    // × 350 ms clamped to 50 here).
     expect(
       renderToStaticMarkup(<ReducedFrame target={100} initial={0} />),
     ).toBe("100");
@@ -323,8 +249,7 @@ describe("the first published frame", () => {
       renderToStaticMarkup(<ReducedTWEENFrame target={100} initial={0} />),
     ).toBe("100");
     expect(renderToStaticMarkup(<ReducedCOASTFrame />)).toBe("50");
-    // The skipped run still completes; a mount that asked for no journey does
-    // not report one.
+
     expect(renderToStaticMarkup(<ReducedCompletion initial={0} />)).toBe(
       "true",
     );
@@ -332,24 +257,15 @@ describe("the first published frame", () => {
       "false",
     );
     expect(renderToStaticMarkup(<ReducedCompletion />)).toBe("false");
-    // The animated control keeps the start: the preference is what changed.
+
     expect(renderToStaticMarkup(<Frame target={100} initial={0} />)).toBe("0");
   });
 });
 
 describe("an options object a caller stored", () => {
   it("mounts every hook from the documented defaults when the store kept none", () => {
-    // The bug this guards: a hook's options are a config as often as a literal,
-    // and JSON has no `undefined` — a settings record a caller never wrote reads
-    // back as `null`. The hooks read `.reducedMotion` and `.initial` off the
-    // object before anything else, so a consumer passing what its decoder
-    // answered threw `TypeError: Cannot read properties of null (reading
-    // 'reducedMotion')` out of the render that mounted the surface, and no hook
-    // on the page painted. An absent object is the documented defaults.
     expect(renderToStaticMarkup(<StoredOptionsFrame />)).toBe("100:100:100:0");
-    // The preference is read from the object the hook was given, so a stored
-    // `null` still answers the provider rather than only the animated default:
-    // a reduced coast paints the rest its release projects, not the offset.
+
     expect(
       renderToStaticMarkup(
         <MotionProvider preference="reduced">
@@ -362,22 +278,15 @@ describe("an options object a caller stored", () => {
 
 describe("the window a stored timing names", () => {
   it("mounts a surface whose timing carries no exit phase", () => {
-    // The defect: `PresenceTiming` is structural and this hook projects the hold
-    // window from `.exit` in its render, so a config that decoded without one
-    // threw out of the render and the surface never mounted at all. A phase the
-    // value does not name is no journey — an explicit zero duration, because an
-    // empty transition is the renderer's own 300 ms default — which is also no
-    // window.
     const stored = { enter: { duration: 0.32 } };
     expect(renderToStaticMarkup(<StoredTimingFrame timing={stored} />)).toBe(
       "true:0",
     );
-    // A config that decoded with no object at all is no phase in either
-    // direction, so the surface still mounts — the type says so, no cast.
+
     expect(renderToStaticMarkup(<StoredTimingFrame timing={null} />)).toBe(
       "true:0",
     );
-    // A complete timing still reports the exit it names.
+
     expect(
       renderToStaticMarkup(
         <StoredTimingFrame timing={presenceTiming("normal")} />,

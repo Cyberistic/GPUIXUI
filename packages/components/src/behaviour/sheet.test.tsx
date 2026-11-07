@@ -1,14 +1,3 @@
-/**
- * Sheet names, on the drawer's surface.
- *
- * The bugs these guard: a second implementation drifting from the drawer's
- * (edges, focus, dismiss), a `top` edge the layout reads without the motion
- * agreeing — which paints the panel at the top but travels it up from the
- * bottom, so it enters from the wrong side — a sheet that does not animate in,
- * one a reduced reader is made to watch, and a bottom sheet without the vaul
- * grabber or inner corners.
- */
-
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import { a11yNodes } from "../internal/a11y.js";
@@ -115,8 +104,6 @@ describe("Sheet", () => {
       const settled = requireBounds(page, "sheet");
       const window = page.renderer.getWindowSize();
 
-      // The sheet leaves no frame in between: at t=0 its top is the window's
-      // bottom edge, and the settled box is anchored to that edge.
       expect(entering.y).toBe(window.height);
       expect(entering.y - settled.y).toBe(settled.height);
       expect(settled.y + settled.height).toBe(window.height);

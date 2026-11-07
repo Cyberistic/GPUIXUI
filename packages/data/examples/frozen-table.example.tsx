@@ -1,23 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * A frozen-column grid: a pinned name column beside columns that pan.
- *
- * The runtime paints no `position: "sticky"`, so the frozen column is its own
- * vertical scroller beside the data pane's, mirrored both ways
- * (`data-grid-frozen-column`, `frozen-column-lifecycle`). The example shows the
- * three rules a consumer must keep:
- *
- * - both panes paint the **same row height**, because the shared vertical offset
- *   is what lines a record up across the seam;
- * - the frozen cell's width is the `frozenWidth` the pane is given, from one
- *   constant, so the header and the cells cannot drift;
- * - a press on either pane reports the **record**, so choosing from the frozen
- *   column selects it for the whole grid.
- *
- * The 60 rows are the package suite's scrolling fixture: every row is mounted,
- * because the frozen composition is two scrollers rather than a window.
- */
-
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { useState } from "react";
@@ -29,16 +10,12 @@ import {
 } from "../src/index.js";
 import { textStyle, useTheme } from "../src/theme.js";
 
-/** Rows in the grid. */
 export const FROZEN_TABLE_ROWS = 60;
 
-/** The frozen pane's width, and the width every frozen cell paints. */
 export const FROZEN_TABLE_WIDTH = 180;
 
-/** Both panes paint one row height. */
 export const FROZEN_TABLE_ROW_HEIGHT = 32;
 
-/** The scrolling columns' total width: wider than the pane, so it can pan. */
 export const FROZEN_TABLE_CONTENT_WIDTH = 420;
 
 interface FileRow {
@@ -68,7 +45,6 @@ const files: ReadonlyArray<FileRow> = Arr.map(
   }),
 );
 
-/** A frozen-column grid with a chosen record. */
 export const FrozenTableExample = () => {
   const theme = useTheme();
   const [chosen, setChosen] = useState<Option.Option<string>>(Option.none());
@@ -204,7 +180,6 @@ export const FrozenTableExample = () => {
   );
 };
 
-/** The fixture's row names, for a suite that needs the source order. */
 export const frozenRowNames: ReadonlyArray<string> = Arr.map(
   files,
   (row) => row.name,

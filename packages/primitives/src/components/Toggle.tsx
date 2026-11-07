@@ -1,28 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * `Toggle` — a button that stays on.
- *
- * A toggle is not a Switch: a switch changes a setting immediately ("dark
- * mode"), a toggle sets a *mode* for the next action ("bold", "grid view",
- * "snap"), and it lives in a toolbar beside other actions.
- *
- * **The accessibility limitation:** `@gpuix/native` 0.11.0 has no `aria-pressed`, so the
- * state reaches assistive technology through `aria-valuetext` (the provider's
- * `messages.press` words, shipped as `"pressed"` / `"not pressed"`), the same
- * channel Checkbox and Switch use. A screen reader hears a button with a value,
- * not a pressed button; the docs page says so.
- *
- * The paint is the shared control recipe with `core/variants.ts`' toggle
- * variants, and the activation/keyboard contract is `Button`'s — Enter on key
- * down, Space on key up, a held key ignored. It forwards the `Tooltip` trigger
- * pair (`TooltipTriggerProps`), because a mode in a toolbar is described by a
- * tip rather than by occupying a label.
- *
- * The resting appearance is a Tailwind recipe (`recipe/toggleClass`), compiled
- * through `@gpuixui/tw`; the caller's `className` is joined last so it wins
- * conflicts exactly as `cn` resolves them.
- */
-
 import type { ReactElement, ReactNode } from "react";
 import type { EventPayload, KeyEvent } from "@gpuix/react";
 import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
@@ -70,60 +46,45 @@ import { useTheme } from "./ThemeProvider.js";
 
 export interface ToggleProps
   extends InteractionProps, TooltipTriggerProps, FieldHostProps, HelpProps {
-  /** Controlled pressed state. Omit to let the toggle own it. */
   readonly pressed?: boolean;
   readonly defaultPressed?: boolean;
   readonly onPressedChange?: (pressed: boolean) => void;
-  /** Defaults to `default`. */
+
   readonly variant?: ToggleVariant;
-  /** Defaults to `md`. */
+
   readonly size?: ControlSize;
-  /** Equal width and height, for an icon-only toggle. */
+
   readonly square?: boolean;
   readonly disabled?: boolean;
-  /**
-   * Busy: shows a spinner and blocks activation, but stays focusable. A busy
-   * toggle reports `disabled` to its `style` callback, because it refuses every
-   * press and key.
-   */
+
   readonly loading?: boolean;
-  /**
-   * The words a busy toggle announces — its `aria-description` and the
-   * spinner's name. Defaults to the provider's `loading.busy` (`Loading`); a
-   * blank label announces nothing.
-   */
+
   readonly loadingLabel?: string;
-  /**
-   * Hold the busy spinner's lit dot. Defaults to the motion provider's
-   * preference (`MotionProvider`); the runtime exposes none of its own.
-   */
+
   readonly reducedMotion?: boolean;
   readonly leading?: ReactNode;
   readonly trailing?: ReactNode;
-  /** Accessible name. Required when the toggle has only an icon. */
+
   readonly label?: string;
-  /** Extra style, resolved against the toggle's live state and merged last. */
+
   readonly style?: StateStyle<ToggleState>;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
   readonly children?: ReactNode;
   readonly testId?: string;
 }
 
-/** The state a toggle announces: there is no `aria-pressed` to carry it. */
 export const pressedValueText = (
   pressed: boolean,
   words: PressWords = defaultMessages.press,
 ): string => pressWord(pressed, words);
 
-/** What a `Toggle` tells a `style` callback. `pressed` is `selected`. */
 export interface ToggleState {
   readonly disabled: boolean;
   readonly focused: boolean;
   readonly selected: boolean;
 }
 
-/** The element a toggle renders. Pure in its arguments. */
 export const renderToggle = (
   props: ToggleProps,
   theme: PrimitiveTheme,
@@ -135,8 +96,7 @@ export const renderToggle = (
   const { variant = "default" } = props;
   const size = controlSize(props.size);
   const busy = props.disabled === true || props.loading === true;
-  // The prop's blank is a deliberate silence; a blank table row is absence and
-  // keeps the shipped word (`busyWord`).
+
   const loadingWord = props.loadingLabel ?? busyWord(messages.loading);
   const toggle = (): void => {
     if (busy) return;
@@ -165,8 +125,6 @@ export const renderToggle = (
   style = mergeStyle(
     style,
     resolveStyle(props.style, {
-      // The state that refuses activation, like `Button`'s: `loading` is not a
-      // second flag a caller has to handle.
       disabled: busy,
       focused: focus.focused,
       selected: state.current,
@@ -177,8 +135,6 @@ export const renderToggle = (
       ref={props.ref}
       role="button"
       aria-label={accessibleName(props.label) ?? childrenName(props.children)}
-      // A tooltip arrives through the same channel as the caller's help; an
-      // explicit `description` is the field-style help and wins.
       aria-description={
         props.loading === true
           ? accessibleName(loadingWord)
@@ -215,7 +171,6 @@ export const renderToggle = (
   );
 };
 
-/** A button whose action has a persistent on/off state. */
 export const Toggle = (props: ToggleProps): ReactElement => {
   const theme = useTheme();
   const messages = useMessages();
@@ -225,7 +180,7 @@ export const Toggle = (props: ToggleProps): ReactElement => {
     props.defaultPressed ?? false,
     props.onPressedChange,
   );
-  // The provider states the preference once; the prop is the per-toggle answer.
+
   const reducedMotion = reducedMotionOf(
     props.reducedMotion,
     useMotionPreference(),

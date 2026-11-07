@@ -1,11 +1,3 @@
-/**
- * The fx-991ES Plus model: the eight modes, the keypad every app paints, and
- * the searchable catalogue over every function and command in the manual.
- *
- * A row is data, not a closure. The palette, the keypad and the keyboard all
- * name the same `CommandAction`, and `session.runAction` is the one interpreter.
- */
-
 import {
   ABS,
   AND,
@@ -88,11 +80,6 @@ const key = (
 
 const row = (...keys: ReadonlyArray<KeypadKey>): KeypadRow => ({ keys });
 
-/**
- * The fx-991ES Plus body, key for key. `shift` and `alpha` are the legends
- * printed above each key (gold left, red right); the session's latch maps give
- * them their meaning, and `model.test.ts` holds the two in step.
- */
 const keypad: Keypad = {
   cluster: {
     left: [

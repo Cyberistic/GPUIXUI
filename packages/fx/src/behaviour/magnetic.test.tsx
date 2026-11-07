@@ -1,18 +1,3 @@
-/**
- * Magnetic in the real GPUix renderer.
- *
- * The bugs these guard: a surface that never feels the pointer because the move
- * lands on a child and does not reach the wrapper; a plate that moves the
- * surface's own box, so the cursor walks out of it; a lean that runs uncapped; a
- * plate that stays where the pointer left it instead of returning to rest; a
- * reduced-motion reader who is still pulled — including one who turns the
- * preference on while the plate is already leaning; and handlers the caller
- * passed that the component swallows.
- *
- * The motion clock is paused for the frame readings, so the plate's offset is
- * the declared target rather than wherever real time had got.
- */
-
 import { describe, expect, it, vi } from "vitest";
 import {
   requireBounds,
@@ -23,7 +8,6 @@ import { Magnetic, type MagneticProps } from "../magnetic.js";
 import { magneticReach } from "../magnetic/logic.js";
 import { MotionProvider } from "@gpuixui/components/motion";
 
-/** The surface is 200 × 80, so a quarter of its width is 50 px from the centre. */
 const surface = { width: 200, height: 80 };
 
 const render = (props: Partial<MagneticProps> = {}) => {
@@ -38,7 +22,6 @@ const render = (props: Partial<MagneticProps> = {}) => {
   return page;
 };
 
-/** Move the pointer to a fraction of the surface's box, then settle the frame. */
 const moveTo = (
   page: ReturnType<typeof renderComponent>,
   across: number,
@@ -52,7 +35,6 @@ const moveTo = (
   settle(page);
 };
 
-/** Advance past the retarget and read the plate's offset from where it started. */
 const pullOf = (
   page: ReturnType<typeof renderComponent>,
   from: { readonly x: number; readonly y: number },
@@ -74,10 +56,9 @@ describe("Magnetic", () => {
       moveTo(page, 0.75, 0.5);
       const pull = pullOf(page, plate);
 
-      // A quarter of the width from the centre, capped at the house reach.
       expect(pull.left).toBe(magneticReach);
       expect(pull.top).toBe(0);
-      // The surface's own box is the fixed thing the pointer is pulling.
+
       expect(requireBounds(page, "surface")).toEqual(box);
     } finally {
       page.unmount();
@@ -123,7 +104,6 @@ describe("Magnetic", () => {
       const plate = requireBounds(page, "magnetic-plate");
       page.renderer.clockPause();
 
-      // 20 px right of centre at the house share of 0.35.
       const box = requireBounds(page, "surface");
       page.renderer.nativeSimulateMouseMove(
         box.x + box.width / 2 + 20,
@@ -138,10 +118,6 @@ describe("Magnetic", () => {
   });
 
   it("leans from the box the surface is in now, not the one it first reported", () => {
-    // A surface moved by a layout above it (a pane opening, a scroll) keeps the
-    // box it last reported: `onLayout` fires on a size change, not a move. The
-    // pull is then taken against a centre the surface no longer has, and leans
-    // the opposite way from the pointer.
     const Shifted = ({ inset }: { readonly inset: number }) => (
       <div style={{ paddingLeft: inset, paddingTop: inset }}>
         <Magnetic testId="shifted-surface" style={surface}>
@@ -168,7 +144,6 @@ describe("Magnetic", () => {
       );
       settle(page);
 
-      // A quarter of the width to the left of the centre the surface has now.
       expect(pullOf(page, plate).left).toBe(-magneticReach);
     } finally {
       page.unmount();
@@ -207,19 +182,17 @@ describe("Magnetic", () => {
     const page = renderComponent(<Page reduced={false} />);
     settle(page);
     try {
-      // Read at rest: the frame the plate started on, before the lean.
       const rest = requireBounds(page, "magnetic-plate");
       page.renderer.clockPause();
       moveTo(page, 0.75, 0.5);
-      // A quarter of the 200px surface to the right of its centre, capped.
+
       expect(pullOf(page, rest).left).toBe(magneticReach);
 
       page.rerender(<Page reduced />);
       settle(page);
-      // The preference removes the journey, including one already on screen.
+
       expect(pullOf(page, rest)).toEqual({ left: 0, top: 0 });
 
-      // A pointer that moves after the switch cannot re-earn it either.
       moveTo(page, 0.75, 0.25);
       expect(pullOf(page, rest)).toEqual({ left: 0, top: 0 });
     } finally {

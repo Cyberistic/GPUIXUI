@@ -1,11 +1,3 @@
-/**
- * Browser preview for the Fireworks page.
- *
- * The native field bursts seeded sparks out of a few centres; the preview
- * scatters the same points and flies each spark from its centre to its rim on
- * a timed loop.
- */
-
 import type { CSSProperties } from "react";
 
 interface Spark {

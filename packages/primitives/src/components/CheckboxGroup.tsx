@@ -1,23 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * `CheckboxGroup` — several independent choices that share one tab stop.
- *
- * A group of checkboxes is not a `RadioGroup`: picking one does not clear the
- * others, so the arrows move focus and only `Space`/`Enter` changes the value.
- * The group still holds **one** tab stop, and that stop skips a disabled option
- * — a group whose value was a disabled option used to have no reachable stop.
- *
- * The state reaches assistive technology through `aria-valuetext` (the
- * provider's `messages.selection` words, shipped as `"checked"` / `"unchecked"`)
- * because `@gpuix/native` 0.11.0 has no `aria-checked`; each row is a named
- * checkbox and the container is a named `group`. There is no
- * `aria-multiselectable`, so the group role does not claim one.
- *
- * Options arrive as data (`options`) or as `<CheckboxGroupItem>` children; both
- * are read into one list by `checkboxGroupItems`, so the roving index, the
- * arrow contract and the row paint have a single path.
- */
-
 import type { ReactElement, ReactNode } from "react";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -83,19 +64,10 @@ import { useMessages } from "./MessagesProvider.js";
 
 export type CheckboxGroupOption = GroupOption;
 
-/** {@link CheckboxGroupItem} props: one option written as an element. */
 export type CheckboxGroupItemProps = GroupItemProps;
 
-/**
- * One option as an element, for content the data prop cannot carry.
- *
- * `CheckboxGroup` reads this part's props and renders the row itself, so the
- * roving index and the key contract stay one code path. The part draws nothing
- * on its own.
- */
 export const CheckboxGroupItem = (_props: CheckboxGroupItemProps): null => null;
 
-/** The option list a group renders: the data prop, or its item children. */
 export const checkboxGroupItems = (props: {
   readonly options?: ReadonlyArray<CheckboxGroupOption>;
   readonly children?: ReactNode;
@@ -110,61 +82,49 @@ export interface CheckboxGroupProps
     InteractionProps,
     FieldHostProps,
     HelpProps {
-  /** The choices as data. Omit when the options are item children. */
   readonly options?: ReadonlyArray<CheckboxGroupOption>;
-  /** The choices as items, when they carry rich content. */
+
   readonly children?: ReactNode;
-  /** Controlled selection: the values that are on. */
+
   readonly value?: ReadonlyArray<string>;
   readonly defaultValue?: ReadonlyArray<string>;
-  /** Arrow-key axis. Defaults to `vertical`. */
+
   readonly orientation?: "vertical" | "horizontal";
-  /** Defaults to `md`. */
+
   readonly size?: ControlSize;
-  /** Defaults to `primary`. */
+
   readonly accent?: SelectionAccent;
-  /** Disables every option. */
+
   readonly disabled?: boolean;
-  /** Paints every box and its focus ring destructive. */
+
   readonly invalid?: boolean;
-  /** Accessible name for the group. */
+
   readonly label?: string;
-  /** Extra style, resolved against the group's live state and merged last. */
+
   readonly style?: StateStyle<CheckboxGroupState>;
-  /** Extra style for every option row, resolved against that row's live state. */
+
   readonly itemStyle?: StateStyle<CheckboxItemState>;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
-  /** The group's own locator. A row is named by `itemTestId`. */
+
   readonly testId?: string;
-  /**
-   * One locator per option row, derived from its value.
-   *
-   * A row is a control of its own and the group's `testId` lands on the
-   * unfocusable wrapper, so without this an automation host can address the
-   * group but never press one choice (`Select`'s `itemTestId` is the same
-   * contract). The derivation is a function because rows are data.
-   */
+
   readonly itemTestId?: (value: string) => string;
 }
 
-/** What a `CheckboxGroup` tells its `style` callback. */
 export interface CheckboxGroupState {
   readonly disabled: boolean;
-  /** True while any option holds native focus. */
+
   readonly focused: boolean;
 }
 
-/** What a `CheckboxGroup` tells its `itemStyle` callback, one row at a time. */
 export interface CheckboxItemState {
   readonly disabled: boolean;
   readonly focused: boolean;
   readonly checked: boolean;
 }
 
-/** What the renderer does with the group's own state. */
 export interface CheckboxGroupHandlers extends GroupHandlers, GroupKeys {
-  /** Turn one option on or off. */
   readonly onToggle: (value: string) => void;
 }
 
@@ -177,20 +137,15 @@ export const renderCheckboxGroup = (
   handlers: CheckboxGroupHandlers,
   messages: PrimitiveMessages = defaultMessages,
 ): ReactElement => {
-  // The axis a group lays out and navigates on. `orientation` is a stored
-  // choice like a size, so a name this release does not carry reads as the
-  // documented vertical (the layout and the keys must not disagree).
   const orientation = orientationOf(props.orientation, "vertical");
   const { accent = "primary" } = props;
   const size = controlSize(props.size);
   const options = checkboxGroupItems(props);
   const count = Arr.length(options);
   const isDisabled = optionDisabled(options, props.disabled);
-  // A focus the group no longer draws is not focus: the option holding it was
-  // filtered out or the list shrank, so no row can carry the ring or the state.
+
   const focused = focusedOption(count, focus.focusedIndex);
-  // The preferred stop may be a disabled row, which takes no focus; the first
-  // option a user can reach is what keeps the group in the tab order.
+
   const activeIndex = rovingIndex(count, preferredIndex, isDisabled);
   const toggle = (index: number): void => {
     const option = options[index];
@@ -223,8 +178,7 @@ export const renderCheckboxGroup = (
     const key = event.key ?? "";
     if (swallowKeyDefault(key, "down")) event.preventDefault();
     if (move(key) || jump(key)) return;
-    // A typed prefix moves focus but never toggles: this group's arrows do not
-    // change a value either, so the keyboard contract stays one rule.
+
     const typed = Option.flatMap(
       Option.all([Option.fromNullishOr(handlers.typeAhead), activeIndex]),
       ([match, from]) => match(from, key),
@@ -232,8 +186,7 @@ export const renderCheckboxGroup = (
     if (Option.match(typed, { onNone: () => false, onSome: focusMove })) return;
     if (decideActivation(key, "down", event.isHeld === true)) activate();
   };
-  // Space toggles on the release, the way a platform checkbox does; Enter has
-  // already toggled on the press, and this handler ignores it.
+
   const onKeyUp = (event: KeyEvent): void => {
     if (!isPlainKey(event.modifiers)) return;
     if (decideActivation(event.key ?? "", "up", false)) activate();
@@ -296,8 +249,7 @@ export const renderCheckboxGroup = (
             checked: current === "checked",
           }),
         );
-        // The address lands on the row that holds the tab stop, so a form can
-        // focus the group's reachable option rather than an unfocusable wrapper.
+
         const addressed = Option.contains(activeIndex, index);
         const register = handlers.registerItem(index);
         return (
@@ -342,16 +294,11 @@ export const renderCheckboxGroup = (
   );
 };
 
-/** A group of independent checkboxes with one tab stop. */
 export const CheckboxGroup = (props: CheckboxGroupProps): ReactElement => {
   const theme = useTheme();
   const messages = useMessages();
   const focus = useRovingFocus();
   const selected = useControlState<ReadonlyArray<string>>(
-    // A saved selection is a list this release writes and often a record an
-    // older one wrote (a map of chosen ids). Only a list is a controlled value;
-    // anything else is absence, so the group stays usable instead of being
-    // pinned to an empty set or throwing at `Arr.contains`'s iteration.
     Option.getOrUndefined(storedTextList(props.value)),
     Option.getOrElse(storedTextList(props.defaultValue), () => []),
     valueChange(props),

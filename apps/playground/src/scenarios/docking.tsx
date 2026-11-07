@@ -1,19 +1,3 @@
-/**
- * Tier 4 probe: `docking-nested` — a dock layout composed from nested splits.
- *
- * The docking question is whether the panel primitives compose: a sidebar, a
- * split inside the sidebar's neighbour, and a tabbed panel inside *that* split.
- * Each level owns its own width, so dragging one divider must move the other
- * level's box without changing its size. The sidebar is caller-owned (`size`)
- * because collapsing it is a layout decision, not a drag: the width goes to the
- * nested split, which is exactly what a dock does when a panel group closes.
- *
- * Measured limitation, asserted below: a split's `max` is the caller's number,
- * not its container's width, so the nested split does not re-clamp when the
- * sidebar opens. The outer pane clips its overflow and the inner pane shrinks to
- * nothing — a dock needs the container's width (0.11.0's `onLayout` supplies it;
- * this probe pins the fixed-width behaviour the existing scenarios rely on).
- */
 import { useState } from "react";
 import { Effect, Option } from "effect";
 import { useTheme } from "@gpuixui/tokens/react";
@@ -54,7 +38,6 @@ const Tab = ({
   );
 };
 
-/** The editor pane: a tab strip and the one document the selected tab names. */
 const EditorPane = () => {
   const theme = useTheme();
   const [active, setActive] = useState("notes");
@@ -92,7 +75,7 @@ const EditorPane = () => {
 const DockingProbe = () => {
   const theme = useTheme();
   const [sidebar, setSidebar] = useState(SIDEBAR_OPEN);
-  /** The width to restore, so collapsing a dragged sidebar reopens at its own size. */
+
   const [restore, setRestore] = useState(SIDEBAR_OPEN);
   const [editor, setEditor] = useState(260);
 
@@ -199,7 +182,6 @@ const DockingProbe = () => {
   );
 };
 
-/** `testId`'s painted text, or a failed check. */
 const text = (
   ctx: Smoke.SmokeContext,
   testId: string,
@@ -209,7 +191,6 @@ const text = (
     Option.fromNullishOr(ctx.host.text(testId)),
   );
 
-/** The painted left edge and width of `testId`, or a failed check. */
 const box = (
   ctx: Smoke.SmokeContext,
   testId: string,
@@ -256,8 +237,6 @@ export const dockingScenario: ScenarioBody = {
         1,
       );
 
-      // Independent levels: the outer divider moves the inner split's origin and
-      // leaves the inner width alone.
       ctx.host.drag("dock-divider", 60, 0, 6);
       yield* ctx.expectContains(
         "the outer divider widens the sidebar",
@@ -278,7 +257,6 @@ export const dockingScenario: ScenarioBody = {
         1,
       );
 
-      // …and the inner divider touches nothing above it.
       ctx.host.drag("dock-inner-divider", 80, 0, 6);
       yield* ctx.expectContains(
         "the inner divider widens the editor",
@@ -288,8 +266,6 @@ export const dockingScenario: ScenarioBody = {
       const outer = yield* box(ctx, "dock-pane-a");
       yield* ctx.expectNear("the sidebar keeps its width", outer.width, 200, 1);
 
-      // Collapsing is the layout's decision, not a drag: the width goes to the
-      // nested split, and the inner split state is untouched.
       ctx.host.click("dock-collapse");
       yield* ctx.expectContains(
         "collapsing empties the sidebar",
@@ -316,7 +292,6 @@ export const dockingScenario: ScenarioBody = {
         0,
       );
 
-      // A tabbed panel inside the dock: the pane's box holds, its content changes.
       const beforeTabs = yield* box(ctx, "dock-inner-pane-a");
       ctx.host.click("dock-tab-log");
       yield* ctx.expectEqual(
@@ -338,8 +313,6 @@ export const dockingScenario: ScenarioBody = {
         "document=notes",
       );
 
-      // Re-opening restores the arrangement the dock held — the width the sidebar
-      // had when it closed, not the one it started with.
       ctx.host.click("dock-expand");
       yield* ctx.expectContains(
         "re-opening restores the sidebar's own width",

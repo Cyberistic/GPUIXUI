@@ -1,25 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Particles: a decorative field of drifting motes.
- *
- * Each mote is a small absolutely positioned circle inside a clipped box, and
- * the drift is a tween of `left`/`top` — inset geometry, because the runtime has
- * no `transform` (upstream issue #102) and no 2D canvas. The layout is a pure
- * function of the measured box and one seed (`particles/logic.ts`), so the same
- * seed paints the same field on every mount.
- *
- * The runtime tweens a target once, so a floating field is a **ping-pong**: each
- * mote travels out on its own leg and, when that tween reports `onMotionComplete`,
- * turns around. `@gpuixui/motion` owns the timing policy through
- * `internal/presence.tsx`, and `MotionProvider preference="reduced"` paints the
- * seeded field still instead of deleting it.
- *
- * The field is decoration: it publishes no accessibility node and takes no
- * pointer input, so the content it sits behind owns the name and the presses.
- * It also measures itself, so the caller must bound it — a box with no height
- * has no field.
- */
-
 import type { EventPayload, MotionProps, Props } from "@gpuix/react";
 import {
   mergeStyles,
@@ -57,37 +36,30 @@ import {
   type ParticleSpec,
 } from "./particles/logic.js";
 
-/** What a field draws at one frame. */
 export interface ParticlesState {
-  /** The motes on screen; `0` before the box has been measured. */
   readonly count: number;
   readonly reducedMotion: boolean;
   readonly width: number;
   readonly height: number;
 }
 
-/** {@link Particles} props. */
 export interface ParticlesProps extends Omit<Props, "children" | "style"> {
-  /** The motes to paint. Default `24`; `0` paints none and `120` is the cap. */
   readonly count?: number;
-  /** The layout seed. Default `1`; the same seed paints the same field. */
+
   readonly seed?: number;
-  /** The smallest mote, in pixels. Default `2`. */
+
   readonly minSize?: number;
-  /** The largest mote, in pixels. Default `5`. */
+
   readonly maxSize?: number;
-  /** The mote colour. Default the theme's `primary` role. */
+
   readonly color?: string;
-  /**
-   * The time for one leg of the drift, in milliseconds. Default `14_000`; every
-   * mote runs `0.75…1.25` of it, so the field never breathes in unison.
-   */
+
   readonly driftMs?: number;
-  /** The entrance level. Default `"slow"` (320 ms). */
+
   readonly level?: MotionLevel;
-  /** A Tailwind class string for the box, merged last. */
+
   readonly className?: string;
-  /** A style for the box, or a function of the field. */
+
   readonly style?: StateStyle<ParticlesState>;
 }
 
@@ -98,13 +70,6 @@ interface MoteProps {
   readonly still: boolean;
 }
 
-/**
- * One mote: born at its seeded place, drifting to the far end of its leg.
- *
- * A plain `div` with a `motion` prop rather than `motion.div`: the component
- * owns the turnaround, so the generation guard `motion.div` wraps around
- * `onMotionComplete` is not wanted here.
- */
 const Mote = ({ spec, ink, radius, still }: MoteProps) => {
   const [direction, setDirection] = useState<ParticleDirection>(1);
   const travel = particleTravel(spec, direction);
@@ -133,20 +98,13 @@ const Mote = ({ spec, ink, radius, still }: MoteProps) => {
         borderRadius: radius,
         backgroundColor: ink,
         opacity: spec.opacity,
-        // A mote is decoration too: a press lands on what is behind the field.
+
         pointerEvents: "none" as const,
       }}
     />
   );
 };
 
-/**
- * A bounded box of drifting motes.
- *
- * Give it a height — directly or through a sized flex parent — because the field
- * positions itself from its own measured box and paints nothing before the first
- * layout.
- */
 export const Particles = ({
   count,
   seed,
@@ -182,8 +140,7 @@ export const Particles = ({
   );
   const ink = color ?? theme.colors.primary;
   const still = preference === "reduced";
-  // The box the field is laid out in. A size that changes re-draws the field from
-  // the same seed; reporting the same size again must not churn the tree.
+
   const [box, setBox] = useState<
     Option.Option<{
       readonly width: number;
@@ -243,7 +200,7 @@ export const Particles = ({
         mergeStyles(recipeStyle(cn(className), theme), {
           position: "relative",
           overflow: "hidden",
-          // Decoration: the content in front of the field keeps every press.
+
           pointerEvents: "none",
         }),
         resolveStyle(style, state),
@@ -262,7 +219,6 @@ export const Particles = ({
   );
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 600). */
 export const particlesMeta = {
   name: "Particles",
   tier: 5,

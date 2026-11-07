@@ -1,18 +1,3 @@
-/**
- * The Casio expression parser.
- *
- * This is deliberately not `mathjs`'s parser. The fx-991ES has its own
- * precedence (omitted multiplication binds tighter than `×`/`÷`, postfix
- * squares bind tighter than the negative sign), its own percent forms and its
- * own token vocabulary. The grammar here mirrors the manual's Calculation
- * Priority Sequence, and every rule has a case in `parser.test.ts`.
- *
- * The parser is a recursive descent over `InputToken`s with an explicit
- * position. A parser cursor is inherently positional; the grammar rules
- * themselves are pure and return either an `Expr` or a `Syntax ERROR` carrying
- * the token position.
- */
-
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { fraction } from "mathjs";
@@ -23,7 +8,7 @@ import { startsOperand } from "./input/token.js";
 export type Expr =
   | {
       readonly _tag: "number";
-      /** The literal as typed, so BASE-N can read it in its own radix. */
+
       readonly text: string;
       readonly value: number;
       readonly exact: Option.Option<ReturnType<typeof fraction>>;
@@ -180,7 +165,6 @@ const andTail = (stream: Stream, left: Expr, depth: number): Parsed => {
 const percentValue = (expr: Expr): Option.Option<Expr> =>
   expr._tag === "percent" ? Option.some(expr.value) : Option.none();
 
-/** The manual's percent forms: `A+B%`, `A×B%`, `A÷B%`. */
 const combineAdd = (op: "+" | "-", left: Expr, right: Expr): Expr =>
   Option.match(percentValue(right), {
     onNone: () => ({ _tag: "binary", op, left, right }),
@@ -503,9 +487,7 @@ const parseNumber = (stream: Stream): Parsed => {
   const plain = parsePlainNumber(stream);
   if (plain._tag !== "ok") return plain;
   const numberNode = plain.expr;
-  // `2°20′30″` is one sexagesimal literal; `30°` alone is an angle tag and is
-  // handled by the postfix loop. A leading `′` form (`39′30″`) carries its
-  // minutes in the first number, as the manual's addition example does.
+
   const degrees = stream.takeIf("°");
   const minuteMark = !degrees && stream.takeIf("′");
   if (degrees || minuteMark) {
@@ -591,7 +573,6 @@ const callTail = (
   return callTail(stream, name, Arr.append(args, next.expr), depth);
 };
 
-/** Parse a complete entry. */
 export const parse = (tokens: ReadonlyArray<InputToken>): Parsed => {
   const stream = new Stream(tokens);
   const parsed = parseSequence(stream, 0);
@@ -600,7 +581,6 @@ export const parse = (tokens: ReadonlyArray<InputToken>): Parsed => {
   return parsed;
 };
 
-/** The last format-override command in an expression, if any. */
 export const formatOverride = (expr: Expr): Option.Option<"rect" | "polar"> => {
   const walk = (node: Expr): Option.Option<"rect" | "polar"> => {
     if (node._tag === "format") return Option.some(node.format);
@@ -633,7 +613,6 @@ export const formatOverride = (expr: Expr): Option.Option<"rect" | "polar"> => {
   return walk(expr);
 };
 
-/** Every variable name an expression mentions, in first-appearance order. */
 export const variablesOf = (expr: Expr): ReadonlyArray<string> => {
   const collect = (node: Expr): ReadonlyArray<string> => {
     if (node._tag === "variable") return [node.name];

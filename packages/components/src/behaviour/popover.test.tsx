@@ -1,18 +1,3 @@
-/**
- * Popover behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: a panel that opens somewhere other than below its
- * trigger; a requested side that is silently flipped (the placement rule read
- * the surface's box before the anchored layer placed it, so every side opened on
- * the opposite one); a panel that overhangs the window instead of pulling back;
- * Escape not closing or not returning focus; an outside press closing the panel
- * and then the same click re-opening it; a press inside the panel closing it; Tab
- * trapping focus in a non-modal surface; and a controlled popover that opens
- * itself. A caller `ref` on the trigger was also discarded in favour of the
- * internal one, so the picker that composes this trigger lost focus after a
- * selection.
- */
-
 import * as Option from "effect/Option";
 import type { PublicInstance } from "@gpuix/react";
 import { createRef, useState } from "react";
@@ -31,14 +16,6 @@ import {
 import { renderComponent, type TestTheme } from "../internal/test-root.js";
 import { Popover, PopoverContent, PopoverTrigger } from "../popover.js";
 
-/**
- * A filter popover beside another control to press outside on.
- *
- * The row is deliberate: the anchored layer measures its **containing block**,
- * which is the popover's positioning root, so the root must shrink to the
- * trigger for a side placement to read from the trigger's edge. A column would
- * stretch the root across the page and anchor `side="right"` to the page's edge.
- */
 const Filters = ({
   open,
   onOpenChange,
@@ -69,7 +46,6 @@ const Filters = ({
   </div>
 );
 
-/** A trigger with room on all four sides, so each side can be asked for. */
 const SidePopover = ({
   side,
 }: {
@@ -87,7 +63,6 @@ const SidePopover = ({
   </div>
 );
 
-/** A trigger against the window's right edge, where a panel cannot hang out. */
 const EdgePopover = () => (
   <div style={{ display: "flex", justifyContent: "flex-end" }}>
     <Popover>
@@ -99,13 +74,6 @@ const EdgePopover = () => (
   </div>
 );
 
-/**
- * A trigger near the window centre, where a panel has room on every alignment.
- *
- * The inner row is shrink-to-fit: the anchored layer measures the positioning
- * root, so a stretched root makes `end` read from the page's edge instead of the
- * trigger's.
- */
 const AlignedPopover = ({
   align,
 }: {
@@ -123,7 +91,6 @@ const AlignedPopover = ({
   </div>
 );
 
-/** A trigger at the bottom of the window, where a downside panel cannot fit. */
 const LowPopover = () => (
   <div style={{ display: "flex", flexDirection: "column", height: 780 }}>
     <div style={{ flexGrow: 1 }} />
@@ -136,7 +103,6 @@ const LowPopover = () => (
   </div>
 );
 
-/** A controlled popover that remembers what the caller was told. */
 const Controlled = ({
   onOpenChange,
 }: {
@@ -179,8 +145,7 @@ describe("Popover", () => {
     expect(panel.value.y).toBeGreaterThanOrEqual(
       trigger.value.y + trigger.value.height,
     );
-    // The house alignment is `center`, so a panel opens on its trigger's
-    // centre line even when the caller names no `align`.
+
     expect(
       Math.abs(
         panel.value.x +
@@ -258,16 +223,12 @@ describe("Popover", () => {
     const trigger = requireBounds(popover, "trigger");
     const panel = requireBounds(popover, "panel");
 
-    // One gap off the trigger's own edge, not the containing block's.
     expect(panel.x).toBe(trigger.x + trigger.width + 6);
 
     popover.unmount();
   });
 
   it("opens on each of the four sides it is asked for", () => {
-    // The bug this guards: the rule read the surface's box before the anchored
-    // layer placed it, so the box sat on the trigger and "covers the trigger"
-    // was true for all four sides — `top` opened below, `left` to the right.
     const sides = [
       [
         "top",
@@ -324,8 +285,6 @@ describe("Popover", () => {
       const trigger = requireBounds(popover, "trigger");
       const panel = requireBounds(popover, "panel");
 
-      // The snap margin, not one pixel of overhang: the panel keeps its side
-      // (below the trigger) and slides left along that side.
       expect(panel.y).toBe(trigger.y + trigger.height + 6);
       expect(panel.x + panel.width).toBe(window.width - 8);
       expect(panel.x).toBeLessThan(trigger.x);
@@ -335,10 +294,6 @@ describe("Popover", () => {
   });
 
   it("opens a panel on each alignment it is asked for", () => {
-    // The panel's own relation to its trigger: `start` shares a left edge,
-    // `center` a centre line and `end` a right edge. GPUix 0.11.0 centres on
-    // the trigger's containing block, so the component maps `center` to `start`
-    // plus the measured half difference (plan 323).
     const alignments = [
       [
         "start",
@@ -395,8 +350,6 @@ describe("Popover", () => {
     const trigger = requireBounds(popover, "trigger");
     const panel = requireBounds(popover, "panel");
 
-    // `fit="snap"` would clamp the panel up over the trigger; the component
-    // flips to the top side, which has room (plan 156 §8, plan 323).
     expect(panel.y + panel.height).toBeLessThanOrEqual(trigger.y);
 
     popover.unmount();
@@ -426,8 +379,6 @@ describe("Popover", () => {
       expect(popover.renderer.findByTestId("panel")).toBeUndefined(),
     );
 
-    // The real runtime delivers the press and the next click in separate tasks,
-    // so the one-gesture dismiss mark has been cleared by now.
     await Promise.resolve();
 
     clickCentreOf(popover, "trigger");
@@ -520,7 +471,6 @@ describe("Popover", () => {
 
     expect(ref.current?.id).toBe(popover.renderer.findByTestId("trigger")?.id);
 
-    // The internal ref still works: Escape returns focus to the trigger.
     clickCentreOf(popover, "trigger");
     popover.renderer.simulateKeystrokes("escape");
     expect(focusedTestId(popover)).toEqual(Option.some("trigger"));

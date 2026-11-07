@@ -23,21 +23,6 @@ import {
   toHex as componentToHex,
 } from "../../../../../packages/components/src/color-picker/logic";
 
-/**
- * The drawing, held to the picker it documents.
- *
- * Guarded bugs: a preview that accepts a colour function the component refuses,
- * a saturation area drawn as one flat fill instead of the component's three
- * two-stop layers, a hue rail with fewer than six ramps, an alpha rail that
- * pretends to be a checkerboard the runtime cannot paint, and a panel whose
- * spacing drifts from `COLOR_PICKER_PANEL` — the drawing is a reader's only
- * picture of the component, so a mirror that spaces itself differently teaches
- * the wrong geometry.
- *
- * The grammar cases execute both modules: the component is the authority, and a
- * drift fails in the direction of the preview.
- */
-
 const repo = new URL("../../../../../", import.meta.url);
 
 const read = (path: string): string =>
@@ -45,7 +30,6 @@ const read = (path: string): string =>
 
 const css = read("apps/docs/src/styles/demos.css");
 
-/** The declarations of the first `selector { … }` block in the sheet. */
 const rule = (selector: string): string => {
   const start = css.indexOf(`\n${selector} {`);
   if (start === -1) throw new Error(`no ${selector} block`);
@@ -57,7 +41,6 @@ const style = (recipe: string, theme: Theme = themes.dark) =>
 
 const parts = read("packages/components/src/color-picker/parts.tsx");
 
-/** The painted height and thumb the component uses. */
 const AREA_HEIGHT = Number(/const AREA_HEIGHT = (\d+);/.exec(parts)?.[1]);
 const THUMB = Number(/const THUMB = (\d+);/.exec(parts)?.[1]);
 
@@ -141,8 +124,6 @@ describe("the colour picker workflow drawing", () => {
   });
 
   it("paints the area as the hue under the component's two ramps", () => {
-    // One fill for the hue and two two-stop layers above it: the runtime has no
-    // single three-stop gradient, so a flat square would be a different paint.
     expect((workflow.match(/class="gx-cp-area-layer"/g) ?? []).length).toBe(2);
     expect(workflow).toContain(
       "background:linear-gradient(to right, #FFFFFF, #FFFFFF00)",

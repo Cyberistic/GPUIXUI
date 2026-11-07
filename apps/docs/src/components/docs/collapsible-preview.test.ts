@@ -18,19 +18,6 @@ import {
   stepBudget,
 } from "./collapsible-preview";
 
-/**
- * The collapsible preview's state contract and keyboard edges.
- *
- * The two rules a drawing cannot show are the reason this model exists: the
- * caller's values survive a collapse because they are outside the body, and the
- * body's own note does not because the body unmounts. The disabled trigger is
- * the third: it refuses every route, including closing a section it did not
- * open. The activation edges are read from the component's own key module
- * rather than trusted, because the wrong edge toggles twice.
- *
- * `node:fs` is the test's own read of a checked-in file, not runtime I/O.
- */
-
 const keyboard = readFileSync(
   new URL(
     "../../../../../packages/components/src/internal/key.ts",
@@ -75,7 +62,7 @@ describe("the collapsible preview", () => {
     const closed = closeSection(edited);
     expect(closed.open).toBe(false);
     expect(closed.note).toBe("");
-    // The policy is the caller's, so closing the body changed nothing about it.
+
     expect(closed.policy).toEqual({
       ...defaultPolicy,
       budget: MAX_BUDGET,
@@ -89,8 +76,6 @@ describe("the collapsible preview", () => {
   });
 
   it("refuses a disabled trigger on every route, open or closed", () => {
-    // Closed: the press must not open it. Open: the press must not close it
-    // either — the trigger's press path is gated before the state moves.
     expect(nextOpen(false, true)).toBe(false);
     expect(nextOpen(true, true)).toBe(true);
     expect(nextOpen(false, false)).toBe(true);

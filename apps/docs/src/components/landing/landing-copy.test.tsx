@@ -7,17 +7,6 @@ import { Dashboard } from "./landing";
 import { Lineage } from "./lineage";
 import { CodeAndComponent } from "./landing";
 
-/**
- * The landing's copy, held to the brief it was rewritten from.
- *
- * The page carried a marketing line per section that drifted from what the
- * section actually shows: a hero advertising native "looks", an authored-look
- * grid that repeated three counts, and a lineage caption explaining the stack.
- * The copy now says what a reader gets — speed, one codebase, every platform —
- * and this guard renders each section, so a reworded heading or a reintroduced
- * caption fails here rather than in a screenshot review.
- */
-
 const read = (path: string): string =>
   readFileSync(fileURLToPath(new URL(path, import.meta.url)), "utf8");
 

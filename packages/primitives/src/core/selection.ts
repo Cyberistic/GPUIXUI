@@ -1,14 +1,3 @@
-/**
- * Selection controls: a checkbox, a radio and a switch are three paints of one
- * three-state model (unchecked, checked, indeterminate) over the same metrics.
- *
- * The published runtime has **no `aria-checked`** (see `docs/gpuix-capabilities.md`), so a
- * component cannot announce the state natively; it reports the state through
- * `aria-valuetext`, and this module owns what that state *looks* like. Keeping
- * both in one place is what stops a Checkbox and a Switch disagreeing about what
- * "checked and disabled" means.
- */
-
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as P from "effect/Predicate";
@@ -36,44 +25,17 @@ import {
 import type { ControlSize, PrimitiveTheme } from "./theme.js";
 import { pressWash } from "./pointer.js";
 
-/** One slot of the paint a platform's own switch declares. */
 type SwitchSlot = "on" | "off" | "knob" | "knobOff" | "edge";
 
-/** A declared switch paint, as a store wrote it: an open record. */
 const DeclaredSwitch = Schema.Record(Schema.String, Schema.Unknown);
 type DeclaredSwitch = typeof DeclaredSwitch.Type;
 
-/** The one decoder for a stored table. */
 const decodeDeclaredSwitch = Schema.decodeUnknownOption(DeclaredSwitch);
 
-/**
- * A theme as a store can hand one back.
- *
- * `Theme.switch` is one control's paint table, and JSON has no `undefined`: a
- * stored theme writes the paint it did not carry as `null`, and a store can lose
- * a slot the same way. The switch seams decode that table as the unknown data it
- * is — the read `@gpuixui/tokens`' `switchFailures` makes — so a restored theme
- * paints the accent switch instead of throwing at its first slot.
- */
 export type SwitchPaintTheme = Omit<PrimitiveTheme, "switch"> & {
-  /** The stored table, as the store wrote it. */
   readonly switch?: unknown;
 };
 
-/**
- * The colours a stored table carries, or `None` when it is no paint.
- *
- * A declaration is **whole** or it is nothing: the three fills are one
- * control's paint, and a table that lost one cannot draw a coherent switch —
- * the tokens' report names the lost slot, and until it is repaired the control
- * keeps the accent toggle every base theme paints.
- *
- * `edge` is optional and travels with the table when it is declared. It is the
- * boundary of a style whose fill is not the silhouette — Windows' off track is
- * `transparent`, so its 1px edge **is** the control, and Apple's track draws its
- * edge as a rim shadow — so rebuilding the table without it dropped the one
- * mark that makes an off switch visible.
- */
 const declaredPaint = (source: SwitchPaintTheme): Option.Option<SwitchColors> =>
   Option.flatMap(Option.fromNullishOr(source.switch), (table) =>
     Option.flatMap(decodeDeclaredSwitch(table), (paint) =>
@@ -98,18 +60,11 @@ const declaredPaint = (source: SwitchPaintTheme): Option.Option<SwitchColors> =>
     ),
   );
 
-/**
- * The theme the switch paint reads: the declared table, or the accent switch.
- *
- * Parsing once at the seam is what keeps the rest of the module ordinary
- * `Theme` code, and what makes a stored theme's `null` unrepresentable past it.
- */
 const switchTheme = (source: SwitchPaintTheme): PrimitiveTheme => ({
   ...source,
   switch: Option.getOrUndefined(declaredPaint(source)),
 });
 
-/** One declared slot's colour, or `None` when the store lost it. */
 const declaredColour = (
   paint: DeclaredSwitch,
   slot: SwitchSlot,
@@ -127,30 +82,14 @@ export const SELECTION_STATES = [
 ] as const;
 export type SelectionState = (typeof SELECTION_STATES)[number];
 
-/** Which accent paints a filled selection: the brand, or a destructive action. */
 export const SELECTION_ACCENTS = ["primary", "destructive"] as const;
 export type SelectionAccent = (typeof SELECTION_ACCENTS)[number];
 
-/** The accents as a list a stored value can be checked against. */
 const ACCENT_NAMES: ReadonlyArray<string> = SELECTION_ACCENTS;
 
-/**
- * Whether a value names a selection accent.
- *
- * An accent is a stored preference like a control size, so a name a release
- * renamed arrives as a string the union no longer names.
- */
 export const isSelectionAccent = (value: unknown): value is SelectionAccent =>
   typeof value === "string" && Arr.contains(ACCENT_NAMES, value);
 
-/**
- * The accent a selection control paints with: the name, or the brand.
- *
- * The recipes and the derived fills are paint seams called mid-render, and an
- * unknown name reached `SELECTION_ROLE[name].bg` (a destructuring `TypeError`)
- * and `filledHover(theme, name)` — one missing name emptied the window instead
- * of painting the brand every selection control defaults to.
- */
 export const selectionAccentOf = (value: unknown): SelectionAccent =>
   isSelectionAccent(value) ? value : "primary";
 
@@ -158,7 +97,7 @@ export interface SelectionSpec {
   readonly state: SelectionState;
   readonly size: ControlSize;
   readonly accent: SelectionAccent;
-  /** A box for a checkbox; a circle for a radio. Defaults to `square`. */
+
   readonly shape?: "square" | "circle";
   readonly invalid?: boolean;
   readonly disabled?: boolean;
@@ -166,7 +105,6 @@ export interface SelectionSpec {
 
 const filled = (spec: SelectionSpec): boolean => spec.state !== "unchecked";
 
-/** The background/foreground pair that paints a filled selection control. */
 const accentRole = (
   spec: SelectionSpec,
   theme: PrimitiveTheme,
@@ -184,7 +122,6 @@ const accentRole = (
         foreground: colorRole(theme, "primaryForeground"),
       };
 
-/** The mark inside a filled checkbox/radio: a check, a dash, or the dot. */
 export const selectionMarkColor = (
   spec: SelectionSpec,
   theme: PrimitiveTheme,
@@ -195,17 +132,6 @@ export const selectionMarkColor = (
       ? colorRole(theme, "destructive")
       : colorRole(theme, "mutedForeground");
 
-/**
- * The fill a filled selection control paints while hovered or pressed.
- *
- * Derived from the theme and **opaque**, like a filled action's feedback: a
- * half-alpha lift (`alpha(primary, 0.9)`) let the surface behind the box
- * through, so the same checked box read as two colours on a card and on a
- * dialog, and the mark painted over it could not be measured for contrast at
- * all. The edge goes transparent with it — the fill *is* the edge once the box
- * is filled, and a resting role left on the border would draw a 1px ring of the
- * old colour around the new fill.
- */
 const feedbackFill = (
   spec: SelectionSpec,
   theme: PrimitiveTheme,
@@ -218,17 +144,6 @@ const feedbackFill = (
   borderColor: "transparent",
 });
 
-/**
- * The square a checkbox or radio paints.
- *
- * The side is the theme's icon size for the control size, so a checkbox lines
- * up with the icon on the label beside it without a bespoke scale. An empty box
- * is carried by its edge, so that edge is the measured control-boundary role
- * (`borderStrong`, 3:1 on every strip a control sits on) rather than a fill
- * role — `input` is the card's own white in the light theme. Feedback is a state
- * wash under the mark, so the edge survives hover and press, including a
- * destructive one.
- */
 export const selectionBoxStyle = (
   spec: SelectionSpec,
   theme: PrimitiveTheme,
@@ -263,11 +178,8 @@ export const selectionBoxStyle = (
       : { backgroundColor: pressWash(theme) },
   };
   if (spec.disabled === true) {
-    // The fade's share is the token package's: `disabledFadeFailures`
-    // composites that number, so a literal here would keep the old value when
-    // the constant moves.
     style.opacity = disabledOpacity;
-    // A disabled control must not respond to the pointer at all.
+
     style.hover = {
       backgroundColor: filled(spec) ? role.background : undefined,
       borderColor: filled(spec) ? role.background : emptyBorder,
@@ -277,41 +189,29 @@ export const selectionBoxStyle = (
   return style;
 };
 
-/** The gap a switch thumb keeps from the track's edge, on every side. */
 export const switchThumbInset = (
   spec: SelectionSpec,
   source: SwitchPaintTheme,
 ): number => switchBox(spec.size, source).inset;
 
-/**
- * The pill a switch draws.
- *
- * A theme that carries switch metrics — a platform whose own toggle has fixed
- * proportions — draws the box the platform specifies; `md` is the published
- * control, and `sm`/`lg` keep a proportional scale of it. Every other theme
- * keeps the derived box, one icon step tall.
- */
 export interface SwitchBox {
-  /** Pill width in pixels. */
   readonly width: number;
-  /** Pill height in pixels. */
+
   readonly height: number;
-  /** The knob's side in pixels. */
+
   readonly knob: number;
-  /** The gap between the knob and the track's edge. */
+
   readonly inset: number;
-  /** Edge thickness; most platform switches paint none. */
+
   readonly border: number;
 }
 
-/** The box a switch paints in, from the platform's metrics and the size step. */
 export const switchBox = (
   size: ControlSize,
   source: SwitchPaintTheme,
 ): SwitchBox => {
   const theme = switchTheme(source);
-  // A platform's metrics are an optional group: JSON writes `null` for one a
-  // store did not carry, and `null` is absence, not a table to measure.
+
   const metrics = Option.getOrUndefined(
     Option.fromNullishOr(theme.switchMetrics),
   );
@@ -329,16 +229,6 @@ export const switchBox = (
   };
 };
 
-/**
- * The box a selection control reserves around its drawing.
- *
- * The drawing is the icon-sized square that lines up with a label's icon; the
- * *target* is what a pointer has to hit, and WCAG 2.2 SC 2.5.8 puts a 24px floor
- * under it. `targetInset` is the shared arithmetic, so a checkbox keeps its
- * drawn size and gains only the padding a reachable target needs. The control's
- * role, focus and ring live on this box, and the drawing inside it is
- * `pointerEvents: "none"` — a press anywhere in the square activates once.
- */
 export const selectionTargetStyle = (
   spec: SelectionSpec,
   theme: PrimitiveTheme,
@@ -356,13 +246,6 @@ export const selectionTargetStyle = (
   };
 };
 
-/**
- * The box a switch reserves around its track.
- *
- * The track is a pill one icon-height tall, shorter than the floor, so the
- * target keeps the pill's width and grows vertically: the press box is a
- * 24px-high band with the pill centred in it.
- */
 export const switchTargetStyle = (spec: SelectionSpec): StyleDesc => ({
   display: "flex",
   alignItems: "center",
@@ -372,17 +255,6 @@ export const switchTargetStyle = (spec: SelectionSpec): StyleDesc => ({
   cursor: spec.disabled === true ? "not-allowed" : "pointer",
 });
 
-/**
- * How far a switch thumb travels between its two positions.
- *
- * The track is a fixed ratio of the icon side, so the travel is the track's
- * width less one knob and both included gaps: the same number a measured drag
- * would produce, without the measurement. A declared platform box measures its
- * inset from the track's outer edge (Fluent's 12px knob at a 4px inset is
- * exactly its 20px track), so the border is part of the gap rather than a
- * second subtraction; the offset below converts the gap to the padding-box
- * value `left` is measured from.
- */
 export const switchThumbTravel = (
   spec: SelectionSpec,
   theme: SwitchPaintTheme,
@@ -391,16 +263,6 @@ export const switchThumbTravel = (
   return box.width - box.knob - box.inset * 2;
 };
 
-/**
- * A switch thumb's `left` offset from the track's padding box.
- *
- * The resting position is the authored gap less the border the runtime paints
- * inside the track's box; a filled track adds the whole travel, so the two
- * positions differ by exactly the distance between them and the thumb never
- * drifts out of the pill. It is an offset rather than `justifyContent` because
- * the runtime can animate a `left` inset (it cannot animate a flex alignment),
- * which is what makes the knob slide.
- */
 export const switchThumbOffset = (
   spec: SelectionSpec,
   theme: SwitchPaintTheme,
@@ -410,19 +272,6 @@ export const switchThumbOffset = (
   return rest + (filled(spec) ? switchThumbTravel(spec, theme) : 0);
 };
 
-/**
- * The fill a platform's own switch paints, or nothing for the accent family.
- *
- * A declared paint is a control's, not a role's: Apple's toggle is green on and
- * grey off whatever the accent is, so the accent family cannot derive it. Its
- * feedback is the same fill — a native switch does not tint to the pointer —
- * and an invalid off switch keeps the library's error colour, which is the one
- * state the HIG does not draw.
- *
- * A table a store **nulled** is no declaration, so the control paints the
- * accent switch; a slot the store lost falls back to the library's value for
- * that state, because a paint the renderer cannot read is not a paint.
- */
 const switchFill = (
   spec: SelectionSpec,
   theme: PrimitiveTheme,
@@ -435,10 +284,6 @@ const switchFill = (
         ? colorRole(theme, "destructive")
         : theme.switch.off;
 
-/**
- * The paint a platform's own switch declares, as a style the switch merges over
- * the accent recipe. Nothing when the theme carries no paint.
- */
 export const switchTrackPaint = (
   spec: SelectionSpec,
   source: SwitchPaintTheme,
@@ -455,8 +300,7 @@ export const switchTrackPaint = (
   return {
     backgroundColor: fill,
     borderColor: edge,
-    // A platform that draws its edge as a rim rather than a border keeps the
-    // knob's inset intact; the ring adds no layout.
+
     boxShadow:
       !filled(spec) && box.border === 0 && theme.switch?.edge !== undefined
         ? {
@@ -472,7 +316,6 @@ export const switchTrackPaint = (
   };
 };
 
-/** The knob's paint, which follows the track's declaration and its state. */
 export const switchThumbPaint = (
   spec: SelectionSpec,
   source: SwitchPaintTheme,
@@ -488,14 +331,6 @@ export const switchThumbPaint = (
       };
 };
 
-/**
- * The pill a switch slides in.
- *
- * Height is the box side, width a fixed ratio of it, so a switch is the same
- * "size" as the checkbox on the label beside it. It is the thumb's positioning
- * context: the thumb is an absolutely positioned child, so only its `left`
- * decides where it sits.
- */
 export const switchTrackStyle = (
   spec: SelectionSpec,
   source: SwitchPaintTheme,
@@ -546,21 +381,6 @@ export const switchTrackStyle = (
   return style;
 };
 
-/**
- * The switch's thumb.
- *
- * The foreground role rather than a literal white, so it contrasts with the
- * track in both modes; the accent foreground once checked, so the knob always
- * reads against the pill it sits on. It is an absolutely positioned child of
- * the track at {@link switchThumbOffset}, which is the one value the slide
- * animates.
- *
- * `pointerEvents: "none"` is load-bearing, not decoration: GPUI hit-tests to the
- * deepest element under the point and does not bubble an unhandled click to the
- * track, so a filled child covering the switch's centre swallowed every click
- * (measured in `runtime/controls.runtime.test.tsx` — the toggle never fired
- * and the switch never took focus).
- */
 export const switchThumbStyle = (
   spec: SelectionSpec,
   source: SwitchPaintTheme,
@@ -570,9 +390,7 @@ export const switchThumbStyle = (
   const box = switchBox(spec.size, source);
   return {
     position: "absolute",
-    // The knob is centred inside the track's padding box, never from the inset:
-    // a platform's inset is a horizontal gap, and the two dimensions need not
-    // agree. The two borders are outside the box `top` is measured from.
+
     top: (box.height - box.border * 2 - box.knob) / 2,
     left: switchThumbOffset(spec, source),
     width: box.knob,
@@ -589,12 +407,6 @@ export const switchThumbStyle = (
   };
 };
 
-/**
- * The centre dot of a checked radio.
- *
- * Half the box, so it reads as a filled pip inside the ring rather than a
- * second border; the colour is the same mark role the checkmark uses.
- */
 export const radioDotStyle = (
   spec: SelectionSpec,
   theme: PrimitiveTheme,
@@ -609,15 +421,6 @@ export const radioDotStyle = (
   };
 };
 
-/**
- * Turn one value's membership in a selection on or off.
- *
- * A checkbox group and a `multiple` toggle group hold the values that are on;
- * pressing an option adds it or removes it without touching the others. A
- * `single` group keeps at most one value, and pressing the active one clears
- * the selection — the toggle's own semantics, unlike a radio group, which
- * always has a value.
- */
 export const toggleSelection = (
   mode: "single" | "multiple",
   current: ReadonlyArray<string>,

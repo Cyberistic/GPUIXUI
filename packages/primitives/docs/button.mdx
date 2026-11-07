@@ -43,8 +43,3 @@ import { Button, Stack } from "@gpuixui/primitives";
 | `style` | `StateStyle<ButtonState>` | — | resolved against `{ disabled, focused }`, merged last |
 | `testId` | `string` | — | stable locator |
 | `children` | `ReactNode` | — | the visible label |
-
-## Notes
-- No `aria-disabled` and no `aria-pressed`.
-- No native button element: a `div` with a role and handlers.
-- **Not adopting `@gpuix/react/button`**: `buttonProps` drops the busy description, the state style and the held-key guard.

@@ -5,16 +5,6 @@ import { describe, expect, it } from "vitest";
 import { toCssVars } from "../../lib/theme-css";
 import { CodeBlockDemo } from "./code-block-demo";
 
-/**
- * The code-block preview, as it renders.
- *
- * The drawing used to be four plain lines in a warm-grey card: no token
- * colours, no language label and a bare `Copy` word. The shipped block feeds
- * `@tanstack/highlight` and paints each run in `syntaxColors(theme)`; the
- * preview has to show the same palette, or a reader comparing the code tab with
- * the drawing would see two different treatments.
- */
-
 const markup = renderToStaticMarkup(<CodeBlockDemo />);
 
 const css = readFileSync(

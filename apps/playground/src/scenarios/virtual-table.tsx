@@ -1,19 +1,3 @@
-/**
- * `virtualized-table` — a 500-row table inside `<virtual-list>`.
- *
- * The data-grid package needs the combination, not the two halves measured
- * separately in plan `130`: fixed-width table cells inside a virtual row, a
- * pointer hit on a row that is genuinely painted, `onVisibleRange`'s index,
- * and selection state that survives scrolling the row out of the window.
- *
- * Measured facts (plan `152` §8): the list paints a window of fixed-height
- * rows; a painted row is hittable; the range event reports a positive start
- * index after a wheel gesture; selection is React state and repaints after the
- * row leaves and re-enters the window. Rows are flex rows with fixed-width
- * cells because `gridTemplateColumns` is a column count in 0.10.0.
- *
- * The wheel's `deltaY` is negative to scroll down (see `scroll.tsx`).
- */
 import { useState } from "react";
 import { Effect, pipe } from "effect";
 import * as Arr from "effect/Array";
@@ -117,7 +101,6 @@ const VirtualTableProbe = () => {
   );
 };
 
-/** Parses a numeric readout; a missing or malformed one is `-1`. */
 const readIndex = (text: Option.Option<string>): number =>
   pipe(
     text,
@@ -126,7 +109,6 @@ const readIndex = (text: Option.Option<string>): number =>
     Option.getOrElse(() => -1),
   );
 
-/** The rows the list currently paints, as `File N` labels become `N`s. */
 const paintedRows = (lines: ReadonlyArray<string>): ReadonlyArray<number> =>
   Arr.filterMap(lines, (line) =>
     pipe(
@@ -182,8 +164,7 @@ export const virtualizedTableScenario: ScenarioBody = {
         Arr.contains(painted, 0),
         false,
       );
-      // `onVisibleRange` lags the painted window by one gesture (measured):
-      // use the painted rows to choose a row that is genuinely on screen.
+
       yield* ctx.expectEqual(
         "the range event is behind the painted window",
         start <= Option.getOrElse(Arr.head(painted), () => -1),

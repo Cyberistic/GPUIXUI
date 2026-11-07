@@ -1,20 +1,6 @@
 import { useState } from "react";
 import { RailToggle, useRailCollapse } from "./sidebar-rail";
 
-/**
- * Settings dialog block — a modal two-pane settings window.
- *
- * The reproduction owns the state a reader can watch: the dark-mode switch
- * flips, the font-size slider moves and its value follows, the layout cards
- * select, and the left nav marks the active row. Every state change repaints —
- * fill, ring, transform — and never changes a border width, padding or size, so
- * the panel cannot move under the pointer.
- *
- * There is no settings component in the library; this is a recipe built from
- * `Dialog`, `SearchInput`, `Avatar`, `Button`, `Slider`, `Stack`, `Switch`,
- * `Text` and `Icon`.
- */
-
 const SETTINGS_NAV = [
   {
     group: "PROFILES",
@@ -108,7 +94,6 @@ export const initialThemeSettings: ThemeSettings = {
   layout: "classic",
 };
 
-/** A slider value inside the range, rounded to the label's whole pixels. */
 export const clampFontSize = (value: number): number =>
   Number.isFinite(value)
     ? Math.min(FONT_SIZE_MAX, Math.max(FONT_SIZE_MIN, Math.round(value)))

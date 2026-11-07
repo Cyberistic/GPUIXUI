@@ -1,11 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Toast example: the stack, an action, and a promise that settles in place.
- *
- * The provider owns one store and one runtime; the viewport is the last child so
- * it paints above the card. A caller only sees `useToast()`.
- */
-
 import { Duration } from "effect";
 import { useState } from "react";
 import { Card, CardDescription, CardHeader, CardTitle } from "../src/card.js";
@@ -13,13 +6,11 @@ import { Button } from "../src/internal/button.js";
 import { textStyle, useTheme } from "../src/internal/theme.js";
 import { ToastProvider, ToastViewport, useToast } from "../src/toast.js";
 
-/** Resolves after `ms`, so the promise toast shows its loading state. */
 const after = <Value,>(ms: number, value: Value): Promise<Value> =>
   new Promise((resolve) => {
     setTimeout(() => resolve(value), ms);
   });
 
-/** The panel inside the provider. */
 const SavePanel = () => {
   const theme = useTheme();
   const toast = useToast();
@@ -125,7 +116,6 @@ const SavePanel = () => {
   );
 };
 
-/** The toast demo, with its own provider and viewport. */
 export const ToastExample = () => (
   <div style={{ width: 900, height: 520 }}>
     <ToastProvider>

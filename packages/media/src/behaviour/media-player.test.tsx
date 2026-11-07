@@ -1,15 +1,3 @@
-/**
- * `MediaPlayer`'s chrome, driven through the real GPUix renderer.
- *
- * The bugs these guard: Space that does not toggle because the player is not
- * the focus target; an arrow that seeks by a wall-clock step instead of the
- * caller's; a timeline that paints a played share but maps a press by another
- * rule; a bar that never fades, or fades and never returns; a rate menu that
- * prints a speed the clock does not run at; and a mute control that reports a
- * state it never paints. The frame source is recorded on every call, so the
- * suite also holds that the paint follows the playhead the transport reports.
- */
-
 import { createTestRoot, type TestRoot } from "@gpuix/react/testing";
 import { lightTheme } from "@gpuixui/tokens";
 import { ThemeProvider } from "@gpuixui/tokens/react";
@@ -18,7 +6,6 @@ import { describe, expect, it } from "vitest";
 import { MediaPlayer, type MediaFrame } from "../media-player.js";
 import { progressWidth, scrubPlayhead, timeLabel } from "../player/logic.js";
 
-/** A 4×4 frame whose bytes are a whole buffer, so the paint path is exercised. */
 const frameFor = (colour: number): MediaFrame => ({
   width: 4,
   height: 4,
@@ -43,7 +30,6 @@ const waitUntil = async (
   return waitUntil(ready, attempts - 1);
 };
 
-/** The centre of `testId` in window points; a missing element is a broken suite. */
 const centreOf = (
   root: TestRoot,
   testId: string,
@@ -105,7 +91,6 @@ const focusPlayer = (root: TestRoot): void => {
   root.renderer.focusElement(player.id);
 };
 
-/** A point on the timeline at `share` of its width, in window points. */
 const trackPoint = (
   root: TestRoot,
   share: number,
@@ -186,8 +171,7 @@ describe("MediaPlayer transport", () => {
     click(page.root, "media-play");
     await waitUntil(() => (page.playheads.at(-1) ?? 0) >= 200);
     expect(page.playing).toStrictEqual([true]);
-    // The clock prints the playhead the transport reported, floored to a
-    // second, so the readout and the fill cannot disagree about where it is.
+
     expect(textOf(page.root, "media-time")).toBe(
       timeLabel(page.playheads.at(-1) ?? 0, 30_000),
     );
@@ -233,8 +217,6 @@ describe("MediaPlayer transport", () => {
   });
 
   it("maps a press on the timeline to the share the component's own rule names", () => {
-    // The bug guarded: the pressed band and the painted rail disagreed, so a
-    // press at three quarters painted the fill at a different share.
     const page = mount();
     const pressed = trackPoint(page.root, 0.75);
     page.root.renderer.nativeSimulateMouseDown(pressed.x, pressed.y);
@@ -262,8 +244,6 @@ describe("MediaPlayer transport", () => {
   });
 
   it("fades the bar after idle and brings it back on a pointer or the focus", async () => {
-    // The bug guarded: the chrome stayed painted forever, or faded and stayed
-    // hidden, because nothing woke it after the pointer returned.
     const page = mount(60);
     expect(barOpacity(page.root)).toBe(1);
     await waitUntil(() => barOpacity(page.root) === 0);
@@ -280,8 +260,6 @@ describe("MediaPlayer transport", () => {
   });
 
   it("runs the clock at the rate the rate menu prints", async () => {
-    // The bug guarded: the menu reported a speed the interval ignored, so 2×
-    // played at 1× and the readout disagreed with the menu.
     const page = mount();
     click(page.root, "media-rate");
     await waitUntil(() => textOf(page.root, "media-rate").includes("×"));
@@ -297,8 +275,6 @@ describe("MediaPlayer transport", () => {
   });
 
   it("leaves Space to a focused control instead of toggling the clip", () => {
-    // The bug guarded: the player mapped Space for every key it heard, so a
-    // focused mute button toggled the clip as well as its own action.
     const page = mount();
     const mute = page.root.renderer.findByTestId("media-mute");
     if (mute === undefined)
@@ -353,9 +329,6 @@ describe("MediaPlayer transport", () => {
   });
 
   it("keeps the transport when a decoded frame carries no bytes", () => {
-    // The bug guarded: the frame was trusted, so a decoder that answered a box
-    // without its buffer threw out of the layout effect and unmounted the
-    // player — the transport included — instead of painting no picture.
     const root = createTestRoot({ width: 900, height: 700 });
     root.render(
       <ThemeProvider theme={lightTheme}>

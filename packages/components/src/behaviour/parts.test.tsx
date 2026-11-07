@@ -1,17 +1,3 @@
-/**
- * Typed-by-position children, in the real GPUix renderer.
- *
- * The bug these guard: a part used inside the wrong parent of its own component
- * (`TabsContent` inside `TabsList`, `AlertTitle` directly in `Alert`, …) used to
- * mount silently and paint in the wrong place. Every parent in the family now
- * rejects it at render with a message naming both sides.
- *
- * React 19 typechecks every JSX child as `ReactElement<any, any>`, so this cannot
- * be a compile error (measured, plan 304 §2). The renderer propagates the throw
- * to a class error boundary, which is the only way to observe it: without one,
- * React reports the error to `console.error` and the test would race it.
- */
-
 import { Component, type ReactNode } from "react";
 import { describe, expect, it } from "vitest";
 import { Accordion, AccordionContent } from "../accordion.js";
@@ -27,7 +13,6 @@ import { Pagination, PaginationList, PaginationNext } from "../pagination.js";
 import { renderComponent } from "../internal/test-root.js";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../tabs.js";
 
-/** Catches the render throw and paints the message as text. */
 class Caught extends Component<
   { readonly children?: ReactNode },
   { readonly message: string | null }
@@ -47,7 +32,6 @@ class Caught extends Component<
   }
 }
 
-/** Render `node` under the boundary and return what the user would see. */
 const caught = (node: ReactNode): string => {
   const root = renderComponent(<Caught>{node}</Caught>);
   const text = root.renderer.getAllText();

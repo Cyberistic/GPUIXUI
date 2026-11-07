@@ -9,26 +9,6 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked · `[-
 
 ---
 
-## Native previews rendered at build time (2026-11-06)
-
-`[x]` `[██████████]` 1/1 — **the docs can now show the real library through the wasm renderer.**
-
-`[x]` Land plan `756`. `/live?scene=example&id=<id>` mounts any registered
-      example; `/live?scene=examples` exposes `__gpuixCapture.render(id)` so one
-      wasm initialisation yields every frame. `nub run --filter @gpuixui/docs
-      native:previews` writes 92 checked-in WebPs (657 KiB) and rejects a flat
-      frame by counting every pixel's colour. `<ComponentPreview>` gains a
-      **Native** tab for captured ids, and the component index's server paint is
-      the real frame before hydration mounts the interactive demo. The live
-      example route SSRs that frame as a poster and warms the wasm on hover,
-      focus or press. Evidence:
-      `src/lib/native-captures.test.ts` (5), `live-frame.test.ts` (+3),
-      `live-prefetch.test.ts` (1), `component-index.test.tsx` (server frame +
-      hydrated demo); the accordion
-      page showed a `960×633` still captioned macOS/dark and linked to the live
-      scene. Limitations are on the page: one platform, one palette, not the
-      native macOS runtime.
-
 ## Calculator example — fx-991ES Plus on GPUix
 
 `[x]` `[██████████]` 18/18
@@ -299,6 +279,35 @@ the OAuth profiles (`cyberistic`, `alkitab`, `seenkw`) have no scopes, so the
 deploy only works with those variables set. Verified in Chrome: the page renders,
 `Publish changes` pushes a stacked card with Undo and dismiss, and the console
 shows no app errors (one blocked external resource from an ad blocker).
+
+### Comment budget (2026-11-06)
+
+`[x]` `[██████████]` 3/3
+
+`[x]` Land the `comments/no-long-comments` oxlint rule (2 lines / 24 words /
+      3 lines per file, licence/TODO/directive exemptions) and register it in
+      `.oxlintrc.json`; `nub run lint` is the gate and `lint:fix` the sweep
+`[x]` Sweep the tree: 40 052 comments / 95 868 lines → 713 / 756 — 99.2% of
+      comment lines removed; the 323 `@jsxImportSource` pragmas were restored;
+      `oxfmt` reformatted the result; plan 757
+`[x]` Repair the docs-guard tests that asserted JSDoc prose in source files
+      (`packages/tokens`, `packages/motion`), and keep the six
+      `// check-tests-ok:` directives in `packages/calc/src/evaluate.test.ts`
+
+### Blocks use the library's own drawings (2026-11-06)
+
+`[x]` `[█████░░░░░]` 1/2
+
+`[x]` One animated tab switcher (`tab-strip.tsx`) in the Tabs page, mail,
+      notifications, kanban and the Settings block; one `panel-left` rail
+      toggle across every collapsing block; the dashboard's week/hour/donut
+      charts read `@gpuixui/data/chart`'s marks; the local `chart-smooth`
+      spline is gone (the area drawings read `curvePath`); block pages render
+      at the full column, the mail drawing fits that width, every block page
+      links its drawing on GitHub, the dashboard pages lose their chart prose
+      and a 40-word page budget holds the rest (plan 756)
+`[ ]` Move `dashboard-01`'s treemap, sankey and sunburst drawings onto the
+      scene compiler's marks, so that page stops carrying its own layout
 
 ### Docs and component polish (2026-10-26)
 
@@ -25365,19 +25374,6 @@ green; the site deployed and all 195 sitemap pages answer 200.
       page, and the owner's `/platform/terminal` guide with this workstream's
       Graphics navigation.
 
-## The Graphics category's icon grid (2026-11-06)
-
-`[x]` `[██████████]` 2/2
-
-`[x]` The icons page already mounted the gallery through the site's preview
-      table (`package-preview.ts` → `icon-gallery-demo`); the primitives index
-      mounted a second copy below its own text. The duplicate is gone — the
-      index now says where the set lives — and `icon-gallery.test.tsx` holds
-      the mount to one page, through the preview table rather than a literal.
-`[x]` The charts page draws all seventeen types: `70ac7d90a` moved the contact
-      sheet into `chart-gallery.tsx` and mounted it, so the grid and the page's
-      table are the same list.
-
 ## The three remaining chart types (plan 754, 2026-11-05)
 
 `[x]` `[██████████]` 10/10
@@ -25441,3 +25437,10 @@ green; the site deployed and all 195 sitemap pages answer 200.
       https://github.com/remorses/gpuix/issues/130 — "Add support for SVG
       primitives", with a link to `https://www.w3.org/TR/SVG2/`. Until it
       lands, every chart and diagram paints through the document route.
+
+## Launch speed (plan 757, 2026-11-06)
+
+`[x]` A launch benchmark that counts a frame as content by its presented pixels.
+`[x]` A production bundle for the playground with the V8 compile cache.
+`[x]` Upstream PR `remorses/gpuix` `feat/launch-speed`: hello 428 ms to 164 ms on macOS, raw GPUI 130 ms.
+`[ ]` After the GPUix release: bump `@gpuix/*`, rerun the benchmark, delete plan 757.

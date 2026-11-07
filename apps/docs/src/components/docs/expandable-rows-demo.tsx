@@ -2,20 +2,6 @@ import { DEFAULT_EXPANDER_WIDTH } from "@gpuixui/data";
 import * as Arr from "effect/Array";
 import { Fragment, useState, type KeyboardEvent } from "react";
 
-/**
- * Browser preview for the Expandable rows page.
- *
- * `@gpuixui/data`'s `TableExpandableRow` is a GPUix host row, so the package
- * page cannot mount it and this drawing is a labelled approximation. What it
- * does not approximate is the row's contract, read from
- * `packages/data/src/table/expandable.tsx`: **the row is the toggle** (the
- * chevron is decoration that takes no hit test), the panel is a **sibling**
- * row on the `muted` strip rather than a cell, the expander track is the
- * package's `DEFAULT_EXPANDER_WIDTH`, and two rows can be open at once. Only
- * the paint is the browser's.
- */
-
-/** One file the table lists, and the facts its panel shows. */
 export interface ListedFile {
   readonly id: string;
   readonly name: string;
@@ -25,7 +11,6 @@ export interface ListedFile {
   readonly owner: string;
 }
 
-/** The first record: the page opens its panel. */
 export const HARBOUR: ListedFile = {
   id: "harbour",
   name: "harbour-chart.png",
@@ -62,7 +47,6 @@ const BUDGET: ListedFile = {
   owner: "finance",
 };
 
-/** The records the table lists. */
 export const LISTED_FILES: ReadonlyArray<ListedFile> = [
   HARBOUR,
   NOTES,
@@ -70,16 +54,8 @@ export const LISTED_FILES: ReadonlyArray<ListedFile> = [
   BUDGET,
 ];
 
-/** The panel the page opens on: the first record, so a reader sees one at rest. */
 export const OPEN_ON_MOUNT: ReadonlyArray<string> = [HARBOUR.id];
 
-/**
- * The ids open after a press on one row.
- *
- * The caller owns `expanded` and flips it, so the drawing's rule is the
- * package's: a press opens the row it names and leaves every other panel
- * alone — two rows can be open at once — and a second press closes it.
- */
 export const toggleOpen = (
   open: ReadonlyArray<string>,
   id: string,
@@ -88,17 +64,14 @@ export const toggleOpen = (
     ? Arr.filter(open, (candidate) => candidate !== id)
     : Arr.append(open, id);
 
-/** The chevron the expander paints: the two names the package chooses between. */
 export const expanderGlyph = (
   open: boolean,
 ): "chevron-down" | "chevron-right" =>
   open ? "chevron-down" : "chevron-right";
 
-/** The glyph a browser paints for the package's icon name. */
 export const expanderMark = (open: boolean): string =>
   expanderGlyph(open) === "chevron-down" ? "▾" : "▸";
 
-/** The facts the detail panel lists, in the order it paints them. */
 export const detailOf = (
   file: ListedFile,
 ): ReadonlyArray<{
@@ -112,7 +85,6 @@ export const detailOf = (
   { key: "modified", label: "Modified", value: file.modified },
 ];
 
-/** The page's preview: a table whose rows open a panel under themselves. */
 export function ExpandableRowsDemo() {
   const [open, setOpen] = useState<ReadonlyArray<string>>(OPEN_ON_MOUNT);
   const press = (id: string): void =>
@@ -122,8 +94,7 @@ export function ExpandableRowsDemo() {
     (id: string) =>
     (event: KeyboardEvent<HTMLDivElement>): void => {
       if (event.key !== "Enter" && event.key !== " ") return;
-      // A disclosure row is a control: the key opens it exactly as a press does,
-      // and it is answered only because the row itself holds focus.
+
       event.preventDefault();
       press(id);
     };

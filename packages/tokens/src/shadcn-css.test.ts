@@ -1,10 +1,5 @@
-/**
- * The film and the docs say a theme from shadcn's builders just works. The bugs
- * this guards: a builder's `oklch()` read wrongly, a typo becoming a colour, and
- * the dark block's values leaking into the light theme.
- */
 import { describe, expect, it } from "vitest";
-import { cssColorToHex, shadcnTheme } from "./shadcn-css.js";
+import { cssColorToHex, shadcnBuilderTheme } from "./shadcn-css.js";
 import { lightTheme } from "./theme.js";
 
 const CSS = `
@@ -37,14 +32,14 @@ describe("a colour", () => {
 
 describe("a builder's file", () => {
   it("sets the roles it names and keeps the base's others", () => {
-    const { theme } = shadcnTheme(CSS, lightTheme);
+    const { theme } = shadcnBuilderTheme(CSS, lightTheme);
     expect(theme.colors.primary).toBe("#171717");
     expect(theme.colors.background).toBe("#FFFFFF");
     expect(theme.colors.success).toBe(lightTheme.colors.success);
   });
 
   it("takes the chart palette from --chart-N", () => {
-    const { theme } = shadcnTheme(
+    const { theme } = shadcnBuilderTheme(
       ":root { --chart-1: #ff0000; --chart-2: #00ff00; }",
       lightTheme,
     );
@@ -52,15 +47,15 @@ describe("a builder's file", () => {
   });
 
   it("reports a value it cannot read, and the role keeps the base", () => {
-    const { theme, problems } = shadcnTheme(CSS, lightTheme);
+    const { theme, problems } = shadcnBuilderTheme(CSS, lightTheme);
     expect(problems).toEqual(["--border"]);
     expect(theme.colors.border).toBe(lightTheme.colors.border);
   });
 
   it("reads the block its mode names, and the radius in pixels", () => {
-    expect(shadcnTheme(CSS, lightTheme, "dark").theme.colors.primary).toBe(
-      "#E5E5E5",
-    );
-    expect(shadcnTheme(CSS, lightTheme).theme.radius.lg).toBe(12);
+    expect(
+      shadcnBuilderTheme(CSS, lightTheme, "dark").theme.colors.primary,
+    ).toBe("#E5E5E5");
+    expect(shadcnBuilderTheme(CSS, lightTheme).theme.radius.lg).toBe(12);
   });
 });

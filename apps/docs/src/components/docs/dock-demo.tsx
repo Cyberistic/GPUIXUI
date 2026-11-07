@@ -8,18 +8,6 @@ import {
   keyWidth,
 } from "./dock-preview";
 
-/**
- * Browser previews for the Workspace lane's shipped split.
- *
- * `@gpuixui/dock`'s `SplitPane` is the native control: two panes and one 6px
- * divider that drags with pointer capture, steps 16px on the arrows and takes
- * its bounds from the caller. The preview draws the same three parts in the
- * platform theme's variables and runs the same arithmetic (`dock-preview.ts`),
- * so the divider is explorable — but the paint is a browser approximation, and
- * the Code tab shows the shipped `SplitPane` it stands in for.
- */
-
-/** The files the rail lists, so the panes read as a workspace rather than a box. */
 const files = [
   { name: "split-pane.tsx", note: "review" },
   { name: "panel-group.tsx", note: "" },

@@ -106,18 +106,3 @@ guide rails, so the surface it sits on (a card, a sidebar, a sheet) is the only
 one. One folder glyph and one file glyph cover every row; the chevron says
 whether a folder is open, and the kind a name classifies into is a fact an app
 can ask for without the paint following it.
-
-## Notes
-- **The chevron cannot rotate.** GPUix 0.11.0 has no renderer transform, so the
-  open and closed states paint `chevron-down` and `chevron-right` instead of
-  rotating one glyph.
-- **No inline rename.** The reference has no rename and neither did the previous
-  surface. A caller that needs one passes an editor as a `FileTreeFile` custom
-  row; the tree does not own an empty-name rule.
-- **One selected path.** Multi-select is not part of the AI Elements tree; the
-  generic `@gpuixui/data` tree and `pressSelection` remain available to a caller
-  that needs it.
-- **The tree does not virtualize itself.** A tree of thousands composes
-  `@gpuixui/data`'s `VirtualTree`, which paints the same rows.
-- The docs site cannot render this component live — it is a GPUix host tree, not
-  DOM; the drawing above is the browser preview.

@@ -1,16 +1,3 @@
-/**
- * The components' focus ring, in the real GPUix renderer.
- *
- * The bug this guards: every focusable part learned it was focused in React
- * state and merged `focusRing(theme)` — a spread shadow — so a mouse press
- * showed a ring the platform would not, and each part re-rendered on focus and
- * blur to paint it. `@gpuix/native@0.11.0` paints `focusVisible` itself, so a
- * part now **declares** the outline at rest while the runtime decides whether a
- * Tab or a press shows it. The old shadow must not come back, the invalid
- * variant must stay destructive, and a composite field must ring the input that
- * takes focus rather than a group that never does.
- */
-
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { describe, expect, it, vi } from "vitest";
@@ -57,7 +44,6 @@ import { Tabs, TabsList, TabsTrigger } from "../tabs.js";
 import { TagInput, TagInputChip, TagInputField } from "../tag-input.js";
 import { TimePicker, TimePickerSegment } from "../time-picker.js";
 
-/** The outline every part declares, read from the dark theme's roles. */
 const outline = {
   outlineWidth: darkTheme.borderWidth.strong,
   outlineColor: darkTheme.colors.ring,
@@ -210,8 +196,6 @@ describe("focus ring", () => {
       </div>,
     );
 
-    // The group is not what focus lands on, so a group-level shadow ring was
-    // the wrong place for it.
     expect(root.renderer.findByTestId("tags")?.style.focusVisible).toBe(
       undefined,
     );

@@ -1,23 +1,3 @@
-/**
- * Holds every value `docs/tokens.md` and the package README print to the tokens
- * that carry them.
- *
- * The bug this guards: the catalogue is the page a consumer treats as the token
- * reference — it prints each role's light and dark hex, every palette ramp, the
- * platform chrome palettes, the type metrics and every scale — and the README
- * prints each platform's and look's family, radius and density. `docs.test.ts`
- * holds only the catalogue's *shape* (a role has a row, the counts agree), so a
- * palette edit could change `lightColors.primary` and leave the page printing
- * the previous value: a reader copies a hex the library no longer ships, and
- * nothing fails. The platform chrome table, the elevation table and the README's
- * tables had no reader at all.
- *
- * Each check compares the printed cell with the exported value, and the printed
- * row set with the exported keys, so a value that moves and a token that is
- * added or dropped are both named. `node:fs` is deliberate, as in
- * `docs.test.ts`: this checks the repository's own Markdown, and the package
- * keeps zero runtime dependencies.
- */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
@@ -81,20 +61,16 @@ import { typography, type TextStyle } from "./typography.js";
 const read = (path: string): string =>
   readFileSync(new URL(path, import.meta.url), "utf8");
 
-/** The two documents a consumer reads: the token catalogue and the README. */
 const catalogue = read("../../../docs/tokens.md");
 const readme = read("../README.md");
 
-/** Prose wraps, so a sentence is compared against the page read flat. */
 const flatCatalogue = catalogue.replace(/\s+/g, " ");
 
-/** A Markdown table: its header cells and its body rows, each cell trimmed. */
 interface DocTable {
   readonly header: ReadonlyArray<string>;
   readonly rows: ReadonlyArray<ReadonlyArray<string>>;
 }
 
-/** The cells of one table line. */
 const cells = (line: string): ReadonlyArray<string> =>
   line
     .trim()
@@ -103,7 +79,6 @@ const cells = (line: string): ReadonlyArray<string> =>
     .split("|")
     .map((cell) => cell.trim());
 
-/** Every table in a document, split on the blank line between blocks. */
 const tablesIn = (markdown: string): ReadonlyArray<DocTable> =>
   markdown.split(/\n{2,}/).flatMap((block) => {
     const lines = block.split("\n").filter((line) => line.startsWith("|"));
@@ -111,11 +86,10 @@ const tablesIn = (markdown: string): ReadonlyArray<DocTable> =>
     if (header === undefined || lines.length < 2) {
       return [];
     }
-    // The second line is the `| --- |` rule; the rest are rows.
+
     return [{ header: cells(header), rows: lines.slice(2).map(cells) }];
   });
 
-/** The one table matching a description, failing by name when it is gone. */
 const docTable = (
   markdown: string,
   description: string,
@@ -126,7 +100,6 @@ const docTable = (
   return found ?? { header: [], rows: [] };
 };
 
-/** The table whose header is exactly `header`, in order. */
 const headed = (markdown: string, header: ReadonlyArray<string>): DocTable =>
   docTable(
     markdown,
@@ -136,20 +109,16 @@ const headed = (markdown: string, header: ReadonlyArray<string>): DocTable =>
       header.every((cell, index) => candidate.header[index] === cell),
   );
 
-/** The text inside a cell's one code span, or the cell itself when it has none. */
 const code = (cell: string): string => /`([^`]*)`/.exec(cell)?.[1] ?? cell;
 
-/** A cell with every code span unwrapped — a cell that names more than one role. */
 const plain = (cell: string): string => cell.replace(/`/g, "").trim();
 
-/** The integers a cell prints, in order. */
 const numbers = (cell: string): ReadonlyArray<number> =>
   (cell.match(/-?\d+/g) ?? []).map(Number);
 
 const isColourRole = (value: string): value is keyof ThemeColors =>
   colorRoles.some((role) => role === value);
 
-/** A role table as `role → printed values`, in the page's order. */
 const printedColours = (
   markdown: string,
   header: ReadonlyArray<string>,
@@ -162,7 +131,6 @@ const printedColours = (
     ]),
   );
 
-/** Every printed cell that is not the value the colour set carries. */
 const colourDrift = (
   printed: ReadonlyMap<string, ReadonlyArray<string>>,
   sets: ReadonlyArray<readonly [string, ThemeColors]>,
@@ -178,11 +146,6 @@ const colourDrift = (
     );
   });
 
-/**
- * Every row of a `Platform | sans | mono | radius.md | density` table that does
- * not print its style. The catalogue also prints the density's `md` height, so
- * a height the cell carries is checked too.
- */
 const styleDrift = (
   rows: ReadonlyArray<ReadonlyArray<string>>,
   styleOf: (name: string) => PlatformStyle | undefined,
@@ -375,7 +338,6 @@ describe("the catalogue's colour roles", () => {
 });
 
 describe("the catalogue's platform chrome", () => {
-  /** The six chrome columns, in the table's order. */
   const columns = [
     ["darwin", "light"],
     ["darwin", "dark"],
@@ -451,10 +413,6 @@ describe("the catalogue's typography", () => {
 });
 
 describe("the catalogue's scales", () => {
-  /**
-   * A `Token | Pixels` table. The two that exist are told apart by whether the
-   * first token names a group (`borderWidth.thin`) or a bare step (`2xs`).
-   */
   const scalarTable = (dotted: boolean, description: string): DocTable =>
     docTable(
       catalogue,
@@ -464,7 +422,6 @@ describe("the catalogue's scales", () => {
         (candidate.rows[0]?.[0] ?? "").includes(".") === dotted,
     );
 
-  /** A `Token | Pixels` table as `token → pixels` pairs. */
   const printedScalars = (candidate: DocTable): ReadonlyArray<string> =>
     candidate.rows.map(
       (row) => `${code(row[0] ?? "")} ${numbers(row[1] ?? "")[0]}`,
@@ -663,8 +620,6 @@ describe("the catalogue's syntax palette", () => {
       "syntaxFailures",
     ].forEach((name) => expect(catalogue).toContain(`\`${name}\``));
 
-    // The high-contrast tables differ in one role, and the page prints both
-    // values: a stale hex there would teach a brand the wrong quiet colour.
     expect(catalogue).toContain(highContrastLightSyntax.comment);
     expect(catalogue).toContain(highContrastDarkSyntax.comment);
     expect(syntaxRoles.length).toBe(24);
@@ -741,7 +696,6 @@ describe("the README's style tables", () => {
   });
 
   it("quotes the value the table carries in an inline comment", () => {
-    /** A style's role, or a phrase that fails the check when it is missing. */
     const quoted = (value: string | undefined): string =>
       value ?? "the style carries no value";
     const lines = [

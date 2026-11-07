@@ -1,11 +1,3 @@
-/**
- * The tiling desktop's content: seven real Omarchy themes and what the panes say.
- *
- * Each palette is the theme's `colors.toml` as Omarchy ships it (MIT,
- * basecamp/omarchy), decoded by `decodeOmarchyPalette` — the same file an app
- * reads from `~/.local/state/omarchy/current/theme/` when the desktop changes.
- */
-
 export const palettes = {
   "tokyo-night": `
 mode = "dark"
@@ -244,7 +236,6 @@ export type PaletteName = keyof typeof palettes;
 
 export const paletteNames = Object.keys(palettes) as ReadonlyArray<PaletteName>;
 
-/** The tiles, in focus order, and the title the bar shows for each. */
 export const tiles = [
   { id: "settings", title: "Settings" },
   { id: "terminal", title: "Alacritty — fastfetch" },

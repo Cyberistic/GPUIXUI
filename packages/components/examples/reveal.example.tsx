@@ -1,12 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Reveal example: a settings section arriving, and a notice that leaves.
- *
- * The first block is a mount reveal per line, staggered by a delay, so a reader
- * sees the arrival a line at a time. The second is the controlled contract: a
- * press opens and closes the notice, which stays mounted for its exit.
- */
-
 import { useState } from "react";
 import { Button } from "../src/internal/button.js";
 import { MotionProvider } from "../src/motion.js";
@@ -18,7 +10,6 @@ const lines = [
   "Telemetry is off.",
 ];
 
-/** A staggered arrival and a notice that can be dismissed. */
 export const RevealExample = () => {
   const [open, setOpen] = useState(true);
 

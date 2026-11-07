@@ -1,16 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * AppMenu: the in-window application menu bar.
- *
- * The pinned runtime installs a fixed macOS menu bar and publishes no API to add
- * to it (`.agents/slop/COMPONENTS.md`, "Application menus"), so the chrome is caller-drawn:
- * a `role="menubar"` row of buttons whose dropdowns are `FloatingLayer`s
- * anchored below the button that opened them. The navigation rules — Left/Right
- * between menus, Up/Down within a dropdown, Escape closing and returning focus
- * to the trigger — live in `logic.ts`; the component maps `KeyEvent`s onto those
- * actions and renders the accelerator label with `@gpuixui/keyboard`.
- */
-
 import type { KeyEvent, Props, PublicInstance, StyleDesc } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import {
@@ -48,16 +36,14 @@ const MENU_TRIGGER =
   "flex flex-row items-center rounded-md px-2 py-1 text-sm font-medium font-sans text-foreground";
 const MENU_ITEM_LABEL = "text-sm font-medium font-sans";
 
-/** One runnable entry in a menu's dropdown. */
 export interface AppMenuItem {
   readonly id: string;
   readonly label: string;
-  /** Display-only accelerator, e.g. `"mod+s"`. The app binds the chord. */
+
   readonly accelerator?: string;
   readonly disabled?: boolean;
 }
 
-/** One top-level menu: a labelled button and its dropdown rows. */
 export interface AppMenuEntry {
   readonly id: string;
   readonly label: string;
@@ -65,22 +51,16 @@ export interface AppMenuEntry {
   readonly items: ReadonlyArray<AppMenuItem>;
 }
 
-/** {@link AppMenu} props. */
 export interface AppMenuProps extends Omit<Props, "children"> {
-  /** The menubar's accessible name. */
   readonly label?: string;
   readonly menus: ReadonlyArray<AppMenuEntry>;
-  /** Render accelerators with another platform's glyphs. Default: the host. */
+
   readonly platform?: Platform;
-  /** Called when a runnable item is selected. */
+
   readonly onSelect?: (menuId: string, itemId: string) => void;
   readonly className?: string;
 }
 
-/**
- * The resting box of a menu-bar button: pressed while its dropdown is open,
- * washed while the keyboard highlights it, and hovered otherwise.
- */
 const triggerStyle = (
   theme: Theme,
   open: boolean,
@@ -97,7 +77,6 @@ const triggerStyle = (
         : { hover: { backgroundColor: theme.colors.hover } }),
 });
 
-/** The resting box of a dropdown row, with its highlight wash. */
 const itemStyle = (
   theme: Theme,
   active: boolean,
@@ -112,14 +91,6 @@ const itemStyle = (
   cursor: disabled ? "not-allowed" : "pointer",
 });
 
-/**
- * The application menu bar.
- *
- * The bar is one keyboard surface: its buttons share a tab stop and the open
- * dropdown's rows are highlighted (not focused), the same "highlight, not focus"
- * rule the command palette uses, so arrow keys keep working while the bar owns
- * the focus.
- */
 export const AppMenu = ({
   label,
   menus,
@@ -145,8 +116,6 @@ export const AppMenu = ({
     })),
   }));
 
-  // A keyboard-open moves focus into the dropdown; the bar's own key handler
-  // drives it from there because key events bubble to the bar root.
   useLayoutEffect(() => {
     if (Option.isSome(state.openMenu) && surfaceRef.current !== null) {
       renderer?.focusElement?.(surfaceRef.current.id);
@@ -158,8 +127,6 @@ export const AppMenu = ({
     (menu) => menu.disabled !== true,
   );
 
-  // The bar is one tab stop; it follows the highlight, falling back to the
-  // first menu before the bar is entered.
   const stopIndex = Option.getOrElse(
     Option.orElse(state.activeMenu, () => firstEnabled),
     () => 0,

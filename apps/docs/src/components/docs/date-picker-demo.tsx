@@ -41,23 +41,6 @@ import {
 } from "./date-picker-preview";
 import { BrowserIcon } from "./browser-icon";
 
-/**
- * Browser previews for the Calendar and Date picker pages.
- *
- * The shipped grid is the `Calendar` component — its rules are the component's
- * own (`calendar/logic.ts`), and its value is an ISO day or a `{ from, to }`
- * span. GPUix has no calendar primitive, so the preview runs the same rules
- * through `date-picker-preview.ts`: six rows, adjacent-month days painted by
- * default, one roving tab stop, arrow/Home/End/PageUp/PageDown moves clamped to
- * inclusive bounds, and a selection painted from the theme's `primary` role.
- *
- * The runtime publishes no `aria-haspopup` in `@gpuix/native@0.11.0`, so the
- * trigger announces `aria-expanded` only, and the floating surface carries no
- * dialog role — the grid inside is the named region. The page says both rather
- * than promising a dialog the component does not open.
- */
-
-/** The keys the grid handles; anything else belongs to the page. */
 const GRID_KEYS: ReadonlySet<string> = new Set<GridKey>([
   "ArrowLeft",
   "ArrowRight",
@@ -71,22 +54,12 @@ const GRID_KEYS: ReadonlySet<string> = new Set<GridKey>([
 
 const isGridKey = (key: string): key is GridKey => GRID_KEYS.has(key);
 
-/**
- * Today, read once when the module is evaluated.
- *
- * A prerendered page bakes the day it was built and the browser reads its own
- * clock, so the two agree unless a visit lands on an older page — the ordinary
- * trade for date content on a static site, and better than a grid that opens on
- * a fixture month nobody is in.
- */
 const TODAY: IsoDay = isoDayOf(new Date());
 
-/** A surface's selection: one day, or a span. */
 type PreviewValue =
   | { readonly mode: "single"; readonly day: IsoDay | null }
   | { readonly mode: "range"; readonly range: PreviewRange | null };
 
-/** How a cell is painted for the surface's mode. */
 const paintOf = (value: PreviewValue, day: IsoDay): RangePaint | "selected" =>
   value.mode === "single"
     ? value.day === day
@@ -94,12 +67,6 @@ const paintOf = (value: PreviewValue, day: IsoDay): RangePaint | "selected" =>
       : null
     : rangePaint(value.range, day);
 
-/**
- * A caption select: the `Select`'s `sm` trigger with the icon set's chevron.
- *
- * A native `<select>` paints its own arrow and box, so it is stripped to a
- * field (`appearance: none`) and the chevron is the library's glyph over it.
- */
 const CaptionSelect = ({
   id,
   label,
@@ -142,17 +109,17 @@ interface SurfaceProps {
   readonly bounds: DayBounds;
   readonly weekStartsOn: WeekStart;
   readonly clearable: boolean;
-  /** Take focus on the first render: an opened picker, not a gallery tile. */
+
   readonly autoFocus?: boolean;
-  /** Lay the surface in flow instead of anchoring it under the trigger. */
+
   readonly inline?: boolean;
-  /** Whether a value exists, so the Clear row only appears with something to clear. */
+
   readonly hasValue: boolean;
-  /** `"label"` (default) paints the month name; `"dropdown"` paints two selects. */
+
   readonly captionLayout?: "label" | "dropdown";
-  /** The earliest year the year select offers. Default 1900, the calendar's own. */
+
   readonly fromYear?: number;
-  /** The latest year the year select offers. Default the current year. */
+
   readonly toYear?: number;
   readonly onMonth: (month: IsoMonth) => void;
   readonly onActive: (day: IsoDay) => void;
@@ -161,12 +128,6 @@ interface SurfaceProps {
   readonly onEscape: () => void;
 }
 
-/**
- * The month navigation, the weekday header, the grid and the Clear row.
- *
- * It is presentational: the parent owns the value, the view month and the
- * focused day, so every preview and every gallery tile shares one paint.
- */
 const DateSurface = ({
   label,
   months,
@@ -225,7 +186,6 @@ const DateSurface = ({
         move(event, event.key);
       }}
       onKeyUp={(event) => {
-        // Space activates on the release, like the button contract it follows.
         if (event.key !== " ") return;
         event.preventDefault();
         onChoose(active);
@@ -235,8 +195,7 @@ const DateSurface = ({
         {monthWindow(month, months).map((panel) => (
           <div className="gx-date-panel" key={panel}>
             <div className="gx-date-nav">
-              {/* One nav pair for the window, as the shipped Calendar paints
-                  it: previous beside the first month, next after the last. */}
+              {}
               {panel === month ? (
                 <button
                   aria-label="Previous month"
@@ -406,20 +365,12 @@ interface PickerProps {
   readonly placeholder?: string;
   readonly disabled?: boolean;
   readonly defaultOpen?: boolean;
-  /** Lay the surface in flow: the states gallery's presentation. */
+
   readonly inline?: boolean;
-  /** Close the surface as soon as a span is complete. Default `true`. */
+
   readonly closeOnSpan?: boolean;
 }
 
-/**
- * One picker: the trigger, the surface while it is open, and the readout.
- *
- * Opening anchors the view on the chosen day, or on today when none is set; a
- * one-day choice closes the surface and returns focus to the trigger, and a span
- * closes when its second day completes it. `Escape` and a press outside do the
- * same without changing the value.
- */
 const DatePickerPreview = ({
   label,
   months = 1,
@@ -564,8 +515,7 @@ const DatePickerPreview = ({
           />
         ) : null}
       </div>
-      {/* The readout is the field's, not the anchor's: inside the frame it
-          pushed the popup 14px further down and left it under the status line. */}
+      {}
       <p className="gx-date-readout" role="status">
         {value.mode === "single"
           ? describeValue(value.day)
@@ -575,7 +525,6 @@ const DatePickerPreview = ({
   );
 };
 
-/** The page's opening preview: a schedule field a reader can really use. */
 export const DatePickerWorkflow = () => (
   <div className="gx-demo gx-date-scene gx-date-popup">
     <div className="gx-date-column">
@@ -592,7 +541,6 @@ export const DatePickerWorkflow = () => (
   </div>
 );
 
-/** The gallery: empty, chosen, bounded and disabled fields. */
 export const DatePickerStates = () => (
   <div className="gx-demo gx-demo-column gx-date-scene">
     <div className="gx-date-gallery">
@@ -643,7 +591,6 @@ export const DatePickerStates = () => (
   </div>
 );
 
-/** A span field: two months, and the surface closes when the span completes. */
 export const DatePickerRange = () => (
   <div className="gx-demo gx-date-scene gx-date-popup">
     <div className="gx-date-column gx-date-wide">
@@ -662,7 +609,6 @@ export const DatePickerRange = () => (
   </div>
 );
 
-/** The modal presets, as shadcn ships them: a Select that writes the span. */
 export const DatePickerPresets = () => {
   const today = "2026-10-22";
   const [value, setValue] = useState<PreviewRange | null>(null);
@@ -747,7 +693,6 @@ export const DatePickerPresets = () => {
   );
 };
 
-/** A calendar on its own: one day, no popover. */
 export const CalendarSingle = () => {
   const [day, setDay] = useState<IsoDay | null>(TODAY);
   const [month, setMonth] = useState<IsoMonth>(monthOf(TODAY));
@@ -783,13 +728,6 @@ export const CalendarSingle = () => {
   );
 };
 
-/**
- * A calendar whose caption is two dropdowns, for a date that is not near today.
- *
- * The window opens on 1979 with the year list reaching back to 1970: a calendar
- * that only offers the decade around today cannot name a birthday, and the
- * dropdowns are how a reader gets to one without paging eleven months at a time.
- */
 export const CalendarDropdowns = () => {
   const [day, setDay] = useState<IsoDay | null>(TODAY);
   const [month, setMonth] = useState<IsoMonth>(monthOf(TODAY));
@@ -828,7 +766,6 @@ export const CalendarDropdowns = () => {
   );
 };
 
-/** A calendar showing two months and a span, with the ends painted apart. */
 export const CalendarRange = () => {
   const [range, setRange] = useState<PreviewRange | null>({
     from: "2026-10-19",

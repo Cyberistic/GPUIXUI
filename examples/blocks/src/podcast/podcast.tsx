@@ -1,12 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Podcast — an episode player over the show's own artwork: the cover fills the
- * window, a scrim keeps the type readable, and the season sits on a translucent
- * panel. Pressing a row plays it; the transport toggles play.
- *
- * The cover is the caller's, because artwork is not ours to ship. A host
- * without one gets the same poster in the theme's own inks.
- */
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { Icon } from "@gpuixui/icons";
@@ -16,13 +8,6 @@ import { useState } from "react";
 import { episodes, type Episode } from "./data.js";
 import { clock, episodeOf, transport, waveform } from "./logic.js";
 
-/**
- * The poster's inks.
- *
- * A photograph over the whole window is not a theme surface, so its type cannot
- * borrow the theme's ink: the scrim is dark in both modes and these are the
- * colours readable on it.
- */
 const INK = "#FFFFFF";
 const DIM = "#FFFFFFB8";
 const FAINT = "#FFFFFF4D";

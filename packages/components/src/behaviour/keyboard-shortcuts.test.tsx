@@ -1,12 +1,3 @@
-/**
- * Keyboard-shortcuts behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: a group that loses its rows or its heading, a chord
- * rendered with the wrong platform glyphs, keycaps that do not paint the muted
- * surface, rows that stop being list items, and a style callback that cannot
- * see the formatted keys.
- */
-
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import {
@@ -23,12 +14,10 @@ import {
   type ComponentTestRoot,
 } from "../internal/test-root.js";
 
-/** The style callback used by the ordering and state assertions. */
 const byKeyCount = (state: KeyboardShortcutState) => ({
   opacity: state.keys.length === 3 ? 1 : 0.5,
 });
 
-/** A cheat sheet with two groups and a mixed-width chord. */
 const Sheet = () => (
   <KeyboardShortcuts label="Editor shortcuts" testId="shortcuts">
     <KeyboardShortcutsGroup label="File">
@@ -57,7 +46,6 @@ const Sheet = () => (
   </KeyboardShortcuts>
 );
 
-/** A row's keycap box by position: row → keys row → cap. */
 const keycapOf = (
   root: ComponentTestRoot,
   rowTestId: string,
@@ -72,7 +60,6 @@ const keycapOf = (
   return capId === undefined ? undefined : root.renderer.getElement(capId);
 };
 
-/** The styled `<text>` node behind a string. */
 const styledText = (root: ComponentTestRoot, value: string) => {
   const leaf = root.renderer.findByText(value);
   if (leaf?.parentId == null) return undefined;
@@ -150,10 +137,6 @@ describe("KeyboardShortcuts", () => {
   });
 
   it("keeps a keycap out of the pointer, and lets a style callback opt back in", () => {
-    // The bug this guards: a keycap paints a fill, and a filled child is the
-    // boundary the hit test stops counting at (`press-routing-lifecycle`), so a
-    // chord drawn inside a press target — the recorder's own box, a menu row —
-    // would take the press the target never hears.
     const sheet = renderComponent(<Sheet />);
     expect(keycapOf(sheet, "new", 0)?.style.pointerEvents).toBe("none");
     sheet.unmount();

@@ -1,11 +1,3 @@
-/**
- * Browser preview for the Progress page.
- *
- * Progress is a determinate or indeterminate bar. The preview draws a
- * determinate fill with a buffer segment and an indeterminate segment. The Code
- * tab shows the native usage.
- */
-
 export const ProgressDemo = () => (
   <div className="gx-demo gx-demo-column gx-meter-scene">
     <div className="gx-meter-block">

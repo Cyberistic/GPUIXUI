@@ -1,22 +1,3 @@
-/**
- * Holds the arithmetic the `hidden-subtree-lifecycle` probe reads a window with,
- * and the claims its README section prints.
- *
- * The finding this guards is that the pinned renderer's two hiding words are not
- * the same capability: `apply_styles` only acts on `display` of `flex` or
- * `grid`, while `visibility: "hidden"` becomes GPUI's `invisible()`. A
- * `display: none` box therefore lays out, paints and keeps its tab stop. The
- * stops below are the window's measurement, not the CSS's intent, so a runtime
- * upgrade that starts honouring `display` fails this file by name and the
- * record has to move with it.
- *
- * The shipped `Carousel` used to hide its spare slides with that word; it now
- * mounts only the slide on screen, so the walk has no spare-slide stop and the
- * carousel's step is asserted as a change of the mounted slide.
- *
- * `node:fs` is deliberate, as in `collapse.test.ts`: this reads the repository's
- * own probe, view and Markdown, never a runtime path.
- */
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
@@ -42,7 +23,6 @@ const probeSource = readFileSync(
   "utf8",
 );
 
-/** The section's prose on one line, so a wrapped sentence still reads whole. */
 const flat = readme.replace(/\s+/g, " ");
 
 describe("the two hiding words", () => {
@@ -55,7 +35,7 @@ describe("the two hiding words", () => {
       HIDDEN_IDS.displayControl,
       HIDDEN_IDS.visibilityControl,
     ]);
-    // The costs are what a reader loses, not a restatement of the word.
+
     expect(HIDING_CASES[0]?.consequence).toContain("tab stop");
     expect(HIDING_CASES[1]?.consequence).toContain("layout space");
   });
@@ -82,16 +62,15 @@ describe("the stops the window measured", () => {
       HIDDEN_IDS.activeSlide,
       HIDDEN_IDS.after,
     ]);
-    // Only the slide on screen is mounted, so its sibling has no stop to walk.
+
     expect(Arr.contains(HIDDEN_STOPS, HIDDEN_IDS.inactiveSlide)).toBe(false);
   });
 
   it("leaves the invisible control out of the walk", () => {
-    // The one rule the runtime does keep: `visibility` removes a stop.
     expect(Arr.contains(HIDDEN_STOPS, HIDDEN_IDS.visibilityControl)).toBe(
       false,
     );
-    // The walk has to be long enough to see the whole cycle and repeat once.
+
     expect(HIDDEN_WALK).toBeGreaterThan(HIDDEN_STOPS.length);
   });
 
@@ -110,9 +89,6 @@ describe("the stops the window measured", () => {
   });
 
   it("holds the count to the assertions the steps run", () => {
-    // Every `yield* ctx.expect…` is one check, `sampleAt` adds the read that
-    // hands it a pixel, and `expectPaint` adds the comparison. Counting the
-    // sites keeps the printed total from drifting from the steps.
     const asserted =
       probeSource.match(/yield\* ctx\.expect[A-Za-z]+\(/g)?.length ?? 0;
     const sampled = probeSource.match(/yield\* sampleAt\(/g)?.length ?? 0;
@@ -155,7 +131,7 @@ describe("the hidden-subtree-lifecycle probe's record", () => {
     expect(flat).toContain("still reports its own **200×32** box");
     expect(flat).toContain("`#1E222A`");
     expect(flat).toContain("`#11141A`");
-    // The mount window's reading: one box, the frame's content width.
+
     expect(flat).toContain("**one** slide box");
     expect(flat).toContain("**866** wide inside the **868** carousel");
     expect(flat).toContain("`invisibleKeys=0`");
@@ -185,8 +161,7 @@ describe("the hidden-subtree-lifecycle probe's record", () => {
       "A subtree that must not paint is unmounted, not hidden",
     );
     expect(flat).toContain("a slide's local state does not survive a visit");
-    // The probe is the component's regression guard now, so the record cannot
-    // go back to teaching the defect it was written against.
+
     expect(flat).not.toContain("still report their box");
     expect(flat).not.toContain("broken by rule 1");
   });
@@ -210,7 +185,7 @@ describe("the probe asks the question the section answers", () => {
   it("types the one key the hidden control counts", () => {
     expect(probeSource).toContain("ctx.host.key(HIDDEN_KEY)");
     expect(HIDDEN_KEY).toBe("a");
-    // The counter reads the same word the readout prints.
+
     expect(probeSource).toContain("invisibleKeys");
   });
 });

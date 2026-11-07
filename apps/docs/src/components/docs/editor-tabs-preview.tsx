@@ -2,16 +2,6 @@ import { useState } from "react";
 import { ReorderableTabs, type ReorderableTab } from "./reorderable-tabs";
 import { closedTabs } from "./reorderable-tabs-logic";
 
-/**
- * The editor tab strip the landing page's terminal block opens, as a browser
- * preview.
- *
- * The preview is not the native `Tabs` component: it draws the VS Code chrome
- * the terminal block reproduces, and it is the same `ReorderableTabs` the
- * landing uses, so a reader can drag a tab, close one and reopen the strip
- * before meeting it on the front page.
- */
-
 const FILES: ReadonlyArray<ReorderableTab> = [
   { id: "page.tsx", label: "page.tsx" },
   { id: "button.tsx", label: "button.tsx" },

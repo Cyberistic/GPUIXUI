@@ -4,17 +4,6 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { roleGuidance, TypeScaleBody } from "./type-scale";
 
-/**
- * The typography specimen.
- *
- * The page claims to show *the* type scale, so the roles it enumerates must be
- * the theme's roles — a role added to `@gpuixui/tokens` and left out here would
- * be a value no docs page mentions. The render guard then checks the specimen
- * actually paints each role's metrics, so the table cannot claim 14/20 while
- * drawing 13/18.
- */
-
-/** The theme's text roles, excluding the two family fields. */
 const themeRoles = Object.keys(themes.dark.typography).filter(
   (key) => key !== "sans" && key !== "mono",
 );

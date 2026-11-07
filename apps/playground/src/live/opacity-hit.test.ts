@@ -1,17 +1,3 @@
-/**
- * Holds the arithmetic the `faded-hitbox-lifecycle` probe reads a window with,
- * and the claims its README section prints.
- *
- * The finding this file guards is that `opacity: 0` removes the ink and nothing
- * else: the box still lays out, keeps its Tab stop and stays in the pointer's
- * path, and a key reaches it while it holds focus. That is why a leaving surface
- * must write `pointerEvents: "none"` and why a dismissed shell that keeps its
- * controls mounted needs a shield — if the share removed the hitbox, both would
- * be ceremony and this file would be asserting a guard that does nothing.
- *
- * `node:fs` is deliberate, as in `hidden-subtree.test.ts`: this reads the
- * repository's own probe, view and Markdown, never a runtime path.
- */
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
@@ -55,7 +41,7 @@ describe("the faded hitbox", () => {
       FADED_IDS.coveredTarget,
       FADED_IDS.inertTarget,
     ]);
-    // The rules are what the reader learns, not a restatement of the locator.
+
     expect(FADED_PRESS_CASES[0]?.rule).toContain("not the box");
     expect(FADED_PRESS_CASES[1]?.rule).toContain("pointer's path");
     expect(FADED_PRESS_CASES[2]?.rule).toContain("handler still runs");

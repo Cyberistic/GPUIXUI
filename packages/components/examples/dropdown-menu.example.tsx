@@ -1,15 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Dropdown menu example: a file row with a small actions menu.
- *
- * The menu is uncontrolled — it remembers whether it is open — while the
- * "Show hidden" checkbox and the "Sort by" choice are app state, because the
- * card behind the menu shows the effect. A checkbox row is an on/off setting and
- * stays open; a radio group is one exclusive choice and closes the menu. A menu
- * action is an ordinary callback: the component does not own what "Delete" means.
- * Keyboard opens (`Enter`, `ArrowDown`, `ArrowUp`) land on the first/last action.
- */
-
 import { useState } from "react";
 import { Card, CardDescription, CardHeader, CardTitle } from "../src/card.js";
 import {
@@ -27,7 +16,6 @@ import {
 } from "../src/dropdown-menu.js";
 import { textStyle, useTheme } from "../src/internal/theme.js";
 
-/** One file row, with a destructive action and two persistent settings. */
 export const DropdownMenuExample = () => {
   const theme = useTheme();
   const [showHidden, setShowHidden] = useState(false);

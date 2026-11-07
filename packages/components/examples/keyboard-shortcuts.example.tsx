@@ -1,17 +1,10 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Keyboard shortcuts example: the same editor chords with macOS and Windows
- * glyphs, which is what the docs platform toggle does. `mod` is the
- * platform-adaptive token; `ctrl` names the Control key everywhere.
- */
-
 import {
   KeyboardShortcut,
   KeyboardShortcuts,
   KeyboardShortcutsGroup,
 } from "../src/keyboard-shortcuts.js";
 
-/** A cheat sheet rendered with one platform's keycaps. */
 const Sheet = ({
   platform,
   label,
@@ -43,7 +36,6 @@ const Sheet = ({
   </KeyboardShortcuts>
 );
 
-/** An editor cheat sheet, shown on both platforms. */
 export const KeyboardShortcutsExample = () => (
   <div style={{ display: "flex", flexDirection: "row", gap: 48 }}>
     <Sheet platform="darwin" label="Editor shortcuts, macOS" />

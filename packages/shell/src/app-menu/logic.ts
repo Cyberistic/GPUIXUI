@@ -1,47 +1,33 @@
-/**
- * The menu bar's navigation: which menu and which item are active.
- *
- * Pure so it is provable without a renderer. `step` folds one keyboard action
- * into the state; the component maps `KeyEvent`s to actions, reads the active
- * item to run it, and uses {@link dismiss} to know where to return focus.
- */
-
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { Match } from "effect";
 import { decideMove } from "@gpuixui/primitives";
 
-/** One dropdown row, reduced to what navigation needs. */
 export interface AppMenuItemSpec {
   readonly id: string;
   readonly disabled: boolean;
 }
 
-/** One top-level menu: a labelled button and its dropdown rows. */
 export interface AppMenuSpec {
   readonly id: string;
   readonly disabled: boolean;
   readonly items: ReadonlyArray<AppMenuItemSpec>;
 }
 
-/** The bar's highlight and open state. */
 export interface MenuBarState {
-  /** The menu whose button is highlighted; `None` before the bar is entered. */
   readonly activeMenu: Option.Option<number>;
-  /** The menu whose dropdown is open. */
+
   readonly openMenu: Option.Option<number>;
-  /** The row highlighted in the open dropdown. */
+
   readonly activeItem: Option.Option<number>;
 }
 
-/** No menu entered, no dropdown open. */
 export const initial: MenuBarState = {
   activeMenu: Option.none(),
   openMenu: Option.none(),
   activeItem: Option.none(),
 };
 
-/** A keyboard action the bar understands. */
 export type MenuBarAction =
   | { readonly _tag: "MoveBar"; readonly delta: 1 | -1 }
   | { readonly _tag: "Open"; readonly menu: number }
@@ -60,7 +46,6 @@ const arrowKey = (
       ? "down"
       : "up";
 
-/** Move within a list, wrapping and skipping disabled entries. */
 const moveIn = (
   current: Option.Option<number>,
   count: number,
@@ -105,14 +90,12 @@ const itemIsDisabled = (
   index: number,
 ): boolean => Option.exists(Arr.get(items, index), (item) => item.disabled);
 
-/** The state after Escape: the dropdown closes and focus returns to its trigger. */
 export interface MenuBarDismiss {
   readonly state: MenuBarState;
-  /** The menu whose trigger should regain focus; `None` leaves the bar. */
+
   readonly refocus: Option.Option<number>;
 }
 
-/** Close the open dropdown and name where focus should return. */
 export const dismiss = (state: MenuBarState): MenuBarDismiss =>
   Option.match(state.openMenu, {
     onSome: (menu) => ({
@@ -126,14 +109,6 @@ export const dismiss = (state: MenuBarState): MenuBarDismiss =>
     onNone: () => ({ state: initial, refocus: Option.none() }),
   });
 
-/**
- * Apply one keyboard action.
- *
- * `MoveBar` moves the open dropdown's menu while one is open, otherwise the
- * highlight between the bar's buttons; both wrap and skip disabled menus.
- * `MoveItem` moves the highlight within the open dropdown, wrapping and
- * skipping disabled rows. `Open` opens a menu's dropdown; `Dismiss` closes it.
- */
 export const step = (
   state: MenuBarState,
   menus: ReadonlyArray<AppMenuSpec>,
@@ -202,14 +177,6 @@ export const step = (
     Match.exhaustive,
   );
 
-/**
- * The state after the pointer enters a menu's trigger.
- *
- * macOS opens a sibling the moment the pointer reaches its title, but only while
- * a dropdown is already open: hovering a closed bar opens nothing, and a
- * disabled menu never opens. The open menu's own trigger is a no-op, so resting
- * the pointer there keeps the highlighted row.
- */
 export const hoverOpen = (
   state: MenuBarState,
   menus: ReadonlyArray<AppMenuSpec>,

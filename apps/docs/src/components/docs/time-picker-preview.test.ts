@@ -19,20 +19,6 @@ import {
   type TimeState,
 } from "./time-picker-preview";
 
-/**
- * The Time picker preview's clock.
- *
- * A preview field is only honest if it is the field the component paints: two
- * segments, the last two typed digits, an immediate clamp above the segment's
- * maximum, a value composed from one typed segment with the other read as zero,
- * a blur that pads both, and one clock behind the arrows that carries at the
- * hour and wraps at midnight. The first cases pin that model; the last reads the
- * native clock, the painter and the preview style sheet, so a moved constant
- * cannot leave the drawing teaching the previous control.
- *
- * `node:fs` is the test's own read of a checked-in file, not runtime I/O.
- */
-
 const read = (path: string): string =>
   readFileSync(new URL(path, import.meta.url), "utf8");
 
@@ -44,7 +30,6 @@ const nativePicker = read(
   "../../../../../packages/components/src/time-picker.tsx",
 );
 
-/** The declarations of the first `selector { … }` block in a style sheet. */
 const block = (css: string, selector: string): string => {
   const start = css.indexOf(`${selector} {`);
   if (start === -1) throw new Error(`no ${selector} block`);
@@ -69,7 +54,7 @@ describe("the clock", () => {
       hours: 23,
       minutes: 59,
     });
-    // A whole day is the same time of day, in either direction.
+
     expect(addMinutes({ hours: 9, minutes: 30 }, 1440)).toEqual({
       hours: 9,
       minutes: 30,
@@ -78,7 +63,7 @@ describe("the clock", () => {
       hours: 9,
       minutes: 30,
     });
-    // The native clock is the same modulus, not a second implementation.
+
     expect(nativeClock).toContain("% 1440");
     expect(nativeClock).toContain("+ 1440) % 1440");
   });
@@ -100,7 +85,7 @@ describe("the clock", () => {
         (time) => parseTime(formatTime(time))?.minutes !== time.minutes,
       ),
     ).toEqual([]);
-    // The formatted text is canonical: two digits, no shorthand.
+
     expect(minutes.map((time) => formatTime(time).length)).toEqual(
       Array.from({ length: 1440 }, () => 5),
     );
@@ -115,7 +100,7 @@ describe("the clock", () => {
     expect(parseTime("12:60")).toBeNull();
     expect(parseTime("09:30:00")).toBeNull();
     expect(parseTime("not a time")).toBeNull();
-    // A malformed controlled value paints an empty field, like the component.
+
     expect(timeText("9:30")).toEqual({ hours: "", minutes: "" });
     expect(segmentText("09:30", "hours")).toBe("09");
     expect(segmentText("09:30", "minutes")).toBe("30");
@@ -134,7 +119,7 @@ describe("one edit", () => {
     expect(digitsOf("a")).toBe("");
 
     const hours = typed(emptyTime(), "99");
-    // The text clamps in the same edit, so the two cannot disagree.
+
     expect(hours.hours).toBe("23");
     expect(hours.value).toBe("23:00");
     const minutes = editSegment(emptyTime(), "minutes", "99");
@@ -144,13 +129,12 @@ describe("one edit", () => {
 
   it("completes the value from one typed segment and clears on an erased one", () => {
     const hours = typed(emptyTime(), "9");
-    // The untouched segment shows no digits; the value reads it as zero.
+
     expect(hours).toEqual({ hours: "9", minutes: "", value: "09:00" });
 
     const both = editSegment(hours, "minutes", "30");
     expect(both).toEqual({ hours: "9", minutes: "30", value: "09:30" });
 
-    // Erasing one segment clears the whole time, including the other segment.
     expect(editSegment(both, "minutes", "")).toEqual(emptyTime());
     expect(composeValue("", "")).toBeNull();
     expect(composeValue("", "30")).toBe("00:30");
@@ -164,7 +148,7 @@ describe("one edit", () => {
       value: "09:00",
     });
     expect(typedHours).toEqual({ hours: "09", minutes: "00", value: "09:00" });
-    // A padded value cannot move on a second blur.
+
     expect(padOnBlur(typedHours)).toEqual(typedHours);
 
     const empty = emptyTime();
@@ -190,9 +174,9 @@ describe("the arrow keys", () => {
     expect(stepSegment(set, "minutes", 1).value).toBe("09:31");
     expect(stepSegment(set, "minutes", 1, 15).value).toBe("09:45");
     expect(stepSegment(set, "minutes", -1, 15).value).toBe("09:15");
-    // Hours ignore the minute step: a whole hour, not 15 minutes.
+
     expect(stepSegment(set, "hours", 1, 15).value).toBe("10:30");
-    // Padding happens inside the step, so the text is canonical after a key.
+
     expect(stepSegment(set, "minutes", 1)).toEqual({
       hours: "09",
       minutes: "31",
@@ -223,7 +207,7 @@ describe("the arrow keys", () => {
     expect(normalizeStep(15)).toBe(15);
     expect(normalizeStep(15.9)).toBe(15);
     expect(normalizeStep(60)).toBe(59);
-    // The native module owns the same rule; a change there must move here.
+
     expect(nativeClock).toContain(
       "Math.min(59, Math.max(1, Math.floor(step)))",
     );
@@ -232,9 +216,6 @@ describe("the arrow keys", () => {
 
 describe("the field the preview draws", () => {
   it("takes its fixed geometry from the painter and its height from the theme", () => {
-    // A segment is 26px and the clear control is the shared 24px target around
-    // the recipe's drawing; the field height is the density's `md` step, so the
-    // platform switch must resize it.
     expect(nativePicker).toContain("const SEGMENT_WIDTH = 26;");
     expect(nativePicker).toContain("width: targetSize.minimum");
     expect(nativePicker).toContain("height: targetSize.minimum");
@@ -249,9 +230,6 @@ describe("the field the preview draws", () => {
   });
 
   it("mirrors the component's disabled field, which is read-only and unannounced", () => {
-    // 0.11.0 publishes no `aria-disabled`, so the shipped control's disabled
-    // state is `readOnly`, a dimmed field and removed tab stops. A preview that
-    // greyed a disabled input instead would teach the wrong contract.
     expect(nativePicker).toContain("readOnly: disabled");
     expect(nativePicker).toContain("tabIndex: disabled ? -1 : 0");
     expect(nativePicker).toContain("...disabledFade(disabled)");

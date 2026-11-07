@@ -1,31 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Dialog: a modal surface that takes the window until it is dismissed.
- *
- * `@gpuix/react@0.11.0` ships a headless dialog (`@gpuix/react/dialog`) with a
- * Radix-style part model — `Root`/`Trigger`/`Portal`/`Backdrop`/`Popup`/
- * `Title`/`Close`. This component does not wrap it: the library's public Dialog
- * is a *styled* compound part with a shadcn shape (`Dialog`/`Trigger`/`Content`/
- * `Header`/`Title`/`Description`/`Footer`/`Close`) and a theme-aware surface,
- * which the headless primitive deliberately leaves to the caller. Rebuilding on
- * it is a future migration, not a mapping; until then the overlay is built from
- * the primitives the release has (plan 112 §1c, measured):
- *
- * - the veil is an `<anchored position={{x:0,y:0}}>` sized from `useWindowSize()`,
- *   because `position:"absolute"` resolves against the mount parent and a nested
- *   dialog would dim only its parent's box;
- * - Escape is offered to `internal/dismiss-layer.ts`, whose top layer is this
- *   dialog, so nested overlays dismiss outside-in;
- * - focus-in, focus-return and the Tab trap use the renderer's own
- *   `focusElement` / `focusNextWithin` / `focusPreviousWithin`; the Tab trap
- *   calls `event.preventDefault()` so 0.11.0's default Tab navigation does not
- *   also move focus out of the surface.
- *
- * Remaining gaps, recorded rather than papered over: no `aria-modal` and no
- * `aria-labelledby`, so the dialog is named with `aria-label` and its title is a
- * heading, not the dialog's accessible name.
- */
-
 import type { KeyEvent, Props, PublicInstance } from "@gpuix/react";
 import { useGpuix, useWindowSize } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
@@ -75,10 +48,8 @@ import {
 import { useMergedRef } from "./internal/ref.js";
 import { useTheme } from "./internal/theme.js";
 
-/** The surface widths a dialog offers: 360, 480 or 640 pixels. */
 export type DialogSize = "sm" | "md" | "lg";
 
-/** The sizes a dialog can paint, as the guard reads them. */
 const DialogSizes = Schema.Literals(["sm", "md", "lg"]);
 
 const MAX_WIDTH: Readonly<Record<DialogSize, number>> = {
@@ -87,19 +58,9 @@ const MAX_WIDTH: Readonly<Record<DialogSize, number>> = {
   lg: 640,
 };
 
-/**
- * The surface width a dialog paints, read from a value a caller may have stored.
- *
- * `DialogSize` is a compile-time guarantee, but a persisted setting is not: a
- * name a release dropped or renamed reaches the component at runtime, and the
- * table lookup then hands `Math.min` an `undefined` — the renderer serialises
- * the resulting `NaN` as `null` and drops the width, so the box shrank to its
- * content. A size the table does not name is the component's own default, `md`.
- */
 const dialogSize = (size: unknown): DialogSize =>
   Schema.is(DialogSizes)(size) ? size : "md";
 
-/** The rules a {@link DialogContent} follows; throws outside a {@link Dialog}. */
 interface DialogContextValue {
   readonly open: boolean;
   readonly setOpen: (open: boolean) => void;
@@ -108,7 +69,6 @@ interface DialogContextValue {
 
 const DialogContext = createContext<DialogContextValue | undefined>(undefined);
 
-/** The dialog a part belongs to. Throws when there is none (plan 110 §8.6). */
 const useDialogContext = (): DialogContextValue => {
   const value = useContext(DialogContext);
   if (value === undefined) {
@@ -117,25 +77,16 @@ const useDialogContext = (): DialogContextValue => {
   return value;
 };
 
-/** {@link Dialog} props. */
 export interface DialogProps {
-  /** The controlled open state. `undefined` means uncontrolled. */
   readonly open?: boolean;
-  /** The uncontrolled starting state. Default `false`. */
+
   readonly defaultOpen?: boolean;
   readonly onOpenChange?: (open: boolean) => void;
-  /**
-   * Whether Escape and an outside press close the dialog. Default `true`; a
-   * dialog doing uninterruptible work sets it `false`.
-   */
+
   readonly dismissible?: boolean;
   readonly children?: PartChildren;
 }
 
-/**
- * The dialog's state and its dismiss layer. It paints nothing itself: the surface
- * appears where {@link DialogContent} is mounted.
- */
 export const Dialog = ({
   open: openProp,
   defaultOpen = false,
@@ -162,7 +113,6 @@ export const Dialog = ({
   );
 };
 
-/** Opens the dialog it sits in. An ordinary button in every other respect. */
 export const DialogTrigger = ({ onClick, ...rest }: ButtonProps) => {
   const { open, setOpen } = useDialogContext();
   return (
@@ -177,7 +127,6 @@ export const DialogTrigger = ({ onClick, ...rest }: ButtonProps) => {
   );
 };
 
-/** Closes the dialog it sits in. An ordinary button in every other respect. */
 export const DialogClose = ({ onClick, ...rest }: ButtonProps) => {
   const { open, setOpen } = useDialogContext();
   return (
@@ -192,47 +141,21 @@ export const DialogClose = ({ onClick, ...rest }: ButtonProps) => {
   );
 };
 
-/** {@link DialogContent} props. */
 export interface DialogContentProps extends Omit<Props, "children"> {
-  /**
-   * Default `"md"` (480px).
-   *
-   * A value restored from storage that names no variant (a size a release
-   * dropped, or a `null`) paints the default width rather than an unmeasured
-   * box.
-   */
   readonly size?: DialogSize;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
-  /** The accessible name — required, because 0.11.0 has no `aria-labelledby`. */
+
   readonly label: string;
-  /**
-   * The modal role. Default `"dialog"`; a confirmation uses `"alertdialog"`,
-   * which the runtime maps to `Role::AlertDialog` and announces as a
-   * interruptive dialog.
-   */
+
   readonly role?: "dialog" | "alertdialog";
-  /** Renders the top-right close control. Default `true`. */
+
   readonly showClose?: boolean;
-  /**
-   * The native id focus should land on once the surface is mounted. Evaluated
-   * after `DialogContent` focuses itself, which is what lets a confirmation
-   * dialog put focus on Cancel instead of on the destructive action.
-   */
+
   readonly initialFocus?: () => number | null;
   readonly children?: PartChildren;
 }
 
-/**
- * The modal surface: a full-window veil plus the dialog box, rendered while the
- * dialog is open. Focus enters the surface, Tab stays inside it, Escape and an
- * outside press close it, and closing returns focus to whatever had it before.
- *
- * The veil and the box compile the `DIALOG_OVERLAY` / `DIALOG_CONTENT` recipes;
- * the size, the centring and the scroll are the component's own, merged after
- * the recipe, because the renderer owns the window measurement and the size is
- * a library variant shadcn expresses with responsive classes.
- */
 export const DialogContent = ({
   size: requestedSize = "md",
   label,
@@ -264,9 +187,7 @@ export const DialogContent = ({
     ref,
   );
   const contentId = content?.id;
-  // The surface's outline: the scroller plus the box's own close control. The
-  // Tab trap and the keys belong here rather than to the scroller, because the
-  // close control sits outside it and must stay a stop and a way out.
+
   const [outline, setOutline] = useState<PublicInstance | undefined>(undefined);
   const outlineRef = useCallback((next: PublicInstance | null) => {
     setOutline(next ?? undefined);
@@ -276,8 +197,6 @@ export const DialogContent = ({
 
   if (!presence.mounted) return null;
 
-  // One size for the box it paints: a stored name the table does not carry is
-  // the component's default rather than an `undefined` that drops the width.
   const size = dialogSize(requestedSize);
   const close = () => setOpen(false);
 
@@ -299,7 +218,6 @@ export const DialogContent = ({
         style={mergeStyles(
           overlaySurfaceStyle(DIALOG_OVERLAY, undefined, theme),
           {
-            // The house veil: the page's own background at 55%, not a blackout.
             backgroundColor: overlayVeilColor(theme),
             width: window.width,
             height: window.height,
@@ -311,9 +229,7 @@ export const DialogContent = ({
           },
         )}
       >
-        {/* The shield's box lives outside the surface's own scroller, so a
-            dialog scrolled down cannot carry the leaving guard off screen. The
-            close control lives here for the same reason. */}
+        {}
         <div
           ref={outlineRef}
           onMouseDownOutside={(event) => {
@@ -355,8 +271,6 @@ export const DialogContent = ({
             <DismissScope>{children}</DismissScope>
           </div>
           {showClose ? (
-            // The motion's travel is written to `top`, so the placement lives
-            // on the wrapper and the control rides it.
             <div
               style={{
                 position: "absolute",
@@ -384,18 +298,11 @@ export const DialogContent = ({
   );
 };
 
-/** The surface's heading block: title, description and any meta row. */
 export interface DialogHeaderProps extends Omit<Props, "children"> {
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
   readonly children?: PartChildren;
 }
 
-/**
- * The surface's heading block: title, description and any meta row. The
- * close-control clearance (`paddingRight`) is the library's own, because the
- * close control floats over the heading rather than sitting in the grid.
- */
 export const DialogHeader = ({
   children,
   className,
@@ -419,13 +326,10 @@ export const DialogHeader = ({
   );
 };
 
-/** {@link DialogTitle} props. */
 export interface DialogTitleProps extends Props {
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
 }
 
-/** The dialog's heading, announced as a level-2 heading. */
 export const DialogTitle = ({
   className,
   style,
@@ -445,13 +349,10 @@ export const DialogTitle = ({
   );
 };
 
-/** {@link DialogDescription} props. */
 export interface DialogDescriptionProps extends Props {
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
 }
 
-/** One paragraph of supporting copy under {@link DialogTitle}. */
 export const DialogDescription = ({
   className,
   style,
@@ -469,13 +370,10 @@ export const DialogDescription = ({
   );
 };
 
-/** {@link DialogFooter} props. */
 export interface DialogFooterProps extends Props {
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
 }
 
-/** The actions row, right-aligned. */
 export const DialogFooter = ({
   className,
   style,
@@ -493,7 +391,6 @@ export const DialogFooter = ({
   );
 };
 
-/** Every part of Dialog, so a misplaced sibling is named. */
 const dialogParts: ReadonlyArray<PartComponent> = [
   Dialog,
   DialogTrigger,
@@ -532,7 +429,6 @@ const dialogHeader: PartsContract = {
   hint: "Put DialogTitle and DialogDescription directly inside DialogHeader.",
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const dialogMeta = {
   name: "Dialogs",
   tier: 2,

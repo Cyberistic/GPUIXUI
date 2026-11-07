@@ -1,13 +1,3 @@
-/**
- * State-aware `style`, in the real GPUix renderer.
- *
- * The bug these guard: a consumer could only pass a fixed `StyleDesc`, so a
- * selected / checked / open / highlighted / invalid look meant forking the part.
- * Each case records the state the part hands to the callback and asserts the
- * callback's style reaches the rendered node — the callback must win over the
- * part's own base, exactly like an object style.
- */
-
 import { describe, expect, it } from "vitest";
 import {
   Accordion,

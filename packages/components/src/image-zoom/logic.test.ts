@@ -1,14 +1,3 @@
-/**
- * The image zoom's arithmetic, without a window.
- *
- * The rules a reader feels are all here: the picture covers its frame at rest,
- * the share of the frame under the pointer stays under the pointer as the
- * picture grows, an edge of the picture never leaves the frame, and a value the
- * component cannot paint falls back instead of reaching the runtime as `NaN`.
- * The renderer suite beside the component proves the same numbers are what the
- * runtime actually paints.
- */
-
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
@@ -25,10 +14,8 @@ import {
   type ZoomGeometry,
 } from "./logic.js";
 
-/** A 200 × 120 frame at the house magnification. */
 const frame = { x: 40, y: 20, width: 200, height: 120 };
 
-/** The geometry for an explicit frame and scale, the way the component builds it. */
 const geometry = (scale: number = imageZoomScale): ZoomGeometry =>
   zoomGeometry({
     width: Option.some(frame.width),
@@ -36,7 +23,6 @@ const geometry = (scale: number = imageZoomScale): ZoomGeometry =>
     scale: Option.some(scale),
   });
 
-/** Every box at a fraction of the frame's width and height. */
 const at = (across: number, down: number): ZoomBox =>
   zoomFollow(geometry(), frame, {
     x: frame.x + frame.width * across,
@@ -86,9 +72,6 @@ describe("the zoom's frame and magnification", () => {
   });
 
   it("holds the magnification to one and the ceiling", () => {
-    // Below one would shrink the picture out of its own frame, so it is no
-    // magnification at all; a huge factor turns the pan into a hunt for what
-    // moved, so the ceiling wins.
     expect(geometry(0.4).scale).toBe(1);
     expect(geometry(9).scale).toBe(imageZoomMaxScale);
     expect(geometry(Number.NaN).scale).toBe(imageZoomScale);
@@ -107,7 +90,6 @@ describe("the box the picture paints", () => {
   });
 
   it("keeps the pointed share of the frame under the pointer", () => {
-    // The centre of the frame is the centre of a 320 × 192 picture.
     expect(at(0.5, 0.5)).toEqual({
       left: -60,
       top: -36,

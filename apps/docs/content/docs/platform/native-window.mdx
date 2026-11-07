@@ -27,7 +27,7 @@ render(<App />, { title: "Mail", ...nativeWindowOptions(theme, currentPlatform) 
 
 | Prop | Type | Default | Consequence |
 | --- | --- | --- | --- |
-| `sidebar` | `ReactNode` | none | runs under the lights; without one the toolbar reserves their 78-point box |
+| `sidebar` | `ReactNode` | none | runs under the lights; without one the toolbar reserves their 90-point box |
 | `sidebarWidth` | `number` | `220` | the starting width; drag the sidebar's hairline or focus it and use ←/→/Home/End |
 | `sidebarMinWidth` / `sidebarMaxWidth` | `number` | `180` / `360` | the drag's bounds; equal bounds fix the width |
 | `onSidebarWidthChange` | `(width) => void` | none | reports each new width, to persist it |
@@ -62,7 +62,3 @@ const app = watchAppearance.pipe(
 ```
 
 - A sandboxed `.app` may be refused the global domain: `AppearanceReadError`.
-
-## Notes
-- The runtime reserves no titlebar and reports none; check the lights by eye on macOS.
-- An app's own capture shows neither the lights nor the blur.

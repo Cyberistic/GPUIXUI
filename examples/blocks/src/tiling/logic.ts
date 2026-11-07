@@ -1,6 +1,3 @@
-/**
- * The tiling desktop's pure logic: focus order and the decoded themes.
- */
 import {
   decodeOmarchyPalette,
   paletteToTokens,

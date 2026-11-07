@@ -1,25 +1,3 @@
-/**
- * Guards the fixture `date-picker-lifecycle` measures the shipped `DatePicker`
- * with.
- *
- * The probe asserts a focused cell after every key, so a table of iso strings
- * typed by hand is exactly the kind of claim that stays green while describing
- * the wrong week. Every route is re-derived here from `effect/DateTime` — the
- * key's own step, then the bounds' clamp — and the day labels are derived again
- * from `Intl` in UTC, so a mistyped month or a route that starts on the wrong
- * weekday fails by name. The month the probe pins is checked to be one where
- * both neighbouring months contain no selectable day, which is the premise the
- * "the month control refuses" check rests on.
- *
- * The bug the section case guards: the probe kept asserting the pre-fix
- * `DatePicker` — an empty picker anchoring on the month's first day and an arrow
- * delivered to a refused month control moving nothing — after the component
- * repaired both (`6b75d6e2`), so the window's evidence contradicted the shipped
- * behaviour and the section still published the defect as a measured limit.
- *
- * `node:fs` is deliberate, as in `registry.test.ts` and `button.test.ts`: this is
- * a check over the repository's own Markdown, not a runtime path.
- */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
@@ -49,7 +27,6 @@ const readme = readFileSync(
 );
 const probe = readFileSync(new URL("./scenarios.tsx", import.meta.url), "utf8");
 
-/** A parsed day; the fixture's iso strings are constants, so this cannot miss. */
 const day = (iso: string): DateTime.Utc => DateTime.makeUnsafe(iso);
 
 const iso = (value: DateTime.Utc): string => DateTime.formatIsoDateUtc(value);
@@ -57,7 +34,6 @@ const iso = (value: DateTime.Utc): string => DateTime.formatIsoDateUtc(value);
 const min = day(DATE_PICKER_MIN);
 const max = day(DATE_PICKER_MAX);
 
-/** The day one key asks for, before any bound is applied. */
 const STEP: Record<
   DatePickerKey,
   (value: DateTime.Utc, weekDay: number) => DateTime.Utc
@@ -66,8 +42,7 @@ const STEP: Record<
   left: (value) => DateTime.add({ days: -1 })(value),
   down: (value) => DateTime.add({ days: 7 })(value),
   up: (value) => DateTime.add({ days: -7 })(value),
-  // `weekStartsOn` defaults to Monday and Effect's `weekDay` is 1-based from
-  // Monday, so the two edges of the row are its Monday and its Sunday.
+
   home: (value, weekDay) => DateTime.add({ days: 1 - weekDay })(value),
   end: (value, weekDay) => DateTime.add({ days: 7 - weekDay })(value),
 };
@@ -75,7 +50,6 @@ const STEP: Record<
 const step = (from: string, key: DatePickerKey): DateTime.Utc =>
   STEP[key](day(from), DateTime.toPartsUtc(day(from)).weekDay);
 
-/** The day a move lands on: the key's step, clamped into the bounds. */
 const landed = (route: DatePickerRoute): string => {
   const wanted = step(route.from, route.key);
   if (DateTime.isLessThan(wanted, min)) return iso(min);
@@ -83,7 +57,6 @@ const landed = (route: DatePickerRoute): string => {
   return iso(wanted);
 };
 
-/** The English label the component's `formatDayLabel` prints. */
 const label = (value: string): string =>
   DateTime.format(day(value), {
     day: "numeric",
@@ -92,7 +65,6 @@ const label = (value: string): string =>
     locale: "en-US",
   });
 
-/** The `date-picker-lifecycle` section, without the headings after it. */
 const section = (): string => {
   const start = readme.indexOf("### `date-picker-lifecycle`");
   const end = readme.indexOf("\n### ", start + 1);
@@ -128,8 +100,7 @@ describe("the date-picker fixture", () => {
         `${route.caption}: ${route.to}`,
       );
     });
-    // The clamped rows are the ones that prove the bounds: 22 March + 7 is 29
-    // March, past the 27th, and a day past the last bound stays there.
+
     const clamped = Arr.filter(
       DATE_PICKER_ROUTES,
       (route) => iso(step(route.from, route.key)) !== route.to,
@@ -143,18 +114,15 @@ describe("the date-picker fixture", () => {
   it("pins a month whose neighbours hold no selectable day", () => {
     const month = DateTime.startOf("month")(day(DATE_PICKER_TODAY));
     expect(iso(month)).toBe("2026-03-01");
-    // Both bounds inside the month: browsing either way leaves the available
-    // range behind, which is the premise of the "control refuses" check.
+
     expect(DateTime.isGreaterThan(min, month)).toBe(true);
     expect(DateTime.isLessThan(max, DateTime.add({ months: 1 })(month))).toBe(
       true,
     );
-    // The unavailable control is in the painted grid (its last week starts on
-    // the 30th) and after the last bound.
+
     expect(iso(day(DATE_PICKER_UNAVAILABLE)) > DATE_PICKER_MAX).toBe(true);
     expect(DATE_PICKER_UNAVAILABLE.startsWith("2026-03-")).toBe(true);
-    // The move the refused next-month control's arrow must land on: one day on
-    // from the anchor, inside the bounds, so it is a selectable day.
+
     expect(DATE_PICKER_NAV_ARROW).toBe(
       iso(DateTime.add({ days: 1 })(day(DATE_PICKER_TODAY))),
     );
@@ -186,32 +154,26 @@ describe("the date-picker fixture", () => {
   });
 
   it("holds the probe to the table it asserts against", () => {
-    // The route is driven from the fixture, so a row cannot be one the window
-    // never receives.
     expect(probe).toContain("DATE_PICKER_ROUTES");
     expect(probe).toContain("datePickerCell(route.to)");
     expect(probe).toContain("formatDatePickerReadout");
-    // The bound controls the route's last rows rely on.
+
     expect(probe).toContain("DATE_PICKER_UNAVAILABLE");
     expect(probe).toContain("DATE_PICKER_MONTH_LABEL");
-    // The empty instance is a second mount, so its first-open anchor is
-    // measured rather than inherited from the driven picker.
+
     expect(probe).toContain("DATE_PICKER_EMPTY_TRIGGER");
     expect(probe).toContain("datePickerCell(DATE_PICKER_TODAY)");
     expect(probe).toContain("datePickerCell(DATE_PICKER_NAV_ARROW)");
   });
 
   it("refuses the anchor and the dead keyboard the component repaired", () => {
-    // The regression: both rows were true of the shipped picker before
-    // `6b75d6e2` and are false after it, so an assertion that puts either back
-    // reads as evidence for a defect the window no longer paints.
     expect(probe).not.toContain("month's first day");
     expect(probe).not.toContain("nowhere to go");
     expect(probe).not.toContain("DATE_PICKER_EMPTY_ANCHOR");
     const text = section().replace(/\s+/g, " ");
     expect(text).not.toContain("month's first day");
     expect(text).not.toContain("nowhere to go");
-    // The repaired contract is what the section teaches instead.
+
     expect(text).toContain("day it calls today");
     expect(text).toContain("nav row");
   });

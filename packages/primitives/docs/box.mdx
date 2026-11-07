@@ -36,8 +36,3 @@ import { Box, Text } from "@gpuixui/primitives";
 | `style` | `StyleDesc` | — | merged last, so it wins property by property |
 | `children` | `ReactNode` | — | content |
 | `testId` | `string` | — | stable locator |
-
-## Notes
-- No `role`, `tabIndex` or event props; compose a host element for semantics. The box itself is measurably yours (`ref`, `aria-id`, `onLayout`), so a measured region needs no wrapper — a wrapper would be the flex item, and a `grow`ing box inside it would have to repeat its own flex facts there.
-- No gradient prop; pass one through `style`.
-- One border style for every side; `dashed` is the only alternate.

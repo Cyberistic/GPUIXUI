@@ -81,8 +81,3 @@ A row box's name is content: a record restored without its title interpolates
 `Select ` and a saved label answers `""`. A blank or whitespace name reads as
 the documented `Select this row` rather than leaving the box unnamed — the same
 rule the header box follows (`src/behaviour/surface-a11y.test.tsx`).
-
-## Notes
-- A row box toggles one record; the header box toggles the whole visible set.
-- No `aria-checked`: state is announced through `aria-valuetext`.
-- A filter that hides a chosen record releases it; the row tab stop moves to the first painted row.

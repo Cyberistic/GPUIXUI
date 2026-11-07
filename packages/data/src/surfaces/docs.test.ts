@@ -1,27 +1,3 @@
-/**
- * The five surface pages' API tables, held to the props their types declare.
- *
- * The bug this guards: `key-value`, `stat-card`, `property-panel`,
- * `data-toolbar` and `advanced-filter` are the only pages a consumer reads for
- * these components, and nothing tied their tables to the interfaces. Measured
- * while writing this guard: every one of the five components' `className` was
- * undocumented, and **five nested shapes had no table at all** — a toolbar's
- * `ToolbarSearch` (so the only route to `debounceMs`, the behaviour the
- * component exists for, was the source), a key-value `KeyValueEntry`, a
- * statistic card's `StatTrend`, a property row and a filter's
- * `AdvancedFilterField`. A prop added to a type left the page teaching an older
- * API (a reader writes a prop the component ignores), and a row removed from a
- * table left the prop undocumented with every suite green.
- *
- * The reader is {@link undocumentedProps} — shared with the pages that
- * document a tree, an expandable row, a frozen grid and the windowed tree, so
- * there is one rule for the whole lane.
- *
- * `node:fs` is test-only, the shape `readme.test.ts` and the sibling
- * `columns/docs.test.ts` use: this checks the repository's Markdown from a
- * plain vitest suite.
- */
-
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
@@ -37,7 +13,6 @@ const readPage = (file: string): string =>
 const readSource = (file: string): string =>
   readFileSync(new URL(file, import.meta.url), "utf8");
 
-/** The page of each component, in the shape {@link undocumentedProps} reads. */
 const claims: ReadonlyArray<PageClaim> = [
   {
     page: "key-value.mdx",
@@ -94,7 +69,6 @@ const claims: ReadonlyArray<PageClaim> = [
   },
 ];
 
-/** The five shapes a caller writes by hand. */
 const nestedHeadings = [
   "KeyValueEntry",
   "StatTrend",
@@ -103,7 +77,6 @@ const nestedHeadings = [
   "AdvancedFilterField",
 ];
 
-/** The five components' own tables, which every page must carry. */
 const componentClaims = claims.filter(
   (claim) => !nestedHeadings.includes(claim.heading),
 );
@@ -116,8 +89,6 @@ describe("the surface pages' API tables", () => {
   });
 
   it("documents every field of every nested shape", () => {
-    // A list that stopped naming the nested shapes must not pass: each of the
-    // five is a shape a caller writes by hand.
     expect(nestedHeadings).toHaveLength(5);
     const nested = claims.filter((claim) =>
       nestedHeadings.includes(claim.heading),
@@ -127,8 +98,6 @@ describe("the surface pages' API tables", () => {
   });
 
   it("reads a real interface and a real table, so a silent reader cannot pass", () => {
-    // The premise both cases rest on: the reader finds the props a type
-    // declares, and the page's own rows.
     expect(
       declaredProps(readSource("./toolbar.tsx"), "ToolbarSearch"),
     ).toContain("debounceMs");

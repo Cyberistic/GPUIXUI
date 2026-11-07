@@ -1,20 +1,3 @@
-/**
- * The `menu-radio-lifecycle` probe: an exclusive-choice menu in a real window.
- *
- * A radio row's visible state is one check mark in a fixed leading slot, so a
- * renderer suite can read `aria-selected` and the mark's accessible name but
- * says nothing about whether the mark's **ink** reached the frame — the slot is
- * the same width marked or not, so no layout read can tell a checked row from an
- * unchecked one. The probe paints the shipped `DropdownMenu` with the shipped
- * radio rows and counts the theme's `primary` ink inside each row's own box: on
- * the row the group chose, and nowhere else; then it chooses another row and
- * reads the mark move. It also measures the two rules a radio row has that a
- * checkbox row does not: a choice closes the surface and reports once, and
- * choosing the row already chosen reports nothing.
- *
- * The view and the steps live here so the measurement is one module; the
- * registry and `liveProbeBodies` name it.
- */
 import { Duration, Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -46,16 +29,12 @@ import {
   type MenuRadioState,
 } from "./menu-radio.js";
 
-/** A press, the surface's entry fade and the dismissal it starts need a frame. */
 const SETTLE = Duration.millis(260);
 
-/** How long a poll waits for a transition, in 20ms samples. */
 const POLLS = 100;
 
-/** The capture a reader can look at. */
 const CHOSEN = "menu-radio";
 
-/** The probe's window: one exclusive-choice menu and its own readout. */
 export const MenuRadioProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -127,7 +106,6 @@ export const MenuRadioProbe = (): ReactNode => {
   );
 };
 
-/** Waits until `testId` paints, and reports whether it did. */
 const settlePainted = (
   ctx: Smoke.AsyncSmokeContext,
   testId: string,
@@ -145,7 +123,6 @@ const settlePainted = (
   return attempt(POLLS);
 };
 
-/** Waits until `testId` paints nothing, and reports whether it stopped. */
 const settleGone = (
   ctx: Smoke.AsyncSmokeContext,
   testId: string,
@@ -163,7 +140,6 @@ const settleGone = (
   return attempt(POLLS);
 };
 
-/** A painted box, as the runtime's layout report gives it. */
 interface RowBox {
   readonly x: number;
   readonly y: number;
@@ -171,7 +147,6 @@ interface RowBox {
   readonly height: number;
 }
 
-/** The painted box of `testId`, failing by name when the runtime omitted it. */
 const paintedBox = (
   ctx: Smoke.AsyncSmokeContext,
   testId: string,
@@ -183,7 +158,6 @@ const paintedBox = (
     );
   });
 
-/** A capture and the scale its logical points convert by. */
 const capture = (
   ctx: Smoke.AsyncSmokeContext,
   name: string,
@@ -202,12 +176,6 @@ const capture = (
     return { pixels, scale } as const;
   });
 
-/**
- * The `primary` ink inside each row's own box.
- *
- * One capture, one count per row: the slot a mark paints is inside its row, so
- * a mark on another row cannot read as this row's.
- */
 const countsByRow = (
   ctx: Smoke.AsyncSmokeContext,
   frame: Pixels.Pixels,
@@ -241,7 +209,6 @@ const countsByRow = (
     { concurrency: 1 },
   );
 
-/** How many pixels of `region` are the mark's ink. */
 const countMarkPixels = (region: Pixels.Pixels, ink: Pixels.Rgba): number =>
   Arr.reduce(
     Arr.range(0, Math.floor(region.data.length / 4) - 1),
@@ -257,7 +224,6 @@ const countMarkPixels = (region: Pixels.Pixels, ink: Pixels.Rgba): number =>
         : count,
   );
 
-/** The box of every choice, in menu order. */
 const rowBoxes = (
   ctx: Smoke.AsyncSmokeContext,
 ): Effect.Effect<
@@ -274,14 +240,12 @@ const rowBoxes = (
     { concurrency: 1 },
   );
 
-/** The index of the row whose box holds marks, or `-1` when none does. */
 export const markedRow = (counts: ReadonlyArray<number>): number =>
   Option.getOrElse(
     Arr.findFirstIndex(counts, (count) => count > 0),
     () => -1,
   );
 
-/** Waits until `testId` holds the native focus, and reports whether it did. */
 const settleFocused = (
   ctx: Smoke.AsyncSmokeContext,
   testId: string,
@@ -310,7 +274,6 @@ export const menuRadioSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       ),
     );
 
-    // 1. The menu starts closed on the first choice, and a press opens it.
     yield* ctx.expectEqual(
       "the menu starts closed on the first choice",
       yield* readout(),
@@ -329,7 +292,6 @@ export const menuRadioSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* Effect.sleep(SETTLE);
 
-    // 2. The mark is the primary ink, on the chosen row and nowhere else.
     const first = yield* capture(ctx, CHOSEN);
     const firstCounts = yield* countsByRow(
       ctx,
@@ -349,7 +311,6 @@ export const menuRadioSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       0,
     );
 
-    // 3. Choosing another row moves the mark, reports once and closes.
     yield* ctx.host.key("escape");
     yield* ctx.expectEqual(
       "Escape dismisses the surface",
@@ -387,7 +348,6 @@ export const menuRadioSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 4. The next open paints the mark on the row now chosen.
     yield* ctx.host.click(MENU_RADIO_IDS.trigger);
     yield* ctx.expectEqual(
       "the surface opens on the new value",
@@ -420,7 +380,6 @@ export const menuRadioSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       0,
     );
 
-    // 5. Choosing the row already chosen reports nothing.
     yield* ctx.host.key("escape");
     yield* ctx.expectEqual(
       "Escape dismisses the surface a second time",

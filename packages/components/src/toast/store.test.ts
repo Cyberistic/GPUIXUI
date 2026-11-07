@@ -1,24 +1,3 @@
-/**
- * The toast store's queue, cancellation and auto-dismiss, under `TestClock`.
- *
- * The bug this guards: a toast dismissed before its timer elapsed left its
- * timer running, and the timer then dismissed whatever toast held the next id.
- * Ids are monotonic here (so an id is never reused) and `dismiss` cancels its
- * timer, so the queue, the wrap-around of `max`, and the deadline of each
- * toast must all be observable in the assertions below.
- *
- * It also guards the timing contract: pausing stores the *remaining* time, so a
- * toast paused at 2s of 5s resumes with 3s left — not a fresh 5s, and not an
- * immediate dismissal.
- *
- * And it guards the queue's bound: `max` is often arithmetic over a measured
- * width, so a measurement that never arrived reaches the store as `NaN` (or as
- * `Infinity` from a caller meaning "no limit"). Both made the overflow
- * arithmetic non-finite, which expires nothing and drops nothing — the queue
- * grew without bound and every card kept a timer. A count the store cannot
- * measure reads as the default now.
- */
-
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as Arr from "effect/Array";
@@ -32,13 +11,11 @@ import { layer, ToastStore, type ToastStoreOptions } from "./store.js";
 const ids = (toasts: ReadonlyArray<{ readonly id: string }>) =>
   Arr.map(toasts, (toast) => toast.id);
 
-/** Run `body` against a fresh store; the layer's scope is the test's scope. */
 const withStore = (
   body: Effect.Effect<void, Schema.SchemaError, ToastStore>,
   options?: ToastStoreOptions,
 ) => body.pipe(Effect.provide(layer(options)));
 
-/** A toast that never auto-dismisses, so a test controls its lifetime. */
 const persistent = { title: "Sticky", duration: Duration.infinity } as const;
 
 describe("ToastStore", () => {
@@ -231,9 +208,6 @@ describe("ToastStore", () => {
         yield* store.push({ title: "Gone soon" });
         yield* store.dismiss("1");
 
-        // The next toast gets the next id, at a later clock time. If ids were
-        // reused — or if dismissing had left the first timer alive — this
-        // toast would be dismissed when that first deadline arrived.
         yield* TestClock.adjust(Duration.seconds(3));
         yield* store.push({ title: "Survivor" });
         expect(ids(yield* store.toasts)).toEqual(["2"]);
@@ -253,8 +227,6 @@ describe("ToastStore", () => {
         const store = yield* ToastStore;
         yield* store.push({ title: "Kept", duration: Duration.infinity });
 
-        // `match` keeps the type of the rejection as a value, so the test's
-        // own failure channel stays the store's.
         const rejection = yield* store.push({ title: "" }).pipe(
           Effect.match({
             onFailure: (error) => error,
@@ -273,8 +245,6 @@ describe("ToastStore", () => {
       Effect.gen(function* () {
         const store = yield* ToastStore;
 
-        // One fiber, so there is no subscription race: the tap pushes inside the
-        // stream's own pull chain, and the next pull must deliver the update.
         const seen = yield* store.changes.pipe(
           Stream.tap((toasts) =>
             Arr.length(toasts) === 0 ? store.push(persistent) : Effect.void,

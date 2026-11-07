@@ -1,16 +1,3 @@
-/**
- * TypingText in the real GPUix renderer.
- *
- * The bugs these guard: a string that paints whole instead of a character at a
- * time; a reveal that restarts because the parent re-rendered; a changed string
- * that keeps the previous count and flashes the old progress; a reveal that
- * still waits under the reduced preference; a completion callback that runs
- * more than once; and a caret that is never dropped once the text is complete.
- *
- * The reveal is real time, so each claim polls (`waitFor`) rather than sleeping
- * a fixed span; the "not yet" half is a synchronous read before any timer runs.
- */
-
 import { describe, expect, it, vi } from "vitest";
 import {
   a11yNodes,
@@ -21,11 +8,9 @@ import { darkTheme, textStyle } from "@gpuixui/components/authoring";
 import { MotionProvider } from "@gpuixui/components/motion";
 import { TypingText } from "../typing-text.js";
 
-/** Every painted string, joined: the reveal at the frame just painted. */
 const painted = (page: ReturnType<typeof renderComponent>): string =>
   page.renderer.getAllText().join("");
 
-/** How many children the root host paints: the text, plus a caret while typing. */
 const parts = (page: ReturnType<typeof renderComponent>): number =>
   page.renderer.findByTestId("typing")?.children.length ?? 0;
 
@@ -35,10 +20,8 @@ describe("TypingText", () => {
       <TypingText testId="typing" text="Ship it" speed={30} />,
     );
     try {
-      // The first character arrives on a timer, so nothing is painted yet.
       expect(painted(page)).not.toBe("Ship it");
-      // The accessible name is the whole string immediately: assistive tech is
-      // never fed a partial word.
+
       expect(a11yNodes(page.renderer).map((node) => node.name)).toContain(
         "Ship it",
       );
@@ -74,10 +57,7 @@ describe("TypingText", () => {
       );
       expect(painted(page)).toBe("");
       await waitFor(() => expect(painted(page)).toBe("Second"));
-      // The completion is a passive effect, so it lands in the flush after the
-      // paint the poll above can already read. Waiting on the callback is the
-      // claim; asserting it straight after the paint raced the effect and made
-      // a full-suite run fail once in a busy pass (measured 2026-10-22).
+
       await waitFor(() => expect(complete).toHaveBeenCalledTimes(2));
     } finally {
       page.unmount();
@@ -114,27 +94,17 @@ describe("TypingText", () => {
   });
 
   it("paints a caret for a stored role the type scale does not carry", () => {
-    // The bug guarded: `caretStyle` indexed `theme.typography[role]` raw while
-    // the string beside it read the same prop through `textStyle`, so a role
-    // restored from storage under a name this release does not ship left the
-    // lookup with no step to read: measured with `caret` on, the whole surface
-    // failed to mount (no string name, no caret) where the text alone had
-    // always painted through the seam.
     const page = renderComponent(
       <TypingText
         testId="typing"
         text="Hi"
         speed={30}
         caret
-        // A store keeps the name it wrote; this release does not declare it.
         // @ts-expect-error — the value a saved role actually carries
         role="banner"
       />,
     );
     try {
-      // The whole surface was down at HEAD, not only the caret: the throw
-      // happened while the component rendered, so not even the string's name
-      // reached the tree.
       expect(a11yNodes(page.renderer).map((node) => node.name)).toContain("Hi");
       const caret = page.renderer.getElement(
         page.renderer.findByTestId("typing")?.children[1] ?? -1,
@@ -147,9 +117,6 @@ describe("TypingText", () => {
   });
 
   it("paints nothing, and throws nothing, for a stored string that was not text", () => {
-    // The bug guarded: a string saved with a layout writes `null` for a value
-    // it never carried, and `characters` handed that to `Arr.fromIterable`,
-    // which threw `self is not iterable` out of the render.
     const page = renderComponent(
       <TypingText testId="typing" text={null as unknown as string} speed={0} />,
     );

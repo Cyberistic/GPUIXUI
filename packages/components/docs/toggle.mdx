@@ -48,22 +48,3 @@ button contract; a held key does not repeat the activation.
 | `className` | `string` | — |
 | `testId` | `string` | — |
 | `ref` / `aria-id` / `onLayout` | host props | — |
-
-## Accessibility
-
-- The toggle is a `button` node. 0.11.0 publishes no `aria-pressed`, so the
-  pressed state is announced through `aria-valuetext` ("pressed"/"not pressed")
-  — the only state channel the runtime carries.
-- An icon-only toggle publishes no text, so `label` is its accessible name; an
-  icon with no visible words is otherwise an unnamed button.
-- `loading` shows a spinner and refuses activation but keeps the tab stop, and
-  the busy label is announced as the help.
-
-## Notes
-- **No `aria-pressed`**: a screen reader hears a button with a value, not a
-  pressed button. Keep the state in visible copy where it matters.
-- The pressed face is the theme's `accent` roles; a custom theme that does not
-  distinguish `accent` from `background` gets no pressed cue the contract can
-  measure.
-- A busy toggle (`loading`) is not the same as `disabled`: it stays focusable
-  so the reader can hear why it cannot act.

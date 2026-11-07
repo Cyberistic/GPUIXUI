@@ -1,13 +1,3 @@
-/**
- * Guards the header widths the `header-menu-lifecycle` probe asserts against.
- *
- * The probe compares an overlay's painted box with the trigger's before and
- * after a wheel. Those two numbers are the fixture's arithmetic, not a value
- * read back from the paint it is measuring: if the header's widths changed, the
- * probe would still compare a stale expectation with a fresh measurement and
- * blame the runtime. A column hidden *before* the trigger has to move it and one
- * hidden *after* it must not.
- */
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";

@@ -1,14 +1,3 @@
-/**
- * The property record: the rows that describe one object, and the one-row edit.
- *
- * The bugs these guard:
- *
- * - an edit that changes more than the row it names, so a panel corrupts its
- *   neighbours;
- * - an edit that mutates the source record, so two panels reading the same
- *   object see each other's edits before a callback runs.
- */
-
 import { describe, expect, it } from "vitest";
 import { propertyRecord, setProperty, type PropertyRow } from "./logic.js";
 

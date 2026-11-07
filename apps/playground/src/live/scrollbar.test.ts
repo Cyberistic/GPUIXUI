@@ -1,19 +1,3 @@
-/**
- * Holds the arithmetic the `scrollbar-thumb` probe reads a window with, and the
- * claims its README section prints.
- *
- * The thumb is the runtime's own paint: the binding sizes it from the track and
- * the content, positions it from the offset and rounds both caps, so every
- * number a plan leans on — how long a thumb is, where it starts, whether one is
- * painted at all — is either arithmetic here or a crop of the frame. The window
- * measured **25** px tall for a rule that predicts 26, which is why the section
- * prints the rule and the capture's one-pixel read side by side rather than
- * pretending they are the same number.
- *
- * `node:fs` is deliberate, as in `flex-sizing.test.ts` and `registry.test.ts`:
- * this reads the repository's own probe, painter and Markdown, never a runtime
- * path.
- */
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -62,7 +46,6 @@ const scrollArea = readFileSync(
   "utf8",
 );
 
-/** The section's prose on one line, so a wrapped sentence still reads whole. */
 const flat = readme.replace(/\s+/g, " ");
 
 const track = SCROLLBAR_VIEWPORT.height;
@@ -75,16 +58,13 @@ describe("the thumb the runtime paints", () => {
     expect(thumbOf(track, SCROLLBAR_WIDE.content, 0)).toEqual(
       Option.some({ start: 0, length: 51 }),
     );
-    // Twice the content is roughly half the thumb: a length is a share, not a
-    // bar the runtime draws at a fixed height.
+
     expect(
       Option.getOrUndefined(thumbOf(track, 2_000, 0))?.length,
     ).toBeLessThan(Option.getOrUndefined(thumbOf(track, 500, 0))?.length ?? 0);
   });
 
   it("puts the same share on the horizontal axis, measured by width", () => {
-    // One rule, two coordinates: the horizontal case's track is the viewport's
-    // width, so the thumb is longer than the vertical case's at the same content.
     expect(trackOf("horizontal")).toBe(SCROLLBAR_VIEWPORT.width);
     expect(trackOf("vertical")).toBe(SCROLLBAR_VIEWPORT.height);
     expect(
@@ -103,7 +83,7 @@ describe("the thumb the runtime paints", () => {
     expect(thumbOf(track, SCROLLBAR_FLOOR_CONTENT, 0)).toEqual(
       Option.some({ start: 0, length: SCROLLBAR_MIN_THUMB }),
     );
-    // A track shorter than the minimum cannot paint a longer thumb than itself.
+
     expect(thumbOf(10, SCROLLBAR_FLOOR_CONTENT, 0)).toEqual(
       Option.some({ start: 0, length: 10 }),
     );
@@ -121,14 +101,12 @@ describe("the thumb the runtime paints", () => {
       ),
     );
     expect(end).toEqual({ start: 134, length: 26 });
-    // The end of the travel is the end of the track: a thumb that stopped a
-    // point early would leave a sliver of travel the reader cannot reach.
+
     expect((end?.start ?? 0) + (end?.length ?? 0)).toBe(track);
     expect(thumbOf(track, SCROLLBAR_TINTED.content, -100_000)).toEqual(
       Option.some({ start: 134, length: 26 }),
     );
-    // The other direction clamps too, so a rubber-banded offset cannot lift the
-    // thumb out of its track.
+
     expect(thumbOf(track, SCROLLBAR_TINTED.content, 50)).toEqual(
       Option.some({ start: 0, length: 26 }),
     );
@@ -177,8 +155,7 @@ describe("the scrollbar case table", () => {
         box: { x: 254, y: 0, width: SCROLLBAR_DEFAULT_WIDTH, height: 26 },
       },
     ]);
-    // The control is absent on purpose, and the tinted list is the subset the
-    // confinement read can count a colour for.
+
     expect(Arr.map(SCROLLBAR_THUMBS, (thumb) => thumb.id)).not.toContain(
       SCROLLBAR_SHORT.id,
     );
@@ -188,9 +165,7 @@ describe("the scrollbar case table", () => {
       SCROLLBAR_IDS.floor,
       SCROLLBAR_IDS.horizontal,
     ]);
-    // The transposition is in the table, not in the reader: the horizontal
-    // thumb is as long across as the width rule says and its thickness is its
-    // height, laid along the bottom edge (150 + 10 = the 160 px track).
+
     const horizontal = Arr.findFirst(
       SCROLLBAR_THUMBS,
       (thumb) => thumb.id === SCROLLBAR_IDS.horizontal,
@@ -209,8 +184,7 @@ describe("the scrollbar case table", () => {
       SCROLLBAR_IDS.horizontal,
       SCROLLBAR_IDS.default,
     ]);
-    // A case whose content fits must be the only one the rule answers nothing
-    // for; a table that quietly gained a second would shrink the thumb list.
+
     expect(
       Arr.filter(SCROLLBAR_VIEWPORTS, (scroller) =>
         Option.isNone(thumbOf(track, scroller.content, 0)),
@@ -301,10 +275,6 @@ describe("the scrollbar-thumb probe's record", () => {
   });
 
   it("prints the lengths the capture read, not only the rule's", () => {
-    // The rounded caps hide one point of a solid-colour read, so the section
-    // prints the rule and the read together; a page that printed the rule alone
-    // would claim a measurement it does not have. The horizontal thumb's length
-    // is its width, so the table is read along each thumb's own axis.
     const rules = Arr.map(SCROLLBAR_THUMBS, (thumb) =>
       thumb.axis === "horizontal" ? thumb.box.width : thumb.box.height,
     );
@@ -332,14 +302,12 @@ describe("the scrollbar-thumb probe's record", () => {
     expect(flat).toContain(
       `whose bottom reads **${bottom}** of the **${track}** px track`,
     );
-    // The other stop, and the control's absence, are the two halves a reader
-    // checks first.
+
     expect(flat).toContain(
       `One \`-${SCROLLBAR_SCROLLED_BY}\` wheel moves the offset to \`-${SCROLLBAR_SCROLLED_BY}\` and the start to 64`,
     );
     expect(flat).toContain("`scrollbar-short` paints none of its tint");
-    // The sideways row: the rule transposes, and the read is half a point in
-    // because the cap rounds.
+
     const sideways = Option.getOrUndefined(SCROLLBAR_HORIZONTAL_STOP);
     expect(sideways).toBeDefined();
     const start = sideways?.thumb.start ?? 0;
@@ -377,16 +345,14 @@ describe("the probe asks the questions the section answers", () => {
       );
       expect(field).toBeDefined();
     });
-    // Both knobs go through `Some`/`None`, so the default case really is the
-    // library's own paint rather than an empty string or a zero width.
+
     expect(liveScenarios).toContain(
       "scrollbarColor={Option.getOrUndefined(scroller.tint)}",
     );
     expect(liveScenarios).toContain(
       "scrollbarWidth={Option.getOrUndefined(scroller.width)}",
     );
-    // The axis is the case's, so the horizontal scroller really is mounted as
-    // one; and its content is a strip rather than a column.
+
     expect(liveScenarios).toContain("axis={scroller.axis}");
     expect(liveScenarios).toContain(
       'scroller.axis === "horizontal"\n            ? {',
@@ -400,9 +366,6 @@ describe("the probe asks the questions the section answers", () => {
   });
 
   it("reads the paint the shipped ScrollArea hands the runtime", () => {
-    // The fixture's default case claims the theme's `scrollbar` role and the
-    // platform's thickness. Both are the component's defaults, not the probe's:
-    // it passes no knob for that case, so the painter is what decides.
     expect(scrollArea).toContain(
       'scrollbarColor: scrollbarColor ?? colorRole(theme, "scrollbar")',
     );

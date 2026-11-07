@@ -1,9 +1,3 @@
-/**
- * The suite's human and machine-readable output.
- *
- * `reportJson` goes through `Schema.fromJsonString`, so the report is validated
- * on the way out and can be decoded back with the same schema.
- */
 import * as Arr from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as Schema from "effect/Schema";
@@ -15,7 +9,6 @@ import {
   type ScenarioResult,
 } from "./smoke.js";
 
-/** A scenario's verdict, from the worst of its checks. */
 type Verdict = "ok" | "FAIL" | "ERROR";
 
 const severity = (outcome: CheckOutcome): Verdict =>
@@ -65,9 +58,7 @@ const summary = (report: SmokeReport): string => {
     ),
     " ",
   );
-  // A scoped run (`--only`) says so in words: `unverified` beside a green probe
-  // reads as a failure otherwise, while it means the selection did not cover
-  // every probe the capability has.
+
   const scoped = Arr.some(
     report.capabilities,
     (entry) => entry.status === "unverified",
@@ -77,7 +68,6 @@ const summary = (report: SmokeReport): string => {
   return `${ok}/${total} scenarios passed · capabilities: ${capabilities}${scoped}`;
 };
 
-/** Renders `report` as a human-readable table plus failure detail. */
 export const formatReport = (report: SmokeReport): string =>
   Arr.join(
     Arr.appendAll(
@@ -95,11 +85,9 @@ export const formatReport = (report: SmokeReport): string =>
     "\n",
   );
 
-/** Encodes `report` as JSON through its schema (EF-19). */
 export const reportJson = (report: SmokeReport): string =>
   Schema.encodeSync(Schema.fromJsonString(SmokeReport))(report);
 
-/** True when at least one scenario ran and every scenario passed. */
 export const passed = (report: SmokeReport): boolean =>
   Arr.match(report.scenarios, {
     onEmpty: () => false,
@@ -107,7 +95,6 @@ export const passed = (report: SmokeReport): boolean =>
       Arr.every(scenarios, (scenario) => worst(scenario.checks) === "ok"),
   });
 
-/** The process exit code for `report`: `0` when everything passed, else `1`. */
 export const exitCode = (report: SmokeReport): 0 | 1 =>
   Bool.match(passed(report), {
     onFalse: () => 1 as const,

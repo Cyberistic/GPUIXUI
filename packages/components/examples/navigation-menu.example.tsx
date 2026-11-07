@@ -1,11 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Navigation menu example: a product nav with two panels.
- *
- * One panel is open at a time. Links are buttons because 0.11.0 has no anchor or
- * href; `onSelect` is where the example would navigate.
- */
-
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -15,7 +8,6 @@ import {
   NavigationMenuTrigger,
 } from "../src/navigation-menu.js";
 
-/** A two-item navigation with real panels. */
 export const NavigationMenuExample = () => (
   <div style={{ padding: 24 }}>
     <NavigationMenu label="Product">

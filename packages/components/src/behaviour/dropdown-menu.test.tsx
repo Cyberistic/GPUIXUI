@@ -1,37 +1,3 @@
-/**
- * DropdownMenu behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: the menu opening without a `menu` role; an arrow key that
- * highlights a disabled row (so Enter does nothing while the highlight claims it
- * would); Enter firing twice or not closing; focus not returning to the trigger
- * after Enter or Escape; a press on the open trigger flickering the menu back open;
- * a checkbox row toggling the wrong way; a held Enter toggling a checkbox row
- * back again on each repeat of the key; a destructive row painted in the
- * solid `destructive` fill role, which no contrast pair measures as text; a
- * checked row's mark painted in the `accent` wash role, which is 1.26:1 on the
- * light popover and 1.14:1 on the dark one, so a toggle that was on said
- * nothing; and a disabled row dimmed with a 50% fade, which composites its
- * label into its own fill instead of painting the measured `disabledForeground`
- * role.
- *
- * Keyboard-opening regression: a menu opened from the trigger landed on the
- * surface with nothing highlighted, so Enter ran nothing and ArrowDown/ArrowUp on
- * the closed trigger did nothing. A caller `ref` on the trigger was discarded in
- * favour of the internal one.
- *
- * Type-ahead regression: typing a prefix selected nothing, a disabled row could
- * win the match, a repeated letter did not advance, the buffer never expired so a
- * later search inherited the old prefix, and Shift+R never matched `Rename`.
- *
- * Submenu regression: a pointer press on a submenu row counted as an outside
- * press on the parent surface, so both levels closed before the click landed and
- * `onSelect` never ran. Only the keyboard path was covered.
- *
- * Leaving-surface regression: the exit tween stayed hit-testable, so a press
- * inside the surface's own box was swallowed instead of reaching the control
- * underneath.
- */
-
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import type { PublicInstance } from "@gpuix/react";
@@ -77,7 +43,6 @@ import {
   DropdownMenuTrigger,
 } from "../dropdown-menu.js";
 
-/** A file-actions menu with a disabled row and a checkbox row. */
 const FileActions = ({
   onSelect,
   onCheckedChange,
@@ -132,7 +97,6 @@ const FileActions = ({
   );
 };
 
-/** A trigger near the window centre, where a centred menu has room to sit. */
 const CentredActions = () => (
   <div style={{ paddingLeft: 540, paddingTop: 100 }}>
     <DropdownMenu>
@@ -146,7 +110,6 @@ const CentredActions = () => (
   </div>
 );
 
-/** A trigger at the bottom of the window, where a downside menu cannot fit. */
 const LowActions = () => (
   <div style={{ display: "flex", flexDirection: "column", height: 780 }}>
     <div style={{ flexGrow: 1 }} />
@@ -161,7 +124,6 @@ const LowActions = () => (
   </div>
 );
 
-/** A menu whose labels share a first letter, for the type-ahead cycle. */
 const Searchable = ({
   onSelect,
 }: {
@@ -190,7 +152,6 @@ const Searchable = ({
   </div>
 );
 
-/** A menu with two submenus and an outside target. */
 const WithSubmenus = ({
   onSelect,
 }: {
@@ -245,7 +206,6 @@ const WithSubmenus = ({
   </div>
 );
 
-/** Focus the trigger, as Tab would. */
 const focusTrigger = (root: ComponentTestRoot): void => {
   root.renderer.focusElement(root.renderer.findByTestId("trigger")?.id ?? -1);
 };
@@ -272,8 +232,6 @@ describe("DropdownMenu", () => {
       -1,
     );
 
-    // A disabled control keeps its key handler observable, so the trigger must
-    // refuse every open path itself rather than relying on the press being gone.
     focusTrigger(menu);
     menu.renderer.simulateKeystrokes("down");
     menu.renderer.simulateKeystrokes("enter");
@@ -337,7 +295,7 @@ describe("DropdownMenu", () => {
     clickCentreOf(menu, "trigger");
 
     expect(menu.renderer.findByTestId("menu")?.customProps?.role).toBe("menu");
-    // 0.11.0 has no `aria-haspopup`; `aria-expanded` is the whole announcement.
+
     expect(menu.renderer.findByTestId("trigger")?.customProps).toMatchObject({
       "aria-expanded": true,
     });
@@ -454,8 +412,7 @@ describe("DropdownMenu", () => {
         const style = menu.renderer.findByTestId("duplicate")?.style;
 
         expect(style?.color).toBe(theme.colors.disabledForeground);
-        // A 50% fade composited this label into the row's own fill, which a
-        // high-contrast theme can no longer read at its 3:1.
+
         expect(style?.opacity).not.toBe(0.5);
         const ratio = contrastRatio(
           theme.colors.disabledForeground,
@@ -484,8 +441,6 @@ describe("DropdownMenu", () => {
       expect(menu.renderer.findByTestId("menu")).toBeUndefined(),
     );
 
-    // The real runtime delivers the press and the next click in separate tasks,
-    // so the one-gesture dismiss mark has been cleared by now.
     await Promise.resolve();
 
     clickCentreOf(menu, "trigger");
@@ -499,24 +454,16 @@ describe("DropdownMenu", () => {
   });
 
   it("closes on a second press of the trigger, and not by reopening", async () => {
-    // The bug: the trigger reopened the menu instead of closing it. The guard
-    // against the dismissing press's own click was cleared by a microtask, which
-    // runs *before* that click — so the trigger read "no dismissal", saw the menu
-    // closed, and toggled it back open. The dismiss layer now records the point
-    // the press landed on, so the click that belongs to that press is recognised
-    // as the same gesture and closes instead of toggling.
     const menu = renderComponent(<FileActions onSelect={vi.fn()} />);
 
     clickCentreOf(menu, "trigger");
     expect(menu.renderer.findByTestId("menu")).toBeDefined();
 
-    // The second press is the same point, one gesture later.
     clickCentreOf(menu, "trigger");
     await waitFor(() =>
       expect(menu.renderer.findByTestId("menu")).toBeUndefined(),
     );
 
-    // And a third press opens it again: the record expires with its gesture.
     clickCentreOf(menu, "trigger");
     expect(menu.renderer.findByTestId("menu")).toBeDefined();
 
@@ -557,9 +504,6 @@ describe("DropdownMenu", () => {
     const surface = requireBounds(menu, "menu");
     menu.renderer.simulateKeystrokes("escape");
 
-    // The surface is still mounted for its exit tween at its own coordinates.
-    // Its rows keep their own hitboxes, so the seam's shield covers the box:
-    // the ghost row cannot run and the page underneath stays unpressed.
     expect(menu.renderer.findByTestId("menu")).toBeDefined();
     menu.renderer.nativeSimulateClick(
       surface.x + surface.width / 2,
@@ -570,7 +514,7 @@ describe("DropdownMenu", () => {
     await waitFor(() =>
       expect(menu.renderer.findByTestId("menu")).toBeUndefined(),
     );
-    // Once the exit window has elapsed the page answers again.
+
     menu.renderer.nativeSimulateClick(
       surface.x + surface.width / 2,
       surface.y + surface.height / 2,
@@ -597,7 +541,7 @@ describe("DropdownMenu", () => {
     clickCentreOf(menu, "hidden");
 
     expect(onCheckedChange).toHaveBeenCalledWith(true);
-    // The menu stays open after a checkbox toggle, so the row is still there.
+
     expect(
       menu.renderer.findByTestId("hidden")?.customProps?.["aria-selected"],
     ).toBe(true);
@@ -609,9 +553,6 @@ describe("DropdownMenu", () => {
   });
 
   it("paints the checked mark in a role the mark floor measures", () => {
-    // The bug: the check painted `colors.accent`, a wash role — 1.26:1 on the
-    // light popover and 1.14:1 on the dark one, so a menu toggle was on with
-    // nothing on screen saying so.
     const menu = renderComponent(<FileActions onSelect={vi.fn()} />, "light");
     clickCentreOf(menu, "trigger");
     clickCentreOf(menu, "hidden");
@@ -631,7 +572,7 @@ describe("DropdownMenu", () => {
           ) ?? 0) >= contrastFloors.boundary,
       ),
     ).toBe(true);
-    // The premise: the wash it used to paint cannot be found on the surface.
+
     expect(
       contrastRatio(lightTheme.colors.accent, lightTheme.colors.popover) ?? 0,
     ).toBeLessThan(contrastFloors.boundary);
@@ -640,15 +581,6 @@ describe("DropdownMenu", () => {
   });
 
   it("paints no emphasis bar on a highlighted row, in any style", () => {
-    // The bug this guards now: the row used to wear a 2px emphasis bar on its
-    // left edge, beside the chevron or the check that already says what the row
-    // is. It read as a second, unrelated mark — and it could not read as a cue
-    // at all: the role it painted was a wash, under the 3:1 mark floor on the
-    // `hover` wash in all eighteen shipped, high-contrast, platform and authored
-    // styles, and 1.000:1 on the Luna dark look's own row.
-    //
-    // A highlighted row is its wash. The measurement below is the reason the
-    // bar was removed rather than repainted.
     const styles = [
       getTheme("light"),
       getTheme("dark"),
@@ -673,11 +605,9 @@ describe("DropdownMenu", () => {
 
       menu.unmount();
 
-      // No left edge at all: not a width, not a colour.
       expect(row?.borderLeftWidth ?? 0).toBe(0);
       expect(row?.borderColor).toBeUndefined();
-      // The premise: a bar painted from the wash role cannot be read on the
-      // wash, which is why the row is its wash alone.
+
       expect(
         contrastRatio(theme.colors.accent, theme.colors.hover) ?? 0,
       ).toBeLessThan(contrastFloorsFor(theme).boundary);
@@ -685,13 +615,6 @@ describe("DropdownMenu", () => {
   });
 
   it("paints a row press the highlight it replaces can show", () => {
-    // The bug: a row's press repainted the raw `active` role, which in
-    // Light · macOS sits 1.037:1 from the `hover` wash the highlighted row is
-    // already wearing — under the 1.05:1 perceptibility floor — so the row a
-    // reader pressed did not answer. The wash is derived against the one it
-    // replaces, the way a list row's press is derived against `accent`. The
-    // palette is macOS's under the pointer interaction: AppKit's own menu
-    // highlights in the accent instead (plan 724, the case below).
     const macOSLight = extendTheme(platformTheme(lightTheme, "darwin"), {
       interaction: "pointer",
     });
@@ -719,7 +642,7 @@ describe("DropdownMenu", () => {
       contrastRatio(pressWash(macOSLight, "hover"), macOSLight.colors.hover) ??
         0,
     ).toBeGreaterThanOrEqual(decorativeFloor);
-    // The premise: the role the row used to paint cannot be seen on its hover.
+
     expect(
       contrastRatio(macOSLight.colors.active, macOSLight.colors.hover) ?? 0,
     ).toBeLessThan(decorativeFloor);
@@ -748,7 +671,6 @@ describe("DropdownMenu", () => {
     );
     clickCentreOf(menu, "trigger");
 
-    // Rename → (skips the disabled Duplicate) → Show hidden.
     menu.renderer.simulateKeystrokes("down down");
     expect(focusedTestId(menu)).toEqual(Option.some("hidden"));
 
@@ -756,7 +678,6 @@ describe("DropdownMenu", () => {
     expect(row).toBeDefined();
     if (row === undefined) return;
 
-    // One keypress, then the platform's repeats of the same held key.
     menu.renderer.nativeSimulateKeyDown(row.id, "enter");
     menu.renderer.nativeSimulateKeyDown(row.id, "enter", true);
     menu.renderer.flush();
@@ -771,14 +692,6 @@ describe("DropdownMenu", () => {
   });
 
   it("keeps a stored tone name it does not carry paintable", () => {
-    // The bug guarded: `menuRowStyle` matched the tone exhaustively over the two
-    // names this release declares, and a row is built from a record as often as
-    // from JSX (a command palette's action list, a saved toolbar's menu), so a
-    // tone saved under another vocabulary's word for the same idea (`"danger"`,
-    // the alert's name) — or the `null` a store writes for a field it never set
-    // — fell through `Match.exhaustive`, which throws out of the render and
-    // takes the whole menu with it. A name the union does not carry paints the
-    // documented `default` row and still runs its action.
     const onSelect = vi.fn();
     const menu = renderComponent(
       <DropdownMenu>
@@ -810,8 +723,6 @@ describe("DropdownMenu", () => {
     try {
       clickCentreOf(menu, "trigger");
 
-      // Both stored shapes paint the documented neutral row: the popover's
-      // foreground, where the destructive role would have painted them red.
       Arr.forEach(["delete", "delete-null"], (id) => {
         const row = menu.renderer.findByTestId(id);
         expect(row, id).toBeDefined();
@@ -820,11 +731,11 @@ describe("DropdownMenu", () => {
           darkTheme.colors.destructiveSoftForeground,
         );
       });
-      // The negative control beside it keeps the emphasis it was given.
+
       expect(menu.renderer.findByTestId("delete-strong")?.style.color).toBe(
         darkTheme.colors.destructiveSoftForeground,
       );
-      // The action still runs: a crash is not the safe answer for a name.
+
       clickCentreOf(menu, "delete");
       expect(onSelect).toHaveBeenCalledTimes(1);
     } finally {
@@ -880,7 +791,6 @@ describe("DropdownMenu", () => {
 
     expect(ref.current?.id).toBe(menu.renderer.findByTestId("trigger")?.id);
 
-    // The internal ref still works: Escape returns focus to the trigger.
     clickCentreOf(menu, "trigger");
     menu.renderer.simulateKeystrokes("escape");
     expect(focusedTestId(menu)).toEqual(Option.some("trigger"));
@@ -908,7 +818,6 @@ describe("DropdownMenu", () => {
 
     expect(ref.current?.id).toBe(menu.renderer.findByTestId("rename")?.id);
 
-    // The internal row ref still carries the highlight.
     menu.renderer.simulateKeystrokes("down");
     menu.renderer.simulateKeystrokes("down");
     expect(focusedTestId(menu)).toEqual(Option.some("delete"));
@@ -947,8 +856,6 @@ describe("DropdownMenu", () => {
     const menu = renderComponent(<FileActions onSelect={vi.fn()} />);
     clickCentreOf(menu, "trigger");
 
-    // `Duplicate` starts with "du" but is disabled, so "du" matches nothing and
-    // the highlight stays on the row the first letter reached.
     menu.renderer.simulateKeystrokes("d u");
     expect(focusedTestId(menu)).toEqual(Option.some("delete"));
 
@@ -1200,8 +1107,6 @@ describe("DropdownMenu submenus", () => {
     clickCentreOf(menu, "trigger");
     clickCentreOf(menu, "share");
 
-    // "e" matches Email in the submenu and Export in the parent. Only the
-    // submenu may react; otherwise focus would be stolen out of it.
     menu.renderer.simulateKeystrokes("e");
 
     expect(focusedTestId(menu)).toEqual(Option.some("email"));

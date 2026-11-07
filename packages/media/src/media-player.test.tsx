@@ -1,14 +1,3 @@
-/**
- * `MediaPlayer`'s resting tree: the chrome Mux's player composes.
- *
- * The bugs these guarded: a bar that stayed painted after the idle timer (or
- * vanished and came back with its controls still pressable), a timeline whose
- * played and buffered fills disagreed with the arithmetic, a clock that drifted
- * from the fill, a rate readout that printed something other than the state, a
- * mute control that lied about its state, and a key map that was not the
- * component's own.
- */
-
 import { createRef, isValidElement, type ReactElement } from "react";
 import type { ImgInstance } from "@gpuix/react";
 import { describe, expect, it, vi } from "vitest";
@@ -109,7 +98,6 @@ const tree = (
 const inset = lightTheme.spacing.md;
 const barWidth = WIDTH - inset * 2;
 
-/** Every string child of an element tree, so a menu's rows can be read. */
 const wordsOf = (element: ReactElement): string =>
   Option.match(elementProp(element, "children"), {
     onNone: () => "",
@@ -196,7 +184,7 @@ describe("renderMediaPlayer", () => {
       {},
       restingState({ duration: 4000, playing: true, controls: false }),
     );
-    // The large control is hidden while a running clip's chrome is idle.
+
     expect(findByTestId(running, "media-play")).toStrictEqual(Option.none());
     expect(
       expectSome(
@@ -250,8 +238,6 @@ describe("renderMediaPlayer", () => {
   });
 
   it("fades the bar out and refuses its presses while idle", () => {
-    // The bug guarded: the bar was painted at rest whatever the idle timer
-    // said, so a pointer over a faded bar still hit its controls.
     const visible = tree();
     const bar = expectSome(findByTestId(visible, "media-controls"));
     expect(expectSome(hostStyleNumber(bar, "opacity"))).toBe(1);
@@ -335,9 +321,6 @@ describe("renderMediaPlayer", () => {
   });
 
   it("hands every key to the surface that reads the focused control", () => {
-    // The bug guarded: the player mapped Space itself, so a focused mute button
-    // toggled the clip as well as its own action. The surface sees the key and
-    // its target, and decides.
     const surface = surfaceOf();
     const root = tree({}, restingState({ duration: 4000 }), surface);
     const keyDown = expectSome(elementHandler(root, "onKeyDown"));

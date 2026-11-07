@@ -1,17 +1,8 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Ripple button example: three actions that mark the press where it landed.
- *
- * The ripple belongs to the action, not to a wrapper, so each press reports its
- * own point. The third row is under the reduced preference: the same action, the
- * same press, and no journey — the pressed fill is the feedback that remains.
- */
-
 import { useState } from "react";
 import { RippleButton } from "../src/ripple-button.js";
 import { MotionProvider } from "@gpuixui/components/motion";
 
-/** A counter pressed at the corners, plus the two other looks. */
 export const RippleButtonExample = () => {
   const [deploys, setDeploys] = useState(0);
 

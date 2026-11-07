@@ -1,27 +1,14 @@
-/**
- * Locating and running the Netherite CLI.
- *
- * The checkout is found the way the binary finds its own root: a directory that
- * holds `AGENTS.md` and `csrc/Makefile`. `NETHERITE_DIR` wins when set, then
- * the reference clone, then the walk up from the app.
- *
- * Spawning stays at this boundary — the app hands a verb over and receives
- * lines, so the UI never owns a process handle.
- */
 import { spawn, type ChildProcess } from "node:child_process";
 import { existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 
-/** The binary inside a checkout. */
 export const binaryOf = (root: string): string =>
   join(root, "out", "bin", "netherite");
 
-/** Whether a directory is a Netherite checkout. */
 export const isCheckout = (dir: string): boolean =>
   existsSync(join(dir, "AGENTS.md")) &&
   existsSync(join(dir, "csrc", "Makefile"));
 
-/** The checkout, or `undefined` when none is reachable. */
 export const findRoot = (
   from: string = process.cwd(),
   env: string | undefined = process.env.NETHERITE_DIR,
@@ -36,7 +23,6 @@ export const findRoot = (
   }
 };
 
-/** What the header reports about a checkout. */
 export interface Checkout {
   readonly root: string;
   readonly built: boolean;
@@ -49,16 +35,10 @@ export const inspect = (root: string): Checkout => ({
   assets: existsSync(join(root, "out", "assets")),
 });
 
-/** One running verb: lines in, a cancel out. */
 export interface Run {
   readonly cancel: () => void;
 }
 
-/**
- * Run `out/bin/netherite <verb>`, streaming stdout and stderr line by line.
- * Resolves through `onLine`; `onExit` reports the code (or `undefined` when the
- * spawn failed before a process existed).
- */
 export const startVerb = (
   checkout: Checkout,
   argv: ReadonlyArray<string>,

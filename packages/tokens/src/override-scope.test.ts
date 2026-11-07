@@ -1,29 +1,9 @@
-/**
- * What a theme override actually reaches.
- *
- * A role resolves through the theme in both packages — a recipe's `bg-card` and
- * `text-foreground` are `theme.colors` lookups — but the **numbers** are split:
- * the primitives' recipes resolve height, side, padding, gap and type from the
- * theme, while the components package compiles shadcn's fixed metrics for its
- * resting recipe (ADR 0006) and reads the theme only for the geometry it
- * measures in `style`. A brand that retuned `radius.md` therefore found its
- * primitives rounded differently and every `Card` still at 12px, and neither
- * page said so: `docs/tokens.md` §Theme API and `docs/design-system.md` §11 now
- * record the scope and this suite reads both halves.
- */
-
 import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 const read = (path: string): string =>
   readFileSync(new URL(path, import.meta.url), "utf8");
 
-/**
- * The list family's sources: the painter and any box helper it grows. A row's
- * height is a measurement whether it is read in `list.tsx` or behind it, so the
- * assertion follows the family rather than one path; `density-adoption.test.ts`
- * owns the derived reader set and the rule for the two-line row.
- */
 const listSources = ["list.tsx", "list/row.ts"]
   .map((path) => new URL(`../../components/src/${path}`, import.meta.url))
   .filter((url) => existsSync(url))
@@ -40,34 +20,23 @@ const pages = {
 
 describe("the scope of an override", () => {
   it("resolves a colour through the theme in the shared registry", () => {
-    // The half that does reach every component: a utility names a role, and the
-    // role is read off the theme the caller passes.
     const utilities = read("../../tw/src/utilities.ts");
     expect(utilities).toContain("const ROLE");
     expect(utilities).toContain("theme.colors[role]");
   });
 
   it("compiles the components' resting recipe from fixed metrics", () => {
-    // The half that does not: shadcn's numbers are the recipe string, so a
-    // radius, padding or type step in the theme cannot move it.
     const recipes = read("../../tw/src/recipes.ts");
     const card = recipes.slice(
       recipes.indexOf("export const CARD_BASE"),
       recipes.indexOf("export const CARD_TITLE"),
     );
-    // The card's own corner: `rounded-lg` is 8px in the registry, so a theme
-    // that retunes `radius.lg` leaves this recipe where it is.
+
     expect(card).toContain("rounded-lg");
     expect(card).toContain("px-");
-    expect(read("../../components/src/internal/recipe.ts")).toContain(
-      "classesToStyle",
-    );
   });
 
   it("reads the theme for the geometry a component measures", () => {
-    // The exception that makes the split visible rather than absolute: a circle
-    // is drawn at `radius.full`, a control's box at `controlHeight`, a row at
-    // `rowHeight`, and the drawer's offsets on the spacing scale.
     expect(read("../../components/src/avatar.tsx")).toContain(
       "theme.radius.full",
     );

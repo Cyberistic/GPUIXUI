@@ -8,24 +8,6 @@ import { themes } from "@gpuixui/tokens";
 import { readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-/**
- * Every control a drawing presents as a button paints the library's Button.
- *
- * Guarded bug: the badge page's `All` / `Failed` / `Running` filters were
- * bordered boxes with their own padding, font and hover — a second button shape
- * that no component owned. The same hand-rolled chrome was spread across the
- * drawings (carousel arrows, table paging, the copy action, the settings
- * toggles), so this scans the whole docs app rather than one page: a class used
- * on a `<button>` or `<a>` that declares a 1px border and padding must be part
- * of the `.gx-btn` family, or belong to the component whose surface it is.
- *
- * The allowlist names the non-Button affordances the library itself ships: a
- * Select/DatePicker/Combobox trigger is the field recipe, a NumberField stepper
- * and a Slider thumb are the control's own parts, a ColorPicker swatch is a
- * colour, a context menu row is a row, and the skip link is the site's own
- * accessibility utility rather than a drawing.
- */
-
 const root = new URL("../", import.meta.url);
 
 const read = (relative: string): string =>
@@ -43,13 +25,12 @@ const COMPONENT_AFFORDANCES = new Set([
   "gx-context-row",
 ]);
 
-/** Files that are the site's own chrome, not a drawing of a component. */
 const isChrome = (path: string): boolean =>
   path.includes("/landing/") ||
   path.endsWith("/recipe-source.tsx") ||
+  path.endsWith("/theme-stylesheet.tsx") ||
   path.endsWith("/skip-link.tsx");
 
-/** `class { … }` blocks whose declarations paint a bordered, padded box. */
 const chromeClasses = (): ReadonlySet<string> => {
   const found = new Set<string>();
   for (const sheet of readdirSync(new URL("styles/", root))) {
@@ -69,7 +50,6 @@ const chromeClasses = (): ReadonlySet<string> => {
   return found;
 };
 
-/** The class tokens of every `className` on a button or a link. */
 const buttonClasses = (): ReadonlyArray<{
   readonly file: string;
   readonly tag: string;
@@ -131,9 +111,6 @@ describe("drawing buttons", () => {
   });
 
   it("read the Button recipe's size and the theme's variant fills", () => {
-    // The drawings transcribe the recipe, so the small action is the recipe's
-    // `sm` height — the density step, not a number the sheet chose — and the
-    // pressed filter's fill is the recipe's `secondary` variant.
     const sm = classesToStyle(
       `${BUTTON_BASE} ${BUTTON_SIZES.sm} ${BUTTON_VARIANTS.secondary}`,
       themes.dark,

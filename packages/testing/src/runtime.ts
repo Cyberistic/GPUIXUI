@@ -1,11 +1,3 @@
-/**
- * Runtime preflight for the native smoke suite.
- *
- * The package never names a `@gpuix/*` module: the caller supplies the loader,
- * so a host with no native binding gets a typed `RuntimeUnsupported` value
- * instead of a crash. `@gpuixui/testing` is the platform-free half of the
- * suite; the app owns the native half.
- */
 import { Effect, Match, pipe } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -13,7 +5,6 @@ import * as P from "effect/Predicate";
 import * as Schema from "effect/Schema";
 import * as Str from "effect/String";
 
-/** The native binding loaded on this host. */
 export class RuntimeReady extends Schema.Class<RuntimeReady>("RuntimeReady")({
   _tag: Schema.tag("RuntimeReady"),
   platform: Schema.String,
@@ -21,7 +12,6 @@ export class RuntimeReady extends Schema.Class<RuntimeReady>("RuntimeReady")({
   detail: Schema.String,
 }) {}
 
-/** The native binding could not be loaded on this host. */
 export class RuntimeUnsupported extends Schema.Class<RuntimeUnsupported>(
   "RuntimeUnsupported",
 )({
@@ -32,12 +22,11 @@ export class RuntimeUnsupported extends Schema.Class<RuntimeUnsupported>(
   hint: Schema.String,
 }) {}
 
-/** The outcome of the preflight, discriminated by `_tag`. */
 export const RuntimeStatus = Schema.Union([
   RuntimeReady,
   RuntimeUnsupported,
 ]).pipe(Schema.toTaggedUnion("_tag"));
-/** The outcome of the preflight, discriminated by `_tag`. */
+
 export type RuntimeStatus = typeof RuntimeStatus.Type;
 
 const DARWIN_ARM64 =
@@ -58,7 +47,6 @@ const UNKNOWN_TARGET =
   "no published binding for this target; `@gpuix/native` `napi.targets` " +
   "lists darwin-arm64, linux-x64, win32-x64 and win32-arm64.";
 
-/** Pure. Maps a platform/arch pair to the actionable remedy. Never throws. */
 export const bindingHint = (platform: string, arch: string): string =>
   Match.value({ platform, arch }).pipe(
     Match.when({ platform: "darwin", arch: "arm64" }, () => DARWIN_ARM64),
@@ -82,19 +70,12 @@ const reasonOf = (cause: unknown): string =>
     Match.orElse(() => "the native loader rejected without an Error"),
   );
 
-/** What the caller supplies: the host identity and the module to load. */
 export interface DetectRuntimeInput {
   readonly platform: string;
   readonly arch: string;
   readonly load: () => Promise<unknown>;
 }
 
-/**
- * Loads the caller's binding and reports the outcome.
- *
- * Never fails: a rejecting loader is data (`RuntimeUnsupported`), not a defect,
- * so the suite can explain an unsupported host instead of crashing.
- */
 export const detectRuntime = (
   input: DetectRuntimeInput,
 ): Effect.Effect<RuntimeStatus> =>

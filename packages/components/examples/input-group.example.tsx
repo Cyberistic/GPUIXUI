@@ -1,12 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Input group example: a search field, a URL field and a note.
- *
- * Each addon is written next to the field it belongs to; the group lays it out
- * by the alignment it names — a leading mark, a trailing shortcut, and a block
- * line above a textarea.
- */
-
 import { Icon } from "@gpuixui/icons";
 import { useTheme } from "../src/internal/theme.js";
 import {
@@ -17,7 +9,6 @@ import {
   InputGroupTextarea,
 } from "../src/input-group.js";
 
-/** A search row, a URL row and a textarea with a block addon. */
 export const InputGroupExample = () => {
   const theme = useTheme();
   return (

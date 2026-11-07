@@ -1,12 +1,3 @@
-/**
- * `@gpuixui/calc` — the Effect-first calculator engine behind the
- * Slang app (`examples/slang`).
- *
- * The public surface is the model seam, the session state machine, the display
- * formatter and the command catalogue. Rendering is the app's job; this package
- * does not import React except in `@gpuixui/calc/react`.
- */
-
 export {
   CalculatorFailure,
   FailureKind,

@@ -12,23 +12,6 @@ import {
   type TimeText,
 } from "./time-picker-preview";
 
-/**
- * Browser previews for the Time picker page.
- *
- * The shipped field is two real `<input>` segments inside a labelled group — a
- * field, not a trigger with a popup, because `@gpuix/native`@0.11.0 has
- * `aria-valuetext` but no `aria-valuenow` for a spinbutton to announce. The
- * preview takes the field's geometry from the theme bridge (the density's `md`
- * control height, the recipe's fixed 6px corner, the 26px segment) and mirrors
- * the decisions a drawing cannot show: typed digits clamp in the text *and* the
- * value, one typed segment completes a value with the other read as zero,
- * emptying a segment clears the whole time, blur pads both, arrows carry through
- * one clock that wraps at midnight, and Clear is a 24px target that returns the
- * focus to the hours segment. A disabled field is read-only, dimmed, and leaves
- * the tab order — with no clear control at all.
- */
-
-/** The clear control's glyph, at the size the shipped `sm` icon step paints. */
 const ClearGlyph = () => (
   <svg
     aria-hidden="true"
@@ -42,23 +25,15 @@ const ClearGlyph = () => (
 );
 
 interface PreviewTimeFieldProps {
-  /** The group's accessible name, the way a caller names the field. */
   readonly label: string;
   readonly value: string | null;
   readonly onChange: (value: string | null) => void;
-  /** Minutes per arrow step; typed minutes are never restricted. */
+
   readonly minuteStep?: number;
   readonly clearable?: boolean;
   readonly disabled?: boolean;
 }
 
-/**
- * One time field: a labelled group, two segments and the conditional clear.
- *
- * The text is local because the native field keeps raw digits while it reports
- * the canonical value; it adopts a value its caller changes only when the text
- * no longer composes to it, which is the component's own rule.
- */
 const PreviewTimeField = ({
   label,
   value,
@@ -167,7 +142,6 @@ const PreviewTimeField = ({
   );
 };
 
-/** A deployment window a reviewer schedules: the value gates the save. */
 const TimePickerWorkflow = () => {
   const [opens, setOpens] = useState<string | null>("09:30");
   const [saved, setSaved] = useState<string | null>(null);
@@ -207,7 +181,6 @@ const TimePickerWorkflow = () => {
   );
 };
 
-/** The states a drawing of one field cannot show side by side. */
 const TimePickerStates = () => {
   const [empty, setEmpty] = useState<string | null>(null);
   const [filled, setFilled] = useState<string | null>("09:30");
@@ -360,7 +333,6 @@ const Field = (props: {
   <Field label="Disabled time" value="07:00" clearable disabled />
 </>;`;
 
-/** One exported example per preview, with the usage its Code tab shows. */
 export {
   TimePickerStates,
   TimePickerWorkflow,

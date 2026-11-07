@@ -1,57 +1,25 @@
-/**
- * The nested-overlay contract, as the probe drives it: a dialog holding a
- * popover holding a menu.
- *
- * The components' `dismiss-layer.ts` decides which surface an Escape closes by
- * containment depth, and guards one gesture to one consumer — a keystroke
- * bubbles through every enclosing surface, so a missing guard would close the
- * menu **and** the popover **and** the dialog on one press. That claim was
- * measured in an offscreen renderer (`dismiss-layer.test.ts`, and the
- * hand-composed `modal-focus-trap` scenario); the shipped three-level tree has
- * never been driven in a window, where the keystroke payloads are the runtime's
- * own.
- *
- * The probe therefore plays the caller: the three surfaces are controlled by
- * `nestedFlow`, which records each transition and appends the surface a close
- * landed on. The order that list prints is the measurement.
- */
 import { Match } from "effect";
 import * as Arr from "effect/Array";
 
-/** The three surfaces, outermost first. */
 export const nestedSurfaces = ["dialog", "popover", "menu"] as const;
 
-/** One surface of the stack. */
 export type NestedSurface = (typeof nestedSurfaces)[number];
 
-/** The app's own opener, which also holds the focus the dialog restores. */
 export const NESTED_OPENER = "nested-open";
 
-/** The dialog surface. */
 export const NESTED_DIALOG = "nested-dialog";
 
-/** The popover inside the dialog. */
 export const NESTED_POPOVER_TRIGGER = "nested-popover-trigger";
 export const NESTED_POPOVER_PANEL = "nested-popover-panel";
 
-/** The menu inside the popover. */
 export const NESTED_MENU_TRIGGER = "nested-menu-trigger";
 export const NESTED_MENU_PANEL = "nested-menu-panel";
 export const NESTED_MENU_ITEM = "nested-menu-item";
 
-/**
- * A painted target inside the dialog but outside the popover and the menu.
- *
- * A pointer press needs somewhere to land that is not one of the surfaces under
- * test: pressing the heading would work too, but a named filler makes the target
- * a deliberate box rather than wherever a layout happens to put the title.
- */
 export const NESTED_OUTSIDE = "nested-outside";
 
-/** The readout the checks assert against. */
 export const NESTED_READOUT = "nested-readout";
 
-/** The app's record: each surface's state, its transitions and the close order. */
 export interface NestedFlow {
   readonly open: Readonly<Record<NestedSurface, boolean>>;
   readonly opens: Readonly<Record<NestedSurface, number>>;
@@ -59,7 +27,6 @@ export interface NestedFlow {
   readonly dismissed: ReadonlyArray<NestedSurface>;
 }
 
-/** One transition a surface reported through `onOpenChange`. */
 export interface NestedEvent {
   readonly surface: NestedSurface;
   readonly open: boolean;
@@ -77,7 +44,6 @@ const noCounts: Readonly<Record<NestedSurface, number>> = {
   menu: 0,
 };
 
-/** The flow before the reader has pressed anything. */
 export const initialNestedFlow: NestedFlow = {
   open: closed,
   opens: noCounts,
@@ -85,10 +51,6 @@ export const initialNestedFlow: NestedFlow = {
   dismissed: [],
 };
 
-/**
- * Records a transition. A close appends its surface, so the list is the order
- * the dismissals happened in — the only evidence an outside-in stack leaves.
- */
 export const nestedFlow = (flow: NestedFlow, event: NestedEvent): NestedFlow =>
   Match.value(event.open).pipe(
     Match.when(true, () => ({
@@ -111,7 +73,6 @@ export const nestedFlow = (flow: NestedFlow, event: NestedEvent): NestedFlow =>
     Match.exhaustive,
   );
 
-/** `dialog=open popover=closed …` in the declared order. */
 const flags = (open: Readonly<Record<NestedSurface, boolean>>): string =>
   Arr.join(
     Arr.map(
@@ -121,20 +82,17 @@ const flags = (open: Readonly<Record<NestedSurface, boolean>>): string =>
     " ",
   );
 
-/** A comma-joined count per surface, in the declared order. */
 const counts = (record: Readonly<Record<NestedSurface, number>>): string =>
   Arr.join(
     Arr.map(nestedSurfaces, (surface) => `${record[surface]}`),
     ",",
   );
 
-/** The close order, or `none` before the first dismissal. */
 const order = (dismissed: ReadonlyArray<NestedSurface>): string =>
   Arr.match(dismissed, {
     onEmpty: () => "none",
     onNonEmpty: (surfaces) => Arr.join(surfaces, ","),
   });
 
-/** The `key=value` line the probe's assertions read. */
 export const nestedReadout = (flow: NestedFlow): string =>
   `${flags(flow.open)} opens=${counts(flow.opens)} closes=${counts(flow.closes)} dismissed=${order(flow.dismissed)}`;

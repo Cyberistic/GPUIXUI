@@ -10,10 +10,6 @@ const label = {
 
 type State = keyof typeof label;
 
-/**
- * Copy the page's Markdown, the way shadcn/ui offers a page-level copy action.
- * The Markdown comes from the docs collection, not from scraping the DOM.
- */
 export function CopyPage({
   origin,
   path,

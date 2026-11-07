@@ -1,14 +1,3 @@
-/**
- * Guards the live runner's mount seam.
- *
- * The bug this holds shut: `--only virtual-tree-lifecycle --only
- * data-tree-lifecycle` ran both probes in **one** window and the second read
- * `visible=4000 expanded=40 …` — the windowed tree's readout — 327 ms into a
- * mount that takes 814 ms alone (measured twice on 2026-10-24). A fixed settle
- * cannot tell a finished mount from a stale screen, so the runner now renders a
- * marker in the same commit as the view and waits for that scenario's own
- * marker id before the probe's first step.
- */
 import { Children, Fragment, isValidElement, type ReactNode } from "react";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
@@ -18,7 +7,6 @@ import { mountProbe, ROOT_VIEW, type LiveProbe } from "./run.js";
 import { mountMarkerView, mountMarker } from "./mount-marker.js";
 import type { LiveProbeId } from "./registry.js";
 
-/** Every `testId` in a React element tree, in document order. */
 const testIdsIn = (node: ReactNode): ReadonlyArray<string> => {
   if (!isValidElement<{ testId?: string; children?: ReactNode }>(node)) {
     return [];
@@ -63,7 +51,6 @@ const runMount = (
     }),
   );
 
-/** Mounts a probe and answers the element the runner rendered. */
 const mountElement = async (
   selected: ReadonlyArray<LiveProbe>,
   scenarioId: LiveProbeId,
@@ -92,10 +79,6 @@ describe("the live mount seam", () => {
   });
 
   it("keeps the root to one host child", async () => {
-    // The runtime renders only the **last** child of a top-level fragment
-    // (measured on 0.11.0: a root fragment of two divs renders the second
-    // alone), so the window mounts one host frame and the marker lives inside
-    // it. A marker beside the view at the root would hide one of them.
     const rendered = await mountElement(
       [probe("data-tree-lifecycle", () => null)],
       "data-tree-lifecycle",

@@ -6,36 +6,10 @@ import {
   type ComponentEntry,
 } from "../../lib/component-index";
 import { componentIndex, componentPages } from "../../lib/component-index-data";
-import {
-  componentIdFromPath,
-  nativeCaptureOf,
-} from "../../lib/native-captures";
 import { demos } from "./demos";
 import { PreviewSurface } from "./preview-surface";
 import { useIndexQuery } from "./use-index-query";
 
-/**
- * The component index: one tile per component, three across on a desktop.
- *
- * The rows are generated (`component-index-data.ts`), so the grid cannot list a
- * page that does not exist or miss one that does. Each tile is the component's
- * first registered demo, clipped to the card, with its name above it and the
- * whole tile linking to the page. A component with no demo gets a labelled
- * static tile instead of an empty frame.
- *
- * The query only narrows what is already rendered: the unfiltered grid is the
- * complete lane. It matches a page's name, its purpose, the parts it documents,
- * the props and prop types its API table declares, the limits it records and
- * its inventory verdict.
- *
- * The filter travels in the URL (`?q=…`): a view worth sharing is the view a
- * link opens, and a reload keeps it. The mount reads the route's search string
- * so a shared link opens filtered rather than painting the whole grid first.
- *
- * The demos mount after hydration, not during the server render: they carry
- * seeded drawings and live timers, and painting a placeholder first keeps the
- * server markup identical to the client's first pass.
- */
 export function ComponentIndex() {
   const { query, chooseQuery } = useIndexQuery();
   const [previews, setPreviews] = useState(false);
@@ -51,7 +25,6 @@ export function ComponentIndex() {
   );
 }
 
-/** The index's markup, with the filter the mount read off the URL. */
 export function ComponentIndexView({
   query,
   onQueryChange,
@@ -59,7 +32,7 @@ export function ComponentIndexView({
 }: {
   readonly query: string;
   readonly onQueryChange: (query: string) => void;
-  /** Whether the demo scenes may mount; false until after hydration. */
+
   readonly previews?: boolean;
 }) {
   const matches = filterEntries(componentPages, query);
@@ -133,10 +106,8 @@ export function ComponentIndexView({
   );
 }
 
-/** A tile that has no demo still needs a stable component type. */
 const Nothing = () => null;
 
-/** One card: the name above its demo, both inside the link. */
 function ComponentTile({
   entry,
   previews,
@@ -145,27 +116,15 @@ function ComponentTile({
   readonly previews: boolean;
 }) {
   const demo = entry.demo === undefined ? undefined : demos[entry.demo];
-  // Rendered as its own component: a demo owns hooks, and calling it inline
-  // would attribute them to the tile that mounts it conditionally.
+
   const Scene = demo?.render ?? Nothing;
   const mark = verdictMark(entry.verdict);
-  const component = componentIdFromPath(entry.url);
-  const native =
-    component === undefined ? undefined : nativeCaptureOf(component);
 
   return (
     <li
       className="relative m-0 flex min-w-0 flex-col bg-background"
       data-component={entry.url}
-      data-preview={
-        demo === undefined
-          ? "none"
-          : previews
-            ? "demo"
-            : native === undefined
-              ? "placeholder"
-              : "native"
-      }
+      data-preview={demo === undefined ? "none" : "demo"}
     >
       <a
         className="z-10 flex items-baseline justify-between gap-2 p-3 text-sm font-medium text-foreground no-underline after:absolute after:inset-0 after:content-[''] hover:underline"
@@ -203,7 +162,7 @@ function ComponentTile({
             <Scene />
           </PreviewSurface>
         </div>
-      ) : native === undefined ? (
+      ) : (
         <div
           aria-hidden="true"
           className="flex aspect-[4/3] items-center justify-center border-t border-border"
@@ -211,19 +170,6 @@ function ComponentTile({
           <span className="font-mono text-[0.65rem] text-muted-foreground">
             Preview
           </span>
-        </div>
-      ) : (
-        <div
-          aria-hidden="true"
-          className="aspect-[4/3] overflow-hidden border-t border-border"
-        >
-          <img
-            alt=""
-            className="h-full w-full object-cover"
-            decoding="async"
-            loading="lazy"
-            src={native}
-          />
         </div>
       )}
     </li>

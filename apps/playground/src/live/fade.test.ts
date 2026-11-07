@@ -1,20 +1,3 @@
-/**
- * Guards the surface-fade fixture.
- *
- * The probe asserts only three pixels, and a run costs a window — so a mistake
- * in this module would be reported as a runtime defect rather than as the stale
- * constant it is. The bugs these cases catch:
- *
- * 1. a partial-frame predicate that accepts the page or the resting surface, so
- *    a fade that never painted would pass as "a mix";
- * 2. a read window that sits on the wrong side of the level, so the "partway"
- *    read actually measures a resting surface or the "settled" read measures the
- *    tween;
- * 3. a duration that no longer matches `motionLevels.slow` or a dialog that
- *    stopped entering at that level, which would make both windows meaningless;
- * 4. a white page that the palette's own popover colour happens to match, which
- *    would leave the fade with nothing to blend toward.
- */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
@@ -37,7 +20,6 @@ import {
 const read = (path: string): string =>
   readFileSync(new URL(path, import.meta.url), "utf8");
 
-/** A straight composite of `top` over `bottom` at `alpha`. */
 const mix = (
   top: Pixels.Rgba,
   bottom: Pixels.Rgba,
@@ -50,13 +32,11 @@ const mix = (
     a: 255,
   });
 
-/** The surface colour the runner's palette paints; a black fallback fails loudly. */
 const surface = Option.getOrElse(
   surfaceFadeColour(palettes.dark.colors.popover),
   () => new Pixels.Rgba({ r: 0, g: 0, b: 0, a: 0 }),
 );
 
-/** The same colour, with one channel moved, so a near miss is expressible. */
 const colour = (overrides: Partial<Pixels.Rgba> = {}): Pixels.Rgba =>
   new Pixels.Rgba({
     r: surface.r,
@@ -82,8 +62,7 @@ describe("the surface-fade fixture", () => {
     expect(FADE_PARTIAL_MS).toBeLessThan(FADE_DURATION_MS);
     expect(FADE_REST_MS).toBeGreaterThan(FADE_DURATION_MS);
     expect(FADE_REST_MS).toBeGreaterThan(FADE_PARTIAL_MS);
-    // A third in leaves most of the fade ahead of the read, so a fade that is
-    // skipped shows as the surface and one that lasts longer stays mixed.
+
     expect(FADE_PARTIAL_MS * 2).toBeLessThan(
       FADE_DURATION_MS + FADE_PARTIAL_MS,
     );
@@ -105,7 +84,7 @@ describe("the surface-fade fixture", () => {
         surface,
       ),
     ).toBe(true);
-    // A tenth of the way in is still a mix a reader can see.
+
     expect(
       isFading(
         mix(colour(), FADE_BACKING_RGBA, 0.1),
@@ -118,8 +97,7 @@ describe("the surface-fade fixture", () => {
   it("refuses the unpainted page, the resting surface and a rounding sliver", () => {
     expect(isFading(FADE_BACKING_RGBA, FADE_BACKING_RGBA, surface)).toBe(false);
     expect(isFading(colour(), FADE_BACKING_RGBA, surface)).toBe(false);
-    // One percent of the page left is two levels of paint: a fade, but not a
-    // measurable one at this fixture's four-level floor.
+
     expect(
       isFading(
         mix(colour(), FADE_BACKING_RGBA, 0.99),
@@ -127,7 +105,7 @@ describe("the surface-fade fixture", () => {
         surface,
       ),
     ).toBe(false);
-    // A pixel darker than the surface is some other paint, not this fade.
+
     expect(
       isFading(colour({ r: 10, g: 10, b: 10 }), FADE_BACKING_RGBA, surface),
     ).toBe(false);

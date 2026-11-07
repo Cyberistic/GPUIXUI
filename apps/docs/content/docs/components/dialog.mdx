@@ -91,11 +91,6 @@ Dialog
 | `loading`, `loadingLabel`, `reducedMotion`, `leading`, `trailing` | the shared `Button` busy contract | — |
 | `className` | `string` — joined after the button recipe | none |
 
-## Notes
-- `role="dialog"`, named by `label`; focus enters on open, returns to the opener on close; no `aria-modal` or `aria-labelledby`.
-- The close control sits outside the `scroller`; a long body scrolls under it (`src/behaviour/dialog.test.tsx`).
-- **A dismissed dialog is a ghost, not a target**: **320 ms** of exit, its close out of the window's tab order, a composed control out until `inert`.
-
 ## Theming
 
 The box paints the theme's `elevation.lg` beside its 1px `foreground` ring. Its corner is the recipe's fixed **32px** (`rounded-4xl`); the preview draws the platform radius plus 8px and is the approximation.

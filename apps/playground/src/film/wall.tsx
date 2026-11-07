@@ -52,12 +52,9 @@ import {
 } from "react";
 import type { Take } from "./take.js";
 
-/** One wall tile's canvas, in points; captured at the rig's 2× scale. */
 export const TILE = { width: 400, height: 267 };
-/** One chart card in the chart scene. */
 export const CARD = { width: 560, height: 380 };
 
-/** Long enough for a chart's mount animation to finish and settle. */
 const TILE_FRAMES = 54;
 
 const LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug"];
@@ -277,7 +274,6 @@ const Canvas = ({ children }: { readonly children: ReactNode }) => {
         justifyContent: "center",
         overflow: "hidden",
         backgroundColor: theme.colors.card,
-        // An example's bare <text> inherits this, or it paints black on dark.
         color: theme.colors.foreground,
       }}
     >

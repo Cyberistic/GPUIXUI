@@ -1,17 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * DropdownMenu: a list of actions anchored to the control that opened it.
- *
- * The open state, the anchored positioning and the trigger's re-open guard live
- * here; the rows, the highlight rules and the surface are shared with the Context
- * menu (`menu/state.ts`, `menu/item.tsx`).
- *
- * Dismissal goes through `internal/dismiss-layer.ts`, so a menu inside a dialog
- * closes only the menu. The trigger records whether the menu was open at
- * **mouse-down**: pressing the open trigger is an outside press that closes the
- * menu, and the click that follows must not immediately re-open it.
- */
-
 import { useGpuix } from "@gpuix/react";
 import type { PublicInstance } from "@gpuix/react";
 import {
@@ -74,13 +61,11 @@ import {
 import { MenuSub, MenuSubContent, MenuSubTrigger } from "./menu/sub.js";
 import { menuKeyHandlers, menuSurfaceStyle } from "./menu/surface.js";
 
-/** The rules a {@link DropdownMenuContent} follows. */
 interface DropdownContextValue {
   readonly open: boolean;
   readonly setOpen: (open: boolean) => void;
   readonly trigger: RefObject<PublicInstance | null>;
-  /** Set by a dismissing outside press, consumed by the click that follows it. */
-  /** The row a keyboard open should focus once the rows have registered. */
+
   readonly pendingFocus: RefObject<"first" | "last" | null>;
 }
 
@@ -88,7 +73,6 @@ const DropdownContext = createContext<DropdownContextValue | undefined>(
   undefined,
 );
 
-/** The dropdown a part belongs to. Throws when there is none. */
 const useDropdownContext = (): DropdownContextValue => {
   const value = useContext(DropdownContext);
   if (value === undefined) {
@@ -97,20 +81,14 @@ const useDropdownContext = (): DropdownContextValue => {
   return value;
 };
 
-/** {@link DropdownMenu} props. */
 export interface DropdownMenuProps {
-  /** The controlled open state. `undefined` means uncontrolled. */
   readonly open?: boolean;
-  /** The uncontrolled starting state. Default `false`. */
+
   readonly defaultOpen?: boolean;
   readonly onOpenChange?: (open: boolean) => void;
   readonly children?: PartChildren;
 }
 
-/**
- * The menu's open state and dismiss layer. It paints a positioning root, which is
- * what the anchored content measures against.
- */
 export const DropdownMenu = ({
   open: openProp,
   defaultOpen = false,
@@ -126,11 +104,9 @@ export const DropdownMenu = ({
   const trigger = useRef<PublicInstance | null>(null);
   const restoreFocus = useRef(false);
   const wasOpen = useRef(false);
-  /** The edge a keyboard open should land on once the rows register. */
+
   const pendingFocus = useRef<"first" | "last" | null>(null);
 
-  // A re-render must not re-push the layer: that would move this menu above an
-  // overlay opened after it. The handler reads the latest setter through a ref.
   const setOpenRef = useRef(setOpen);
   useLayoutEffect(() => {
     setOpenRef.current = setOpen;
@@ -139,10 +115,6 @@ export const DropdownMenu = ({
   const close = useCallback((reason: MenuCloseReason) => {
     restoreFocus.current = reason === "activate" || reason === "dismiss";
     if (reason === "outside") {
-      // The press that dismissed the menu owns the click that follows it.
-      // Marking here (rather than in the dismiss handler) means a nested
-      // submenu's outside press gets the same guard. The microtask clears the
-      // mark before the next user gesture.
     }
     setOpenRef.current(false);
   }, []);
@@ -189,7 +161,6 @@ export const DropdownMenu = ({
   );
 };
 
-/** Opens the menu it sits in. An ordinary button in every other respect. */
 export const DropdownMenuTrigger = ({
   onClick,
   onKeyDown,
@@ -213,8 +184,6 @@ export const DropdownMenuTrigger = ({
       disabled={disabled}
       aria-expanded={open}
       onKeyDown={(event) => {
-        // The local Button keeps a disabled control's key handler observable, so
-        // the trigger refuses the open itself rather than relying on the press.
         if (!disabled && !open) {
           if (isDown(event)) openAt("first");
           else if (isUp(event)) openAt("last");
@@ -224,19 +193,14 @@ export const DropdownMenuTrigger = ({
         onKeyDown?.(event);
       }}
       onKeyUp={(event) => {
-        // Space's release is an activation, so a keyboard open lands on the
-        // first row exactly like Enter's press does.
         if (!disabled && !open && isActivation(event, "up")) openAt("first");
         onKeyUp?.(event);
       }}
       onClick={(event) => {
         onClick?.(event);
-        // A pointer open keeps focus on the surface; only a keyboard open names
-        // a row. Clearing here cannot undo the key handler: activation clicks
-        // run before onKeyDown within the same render.
+
         pendingFocus.current = null;
-        // The press that dismissed the menu owns this click: toggling here would
-        // re-open what the same gesture just closed.
+
         if (isDismissalClick(event)) return;
         setOpen(!open);
       }}
@@ -244,24 +208,21 @@ export const DropdownMenuTrigger = ({
   );
 };
 
-/** {@link DropdownMenuContent} props: a floating list of rows. */
 export interface DropdownMenuContentProps extends FloatingContentProps {
-  /** The menu's accessible name. */
   readonly label?: string;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
-  /** Default `"bottom"`. Flipped once if the snapped surface would cover the trigger. */
+
   readonly side?: "top" | "right" | "bottom" | "left";
-  /** Default `"start"`. `"center"` is measured from the trigger, not the runtime's `center`. */
+
   readonly align?: "start" | "center" | "end";
-  /** The gap between trigger and surface. Default `4`. */
+
   readonly sideOffset?: number;
-  /** Added on top of the measured centre correction. Default `0`. */
+
   readonly alignOffset?: number;
   readonly children?: PartChildren;
 }
 
-/** The menu surface, rendered while the menu is open. */
 export const DropdownMenuContent = ({
   label,
   className,
@@ -287,8 +248,6 @@ export const DropdownMenuContent = ({
   const timing = useSurfaceTiming("normal");
   const presence = useSurfacePresence(open, timing);
   const placement = usePlacement({
-    // The exit tween keeps the measured side, so a flipped menu does not jump
-    // back while it fades out.
     open: presence.mounted,
     side,
     align,
@@ -298,8 +257,6 @@ export const DropdownMenuContent = ({
   });
   assertParts(dropdownContent, children);
 
-  // Rows register in child layout effects, which run before this one. If the
-  // root has not published them yet, the effect runs again when `rows` changes.
   useLayoutEffect(() => {
     if (!open) return;
     const edge = pendingFocus.current;
@@ -339,7 +296,7 @@ export const DropdownMenuContent = ({
       style={mergeStyles(
         mergeStyles(
           menuSurfaceStyle(theme, className),
-          // A positioned box is what the leaving guard is inset against.
+
           { position: "relative", ...presenceStyle(presence.present) },
         ),
         style,
@@ -382,7 +339,6 @@ export type {
   MenuRadioItemProps as DropdownMenuRadioItemProps,
 } from "./menu/item.js";
 
-/** Every part of the dropdown menu, so a misplaced sibling is named. */
 const dropdownParts: ReadonlyArray<PartComponent> = [
   DropdownMenu,
   DropdownMenuTrigger,
@@ -421,7 +377,6 @@ const dropdownContent: PartsContract = {
   hint: "Put rows, groups, labels, separators and submenus directly inside DropdownMenuContent.",
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const dropdownMenuMeta = {
   name: "Dropdown menus",
   tier: 2,

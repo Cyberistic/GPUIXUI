@@ -1,13 +1,3 @@
-/**
- * The command palette's ranked subsequence matcher.
- *
- * The bugs these guard: a substring rule that rejected initials; a scorer that
- * let a mid-word run outrank a word start; a global score sort that interleaved
- * groups and repeated headings; a tie that reordered the list; an empty query
- * that changed the palette's order; and a filter that reported the wrong
- * declaration index.
- */
-
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
 import {
@@ -19,7 +9,6 @@ import {
   type FuzzyMatch,
 } from "./fuzzy.js";
 
-/** A score, or `-1` for "no match", so comparisons read as numbers. */
 const score = (query: string, text: string): number =>
   Option.getOrElse(fuzzyScore(query, text), () => -1);
 
@@ -133,8 +122,6 @@ describe("commandListOf", () => {
   });
 
   it("reads a value that is not a list as no rows", () => {
-    // A palette whose registry has not loaded yet, or a saved toolbar's `null`,
-    // reduced over the value before the first row painted.
     expect(commandListOf(null)).toEqual([]);
     expect(commandListOf(undefined)).toEqual([]);
   });

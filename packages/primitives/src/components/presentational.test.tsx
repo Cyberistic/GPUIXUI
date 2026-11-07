@@ -1,12 +1,3 @@
-/**
- * The components whose contribution is the element they produce.
- *
- * Their behaviour lives in `core/` and is already pinned there (`layout.test.ts`,
- * `style.test.ts`, `loading.test.ts`); what those suites cannot see is the piece
- * the *component* adds — which host element, which resolved chrome, which ARIA.
- * That is the seam this file guards.
- */
-
 import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
 import * as Arr from "effect/Array";
@@ -64,7 +55,6 @@ import {
 } from "./testing/element.js";
 import { clickEvent } from "./testing/event.js";
 
-/** One property of the resolved `style` prop, still unknown. */
 const styleProp = (
   element: ReactElement,
   name: string,
@@ -125,10 +115,6 @@ describe("layout containers", () => {
   });
 
   it("lifts a box for a stored level name this release does not carry", () => {
-    // `elevationShadow` reads a name the scale does not carry as `md`, so the
-    // shipped painter must paint that lift rather than a flat box: the recipe
-    // indexed the level raw and dropped the class. `overlay` is reserved and
-    // empty, and an absent level paints no lift at all.
     const shadow = (elevation: ElevationLevel): Option.Option<unknown> =>
       styleProp(renderBox({ tone: "card", elevation }, testTheme), "boxShadow");
     expect(shadow("raised" as ElevationLevel)).toStrictEqual(
@@ -162,9 +148,6 @@ describe("layout containers", () => {
   });
 
   it("draws one track for a count the runtime cannot measure", () => {
-    // `docs/grid.mdx` promises a non-finite count reads as one track. The core
-    // resolver always did; the recipe did not, and an unresolved
-    // `grid-cols-NaN` left the shipped grid with no template at all.
     Arr.forEach(
       [
         { spec: { columns: Number.NaN }, columns: 1, rows: Option.none() },
@@ -223,16 +206,6 @@ describe("layout containers", () => {
   });
 
   it("draws a stored orientation this release does not carry as the rule it defaults to", () => {
-    // The bug guarded: an orientation is a stored layout choice — a saved
-    // workspace's divider — so a name this release renamed or dropped arrives
-    // as a string the union no longer names. `renderSeparator` read that name
-    // twice and disagreed with itself: the recipe painted a **vertical**
-    // hairline for anything that was not `horizontal`, while the caption branch
-    // only dropped the caption for `vertical` — so the stale name painted a
-    // row around two vertical rules, a caption with no rule to sit on. The axis
-    // is resolved once, against the horizontal rule a region divider is drawn
-    // in, so the stale name paints the tree an omitted default does.
-    // The cast is the storage boundary: a saved orientation is a string.
     const stored = renderSeparator(
       {
         orientation: "Horizontal" as RuleSpec["orientation"],
@@ -243,13 +216,13 @@ describe("layout containers", () => {
     expect(stored).toStrictEqual(
       renderSeparator({ orientation: "horizontal", label: "or" }, testTheme),
     );
-    // The rule the caption sits between runs across, not up.
+
     const rule = expectSome(Arr.head(elementChildren(stored)));
     expect(numberIn(rule, "height")).toStrictEqual(
       Option.some(testTheme.borderWidth.thin),
     );
     expect(numberIn(rule, "width")).toStrictEqual(Option.none());
-    // A shipped vertical rule still refuses the caption row it cannot carry.
+
     expect(
       elementChildren(
         renderSeparator({ orientation: "vertical", label: "or" }, testTheme),
@@ -258,14 +231,6 @@ describe("layout containers", () => {
   });
 
   it("paint no caption for a caption that says nothing", () => {
-    // The bug guarded: `label` is copy a caller fills from an i18n table as
-    // often as a literal, and a missing row hands over `""` / `"   "`. A
-    // labelled rule is a row of two rules around a `Text`, so a blank caption
-    // drew the row's caption element — and the runtime lays a run of spaces out
-    // as a full line (measured in `runtime/layout.runtime.test.tsx`), which
-    // breaks a separator that reads as one hairline. A blank caption is no
-    // caption, the rule `visibleCopy` already applies to a label's help and a
-    // list row's description.
     const blank = renderSeparator(
       { orientation: "horizontal", label: "   " },
       testTheme,
@@ -292,13 +257,6 @@ describe("layout containers", () => {
   });
 
   it("fills for a stored size name this release does not carry", () => {
-    // Bug guarded: `size` is a name a saved layout stores as often as a
-    // literal, and it was indexed raw — `theme.spacing["roomy"]` is
-    // `undefined`, so the spacer painted a **fixed** item with no side at all
-    // (measured 0px beside a 12px `lg` one) instead of either of the two states
-    // its API documents. The documented default for an omitted step is the
-    // flexible filler, so a name the theme cannot paint reads as that default.
-    // The cast is the storage boundary: a saved step is a string, not a union.
     const stored = renderSpacer(
       { size: "roomy" as keyof PrimitiveTheme["spacing"] },
       testTheme,
@@ -306,16 +264,13 @@ describe("layout containers", () => {
     expect(stored).toStrictEqual(renderSpacer({}, testTheme));
     expect(numberIn(stored, "flexGrow")).toStrictEqual(Option.some(1));
     expect(numberIn(stored, "width")).toStrictEqual(Option.none());
-    // A step the theme does paint is still the caller's.
+
     expect(
       numberIn(renderSpacer({ size: "md" }, testTheme), "width"),
     ).toStrictEqual(Option.some(testTheme.spacing.md));
   });
 
   it("lets a caller add a class to the gap a spacer draws", () => {
-    // The bug guarded: `Spacer` was the one primitive without the caller's
-    // `className` escape hatch, so a layout could not adjust the gap it owns.
-    // The class is compiled after the fixed step and `style` is still last.
     const element = renderSpacer({ size: "lg", className: "mt-1" }, testTheme);
     expect(numberIn(element, "marginTop")).toStrictEqual(Option.some(4));
     expect(numberIn(element, "width")).toStrictEqual(
@@ -351,13 +306,6 @@ describe("layout containers", () => {
   });
 
   it("hand the runtime's host props to the element they paint", () => {
-    // The bug guarded: a layout primitive painted one element and could not be
-    // reached from outside. Measuring a region, holding its instance or naming
-    // it for automation meant wrapping it in a `div` — and in a flex parent the
-    // wrapper becomes the item, so a box that grows or stretches inside it has
-    // to repeat its own flex facts on the wrapper and the layout measured is no
-    // longer the layout the caller composed. The four layout primitives take
-    // the runtime's own trio instead.
     const onLayout = () => {};
     const painted = [
       renderBox({ tone: "card", "aria-id": "box", onLayout }, testTheme),
@@ -376,8 +324,7 @@ describe("layout containers", () => {
         Option.some(onLayout),
       );
     });
-    // A primitive given neither still carries neither: the trio is the
-    // caller's, not something the element invents.
+
     expect(
       Arr.map(
         [
@@ -397,10 +344,6 @@ describe("layout containers", () => {
   });
 
   it("hand a run of type its own element", () => {
-    // The bug guarded: `Text` painted one `<text>` and published only a
-    // `testId`, so a caller measuring the height a heading wraps to, holding
-    // the instance or naming the node for automation had to wrap the run — and
-    // the wrapper is the flex item that paints. The run itself is the element.
     const onLayout = () => {};
     const hold = () => {};
     const text = renderText(
@@ -410,7 +353,7 @@ describe("layout containers", () => {
     expect(expectSome(hostProp(text, "aria-id"))).toBe("text");
     expect(hostProp(text, "onLayout")).toStrictEqual(Option.some(onLayout));
     expect(hostProp(text, "ref")).toStrictEqual(Option.some(hold));
-    // A run given none of the trio invents none of it.
+
     const plain = renderText({}, testTheme);
     expect(hostProp(plain, "aria-id")).toStrictEqual(Option.none());
     expect(hostProp(plain, "onLayout")).toStrictEqual(Option.none());
@@ -462,9 +405,6 @@ describe("layout containers", () => {
   });
 
   it("lets a scroll reading measure the scroller, and a composed viewport override it", () => {
-    // The bug guarded: the area published no layout event for the element that
-    // scrolls, so `ScrollProgress`/`ScrollFade` had to duplicate the viewport —
-    // and lose its keyboard contract — to measure the box they read.
     const areaLayout = () => {};
     const part = scrollPart(
       { axis: "vertical", onLayout: areaLayout },
@@ -497,8 +437,7 @@ describe("layout containers", () => {
       {},
       scrollPart({ axis: "vertical" }, testTheme),
     );
-    // A tab stop with no role is a node the accessibility tree cannot hold, so
-    // the unnamed viewport is a named group rather than a silent stop.
+
     expect(expectSome(hostProp(viewport, "role"))).toBe("group");
     expect(expectSome(hostProp(viewport, "aria-label"))).toBe(
       DEFAULT_SCROLL_NAME,
@@ -506,12 +445,6 @@ describe("layout containers", () => {
   });
 
   it("declares the keyboard ring on the viewport that takes the stop", () => {
-    // The bug guarded: the viewport was a tab stop with a keyboard contract
-    // (arrows, PageUp/PageDown, Home/End) and declared no `focusVisible`, so a
-    // keyboard reader who Tabbed into a scroller saw no cue at all — the one
-    // focusable primitive in the package without a ring. The declaration sits
-    // on the element that holds the focus, and a non-focusable viewport owes
-    // neither the ring nor the stop.
     const focusable = renderScrollAreaViewport(
       {},
       scrollPart({ axis: "vertical" }, testTheme),
@@ -568,11 +501,6 @@ describe("layout containers", () => {
   });
 
   it("hands the implicit viewport to the caller's ref", () => {
-    // The bug guarded: the page told a caller to keep `onScrollChange` "for a
-    // restored offset", while the area handed out no way to set one — the
-    // scroller is the element the renderer moves, so it has to be reachable.
-    // `viewportTestId` addresses it in automation; `viewportRef` holds it in
-    // application code.
     const viewportRef = () => {};
     const root = renderScrollArea(
       { axis: "vertical", viewportRef, children: <div /> },
@@ -605,10 +533,6 @@ describe("layout containers", () => {
   });
 
   it("finds the caller's viewport inside a fragment", () => {
-    // The bug guarded: the composition scan read only direct children, so a
-    // viewport grouped in a fragment (or a fragment inside one) was invisible
-    // and the area wrapped the whole composition — heading and all — in a
-    // second, implicit scroller.
     const root = renderScrollArea(
       {
         axis: "vertical",
@@ -645,9 +569,6 @@ describe("layout containers", () => {
   });
 
   it("lays its actions on the axis it is given", () => {
-    // The bug this guards: a group was only ever a row, so a column of
-    // attached actions was impossible to build without hand-rolling the
-    // silhouette outside the component.
     expect(
       styleProp(renderButtonGroup({}, testTheme), "flexDirection"),
     ).toStrictEqual(Option.some("row"));
@@ -655,21 +576,14 @@ describe("layout containers", () => {
     expect(styleProp(vertical, "flexDirection")).toStrictEqual(
       Option.some("column"),
     );
-    // A column shares one width: without `stretch` two text actions end at
-    // different edges and the group reads as two unrelated buttons.
+
     expect(styleProp(vertical, "alignItems")).toStrictEqual(
       Option.some("stretch"),
     );
     expect(numberIn(vertical, "gap")).toStrictEqual(Option.some(0));
   });
 
-  // Bug guarded: a toolbar is saved with its mode, and the mode had no
-  // membership test — read raw, the class recipe's `attached` check was false
-  // for a name this release does not carry, so a restored toolbar came back
-  // **separated** (a gap and no clipped silhouette) although `attached` is the
-  // documented default. The paint and the actions it wraps read one answer now.
   it("paints the documented mode for a stored name the union does not carry", () => {
-    // The cast is the storage boundary: a saved mode is one string.
     const stored = renderButtonGroup(
       { mode: "segmented" as ButtonGroupMode },
       testTheme,
@@ -679,7 +593,7 @@ describe("layout containers", () => {
     const actions =
       elementChildren(stored)[0] ?? expect.fail("the group wrapped no actions");
     expect(elementProp(actions, "value")).toStrictEqual(Option.some(true));
-    // A stored axis reads as the documented horizontal row.
+
     const row = renderButtonGroup(
       { orientation: "diagonal" as ButtonGroupOrientation },
       testTheme,
@@ -701,16 +615,7 @@ describe("layout containers", () => {
     ).toStrictEqual(Option.none());
   });
 
-  // Bug guarded: a toolbar is saved with its gap as readily as its mode, and
-  // `spaceStep`'s own JSDoc names "a restored toolbar's gap" as its motivating
-  // case — while this group was the one caller that read the step raw. `gap:
-  // null` (JSON's field a record never wrote) and a step this release dropped
-  // became the classes `gap-null` / `gap-huge`, which the compiler records as
-  // unsupported and nobody reads, so a **separated** group painted its actions
-  // flush although the prop documents `sm`.
   it("paints the documented gap for a stored step the theme does not carry", () => {
-    // The cast is the storage boundary: a saved record's gap is whatever its
-    // decoder wrote, and a step this release does not carry has no type here.
     const stored: ReadonlyArray<SpaceStep | null> = [null, "huge" as SpaceStep];
     Arr.forEach(stored, (gap) => {
       expect(
@@ -721,8 +626,7 @@ describe("layout containers", () => {
         String(gap),
       ).toStrictEqual(Option.some(testTheme.spacing.sm));
     });
-    // A step the theme paints is still the caller's, and `attached` still owns
-    // the silhouette whatever gap it was handed.
+
     expect(
       numberIn(
         renderButtonGroup({ mode: "separated", gap: "lg" }, testTheme),
@@ -738,11 +642,6 @@ describe("layout containers", () => {
   });
 
   it("hands a group of actions its own element", () => {
-    // The bug guarded: the group painted one `div` and published only a
-    // `testId`, so a layout measuring a toolbar, a scroll naming the region it
-    // holds or an automation host addressing it had to wrap the group — and the
-    // wrapper is the flex item that paints. Every other layout primitive takes
-    // the runtime's own trio; the group is a layout of actions.
     const onLayout = () => {};
     const hold = () => {};
     const group = renderButtonGroup(
@@ -752,7 +651,7 @@ describe("layout containers", () => {
     expect(expectSome(hostProp(group, "aria-id"))).toBe("toolbar");
     expect(hostProp(group, "onLayout")).toStrictEqual(Option.some(onLayout));
     expect(hostProp(group, "ref")).toStrictEqual(Option.some(hold));
-    // A group given none of the trio invents none of it.
+
     const plain = renderButtonGroup({}, testTheme);
     expect(hostProp(plain, "aria-id")).toStrictEqual(Option.none());
     expect(hostProp(plain, "onLayout")).toStrictEqual(Option.none());
@@ -770,11 +669,6 @@ describe("type", () => {
   });
 
   it("paints a role name the scale does not carry as the body role", () => {
-    // The bug guarded: `role` is content before it is a literal — a saved
-    // markdown node or a restored inspector row carries the role it was written
-    // with — and `ROLE_CLASS[name]` answered `undefined`, so the run asked the
-    // compiler for `type-undefined` and painted no size, leading or weight at
-    // all instead of the body role every run of text defaults to.
     const stored = renderText({ role: "h4" as TextRole }, testTheme);
     const fallback = renderText({ role: "body" }, testTheme);
     expect(numberIn(stored, "fontSize")).toStrictEqual(
@@ -789,11 +683,6 @@ describe("type", () => {
   });
 
   it("paints a tone name the table does not carry as the default tone", () => {
-    // The bug guarded: `tone` is a stored choice as often as a literal — an
-    // audit row, a saved message, a settings record — so a name a release
-    // renamed resolved to no colour class at all. The run then inherited
-    // whatever the surface behind it painted, instead of the `default` ink the
-    // component documents.
     const stored = renderText({ tone: "critical" as TextTone }, testTheme);
     const fallback = renderText({ tone: "default" }, testTheme);
     expect(expectSome(stringIn(stored, "color"))).toBe(
@@ -805,10 +694,6 @@ describe("type", () => {
   });
 
   it("aligns a run in the runtime's grammar, not the API's name", () => {
-    // The bug guarded: `align="end"` compiled to a declaration of `end`, a word
-    // the pinned renderer does not parse (its text host reads `left`, `center`
-    // and `right`, plus `start` as left) — handed `end` it paints the default,
-    // so a right-aligned caption looked exactly like a left-aligned one.
     expect(
       stringIn(renderText({ align: "end" }, testTheme), "textAlign"),
     ).toStrictEqual(Option.some("right"));
@@ -818,9 +703,6 @@ describe("type", () => {
   });
 
   it("paints a spinner accent name the table does not carry as the brand", () => {
-    // The bug guarded: an unknown accent resolved to no colour class on every
-    // dot, so the indicator painted nothing at all — a busy state a reader
-    // cannot see, and no error anywhere.
     const stored = renderSpinner(
       { accent: "brand" as SpinnerAccent },
       testTheme,
@@ -848,17 +730,13 @@ describe("type", () => {
     expect(
       expectSome(hostProp(renderText({ role: "code" }, testTheme), "role")),
     ).toBe("code");
-    // Body copy is not a landmark; it must not invent a role.
+
     expect(
       hostProp(renderText({ role: "body" }, testTheme), "role"),
     ).toStrictEqual(Option.none());
   });
 
   it("clamps after a line count and truncates on one line", () => {
-    // The bug: `clamp` resolved `lineClamp`, which GPUix 0.11.0 declares and
-    // paints every line for (measured by the playground's `text-truncation`
-    // probe: `clamp={2}` over five lines painted five). A clamp has to be a
-    // definite box at the role's leading with the overflow hidden.
     const clamped = renderText({ clamp: 3 }, testTheme);
     expect(numberIn(clamped, "height")).toStrictEqual(
       Option.some(3 * testTheme.typography.body.lineHeight),
@@ -866,7 +744,7 @@ describe("type", () => {
     expect(expectSome(stringIn(clamped, "overflow"))).toBe("hidden");
     expect(expectSome(stringIn(clamped, "whiteSpace"))).toBe("normal");
     expect(numberIn(clamped, "lineClamp")).toStrictEqual(Option.none());
-    // The height follows the role, not a fixed leading.
+
     const heading = renderText({ role: "h1", clamp: 1 }, testTheme);
     expect(numberIn(heading, "height")).toStrictEqual(
       Option.some(testTheme.typography.h1.lineHeight),
@@ -878,28 +756,18 @@ describe("type", () => {
   });
 
   it("paints a stored clamp of null as no clamp, not as one line", () => {
-    // The bug guarded: a clamp is a stored preference — a markdown node's line
-    // budget, a restored inspector row's preview — and JSON keeps a field the
-    // record never carried as `null`, not `undefined`. `textClass` asked
-    // `clamp !== undefined`, so a restored run compiled a one-line box while
-    // the prop's documented default is no clamp at all.
-    // The cast is the storage boundary: a saved record stores absence as null.
     const stored = { clamp: null } as unknown as TextProps;
     const element = renderText(stored, testTheme);
     expect(numberIn(element, "height")).toStrictEqual(Option.none());
     expect(stringIn(element, "overflow")).toStrictEqual(Option.none());
     expect(stringIn(element, "whiteSpace")).toStrictEqual(Option.none());
-    // A count that is there and cannot be laid out is still one line.
+
     expect(
       numberIn(renderText({ clamp: Number.NaN }, testTheme), "height"),
     ).toStrictEqual(Option.some(testTheme.typography.body.lineHeight));
   });
 
   it("paints an error in the measured status text role, not the solid fill", () => {
-    // The bug: `destructive` is a *background* whose own label clears the
-    // secondary floor; written as body text on the page it measured 3:1. Tokens
-    // measure `destructiveSoftForeground` as page text on background and card,
-    // so that is what an error message and an invalid label paint.
     const element = renderText({ tone: "destructive" }, testTheme);
     expect(stringIn(element, "color")).toStrictEqual(
       Option.some(testTheme.colors.destructiveSoftForeground),
@@ -910,9 +778,6 @@ describe("type", () => {
   });
 
   it("paints a brand-toned run in the derived brand text, not the fill role", () => {
-    // The bug: `tone="primary"` resolved to `primary`, a fill role no text
-    // contract measures — 4.30:1 on the base light `active` wash, 3.10:1 in
-    // macOS dark. A brand-coloured run paints `brandText` like a link does.
     Arr.forEach([lightTheme, darkTheme] as const, (theme) => {
       const colour = expectSome(
         stringIn(renderText({ tone: "primary" }, theme), "color"),
@@ -927,43 +792,31 @@ describe("type", () => {
   });
 
   it("hands a control its name, because GPUix has no aria-labelledby", () => {
-    // The helper is only useful if a control can consume it: every control
-    // takes `label` and writes the host's `aria-label` itself.
     const button = renderButton(
       { ...labelledBy("Email"), children: "Send" },
       testTheme,
       { focused: false },
     );
     expect(expectSome(hostProp(button, "aria-label"))).toBe("Email");
-    // `Label` composes rather than renders, so its own contribution is the
-    // column stack it asks for; the text inside is `Text`'s.
+
     expect(expectSome(elementProp(renderLabel({}), "direction"))).toBe(
       "column",
     );
   });
 
   it("makes the words that name a control its pointer target", () => {
-    // The bug guarded: a label was inert, so pressing the words beside a field
-    // did nothing. A browser gets click-to-focus from `for`/`htmlFor`; the
-    // runtime has neither, but it exposes `focusElement`, so a label given its
-    // control's ref is that control's pointer target. The frame is the element
-    // that holds the press; the runtime case proves the words reach it.
     const pressed = vi.fn();
     const element = renderLabel({ description: "We never share it." }, pressed);
     expect(expectSome(hostTag(element))).toBe("div");
     expect(expectSome(stringIn(element, "cursor"))).toBe("pointer");
     expectSome(hostHandler(element, "onClick"))(clickEvent);
     expect(pressed).toHaveBeenCalledOnce();
-    // The column the caller styled is still the label's own layout.
+
     const stack = elementChildren(element)[0] ?? expect.fail("no label column");
     expect(expectSome(elementProp(stack, "direction"))).toBe("column");
   });
 
   it("leaves a label with no target inert", () => {
-    // The other direction: a label that names nothing must not become a press
-    // target or a pointer cursor — reading the words is all it does, and the
-    // runtime has no focus to move. No frame is added, so the tree is the
-    // column the caller composes.
     const element = renderLabel({ description: "We never share it." });
     expect(hostTag(element)).toStrictEqual(Option.none());
     expect(expectSome(elementProp(element, "direction"))).toBe("column");
@@ -971,10 +824,6 @@ describe("type", () => {
   });
 
   it("stays inert while the control it names is disabled", () => {
-    // A label holds the control's element, not its state, so a press would
-    // otherwise move focus to a control that refuses every key. `disabled`
-    // is the caller's own boolean, and it drops the press the same way a
-    // disabled control installs no handler.
     const pressed = vi.fn();
     const element = renderLabel({ disabled: true }, pressed);
     expect(hostTag(element)).toStrictEqual(Option.none());
@@ -983,10 +832,6 @@ describe("type", () => {
   });
 
   it("hands back the description the label paints, when there is one", () => {
-    // The bug guarded: `labelledBy(name)` wrote only the name, so the help a
-    // visible `Label description` painted was announced to nobody — there is no
-    // `aria-describedby`. Passing the same string gives the control the words;
-    // the Checkbox suite proves a control consumes them.
     expect(labelledBy("Email")).toStrictEqual({ label: "Email" });
     expect(labelledBy("Email", "We never share it.")).toStrictEqual({
       label: "Email",
@@ -995,10 +840,6 @@ describe("type", () => {
   });
 
   it("paints no help line for a description that says nothing", () => {
-    // The bug guarded: the caption was painted for any string that was not
-    // `undefined`, and a run of spaces lays out a whole line where `""` lays out
-    // none (measured in a window) — so help that arrived from data blank added a
-    // blank line under every name while the control announced nothing.
     expect(elementChildren(renderLabel({ description: "   " }))).toHaveLength(
       1,
     );
@@ -1014,12 +855,6 @@ describe("type", () => {
 
 describe("loading", () => {
   it("hand the runtime's host props to the status leaves they paint", () => {
-    // The bug guarded: the four status leaves painted one element each and
-    // published only a `testId`, so a caller could not measure the box a
-    // placeholder reserves, hold a bar's instance or name the node for
-    // automation without wrapping it — and the wrapper becomes the flex item
-    // that paints, so the box measured is not the box composed. They take the
-    // runtime's trio now, the rule every layout leaf follows.
     const onLayout = () => {};
     const hold = () => {};
     const painted = [
@@ -1052,7 +887,7 @@ describe("loading", () => {
       );
       expect(hostProp(element, "ref")).toStrictEqual(Option.some(hold));
     });
-    // A leaf given none of the trio invents none of it.
+
     expect(
       Arr.map(
         [
@@ -1080,8 +915,6 @@ describe("loading", () => {
   });
 
   it("holds a skeleton on its resting frame when the reader asked for less motion", () => {
-    // The bug guarded: the caller's preference reached nothing, so a reader who
-    // asked not to see motion still got a block pulsing every 700 ms.
     const opacityAt = (step: number, reducedMotion?: boolean): number =>
       expectSome(
         numberIn(renderSkeleton({ reducedMotion }, testTheme, step), "opacity"),
@@ -1093,8 +926,6 @@ describe("loading", () => {
   });
 
   it("holds a spinner's arc when the reader asked for less motion", () => {
-    // The same rule on the second timed indicator: the ring stays a status
-    // report, but no frame after the first is painted.
     const opacitiesAt = (
       step: number,
       reducedMotion?: boolean,
@@ -1110,8 +941,6 @@ describe("loading", () => {
   });
 
   it("keeps a skeleton circle round with only one side given", () => {
-    // The bug: the missing side fell back to the body line height, so a
-    // 40-wide avatar placeholder painted a 40x20 ellipse.
     const circle = renderSkeleton({ circle: true, width: 40 }, testTheme, 0);
     expect(expectSome(numberIn(circle, "width"))).toBe(40);
     expect(expectSome(numberIn(circle, "height"))).toBe(40);
@@ -1121,9 +950,6 @@ describe("loading", () => {
   });
 
   it("paints a skeleton box when a side it was given cannot be measured", () => {
-    // The bug guarded: a placeholder's side is often a measurement, and `NaN`
-    // reached `width`/`height` verbatim — a box the runtime paints as nothing,
-    // which reads exactly like content that finished loading.
     const block = renderSkeleton({ width: Number.NaN }, testTheme, 0);
     expect(expectSome(stringIn(block, "width"))).toBe("100%");
     expect(expectSome(numberIn(block, "height"))).toBe(
@@ -1143,10 +969,7 @@ describe("loading", () => {
   });
 
   it("keeps the corner its page documents for a stored radius name", () => {
-    // The bug guarded: a saved placeholder's radius arrived as a name a later
-    // release dropped, so the recipe shipped an unsupported `rounded-<name>`
-    // class and the block painted square while its page promised `sm`.
-    const stored = "xl2" as RadiusStep; // the storage boundary
+    const stored = "xl2" as RadiusStep;
     expect(
       expectSome(
         numberIn(
@@ -1164,20 +987,13 @@ describe("loading", () => {
     const element = renderSpinner({ label: "Saving" }, testTheme, 0);
     expect(expectSome(hostProp(element, "role"))).toBe("status");
     expect(expectSome(hostProp(element, "aria-label"))).toBe("Saving");
-    // The provider's word names an unnamed indicator rather than leaving it an
-    // unnamed status.
+
     const shipped = renderSpinner({}, testTheme, 0);
     expect(expectSome(hostProp(shipped, "role"))).toBe("status");
     expect(expectSome(hostProp(shipped, "aria-label"))).toBe("Loading");
   });
 
   it("paints a blank spinner label as decoration, not an unnamed status", () => {
-    // Bug guarded: a blank label — deliberately (`Button`'s blank
-    // `loadingLabel`) or through a translation table that answered nothing —
-    // reached `aria-label={undefined}` while the node still declared
-    // `role="status"`, so the window's accessibility tree carried a Status node
-    // with no name: a reader walked into a status with nothing to announce.
-    // Silence is decoration, the rule `Icon` follows for a blank label.
     Arr.forEach(["", "   "], (label) => {
       const element = renderSpinner({ label }, testTheme, 0);
       expect(expectSome(hostProp(element, "role"))).toBe("presentation");
@@ -1186,10 +1002,6 @@ describe("loading", () => {
   });
 
   it("sizes a spinner's ring from the icon scale, or from pixels", () => {
-    // The bug guarded: `size` took a bare pixel count while every sibling
-    // `size` prop in the package took a named step, so the documented way to
-    // line a spinner up with the text beside it was to read `theme.iconSize.sm`
-    // and pass the number back — a scale the caller had to find first.
     const ringOf = (size?: Parameters<typeof renderSpinner>[0]["size"]) => {
       const element = renderSpinner({ size }, testTheme, 0);
       return {
@@ -1216,11 +1028,6 @@ describe("loading", () => {
   });
 
   it("reads a ring size it cannot paint as the default step", () => {
-    // The bug: `size` also takes the number a caller measured, and it reached
-    // `style.width`/`height` verbatim. A measurement that never arrived
-    // (`NaN`), zero or a negative count paints no ring at all — the status is
-    // still announced, so the indicator vanishes without a word. The icon
-    // scale's own resolver already answers this case.
     const ringOf = (size?: Parameters<typeof renderSpinner>[0]["size"]) => {
       const element = renderSpinner({ size }, testTheme, 0);
       return [
@@ -1242,10 +1049,6 @@ describe("loading", () => {
 
 describe("ButtonGroup's public surface", () => {
   it("exports both ordered indexes a persisted choice needs", () => {
-    // The bug guarded: `ButtonGroup` gained a second axis while only the mode
-    // index reached the package root, so a consumer persisting an orientation
-    // could not name the choices it is allowed to store — the same dead end the
-    // Select helpers had when a page taught symbols the root did not export.
     expect(primitives.BUTTON_GROUP_MODES).toStrictEqual([
       "attached",
       "separated",
@@ -1256,8 +1059,6 @@ describe("ButtonGroup's public surface", () => {
     ]);
   });
 
-  // An ordered index a consumer can persist beside the guard that reads it
-  // back: the pair the tokens package keeps for every stored union.
   it("guards both choices and answers the documented default", () => {
     expect(primitives.isButtonGroupMode("separated")).toBe(true);
     expect(primitives.isButtonGroupMode("segmented")).toBe(false);

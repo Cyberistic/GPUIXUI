@@ -1,16 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * The blocks, in the real GPUix renderer. The bugs these guard: a block that
- * paints nothing, a Look control that does not restyle the tree, a thread click
- * that does not open the thread, and a kanban drag that leaves the card where
- * it was (or drops it in a column the pointer was not over). The desktop: a
- * Start button that does not open the menu, a taskbar button that does not
- * bring its window to the front, and a menu a press on the desktop leaves open.
- * Stats: a range control that leaves the numbers on the old range. SettingsApp:
- * a Dark mode switch that changes nothing (its handlers were no-ops in main.tsx).
- * Console: a sidebar trigger that does not collapse the sidebar, and a Deploy
- * button that raises no toast (the toasts once never painted: two root children).
- */
 import { createTestRoot } from "@gpuix/react/testing";
 import { lightTheme, platformTheme } from "@gpuixui/tokens";
 import { ThemeProvider } from "@gpuixui/tokens/react";
@@ -29,8 +17,6 @@ import { Podcast } from "./podcast/podcast.js";
 import { Monitor } from "./monitor/monitor.js";
 import { Dashboard } from "./dashboard/dashboard.js";
 
-// The first mount in a file loads the native binding and its fonts: measured at
-// 7.3 s cold against vitest's 5 s default.
 vi.setConfig({ testTimeout: 20_000 });
 
 let unmount = () => {};
@@ -134,7 +120,6 @@ describe("Kanban", () => {
 });
 
 describe("Desktop", () => {
-  /** The windows' ids in paint order: the last is in front. */
   const order = (r: Renderer) => {
     const root = r.findByTestId("desktop");
     return (root?.children ?? [])

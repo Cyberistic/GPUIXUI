@@ -1,12 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * PinnedList example: a settings page's sectioned scroll region.
- *
- * Composition, not a gallery: a real preferences panel where the section titles
- * pin as the reader scrolls, and one section whose rows are a plain list so the
- * spacer and the header's own surface are visible against content of their own.
- */
-
 import * as Arr from "effect/Array";
 import {
   Card,
@@ -18,7 +10,6 @@ import {
 import { PinnedList, type PinnedListSection } from "../src/pinned-list.js";
 import { textStyle, useTheme } from "../src/internal/theme.js";
 
-/** One setting: a label and the state a reader would change. */
 interface Setting {
   readonly label: string;
   readonly value: string;
@@ -50,7 +41,6 @@ const settings: ReadonlyArray<readonly [string, ReadonlyArray<Setting>]> = [
   ],
 ];
 
-/** A settings card whose section titles pin to the top of the scroll box. */
 export const PinnedListExample = () => {
   const theme = useTheme();
   const sections: ReadonlyArray<PinnedListSection> = Arr.map(
@@ -104,7 +94,6 @@ export const PinnedListExample = () => {
           testId="settings"
           aria-label="Settings"
           headerHeight={32}
-          // The card is the surface behind a held header.
           surfaceColor={theme.colors.card}
           style={{ height: 240 }}
           sections={sections}

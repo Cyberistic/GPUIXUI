@@ -8,17 +8,6 @@ import {
   type BrowserChord,
 } from "./hotkey-chord";
 
-/**
- * The recorder reads the physical key and every modifier around it.
- *
- * Guarded bug: the Hotkey recorder page built its chord from `event.key` alone
- * and dropped anything longer than one character, so ⌘⇧P bound the letter `p`,
- * `F5` and the arrows bound nothing, and a press of Shift alone silently
- * recorded "shift". The drawing now goes through the same `parseHotkey →
- * hasNonModifierKey → normalizeHotkey` path the runtime uses, and paints the
- * component's own glyphs.
- */
-
 const press = (
   code: string,
   key: string,
@@ -51,8 +40,6 @@ describe("the accelerator of a physical key", () => {
 
 describe("the chord a press binds", () => {
   it("keeps every modifier, in the grammar's order", () => {
-    // `normalizeHotkey` is the grammar's own canonical form, which is also what
-    // the recorder stores; `formatSymbols` derives the same keycaps from either.
     expect(chord(press("KeyP", "P", { meta: true, shift: true }))).toBe(
       "Mod+Shift+P",
     );
@@ -66,7 +53,6 @@ describe("the chord a press binds", () => {
   });
 
   it("reads the physical key, not the character a modified press produced", () => {
-    // Shift+1 is "!" on a US layout; the binding is still the 1 key.
     expect(chord(press("Digit1", "!", { shift: true }))).toBe("Shift+1");
   });
 
@@ -95,7 +81,7 @@ describe("the recorder drawing", () => {
   it("records through the grammar instead of the produced character", () => {
     expect(source).toContain("chordOf");
     expect(source).toContain("glyphsOf");
-    // `event.key.length !== 1` is what dropped F-keys and the arrows.
+
     expect(source).not.toContain("length !== 1");
   });
 });

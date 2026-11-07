@@ -1,34 +1,16 @@
-/**
- * The Tier 1 inventory: one record per row of `.agents/slop/COMPONENTS.md`'s foundational
- * table.
- *
- * The table is what a reader trusts and what the release gate reads, so it is
- * checked against the code rather than maintained by hand: `inventory.test.ts`
- * fails when a record names a file that does not exist, when a row and its
- * record disagree about status or GPUix support, when a row marked `done` has no
- * test, or when a finished row has no record. The table drifted to `todo` for
- * every Tier 1 component while all of them were built; this is the guard that
- * makes that drift a failing suite instead of a stale document.
- *
- * Paths are relative to `packages/primitives`; the icons record reaches into
- * `packages/icons`, which the same workstream owns.
- */
-
-/** One Tier 1 component's inventory record. */
 export interface PrimitiveMeta {
-  /** Exactly the label used in `.agents/slop/COMPONENTS.md`. */
   readonly name: string;
   readonly status: "todo" | "wip" | "done" | "blocked" | "unsupported";
   readonly gpuixSupport: "yes" | "partial" | "no";
-  /** Empty array when there is no limitation. Never omitted. */
+
   readonly limitations: ReadonlyArray<string>;
-  /** Every source module that makes up the component. */
+
   readonly source: ReadonlyArray<string>;
-  /** The in-package docs page. */
+
   readonly docs: string;
-  /** The example mounted by `runtime/examples.runtime.test.tsx`. */
+
   readonly example: string;
-  /** Unit and/or runtime suites that exercise it. Never empty when `done`. */
+
   readonly tests: ReadonlyArray<string>;
 }
 
@@ -36,7 +18,6 @@ const layoutRuntime = "runtime/layout.runtime.test.tsx";
 const layoutExample = "examples/layout.example.tsx";
 const formExample = "examples/form.example.tsx";
 
-/** Every Tier 1 component, in the order `.agents/slop/COMPONENTS.md` lists them. */
 export const inventory: ReadonlyArray<PrimitiveMeta> = [
   {
     name: "Text / typography",

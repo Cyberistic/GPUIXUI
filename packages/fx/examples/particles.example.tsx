@@ -1,20 +1,10 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Particles example: a launch panel with the field behind its content.
- *
- * Composition, not a gallery: the hero is the field's real job — a drifting
- * background under a headline and one action — and the quiet strip shows the same
- * field under the reduced preference and with a caller's own colour and count,
- * which are the two decisions a decorative field leaves to its caller.
- */
-
 import { Card } from "@gpuixui/components/card";
 import { textStyle, useTheme } from "@gpuixui/components/authoring";
 import { MotionProvider } from "@gpuixui/components/motion";
 import { Particles } from "../src/particles.js";
 import { ShineButton } from "../src/shine-button.js";
 
-/** The field fills the box it is given, so the example bounds it with insets. */
 const fill = {
   position: "absolute" as const,
   top: 0,
@@ -23,7 +13,6 @@ const fill = {
   left: 0,
 };
 
-/** A hero with its field behind the copy, and the field stilled. */
 export const ParticlesExample = () => {
   const theme = useTheme();
 
@@ -85,7 +74,7 @@ export const ParticlesExample = () => {
         >
           <MotionProvider preference="reduced">
             <div style={fill}>
-              {/* A caller's colour and count: a quiet field, painted still. */}
+              {}
               <Particles
                 count={12}
                 seed={2}

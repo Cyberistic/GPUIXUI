@@ -76,19 +76,3 @@ Each entry of `steps` is a `MultiStep`:
 `label` names the wizard group; a blank name is an **absence**, so the root is not published with an empty name. The indicator is always named (`Steps` when the wizard is not), a step whose `title` arrived blank is named by its position (`Step 2`) so no list item is unnamed and no announcement opens with a comma, and a title is published trimmed. That rule is the **stepper's** (`stepName` in `stepper/logic.ts`), so a `StepperStep` written directly and the wizard's content announcement cannot disagree about it. A blank `description` paints no line — an empty string lays out a zero-height run, but a run of spaces would lay out a full line. **A field a record kept as something other than text is no copy at all**: a saved definition's `title: 42` or `description: {}` reads through `textOf` before the blank rule, so the step keeps its position name and paints no description line instead of the render throwing out of `accessibleName`. The three action labels are copy too: a blank `nextLabel`, `backLabel` or `submitLabel` reads as its documented default, because a missing i18n row must not paint a blank box as the wizard's only way forward.
 
 A gate's message is copy on the same rule. `Some("")` still **refuses** the move, so a table with a missing row cannot release a step its author gated, but the painted alert reads `This step is not complete yet.` rather than nothing — an invisible refusal leaves the reader pressing a button that does nothing.
-
-## Notes
-- **A workflow is data as well as code**: a `steps` list restored from a saved
-  definition is read at the boundary (`stepsOf`), so JSON's `null` for a list a
-  record never carried paints nothing rather than throwing on `steps.length`,
-  and an entry without a text `id` is not a step — it is dropped while its
-  neighbours paint.
-- **A stored gate is consulted only when it is a function**: `gateMessage` reads
-  the step's `gate` (`StepGateSource`), so the `null` JSON writes for a gate the
-  record never carried, or a field a release renamed, makes the step **move**
-  instead of throwing `gate is not a function` from the press.
-- **The draft is the caller's**: the component stores the step index and a
-  refusal per step `id`, so a caller that reorders `steps` never paints one
-  step's message under another.
-- **No free navigation**: `Back` and the gates are the only moves.
-- A step gate is not the record decode; decode the whole draft in `Form`.

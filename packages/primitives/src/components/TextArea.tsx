@@ -1,15 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * `TextArea` — a multi-line text field.
- *
- * The same field contract as `Input`, on the runtime's `textarea` element.
- * `minRows`/`maxRows` are the runtime's own height controls; a textarea does
- * not scroll until its content exceeds `maxRows`, so a set `maxRows` is also
- * the point at which it becomes a scroll container. Both counts are handed over
- * as whole rows (`core/layout.ts`'s `fieldRows`), because the runtime drops a
- * fractional count instead of flooring it.
- */
-
 import type { ReactElement } from "react";
 import type { StyleDesc } from "@gpuix/react";
 import * as Option from "effect/Option";
@@ -28,36 +17,13 @@ import {
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
-/**
- * Drift a textarea cannot take: with `onSubmit` set, the runtime turns Enter
- * into a submit and the newline never arrives (measured by
- * `runtime/fields.runtime.test.tsx`). A caller who wants submit-on-Enter wants
- * an `Input`.
- */
 export type TextAreaProps = Omit<FieldProps, "onSubmit"> &
   ValueChangeProps<string> & {
-    /**
-     * Minimum visible rows; the field grows to fit. A fractional or unusable
-     * count is read as a whole row, never dropped (`fieldRows`).
-     *
-     * A saved count that is not a number — JSON's `null` for a field the record
-     * never carried, or text a store wrote — is **absence**, so the runtime's
-     * own height answers.
-     */
     readonly minRows?: number;
-    /**
-     * Rows after which the field scrolls instead of growing. A fractional or
-     * unusable count is read as a whole row, and the cap is never below
-     * `minRows`.
-     *
-     * A saved count that is not a number is absence here too, and that matters
-     * more on this side: a cap read as one row collapsed a six-line restored
-     * field to a single row.
-     */
+
     readonly maxRows?: number;
   };
 
-/** A textarea's height is rows, not a control height, so it re-bases padding. */
 export const renderTextArea = (
   props: TextAreaProps,
   theme: PrimitiveTheme,
@@ -84,7 +50,6 @@ export const renderTextArea = (
   );
 };
 
-/** A multi-line text field. */
 export const TextArea = (props: TextAreaProps): ReactElement => {
   const theme = useTheme();
   const focus = useFocus();

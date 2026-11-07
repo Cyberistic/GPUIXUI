@@ -1,20 +1,3 @@
-/**
- * GravityStars in the real GPUix renderer.
- *
- * The bugs these guard: a star born inside the box instead of on its edge; a
- * first leg that never hands over to the fade, so the star stays lit at the well;
- * a fall that replays its approach instead of retargeting from the frame on
- * screen; a field that stops after one fall because the runtime tweens a target
- * once; a reduced preference that deletes the field instead of stilling it; a
- * decorative field that leaks into the accessibility tree or swallows presses;
- * and an entrance that ignores the house level.
- *
- * The motion clock is paused before the mount, so the first frame is the declared
- * initial frame rather than wherever the frame loop had got. A headless tree
- * reports bounds and the motion description, not paint, so the fall is read from
- * the targets the component hands the runtime.
- */
-
 import type { TestElement, TestRoot } from "@gpuix/react/testing";
 import { motionLevels } from "@gpuixui/motion/timing";
 import * as Arr from "effect/Array";
@@ -38,10 +21,8 @@ import {
   type GravityStar,
 } from "../gravity-stars/logic.js";
 
-/** The fall the cases run with, short enough to finish in a test. */
 const fallMs = 2_000;
 
-/** One element by test id, failing rather than casting. */
 const byTestId = (
   renderer: TestRoot["renderer"],
   testId: string,
@@ -53,7 +34,6 @@ const byTestId = (
   return element;
 };
 
-/** Mount under a paused motion clock, then let the box measurement land. */
 const mountFrozen = (node: ReactNode) => {
   const page = renderComponent(<div />);
   page.renderer.clockPause();
@@ -62,14 +42,12 @@ const mountFrozen = (node: ReactNode) => {
     page.renderer.flush();
   };
   show(node);
-  // The field positions itself from its own layout, so the stars arrive on the
-  // second frame; the second settle paints what the measurement changed.
+
   settle(page);
   settle(page);
   return { page, show };
 };
 
-/** The field's pure layout for the box the renderer measured. */
 const fieldIn = (
   page: ReturnType<typeof renderComponent>,
   overrides: Partial<GravityFieldInput> = {},
@@ -124,7 +102,6 @@ describe("GravityStars", () => {
         expect(star.style.width).toBe(spec.size);
       });
 
-      // Every star aims its centre at the same well.
       expect(
         Arr.length(
           Arr.dedupe(
@@ -136,7 +113,7 @@ describe("GravityStars", () => {
           ),
         ),
       ).toBe(1);
-      // The first star's declared box sits inside the field it was laid out in.
+
       const field = requireBounds(page, "field");
       const first = requireBounds(page, `gravity-star-${specAt(specs, 0).key}`);
       expect(first.x).toBeGreaterThanOrEqual(field.x);
@@ -157,7 +134,6 @@ describe("GravityStars", () => {
       const phases = gravityPhases(spec);
       const born = byTestId(page.renderer, "gravity-star-0");
 
-      // Born transparent on the edge, heading for the approach frame.
       expect(born.style.opacity).toBe(0);
       expect(born.customProps?.motion).toMatchObject({
         initial: { left: spec.x, top: spec.y, opacity: 0 },
@@ -178,7 +154,6 @@ describe("GravityStars", () => {
       );
       settle(page);
 
-      // The plunge retargets from the frame on screen rather than replaying.
       const landing = byTestId(page.renderer, "gravity-star-0");
       expect(landing.id).toBe(born.id);
       expect(landing.customProps?.motion).toMatchObject({
@@ -209,7 +184,6 @@ describe("GravityStars", () => {
       page.renderer.clockFastForward(phases.plunge.durationMs);
       settle(page);
 
-      // A fresh star back on the edge, heading inward again.
       const next = byTestId(page.renderer, "gravity-star-0");
       expect(next.id).not.toBe(born.id);
       expect(next.style.left).toBeCloseTo(spec.x, 0);
@@ -270,7 +244,6 @@ describe("GravityStars", () => {
       const rest = gravityRest(spec);
       const star = byTestId(page.renderer, "gravity-star-1");
 
-      // The field stays, the fall goes: no target, the approach frame painted.
       expect(star).not.toHaveProperty("customProps.motion");
       expect(star.style.left).toBeCloseTo(rest.left, 0);
       expect(star.style.top).toBeCloseTo(rest.top, 0);
@@ -295,7 +268,6 @@ describe("GravityStars", () => {
   it("publishes no accessibility node and takes no pointer input", () => {
     const { page } = mountFrozen(<Field />);
     try {
-      // The window itself is the only node: the field adds no role and no name.
       expect(Arr.map(a11yNodes(page.renderer), (node) => node.role)).toEqual([
         "window",
       ]);

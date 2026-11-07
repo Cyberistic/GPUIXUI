@@ -1,13 +1,3 @@
-/**
- * TimePicker behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: typing that never reached `onValueChange`; an hour typed
- * without a value on the minute side; text and value disagreeing after an
- * out-of-range digit; arrow keys that stopped at the hour or at midnight; blur
- * that left a one-digit segment; a clear control on an empty or non-clearable
- * field; and a controlled field that changed itself when the consumer said no.
- */
-
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
 import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
@@ -69,7 +59,6 @@ const Time = ({
   </div>
 );
 
-/** Focus a segment, then send each character as a real key press. */
 const typeIn = (
   root: ComponentTestRoot,
   segment: "hours" | "minutes",
@@ -112,7 +101,7 @@ describe("TimePicker", () => {
     typeIn(time, "minutes", "45");
 
     expect(onValueChange.mock.calls.at(-1)).toEqual(["09:45"]);
-    // Moving focus out of the hour segment padded it before the minutes were edited.
+
     expect(segmentValue(time, "hours")).toBe("09");
     expect(segmentValue(time, "minutes")).toBe("45");
 
@@ -237,7 +226,7 @@ describe("TimePicker", () => {
     typeIn(time, "hours", "3");
 
     expect(onValueChange.mock.calls.at(-1)).toEqual(["23:00"]);
-    // The consumer did not adopt the value, so the display went back to 09.
+
     expect(segmentValue(time, "hours")).toBe("09");
 
     time.unmount();
@@ -265,9 +254,6 @@ describe("TimePicker", () => {
   });
 
   it("refuses every edit path on a disabled field", () => {
-    // The bug this guards: a read-only host still receives keys and a press
-    // still moves focus, so a disabled picker stepped its own value with the
-    // arrow keys and reported it to the caller.
     const onValueChange = vi.fn();
     const time = renderComponent(
       <Time defaultValue="09:30" disabled onValueChange={onValueChange} />,

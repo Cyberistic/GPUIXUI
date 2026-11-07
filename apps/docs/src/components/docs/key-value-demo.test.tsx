@@ -13,18 +13,6 @@ import {
   trackReadout,
 } from "./key-value-demo";
 
-/**
- * The Key-value displays preview.
- *
- * `packages/data/docs/key-value.mdx` is the package's Markdown, so the site
- * mounts the drawing from `package-preview.ts` and the page carries no
- * `<ComponentPreview>`. The registry's guard sees the demo and the page mount;
- * what it cannot see is whether the drawing still paints the list's one
- * measured rule — a **fixed** label track, with a width the layout cannot paint
- * read as the package's own default — so the cases below hold the drawing to
- * `packages/data/src/surfaces/key-value.tsx`.
- */
-
 const root = new URL("../../../../../", import.meta.url);
 
 const read = (path: string): string =>
@@ -32,8 +20,6 @@ const read = (path: string): string =>
 
 describe("the key-value preview", () => {
   it("reads the label track the package paints", () => {
-    // The premise is the package's own guard, read from its source: the drawing
-    // must not teach a fallback the component does not apply.
     const list = read("packages/data/src/surfaces/key-value.tsx");
     expect(list).toContain("export const DEFAULT_LABEL_WIDTH = 120;");
     expect(list).toContain("labelWidth = DEFAULT_LABEL_WIDTH");
@@ -44,7 +30,7 @@ describe("the key-value preview", () => {
         labelTrack,
       ),
     ).toEqual([120, 120, 168, 120, 120, 120, 120]);
-    // A fractional width is kept, because the layout can paint it.
+
     expect(labelTrack(160.5)).toBe(160.5);
   });
 
@@ -74,7 +60,7 @@ describe("the key-value preview", () => {
     expect(html.match(/role="listitem"/g) ?? []).toHaveLength(
       FILE_ENTRIES.length,
     );
-    // The label track is the fixed width the package paints, not a share.
+
     expect(html.match(/width:120px/g) ?? []).toHaveLength(FILE_ENTRIES.length);
     FILE_ENTRIES.forEach((entry) => {
       expect(html).toContain(`>${entry.label}<`);
@@ -98,7 +84,7 @@ describe("the key-value preview", () => {
     expect(value.slice(0, value.indexOf("}"))).toContain(
       "color: var(--foreground);",
     );
-    // The track is data (a caller width), so the sheet names no fixed width.
+
     expect(css).not.toContain(".gx-kv-label { width:");
   });
 
@@ -112,7 +98,5 @@ describe("the key-value preview", () => {
 
     const page = read("packages/data/docs/key-value.mdx");
     expect(page).not.toContain("<ComponentPreview");
-    expect(page).toContain("The label column is fixed, not measured");
-    expect(page).toContain("An unusable `width` reads as the default");
   });
 });

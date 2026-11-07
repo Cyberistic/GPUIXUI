@@ -14,18 +14,6 @@ import {
   type PreviewListRow,
 } from "./list-preview";
 
-/**
- * The list preview's navigation, type-ahead and selection rules.
- *
- * The preview repeats the shipped `List` because a browser cannot mount the
- * native one, and these are the rules a screenshot cannot show: a disabled row
- * is skipped (and an arrow that starts on one continues past it), the ends wrap,
- * a typed prefix searches **after** the current row so a repeated letter cycles,
- * and a range never picks up a disabled row. A preview that stopped on a
- * disabled row or searched from the top would teach a keyboard the component
- * does not have.
- */
-
 const files: ReadonlyArray<PreviewListRow> = [
   { value: "readme", title: "README.md", searchText: "README.md" },
   {
@@ -48,7 +36,6 @@ describe("the list preview's arrow order", () => {
   });
 
   it("continues past a disabled row the arrow starts on", () => {
-    // A row can be disabled after it held the focus; the move must not stop.
     expect(nextRow(files, "locked", 1)).toBe("design");
     expect(nextRow(files, "locked", -1)).toBe("readme");
   });
@@ -65,7 +52,6 @@ describe("the list preview's arrow order", () => {
 
 describe("the list preview's type-ahead", () => {
   it("searches after the current row and wraps", () => {
-    // `d` from README.md finds Design notes, and the next `d` finds diagram.svg.
     expect(typeaheadMatch(files, "readme", "d")).toBe("design");
     expect(typeaheadMatch(files, "design", "d")).toBe("diagram");
     expect(typeaheadMatch(files, "diagram", "d")).toBe("design");
@@ -79,8 +65,6 @@ describe("the list preview's type-ahead", () => {
   });
 
   it("keeps a repeated letter's prefix, and starts over after the window", () => {
-    // The component keeps `d` as `d` while the same letter repeats, which is
-    // what lets the match advance; a second letter appends.
     const first = press(IDLE, "d", 1_000);
     expect(first.text).toBe("d");
 
@@ -112,11 +96,9 @@ describe("the list preview's selection", () => {
   });
 
   it("never lets a range include a disabled row", () => {
-    // `locked` sits between the ends, so the range has to step over it.
     expect(range(files, "readme", "design")).toEqual(["readme", "design"]);
     expect(range(files, "design", "readme")).toEqual(["readme", "design"]);
-    // A disabled target cannot enter a selection, and a lost anchor collapses
-    // to the target alone rather than guessing the row above it.
+
     expect(range(files, "readme", "locked")).toEqual([]);
     expect(range(files, "locked", "design")).toEqual(["design"]);
   });

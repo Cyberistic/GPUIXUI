@@ -1,11 +1,3 @@
-/**
- * Browser preview for the Skeleton component page.
- *
- * The shipped placeholder is a GPUix host tree, so the preview draws the blocks
- * from the theme bridge and says so. It teaches the two shapes a caller builds:
- * a composed card and one block held still.
- */
-
 export const SkeletonStates = () => (
   <div className="gx-demo gx-demo-column gx-skel-scene">
     <div className="gx-skel-card">
@@ -40,7 +32,6 @@ const skeletonStatesSource = `import { Skeleton } from "@gpuixui/components/skel
 
 export { skeletonStatesSource };
 
-/** The list shape a caller builds from rows, not a component of its own. */
 export const SkeletonList = () => (
   <div className="gx-demo gx-demo-column gx-skel-scene">
     <div className="gx-skel-card gx-skel-list">

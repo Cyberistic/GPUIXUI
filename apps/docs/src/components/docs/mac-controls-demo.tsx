@@ -1,12 +1,3 @@
-/**
- * Browser drawings for the three Mac controls (plan 725): the segmented
- * control, the disclosure and the inset group.
- *
- * Each mirrors the shipped geometry and reads the preview surface's theme
- * roles; the segmented control and the disclosure answer the reader the way
- * the native ones do — the arrows select, the header folds.
- */
-
 import { useState, type KeyboardEvent } from "react";
 
 const VIEWS = ["List", "Board", "Calendar"] as const;

@@ -176,7 +176,6 @@ component call sites adopt the outline in their own workstream.
 | [440](./440-live-gpuix-web-surface.md) | A live GPUix surface in the docs site: the wasm browser build, cross-origin isolation, one mount per page load | F | `203` (capability record), the docs deploy middleware | **implemented** — `/live` boots the wasm build and mounts the screen through `@gpuix/react`'s reconciler; `live-surface-probe` and `live-route-probe` measured it, `src/lib/live-surface.test.ts` and `src/lib/gpuix-web.test.ts` hold the screen, the mount, the isolation and the policy together. `render()` is not used because it installs Node error handlers against a browser `process` shim; `createRoot` is. §6 records the outcome and the two browser-build gaps |
 
 | [750](./750-docs-prose-pass.md) | Docs prose pass, terminal and Omarchy guides | F | the page contracts in `apps/docs/src/lib` | **done** — seven page sets cut to `docs/VOICE.md`; `/platform/terminal` and `/getting-started/omarchy` shipped |
-| [756](./756-native-ssr-previews.md) | Native previews rendered at build time: the wasm renderer SSRs every registered example into a checked-in frame, and the docs serve it as a real still | F | `440`, the native example registries | **implemented** — `/live?scene=example` + the batch capture surface; 92 frames (657 KiB); the Native tab and the index poster; guards in `native-captures.test.ts`, `live-frame.test.ts` and `component-index.test.tsx` |
 
 > The earlier phase-E docs plans (`433` platform recipes, `435a–c`
 > Pele / Editor / RTL) are listed in the reference-adoption table above; they
@@ -253,6 +252,9 @@ Order: `721` → `722` → (`723`, `724` → `725`) → `728` → `730`, `729` �
 | [753](./753-graphics-category.md) | Graphics: one category for charts, icons and diagrams | F | data charts, icons, Pele | landed — the `Graphics` section, the `Diagram` component, the pages and the document-route probe |
 | [754](./754-chart-types.md) | The three remaining chart types: treemap, sankey and sunburst | D | data charts, the scene bridge | landed — the three types Recharts ships and this library did not, painted through the document route |
 | [755](./755-tasks-block.md) | The tasks block: a Notion-style Tasks view for the docs | F | blocks registry, `@gpuixui/components`, tokens | **done** — top bar, workspace rail, dated inbox and two card rows; ticks, New Task, pin and collapse are live |
+| [758](./758-shadcn-first-platform-themes.md) | shadcn-first platform themes, and a shadcn `default` | F | `@gpuixui/tokens`, the docs token catalogue | **landed** — platforms authored as shadcn variables plus extras with every value frozen by a test; the site's `default` is shadcn's neutral theme, audited as warnings |
+| [756](./756-block-component-parity.md) | Blocks paint with the library's own drawings | F | blocks registry, the charts package, the docs frame | **done** — one animated tab strip, one rail toggle, the dashboard's charts on the package's geometry, the page-wide column, GitHub source links and the prose cut |
+| [757](./757-comment-budget.md) | A hard comment budget | F | root oxlint config, `scripts/` | **done** — `comments/no-long-comments` (2 lines / 24 words / 3 lines per file), 95 868 → 756 comment lines (99.2%) |
 
 ### Media
 
@@ -269,3 +271,9 @@ Order: `721` → `722` → (`723`, `724` → `725`) → `728` → `730`, `729` �
 | [067](./067-tiling-block.md) | The `tiling` block: a Hyprland-style Linux desktop themed by Omarchy palettes | blocks | 728 | landed |
 | [744](./744-macos-desktop-and-three-os-flip.md) | The `macos` desktop block and the three-OS chat flip | blocks | 728, 729, 067 | landed |
 | [745](./745-editor-music-monitor-blocks.md) | Three app blocks — `editor`, `music`, `monitor` — and the apps montage | blocks | 728, 610, 729 | landed |
+
+### Performance
+
+| Plan | Title | Phase | Depends on | Status |
+| ---- | ----- | ----- | ---------- | ------ |
+| [757](./757-launch-speed.md) | Launch speed parity with raw GPUI | perf | gpuix upstream | waiting on the upstream release |

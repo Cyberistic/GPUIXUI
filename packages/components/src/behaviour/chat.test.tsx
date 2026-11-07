@@ -1,22 +1,3 @@
-/**
- * Chat behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: an empty conversation with no explanation; a composer
- * that sends a second message while the first is still streaming; a Stop that
- * reaches the transport as a submit; Escape doing nothing while a reply is open;
- * a draft that is not cleared after a send; a failed reply with no way to retry;
- * an appended message that pushes the composer around; and rows that do not
- * follow the tail while the reader is pinned.
- *
- * The composer's key contract is measured here rather than assumed: Enter
- * arrives as the textarea's `onSubmit` and Shift+Enter as a newline that reaches
- * no handler, so the suite proves the send path and the newline path separately.
- *
- * The send control is a glyph, not the word: shadcn's composer draws the icon
- * set's paper plane and keeps the word as the control's name, because a button
- * whose content is a picture has nothing else to be announced by.
- */
-
 import * as Option from "effect/Option";
 import { icons } from "@gpuixui/icons";
 import { describe, expect, it, vi } from "vitest";
@@ -36,7 +17,6 @@ import {
 import { Message, MessageContent } from "../message.js";
 import { Bubble, BubbleContent } from "../bubble.js";
 
-/** One conversation: a bounded transcript, then the composer. */
 const Conversation = ({
   rows,
   status,
@@ -96,18 +76,8 @@ const Conversation = ({
   </div>
 );
 
-/**
- * The deadline a transcript-layout case needs.
- *
- * These cases mount thirty rows and append three more, and the native renderer
- * paints every row it is given — the transcript is not virtualised
- * (`packages/components/docs/message-scroller.mdx`, Limitations). The work is
- * real, so the case gets a deadline that fits it instead of failing on a busy
- * machine.
- */
 const LAYOUT_CASE_TIMEOUT_MS = 30_000;
 
-/** Focus the field and send each character as a real key press. */
 const type = (root: ComponentTestRoot, text: string): void => {
   root.renderer.focusElement(
     root.renderer.findByTestId("chat-field")?.id ?? -1,
@@ -115,11 +85,9 @@ const type = (root: ComponentTestRoot, text: string): void => {
   text.split("").forEach((key) => root.renderer.simulateKeystrokes(key));
 };
 
-/** Whether the jump control is painted and reachable, or only reserving rail. */
 const jumpActive = (root: ComponentTestRoot): boolean =>
   root.renderer.findByTestId("chat-jump")?.customProps?.tabIndex === 0;
 
-/** The viewport's vertical scroll offset; `0` when it has not scrolled. */
 const offsetOf = (root: ComponentTestRoot): number =>
   Option.getOrElse(
     Option.flatMap(
@@ -130,7 +98,6 @@ const offsetOf = (root: ComponentTestRoot): number =>
     () => 0,
   );
 
-/** Wheel over the transcript. Positive values scroll toward older rows. */
 const wheel = (root: ComponentTestRoot, deltaY: number): void => {
   const { x, y, width, height } = requireBounds(root, "chat-messages");
   root.renderer.nativeSimulateScrollWheel(
@@ -141,7 +108,6 @@ const wheel = (root: ComponentTestRoot, deltaY: number): void => {
   );
 };
 
-/** Whether the last row sits inside the transcript's painted box. */
 const endIsVisible = (root: ComponentTestRoot, last: number): boolean => {
   const viewport = requireBounds(root, "chat-messages");
   const row = requireBounds(root, `row-${last}`);
@@ -194,7 +160,6 @@ describe("Chat", () => {
     expect(onSubmit).toHaveBeenCalledWith("hello");
     expect(onStatusChange).toHaveBeenCalledWith("submitting");
 
-    // The consumer reports the reply finished, so the next send is allowed.
     root.rerender(
       <Conversation
         rows={1}
@@ -203,7 +168,7 @@ describe("Chat", () => {
         onStatusChange={onStatusChange}
       />,
     );
-    // The draft was cleared: the next send is only what was typed afterwards.
+
     type(root, "again");
     root.renderer.simulateKeystrokes("enter");
     expect(onSubmit).toHaveBeenLastCalledWith("again");
@@ -243,9 +208,8 @@ describe("Chat", () => {
     try {
       const [plane] = root.renderer.findByType("svg");
 
-      // The same markup the icon set publishes, not a second drawing of a plane.
       expect(plane?.customProps?.source).toBe(icons.send);
-      // The word is the control's name now; the glyph is all a reader sees.
+
       expect(root.renderer.getAllText()).not.toContain("Send");
       expect(
         a11yNodes(root.renderer)
@@ -272,13 +236,11 @@ describe("Chat", () => {
     root.renderer.simulateKeystrokes("enter");
 
     expect(onSubmit).not.toHaveBeenCalled();
-    // The machine refuses the submit, so the reader's words must survive it:
-    // clearing a draft nobody received is how a message disappears.
+
     expect(root.renderer.findByTestId("chat-field")?.customProps?.value).toBe(
       "queued",
     );
 
-    // The same draft is what the next accepted send carries.
     root.rerender(
       <Conversation rows={1} onSubmit={onSubmit} onStop={() => undefined} />,
     );
@@ -343,8 +305,6 @@ describe("Chat", () => {
       />,
     );
 
-    // The failure is painted in the fixed header, so it does not take height
-    // from the transcript or move the composer.
     expect(requireBounds(root, "composer").y).toBe(composer);
     expect(root.renderer.findByTestId("chat-error")).toBeDefined();
     expect(root.renderer.getAllText()).toContain("The model timed out.");
@@ -362,11 +322,6 @@ describe("Chat", () => {
     );
     wheel(root, 2000);
 
-    // The failure lives in the fixed header, so a reader at the top of a long
-    // transcript still sees it without scrolling, and it never takes height
-    // from the viewport the way a row between the transcript and the composer
-    // did. The full sentence is the status line's description; the line itself
-    // is truncated to the header's fixed line.
     const error = requireBounds(root, "chat-error");
     const viewport = requireBounds(root, "chat-messages");
     const chat = requireBounds(root, "chat");
@@ -448,7 +403,6 @@ describe("Chat", () => {
         expect(endIsVisible(root, rows - 1)).toBe(true);
       });
 
-      // The viewport followed the tail: its offset moved further from the start.
       expect(offsetOf(root)).toBeLessThan(before);
       expect(jumpActive(root)).toBe(false);
 
@@ -465,8 +419,7 @@ describe("Chat", () => {
       const viewport = requireBounds(root, "chat-messages").height;
       wheel(root, 160);
       settle(root);
-      // The jump control floats over the transcript: neither its height nor the
-      // composer's place moved.
+
       expect(requireBounds(root, "chat-messages").height).toBe(viewport);
       expect(requireBounds(root, "composer").y).toBe(composer);
       const before = offsetOf(root);
@@ -493,7 +446,7 @@ describe("Chat", () => {
       const pinnedRoot = renderComponent(<Conversation rows={30} />);
       const pinnedComposer = requireBounds(pinnedRoot, "composer").y;
       pinnedRoot.rerender(<Conversation rows={30} status="streaming" grown />);
-      // The grown row reports its size on the next layout.
+
       settle(pinnedRoot);
       expect(requireBounds(pinnedRoot, "composer").y).toBe(pinnedComposer);
       expect(endIsVisible(pinnedRoot, 29)).toBe(true);
@@ -543,11 +496,6 @@ describe("Chat", () => {
   });
 
   it("reads a stored draft that is not text as an empty composer", () => {
-    // The bug this guards: the composer read `.trim()` off the draft before
-    // anything painted, so a draft restored from storage or read out of a saved
-    // record as `null` — the field a store writes where it carried no text —
-    // threw out of the render and took the transcript, the clock and the field
-    // with it, while every other stored value in the package reads failsafe.
     const owned = renderComponent(
       <div style={{ height: 320, display: "flex", flexDirection: "column" }}>
         <ChatRoot onSubmit={() => undefined}>
@@ -582,12 +530,6 @@ describe("Chat", () => {
   });
 
   it("reads blank copy as the documented words, never a nameless control or a blank line", () => {
-    // The bug this guards: every name and sentence was a destructuring default,
-    // which covers only `undefined`. An i18n table's missing key — or a saved
-    // record — handed over `""`/`"   "`, so the conversation and its field were
-    // published with no name, the two actions painted no words, the failed reply
-    // painted a whitespace line and the hint laid out a full blank line (the
-    // runtime measures `""` at 0px and `"   "` at 16px).
     const Surface = ({ status }: { readonly status?: ChatStatus }) => (
       <div style={{ height: 320, display: "flex", flexDirection: "column" }}>
         <ChatRoot
@@ -623,9 +565,7 @@ describe("Chat", () => {
           "Messages you send appear here.",
         ]),
       );
-      // Neither the description nor the hint copy lays out a blank line: the
-      // runtime measures `""` at 0px and `"   "` at 16px, so a whitespace-only
-      // run is the visible defect.
+
       expect(
         page.renderer.getAllText().filter((line) => line.trim() === ""),
       ).toEqual([]);
@@ -645,10 +585,6 @@ describe("Chat", () => {
   });
 
   it("reads the names and the help a stored conversation wrote as text", () => {
-    // The bug guarded: a conversation restored from storage carries the fields
-    // the record kept, and `accessibleName`/`spokenSentence` trim the string they
-    // are handed — a label, a failure sentence or a help line the decoder wrote
-    // as a number threw `self.trim is not a function` out of the first paint.
     const Surface = ({ status }: { readonly status?: ChatStatus }) => (
       <div style={{ height: 320, display: "flex", flexDirection: "column" }}>
         <ChatRoot
@@ -705,7 +641,6 @@ describe("Chat", () => {
   });
 });
 
-/** A composer at a given draft, so the row's height can be varied. */
 const ComposerAt = ({ value }: { readonly value: string }) => (
   <div style={{ height: 320, display: "flex", flexDirection: "column" }}>
     <ChatRoot onSubmit={() => undefined}>
@@ -715,7 +650,6 @@ const ComposerAt = ({ value }: { readonly value: string }) => (
   </div>
 );
 
-/** The gaps above and below the send control inside its row. */
 const composerGaps = (
   root: ComponentTestRoot,
 ): {
@@ -732,11 +666,6 @@ const composerGaps = (
   };
 };
 
-/**
- * The send control is centred on the composer row's cross axis. The bug this
- * guards: the row was `items-end`, so the prefix of a growing field lifted the
- * control to the bottom edge and left all the space above it.
- */
 describe("ChatComposer's send control", () => {
   it("keeps equal space above and below at one line and at a grown field", () => {
     const single = renderComponent(<ComposerAt value="One line" />);

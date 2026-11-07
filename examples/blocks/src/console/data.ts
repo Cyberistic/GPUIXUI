@@ -1,6 +1,3 @@
-/**
- * The console block's sample data: the Hunter Association's deploys.
- */
 import type { IconName } from "@gpuixui/icons";
 
 export const sections: ReadonlyArray<readonly [IconName, string]> = [

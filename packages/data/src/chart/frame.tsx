@@ -196,13 +196,10 @@ export const ChartMask = ({
   );
 };
 
-/** Past this many categories an axis thins its labels instead of clipping them. */
 const THIN_FROM = 12;
 
-/** A category label's average character width at its role's size, in pixels. */
 const CATEGORY_CHAR_WIDTH = 7;
 
-/** How many slots one label spans: 1 until the axis is long enough to thin. */
 export const labelStride = (
   labels: ReadonlyArray<string>,
   slot: number,

@@ -1,15 +1,3 @@
-/**
- * The launch film v9 (plan 070), written from one timeline table: encodes the
- * takes it uses into `assets/footage/`, then writes `index.html` and one
- * composition per scene. A retime is one edit here; nothing is pasted by hand.
- *
- *   nub media/launch/build.ts
- *
- * Every product picture is a real take (`takes/<name>/`, the native renderer's
- * frames) or a stage recording of real takes (`takes/stage-*`, see
- * `stage/README.md`). The film draws only the ground, the lines, the desktops
- * around the windows, the terminal shell, the cursor and the end card.
- */
 import {
   CHARS_PER_FRAME as CODE_SPEED,
   CODE,
@@ -28,9 +16,6 @@ const INK = "#1D1D1F";
 const INK_DARK = "#09090B";
 const SANS = `"Mona Sans", sans-serif`;
 
-/* ------------------------------------------------------------ footage */
-
-/** Encode a take's frames; `crf` is the quality (lower is cleaner). */
 const footage = (take: string, crf = 14): string => {
   const out = at(`assets/footage/${take}.mp4`);
   const first = at(`takes/${take}/0000.png`);
@@ -77,11 +62,8 @@ type Sample = { frame: number; x: number; y: number; down: boolean };
 const cursorOf = (take: string): ReadonlyArray<Sample> =>
   JSON.parse(readFileSync(at(`takes/${take}/cursor.json`), "utf8"));
 
-/* ------------------------------------------------------------ html parts */
-
 const CURSOR = `<svg viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg"><path d="M2 2 L2 28.5 L8.6 22.4 L13 32.6 L17.2 30.8 L12.9 20.7 L21.6 20.7 Z" fill="#000" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/></svg>`;
 
-/** A take's cursor replayed: one `set` per frame, pressed frames squeezed. */
 const cursorTrack = (
   id: string,
   samples: ReadonlyArray<Sample>,
@@ -139,9 +121,6 @@ const video = (
 ) =>
   `<video id="${id}" class="clip" data-start="${+start.toFixed(3)}" data-duration="${+duration.toFixed(3)}" data-track-index="${track}" muted playsinline src="${src}" style="${style}"></video>`;
 
-/* ------------------------------------------------------------ scenes */
-
-/** A take's cursor over one clip of it: frames `mediaStart … +duration`, placed at `start`. */
 const cursorClip = (
   id: string,
   take: string,
@@ -156,8 +135,6 @@ const cursorClip = (
       sample.frame / FPS < mediaStart + duration,
   );
   const first = samples[0];
-  // A cursor sits where its take left it at the cut: without this it waits at
-  // the frame's top-left corner until its first sample.
   const lead =
     first === undefined
       ? ""
@@ -179,10 +156,6 @@ const clip = (
     `<video data-media-start="${mediaStart}" `,
   );
 
-// 0–4.8: four controls, each held 1.2 s and cut only once its press has
-// settled. Every shot is a static framing: the cut is the only motion. The
-// first is the switch alone, pushed in — the film's thumbnail.
-// A take is 1920×1080: past scale 1 the camera magnifies the capture and text blurs.
 const MONTAGE = [
   { take: "cu-switch-solo", sound: "press" },
   { take: "cu-tabs", sound: "cap-0" },
@@ -190,11 +163,9 @@ const MONTAGE = [
   { take: "cu-checkbox", sound: "cap-2" },
 ] as const;
 const BEAT_CUT = 1;
-/** The opening's camera, one continuous push: each clip resumes the last scale. */
 const PUSH = [0.76, 0.82, 0.88, 0.94, 1] as const;
-const PRESS_AT = 0.8; // every close-up presses on its frame 24
-const LEAD_IN = 0.42; // each clip starts this far into its take, so the press lands 0.38 s in
-/** On-screen pointer width: the camera crops otherwise scale the pointer too. */
+const PRESS_AT = 0.8;
+const LEAD_IN = 0.42;
 const CURSOR_WIDTH = 87;
 const montage: Scene = {
   id: "montage",
@@ -215,8 +186,6 @@ const montage: Scene = {
       i + 1 < MONTAGE.length
         ? `tl.set("#m-cam${i}",{opacity:0},${(t + BEAT_CUT).toFixed(1)});`
         : "";
-    // One carried move: every clip resumes the scale the last one reached, so the
-    // four close-ups are a single push that hands over to the wall's pull-back.
     const push = `tl.fromTo("#m-cam${i}",{scale:${PUSH[i]}},{scale:${PUSH[i + 1]},duration:${BEAT_CUT},ease:"none"},${t.toFixed(1)});`;
     return `${i > 0 ? `tl.set("#m-cam${i}",{opacity:1},${t.toFixed(1)});` : ""}${cut}
     ${push}
@@ -224,15 +193,10 @@ const montage: Scene = {
   }).join("\n    "),
 };
 
-/* ------------------------------------------------------------ headlines */
-
 const jitter = (i: number): number => ((i * 2654435761) % 1000) / 1000;
-/** A word under a marker; `marked` draws every one in a line, left to right. */
 const hl = (word: string) => `<span class="hl"><i></i>${word}</span>`;
 const marked = (line: string, at: number) =>
   `tl.fromTo("${line} .hl i",{scaleX:0},{scaleX:1,duration:0.32,ease:"power3.out",stagger:0.18},${at.toFixed(2)});`;
-
-/* ------------------------------------------------------------ 4–6.5: the mock */
 
 const MOCK_START = 4;
 const MOCK_LENGTH = 2.5;
@@ -338,7 +302,6 @@ const uglify = (code: string) =>
     .replace(/</g, "&lt;")
     .replace(/("[^"]*")/g, "<i>$1</i>")
     .replace(/(createElement|\.\w+(?=\())/g, "<b>$1</b>");
-/** Emoji bursting around the word: wide, because the word is, and never off the frame's top. */
 const LAUGHS = Array.from({ length: 8 }, (_, i) => {
   const angle = (i * 2 * Math.PI * 3) / 8;
   const reach = 1.1 + jitter(i) * 0.25;
@@ -387,8 +350,6 @@ const mock: Scene = {
     tl.to("#k-say",{opacity:0,duration:0.14},${(MOCK_LENGTH - 0.16).toFixed(2)});`,
 };
 
-/* ------------------------------------------------------------ 6.5–10.5: it's just shadcn */
-
 const SHADCN_START = MOCK_START + MOCK_LENGTH;
 const SHADCN_LENGTH = SHADCN_FRAMES / FPS;
 const SHADCN_F = (frame: number) => frame / FPS;
@@ -400,7 +361,6 @@ const highlight = (text: string) =>
     .replace(/("[^"]*")/g, "<i>$1</i>")
     .replace(/(--[a-z-]+)/g, "<b>$1</b>")
     .replace(/(oklch\([^)]*\)|\d+(?:\.\d+)?rem)/g, "<i>$1</i>");
-/** The left half's look, shared with the npm scene that slides it away. */
 const CODE_CSS = `#root .code { position:absolute; left:0; top:0; width:960px; overflow:hidden; height:1080px; background:${CODE_BG}; padding:96px 0 0 64px; font:500 27px/46px "JetBrains Mono", Menlo, monospace; color:#d4d4d8; }
     #root .code b { font-weight:500; color:#7aa2f7; } #root .code .ln i, #root .code .css i { font-style:normal; color:#9ece6a; }
     #root .css { position:absolute; left:64px; top:96px; white-space:pre; font-size:24px; line-height:42px; }
@@ -426,8 +386,6 @@ const shadcn: Scene = {
       <div id="s-say1" class="say on-dark" style="opacity:0">${TWEAKCN_LINE}</div>
     </div>
     <div id="s-title" class="title">it's just ${hl("shadcn")}</div>`,
-  // The title holds the frame alone; then the code slides in beneath it and it
-  // moves, shrinking, to the place it keeps while the code types.
   script: `tl.fromTo("#s-title",{x:400,y:-448,scale:2.2,opacity:0},{opacity:1,duration:0.2},0.02);
     ${marked("#s-title", 0.25)}
     tl.set("#s-code",{x:-960},0);
@@ -457,8 +415,6 @@ const shadcn: Scene = {
     tl.set("#s-say1",{opacity:1},${SHADCN_F(BUILDER_THEMES[0]!.frame).toFixed(3)});
     ${marked("#s-say1", SHADCN_F(BUILDER_THEMES[0]!.frame))}`,
 };
-
-/* ------------------------------------------------------------ 10.5–13: the packages */
 
 const PACKAGES = [
   [
@@ -510,8 +466,6 @@ const npm: Scene = {
       ),
     ).join("\n    ")}`,
 };
-
-/* ------------------------------------------------------------ 13–16.5: the tilted screen */
 
 const WALL_TAKES = [
   "calendar",
@@ -586,9 +540,7 @@ const cellY = (row: number) =>
   (row - (WALL_ROWS - 1) / 2) * (CELL.h + CELL.gap);
 const PLANE_WIDTH = WALL_COLS * (CELL.w + CELL.gap);
 const DROP = 0.42;
-/** The swipe to dark: a line crossing the plane left to right. */
 const SWIPE = { at: 1.95, length: 0.75 };
-/** The ground behind the plane, reaching past every corner of the frame. */
 const SKY_HALF = 6000;
 const SWIPE_SPEED = PLANE_WIDTH / SWIPE.length;
 const swipeAt = (x: number) =>
@@ -645,8 +597,6 @@ ${tileMeta
     tl.to("#w-say .hl i",{backgroundColor:"#2F6FED",duration:0.2},${(SWIPE.at + SWIPE.length * 0.4).toFixed(2)});`,
 };
 
-/* ------------------------------------------------------------ 16.5–20.5: the apps */
-
 const APPS = {
   start: WALL_START + WALL_LENGTH,
   length: 4,
@@ -699,9 +649,6 @@ const apps: Scene = {
     ${cursorOn("dashboard-v8", "a-dc", DASH_AT, 0, 1.6, WIN.w, 1400)}`,
 };
 
-/* ------------------------------------------------------------ 20.5–23: the charts */
-
-/** A chart take is 54 frames; its last frame holds after that. */
 const TILE_MEDIA = 1.8;
 const CHARTS = [
   ["area", "AreaChart"],
@@ -738,7 +685,6 @@ const SETTINGS_WIN = {
   h: Math.round((1320 * 470) / 880),
 };
 
-/* The desktops around one window: wallpaper to the edges and the system's own furniture. */
 const dockTile = (fill: string) => `<i style="background:${fill}"></i>`;
 const DOCK = [
   "linear-gradient(#5ac8fa,#007aff)",
@@ -840,8 +786,6 @@ ${RUN.map(
     tl.to("#c-next",{clipPath:"circle(1300px at 960px 560px)",duration:0.42,ease:"expo.inOut"},${(CHARTS_LENGTH - 0.42).toFixed(2)});`,
 };
 
-/* ------------------------------------------------------------ 23–26: three desktops */
-
 const osLine = (id: string) =>
   `<span id="${id}0">${hl("Mac,")}</span> <span id="${id}1">${hl("Windows,")}</span> <span id="${id}2">${hl("Linux")}</span>`;
 const OS_SAY_CSS = `#root .say { position:absolute; left:0; right:0; top:72px; text-align:center; font:500 62px ${SANS}; letter-spacing:-0.025em; color:#fff; text-shadow:0 2px 8px rgba(0,0,0,.5), 0 4px 40px rgba(0,0,0,.6); }`;
@@ -872,7 +816,6 @@ const desktops: Scene = {
     <div id="d-gnome-layer" style="position:absolute;inset:0;clip-path:circle(0px at ${pL.x.toFixed(0)}px ${pL.y.toFixed(0)}px)">${gnomeDesk("d-gnome")}</div>
     <div id="d-window" class="window">${video("d-v", footage("settings-v8", 12), 0, DESK_LENGTH, "", 2)}<div id="d-cur" class="cursor">${CURSOR}</div></div>
     <div id="d-say" class="say on-dark">${osLine("d-os")}</div>`,
-  // Each press and its wipe share a frame; the window's own chrome is the take's.
   script: `${[0.12, PRESS_WIN + 1 / FPS, PRESS_LINUX + 1 / FPS]
     .map(
       (at, i) =>
@@ -884,11 +827,8 @@ const desktops: Scene = {
     ${cursorClip("d-cur", "settings-v8", 0, 0, DESK_LENGTH, SETTINGS_WIN.w / (2 * 880))}`,
 };
 
-/* ------------------------------------------------------------ 26–30: Omarchy */
-
 const OM_START = DESK_START + DESK_LENGTH;
 const OM_LENGTH = 4;
-/** A strip of carriages: the sentence, then each theme, stopping on one at a time. */
 const NOSE = 140;
 const COUPLER = 28;
 const ARRIVE = 0.8;
@@ -897,7 +837,6 @@ const stopAt = (carriage: number) => -carriage * (1920 + COUPLER);
 const OM_FLIP = (i: number) => 2.4 + i * 0.4;
 const TRAIN_WORDS = ["Follows", "your", "theme", "in"] as const;
 const THEMES = ["rose-pine", "gruvbox", "catppuccin-latte", "tokyo"] as const;
-/** The terminal pane in the tiling take, in frame fractions (measured from the still). */
 const PANE = { x: 0.55, y: 0.075, w: 0.42, h: 0.46 };
 const paneZoom = 1 / PANE.w;
 const omarchy: Scene = {
@@ -940,8 +879,6 @@ ${THEMES.map((t, i) => `      <div class="car" style="left:${-stopAt(i + 1)}px">
       .join("\n    ")}
     tl.to("#o-all",{x:${(-PANE.x * 1920 * paneZoom).toFixed(1)},y:${(-PANE.y * 1080 * paneZoom + (1080 - PANE.h * 1080 * paneZoom) / 2).toFixed(1)},scale:${paneZoom.toFixed(3)},duration:0.42,ease:"expo.in"},${(OM_LENGTH - 0.42).toFixed(2)});`,
 };
-
-/* ------------------------------------------------------------ 30–34: the terminal */
 
 const TERM_START = OM_START + OM_LENGTH;
 const TERM_LENGTH = 4;
@@ -1004,11 +941,8 @@ const terminal: Scene = {
     ${cursorClip("t-cur", "console-v8", T_APP, 0, TERM_LENGTH - T_APP, 1920 / (2 * 1024))}`,
 };
 
-/* ------------------------------------------------------------ 32–38: the stack and the end */
-
 const STACK_START = TERM_START + TERM_LENGTH;
 const WORDS = ["GPUI", "React", "shadcn", "Tailwind"] as const;
-/** A beat of the score at 120 BPM: the stabs and the last chord land on these. */
 const BEAT = 0.5;
 const stack: Scene = {
   id: "stack",
@@ -1068,10 +1002,7 @@ const scenes = [
 ];
 const LENGTH = END_START + 4;
 
-/* ------------------------------------------------------------ lines and sound */
-
 const F = 1 / FPS;
-/** The frames the slider's value actually changed on, read from its take. */
 const sliderTicks: ReadonlyArray<number> = JSON.parse(
   readFileSync(at("takes/cu-slider/changes.json"), "utf8"),
 );
@@ -1079,9 +1010,7 @@ const typedCues = (text: string, from: number, speed: number) =>
   Array.from({ length: Math.ceil(text.length / speed) }, (_, i) => i)
     .filter((i) => i % 2 === 0)
     .map((i, n) => [from + i / FPS, `key-${n % 4}`, 0.7] as const);
-/** A cue: when, which sample, and an optional level (0.9 is the default bed). */
 const CUES: ReadonlyArray<readonly [number, string, number?]> = [
-  // A close-up's state changes on release, three frames after its press.
   ...MONTAGE.map(
     ({ sound }, i) =>
       [i * BEAT_CUT + PRESS_AT - LEAD_IN + 3 * F, sound] as const,
@@ -1094,7 +1023,6 @@ const CUES: ReadonlyArray<readonly [number, string, number?]> = [
       (frame, n) =>
         [2 * BEAT_CUT + frame / FPS - LEAD_IN + F, `detent-${n + 2}`] as const,
     ),
-  // The two panels land, then the code types and each pasted theme lands.
   [MOCK_START + 0.2, "thud", 0.7],
   [MOCK_START + 0.3, "thud", 0.7],
   ...CODE.flatMap((line) =>
@@ -1119,7 +1047,6 @@ const CUES: ReadonlyArray<readonly [number, string, number?]> = [
     .filter((_, i) => i % 8 === 0)
     .map((t, i) => [WALL_START + t.land, `cap-${i % 4}`, 0.45] as const),
   [WALL_START + SWIPE.at + 0.1, "glass-1", 0.8],
-  // ⌘K, five keys, Enter.
   [APPS.start, "press"],
   ...[12, 15, 18, 21, 24].map(
     (frame, n) => [APPS.start + frame / FPS + F, `key-${n % 4}`] as const,
@@ -1153,11 +1080,6 @@ const CUES: ReadonlyArray<readonly [number, string, number?]> = [
   [END_START + 0.02, "mark"],
 ];
 
-/**
- * The score, opened up: bar 4 (its A) plays twice and bars 5–8 play twice, so the
- * stabs land the stack and the last chord the mark. The harmony still resolves: A
- * leads back to the Bm that follows each repeat.
- */
 const score = (): string => {
   const out = "assets/music/score-long.wav";
   execFileSync("ffmpeg", [
@@ -1225,7 +1147,6 @@ const written = [
 ];
 scenes.forEach((scene, i) => writeFileSync(written[i]!, composition(scene)));
 writeFileSync(at("index.html"), index);
-// The written files meet the repo's formatter, as hand-written ones do.
 // `shadcn.html` and `npm.html` hold preformatted code, which it would reflow.
 execFileSync(
   at("../../node_modules/.bin/oxfmt"),

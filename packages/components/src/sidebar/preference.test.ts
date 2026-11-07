@@ -1,11 +1,3 @@
-/**
- * The sidebar's cookie: shadcn's key, shadcn's seven-day lifetime.
- *
- * The bug this guards: a preference that never expires and never reads its own
- * write would make a remount look persistent while the cookie contract the
- * component documents is not the one it keeps.
- */
-
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as Duration from "effect/Duration";

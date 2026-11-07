@@ -1,12 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Hover card example: a mention that previews the person.
- *
- * Resting on the name opens the card after the delay, and the pointer may
- * travel into it to reach the action; focusing the name opens it at once, so a
- * keyboard reader can read the same card.
- */
-
 import { Button } from "../src/internal/button.js";
 import {
   HoverCard,
@@ -14,7 +6,6 @@ import {
   HoverCardTrigger,
 } from "../src/hover-card.js";
 
-/** A paragraph with a previewable mention. */
 export const HoverCardExample = () => (
   <div
     style={{ display: "flex", flexDirection: "column", gap: 12, width: 420 }}

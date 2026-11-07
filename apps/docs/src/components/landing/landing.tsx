@@ -58,11 +58,6 @@ function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();
   const dark = resolvedTheme === "dark";
 
-  // The two icons are always in the DOM; CSS shows the relevant one from the
-  // `.dark` class on <html>. Rendering both keeps the server and client markup
-  // identical, so the button hydrates cleanly. The class swap runs inside a
-  // view transition so the circle-blur mask animates the repaint; browsers
-  // without the API fall back to an instant switch.
   const toggle = () => {
     const next = dark ? "light" : "dark";
     const swap = () => flushSync(() => setTheme(next));
@@ -119,14 +114,6 @@ function MoonIcon() {
   );
 }
 
-/**
- * A shipped demo under the landing's own theme, platform and primary colour.
- *
- * The landing has no `PreviewSurface`, so this is the one place a scene carries
- * the preview variables itself; it is scoped to the tile and never touches the
- * page's own roles.
- */
-/** The landing's preview roles, scoped to one tile. */
 export function LandingScene({
   platform,
   primary,
@@ -216,8 +203,7 @@ export function CodeAndComponent() {
   if (demo === undefined) {
     throw new Error('CodeAndComponent: no demo named "tabs-demo"');
   }
-  // A demo is an element, not a call: `demo.render()` would run its hooks as
-  // this section's own.
+
   const Drawing = demo.render;
 
   return (
@@ -228,8 +214,7 @@ export function CodeAndComponent() {
       <div className="landing-code">
         <HighlightedCode lang="tsx" code={demo.source} />
         <div className="landing-code-preview">
-          {/* The landing sits outside a `PreviewSurface`, so the scene needs the
-              dark defaults `gx-base` carries; on a docs page the surface does. */}
+          {}
           <div className="gx-base gx-demo">
             <Drawing />
           </div>

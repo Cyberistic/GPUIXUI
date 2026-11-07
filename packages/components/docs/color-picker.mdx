@@ -54,27 +54,6 @@ ColorPicker
 | `style` | `StateStyle<ColorPickerState>` | — |
 | `testId` | `string` | — |
 
-## Notes
-- **No `transform`.** The area's thumb is placed from the area's own measured
-  box, and the panel is anchored rather than grown out of the swatch: the
-  runtime has no transform and no `clip-path`.
-- **Two gradient stops, no repeating gradient.** The saturation area is three
-  stacked fills (the hue, white-to-clear, clear-to-black), the hue rail is six
-  60° ramps, and the alpha rail fades to the panel instead of a checkerboard.
-- **No screen sampling.** The eyedropper is absent rather than a button that
-  reports nothing; `EyeDropper` is a browser API the native window does not
-  expose.
-- **Hex is the only grammar.** `rgb()`, `hsl()` and `oklch()` entry is not
-  parsed. Shorthand and alpha forms are: `#f0a` commits `#FF00AA`, `#f0a8`
-  commits `#FF00AA88`.
-- **No `aria-roledescription` or `aria-valuenow`.** The area announces
-  saturation and brightness through `aria-valuetext`; the rails announce
-  degrees and percent the same way.
-- **Presets, not saved palettes.** One `Button` per colour; there is no add,
-  delete or reorder affordance.
-- **A blank label reads as `"Color picker"`**, so the trigger and the
-  `Color picker hex value` field are always named.
-
 ## Measured in a window
 
 `color-picker-lifecycle` (15 checks, 0.11.0) mounts the shipped picker and a disabled twin.
@@ -87,9 +66,3 @@ ColorPicker
 The names and the `aria-valuetext` sentences are the behaviour suite's
 (`src/behaviour/color-picker.test.tsx`), because a window's protocol has no
 accessibility verb.
-
-## Related
-
-- **Popover** — the surface the picker opens.
-- **Slider** — the rails the hue and alpha channels use.
-- **Input** — the hex field.

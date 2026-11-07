@@ -12,16 +12,6 @@ import {
   typeQuery,
 } from "./command-centre";
 
-/**
- * The command centre block.
- *
- * The panel is open in the preview, so every part a reader is told to look for
- * has to reach the markup: the issue chip, the filter field with its caret and
- * hint, all six actions with their keycaps, and exactly one highlighted row.
- * The filter, the arrow keys, `Enter` and `Escape` are the panel's state rules;
- * a rendering cannot be typed into, so they are held here.
- */
-
 const markup = renderToStaticMarkup(<CommandCentreRender />);
 
 const count = (source: string, pattern: RegExp): number =>
@@ -43,7 +33,7 @@ describe("the command centre", () => {
     expect(markup).toContain('aria-hidden="true" class="gx-cmd-dock"');
     expect(count(markup, /class="gx-cmd-dock-tile"/g)).toBe(7);
     expect(markup).toContain('class="gx-cmd-dock-sep"');
-    // The app outline behind the palette is decoration too.
+
     expect(markup).toContain('aria-hidden="true" class="gx-cmd-page"');
   });
 
@@ -51,7 +41,7 @@ describe("the command centre", () => {
     for (const entry of commandEntries) {
       expect(markup).toContain(entry.label);
     }
-    // Six rows, and the estimate action carries two caps.
+
     expect(count(markup, /class="gx-keycap"/g)).toBe(7);
     expect(count(markup, /class="gx-cmd-row"/g)).toBe(commandEntries.length);
     expect(markup).toContain(">⌘<");
@@ -101,13 +91,12 @@ describe("the command centre", () => {
     const typed = typeQuery(initialCommandState, "assign");
     expect(typed.query).toBe("assign");
     expect(typed.active).toBe("assign-me");
-    // The assign-to-me row is filtered out by `label`, so the first match
-    // becomes the highlight.
+
     const label = typeQuery(initialCommandState, "label");
     expect(highlightFor(matchCommands(label.query), label.active)).toBe(
       "label",
     );
-    // One surviving row wraps onto itself.
+
     expect(applyCommandKey(label, "ArrowDown")).toEqual({
       ...label,
       active: "label",

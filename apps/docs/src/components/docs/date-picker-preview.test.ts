@@ -27,20 +27,6 @@ import {
   type IsoDay,
 } from "./date-picker-preview";
 
-/**
- * The Date picker preview's calendar arithmetic.
- *
- * A preview grid is only honest if it is the grid the component paints: six
- * rows of seven cells, adjacent-month days painted by default, one column shift
- * per week start, and arrow/Home/End/PageUp/PageDown moves that clamp to the
- * same bounds the native calendar clamps to. The first cases read the native
- * model (`packages/components/src/calendar/logic.ts`) and hold the preview's
- * labels and shape to it, so a month list or a grid size cannot drift on one
- * side; the rest pin the measured rules of the shipped calendar and picker.
- *
- * `node:fs` is the test's own read of a checked-in file, not runtime I/O.
- */
-
 const native = readFileSync(
   new URL(
     "../../../../../packages/components/src/calendar/logic.ts",
@@ -59,8 +45,7 @@ describe("the month grid", () => {
     expect(grid.length).toBe(6);
     expect(grid.every((week) => week.length === 7)).toBe(true);
     expect(cells.length).toBe(42);
-    // October 2026 opens on a Thursday, so a Monday-start grid reaches back
-    // into September, the shipped default.
+
     expect(cells.slice(0, 3)).toEqual([
       "2026-09-28",
       "2026-09-29",
@@ -69,7 +54,6 @@ describe("the month grid", () => {
     expect(cells[3]).toBe("2026-10-01");
     expect(cells).toContain("2026-11-01");
 
-    // With outside days hidden the grid is the month alone.
     const own = monthGrid("2026-10", 1, false).flat();
     expect(own.slice(0, 3)).toEqual([null, null, null]);
     expect(own.filter((cell) => cell !== null).length).toBe(31);
@@ -77,7 +61,6 @@ describe("the month grid", () => {
   });
 
   it("shifts the first column with the week start", () => {
-    // Thursday is column 3 under a Monday start and column 4 under a Sunday one.
     expect(monthGrid("2026-10", 1).flat().indexOf("2026-10-01")).toBe(3);
     expect(monthGrid("2026-10", 0).flat().indexOf("2026-10-01")).toBe(4);
     expect(weekdayLabels(1)).toEqual([
@@ -97,7 +80,7 @@ describe("the month grid", () => {
     expect(daysInMonth("2028-02")).toBe(29);
     expect(lastDayOfMonth("2028-02")).toBe("2028-02-29");
     expect(lastDayOfMonth("2026-12")).toBe("2026-12-31");
-    // The cell count is the grid's shape, not the month's length.
+
     expect(monthGrid("2026-02", 1, false).flat().filter(Boolean).length).toBe(
       28,
     );
@@ -108,8 +91,6 @@ describe("the month grid", () => {
   });
 
   it("names months and days the way the native calendar does", () => {
-    // The labels are fixed English strings in both models; a month added,
-    // renamed or reordered on the native side must move here too.
     const nativeMonths = [
       ...native
         .slice(
@@ -123,10 +104,10 @@ describe("the month grid", () => {
     expect(monthLabel("2026-10")).toBe("October 2026");
     expect(dayLabel("2026-10-17")).toBe("17 October 2026");
     expect(weekdayOf("2026-10-17")).toBe(6);
-    // The native grid is the same 6 × 7 shape, built from two ranges.
+
     expect(native).toContain("Arr.range(0, 5)");
     expect(native).toContain("Arr.range(0, 6)");
-    // Both sides default to painting the neighbouring months' days.
+
     expect(native).toContain("showOutsideDays = true");
   });
 });
@@ -156,7 +137,7 @@ describe("the bounds", () => {
     expect(clampToBounds("2026-10-05", bounds)).toBe("2026-10-12");
     expect(clampToBounds("2026-12-01", bounds)).toBe("2026-11-20");
     expect(clampToBounds("2026-10-17", bounds)).toBe("2026-10-17");
-    // `min` after `max` selects nothing; the native clamp settles on `max`.
+
     const inverted = boundsOf("2026-12-01", "2026-11-01");
     expect(clampToBounds("2026-10-01", inverted)).toBe("2026-11-01");
     expect(
@@ -211,13 +192,11 @@ describe("the keys", () => {
     expect(key("2026-10-17", "ArrowRight")).toBe("2026-10-18");
     expect(key("2026-10-17", "ArrowUp")).toBe("2026-10-10");
     expect(key("2026-10-17", "ArrowDown")).toBe("2026-10-24");
-    // The week crosses a month edge without landing on a blank cell.
+
     expect(key("2026-10-01", "ArrowLeft")).toBe("2026-09-30");
   });
 
   it("jumps to the week's edges in the grid's own week order", () => {
-    // 17 October 2026 is a Saturday, so Monday-start week is 12–18 and
-    // Sunday-start is 11–17.
     expect(key("2026-10-17", "Home")).toBe("2026-10-12");
     expect(key("2026-10-17", "End")).toBe("2026-10-18");
     expect(moveFocus("2026-10-17", "Home", 0, unbounded)).toBe("2026-10-11");
@@ -261,7 +240,7 @@ describe("the value", () => {
 
   it("labels the field and reports the value the component would emit", () => {
     expect(formatValue(null, "Pick a date")).toBe("Pick a date");
-    // The shipped trigger prints `formatShortDay`: `"Oct 17, 2026"`.
+
     expect(formatValue("2026-10-17", "Pick a date")).toBe("Oct 17, 2026");
     expect(formatRange(null, "Pick a date")).toBe("Pick a date");
     expect(formatRange({ from: "2026-01-20", to: "2026-02-04" }, "x")).toBe(
@@ -277,8 +256,6 @@ describe("the value", () => {
 
 describe("isoDayOf", () => {
   it("names the local day, not the UTC one", () => {
-    // Guarded bug class: a grid built from the UTC day marks yesterday for a
-    // reader west of Greenwich for part of their morning.
     const local = new Date(2026, 9, 29, 0, 30);
     expect(isoDayOf(local)).toBe("2026-10-29");
   });

@@ -1,14 +1,3 @@
-/**
- * The rules every text swap shares, without a renderer.
- *
- * The bugs these guard: a swap that happens before the exit has run (a jump
- * instead of a journey); a clock that outruns the swap and queues every value
- * instead of landing on the newest; a target that reverts mid-exit and leaves
- * the clip empty; a reduced run that still schedules a timer; an entry that
- * travels the wrong way, or one whose distance reaches the runtime as `null`; and
- * a level whose halves do not add up to the level the caller named.
- */
-
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
 import {

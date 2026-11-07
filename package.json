@@ -40,8 +40,8 @@
       "examples/*"
     ],
     "catalog": {
-      "@effect/platform-node": "4.0.5",
-      "@effect/vitest": "4.0.5",
+      "@effect/platform-node": "4.1.2",
+      "@effect/vitest": "4.1.2",
       "@gpuix/native": "0.11.0",
       "@gpuix/react": "0.11.0",
       "@tailwindcss/vite": "^4.3.2",
@@ -49,7 +49,7 @@
       "@tanstack/charts-scales": "1.2.1",
       "@tanstack/form-core": "1.33.5",
       "@tanstack/highlight": "1.1.0",
-      "@tanstack/hotkeys": "0.17.0",
+      "@tanstack/hotkeys": "0.24.0",
       "@tanstack/pacer": "0.23.1",
       "@tanstack/react-router": "^1.170.44",
       "@tanstack/react-start": "^1.169.2",
@@ -57,8 +57,8 @@
       "@tanstack/virtual-core": "3.19.6",
       "@types/react": "^19.2.0",
       "@vitejs/plugin-react": "^6.0.3",
-      "alchemy": "2.0.0-beta.83",
-      "effect": "4.0.5",
+      "alchemy": "2.0.0-beta.85",
+      "effect": "4.1.2",
       "fumadocs-core": "^16.17.4",
       "fumadocs-mdx": "^15.4.7",
       "fumadocs-ui": "^16.17.4",
@@ -69,7 +69,8 @@
       "tailwindcss": "^4.3.2",
       "typescript": "^7",
       "vite": "^8.3.4",
-      "vitest": "^5.0.3"
+      "vitest": "^5.0.3",
+      "@alchemy.run/cloudflare": "2.0.0-beta.85"
     }
   }
 }

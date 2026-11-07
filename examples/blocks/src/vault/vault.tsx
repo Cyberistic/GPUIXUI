@@ -1,8 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Vault — a linked-notes app: the folders in a source list, a reading pane whose
- * `[[links]]` open notes, and the graph and backlinks of the open note.
- */
 import { SourceList, Window, WindowToolbar } from "@gpuixui/shell";
 import { Stack, Text } from "@gpuixui/primitives";
 import type { PlatformName } from "@gpuixui/tokens";

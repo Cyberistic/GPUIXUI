@@ -47,18 +47,3 @@ carried as **one** byte-mode segment rather than split into several, so the
 symbol is always valid though not always the smallest one the standard allows.
 The mode is a property of the value, not a prop: a caller who needs the smaller
 symbol writes a payload the table already covers.
-
-## Notes
-- **Versions 1–10.** The largest symbol holds 271 bytes at `L`.
-- **A stored `ink` or `paper` that is blank or not text reads as the scanner pair**, so a saved record cannot hand the runtime a colour it cannot paint — a quiet zone left on the page is unscannable in a dark theme.
-- **A value that is not text carries nothing**: a record restored from storage
-  writes `null` where it carried no value, and the encoder reads that as the
-  empty string — `TextEncoder` would otherwise stringify it to the four bytes of
-  `"null"`, so a scanner would read a payload the record never carried.
-- A `quietZone` that is not finite and non-negative reads as the default `4`; `0` asks for no quiet zone, while a stored `-4` cannot mean one.
-- **A value that does not fit is an alert, not an image**: the box announces the capacity sentence — in the value's own unit, digits or characters or bytes — keeps the caller's reserved square (`size`, or an explicit `style` box) and never paints a partial symbol; `label` names the painted symbol only.
-- A **blank `label`** reads as the default `"QR code"`; a symbol that names nothing would be an unnamed image to assistive technology.
-- **No segmentation.** A mixed value is carried in byte mode whole, so a payload
-  the standard could split into a numeric and a byte segment paints a larger
-  symbol than a segmented encoder would.
-- **No logo or artwork overlay**: a mask is a path, not a composited image.

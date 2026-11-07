@@ -31,21 +31,3 @@ default is semantic, because a divider that separates content is content.
 | `className` | `string` | — |
 | `testId` | `string` | — |
 | `aria-id` | `string` | — |
-
-## Accessibility
-
-- A semantic rule is published as `role="separator"`; the platform reports that
-  token as `Splitter`, the role of a draggable divider, and 0.11.0 publishes no
-  `aria-orientation`, so a reader is told there is a separator but not which way
-  it runs.
-- A decorative rule publishes no node at all; the rule is a filled `div` with no
-  role.
-- A labelled rule also paints its caption as text, so the words are readable
-  even where the rule itself is decorative.
-
-## Notes
-- A filled 1px rule, not a border: `borderStyle` does not apply, so there is no
-  dashed or dotted divider — compose a `Box` with a dashed border instead.
-- No draggable splitter and no resize event.
-- A vertical rule needs a definite height from its parent; it stretches on the
-  cross axis the way `self-stretch` does on the web.

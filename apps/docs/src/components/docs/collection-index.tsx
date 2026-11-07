@@ -7,18 +7,6 @@ import {
 import { mainContentId } from "@/components/skip-link";
 import type { CollectionIndexView } from "@/lib/collection-index";
 
-/**
- * The list a mounted collection serves at its own route.
- *
- * The package writes every component page; this is the list of them, generated
- * from the collection so a new page reaches its section's entry in the same
- * commit. It is a page rather than MDX because six packages would otherwise
- * hand-maintain the same list, and a package cannot write one into the site's
- * collection.
- *
- * The body is separate from the frame because the frame reads Fumadocs' tree
- * context, which a unit test does not stand up; the table is the page.
- */
 export function CollectionIndexBody({
   index,
 }: {
@@ -63,7 +51,6 @@ export function CollectionIndexBody({
   );
 }
 
-/** The page a collection route answers with when the package writes no index. */
 export function CollectionIndexPage({
   index,
 }: {

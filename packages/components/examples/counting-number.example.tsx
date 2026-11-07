@@ -1,18 +1,9 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Counting number example: a dashboard metric that counts up.
- *
- * Two buttons move the value, so the example shows both halves of the contract:
- * the mount run starts at zero, and a later value retargets from the number on
- * screen. The reduced case paints its target at once.
- */
-
 import { useState } from "react";
 import { Button } from "../src/internal/button.js";
 import { CountingNumber } from "../src/counting-number.js";
 import { MotionProvider } from "../src/motion.js";
 
-/** A metric with a step control. */
 export const CountingNumberExample = () => {
   const [deploys, setDeploys] = useState(1_284);
 

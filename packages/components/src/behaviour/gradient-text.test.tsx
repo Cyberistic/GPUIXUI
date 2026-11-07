@@ -1,12 +1,3 @@
-/**
- * GradientText in the real GPUix renderer.
- *
- * The bugs these guard: a ramp that paints every glyph the same colour; an
- * untagged end that leaves holes instead of the start colour; a word split into
- * one accessibility node per letter; a two-line phrase painted as one row; and
- * a reduced-motion reader whose text still fades in.
- */
-
 import type { TestElement } from "@gpuix/react/testing";
 import * as Str from "effect/String";
 import { describe, expect, it } from "vitest";
@@ -17,13 +8,11 @@ import { lightTheme } from "../internal/theme.js";
 import { MotionProvider } from "../motion.js";
 import { GradientText } from "../gradient-text.js";
 
-/** The styled text hosts, in paint order (the run child carries the string). */
 const glyphs = (
   page: ReturnType<typeof renderComponent>,
 ): ReadonlyArray<TestElement> =>
   page.renderer.findByType("text").filter((element) => element.text === null);
 
-/** Every painted glyph, joined, and every colour in the same order. */
 const painted = (
   page: ReturnType<typeof renderComponent>,
 ): {
@@ -34,7 +23,6 @@ const painted = (
   colors: glyphs(page).map((glyph) => String(glyph.style.color ?? "")),
 });
 
-/** The painted y of one named element. */
 const yOfWord = (
   page: ReturnType<typeof renderComponent>,
   key: string,
@@ -135,10 +123,6 @@ describe("GradientText", () => {
   });
 
   it("paints no glyphs for a stored phrase that was not text", () => {
-    // The bug guarded: a phrase saved with a layout writes `null` for a string
-    // it never carried, and `gradientLines` handed it to `Str.split`, which
-    // threw `Cannot read properties of null (reading 'split')` out of the
-    // render — the whole surface went, not only the ramp.
     const page = renderComponent(
       <GradientText testId="gradient-text" text={null as unknown as string} />,
     );

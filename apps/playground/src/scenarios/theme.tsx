@@ -1,28 +1,3 @@
-/**
- * The theme gallery: the token layer painting in the real runtime.
- *
- * `theme-color-roles` renders every role in `colorRoles` as a labelled swatch,
- * then switches dark → light → high contrast. Each step asserts the runtime's
- * **own style report** (`paintedStyle`) against the theme's value, so a token
- * that never reaches the renderer fails without a screenshot diff.
- *
- * `theme-type-and-shadow` does the same for every type role through
- * `textStyle`, plus `focusRing` and an `md` elevation. The ring check is a
- * **style** proof, not a focus-behaviour proof: `focus-traversal` owns that.
- *
- * `theme-platform` paints one row per platform through `platformTheme` — its
- * mono face, a palette role, a radius from its own scale and an `md` control at
- * its density — and asserts each against the runtime's style report, so the
- * platform styles are real theme values rather than a docs-only toggle.
- *
- * `theme-look` does the same for the authored looks (`retroTheme` over
- * `retroStyles`), with the base theme's own `lg` radius and `primary` fill as the
- * negative control: a look that inherited its base would fail both.
- *
- * The role lists are derived from `colorRoles` and `typography`, never copied,
- * so a new token cannot go untested. The panel rows are explicit flex rows
- * because `flexWrap` is not a verified GPUix capability.
- */
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { Effect } from "effect";
@@ -52,7 +27,6 @@ import type { ScenarioBody } from "../types.js";
 const SWATCH_COLUMNS = 4;
 const SWATCH_WIDTH = 176;
 
-/** The gallery's own surface, so the smoke screenshot is not a black page. */
 const Surface = ({ children }: { readonly children: ReactNode }) => {
   const theme = useTheme();
   return (
@@ -70,7 +44,6 @@ const Surface = ({ children }: { readonly children: ReactNode }) => {
   );
 };
 
-/** Every typographic role, read off `typography` rather than restated. */
 const typeRoles: ReadonlyArray<TextRole> = Arr.filter(
   R.keys(typography),
   (role): role is TextRole => role !== "sans" && role !== "mono",
@@ -82,13 +55,6 @@ const styleOf = (
 ): Option.Option<Smoke.StyleSnapshot> =>
   Option.fromNullishOr(ctx.host.paintedStyle(testId));
 
-/**
- * Asserts one property of one element's painted style.
- *
- * `paintedStyle` is `null` when the element is not painted and a property is
- * `None` when the runtime did not report it; both fail the check with a label
- * naming the element, so a style the runtime silently dropped cannot pass.
- */
 const expectStyle = <A extends Smoke.Scalar>(
   ctx: Smoke.SmokeContext,
   label: string,
@@ -117,7 +83,6 @@ const backgroundOf = (
     (style) => style.backgroundColor,
   );
 
-/** Asserts every colour role paints its own value in `theme`. */
 const expectPalette = (
   ctx: Smoke.SmokeContext,
   theme: Theme,
@@ -190,7 +155,6 @@ const ColorRolesProbe = () => {
   );
 };
 
-/** The `palette=` readout, or `""` when the readout is missing. */
 const readout = (ctx: Smoke.SmokeContext): string =>
   Option.getOrElse(
     Option.fromNullishOr(ctx.host.text("theme-readout")),
@@ -389,14 +353,6 @@ export const themeTypeAndShadowScenario: ScenarioBody = {
     }),
 };
 
-/**
- * One row of theme samples: the mono face, the primary fill, an `lg` radius and
- * an `md` control at the theme's density.
- *
- * The sans face is GPUI's `.SystemUIFont` sentinel in every style, so the family
- * that distinguishes two themes is the mono one. `base` paints the labels and
- * the row's gap; `themed` owns every sampled value.
- */
 const ThemeRow = ({
   label,
   testId,
@@ -455,7 +411,6 @@ const ThemeRow = ({
   </div>
 );
 
-/** Asserts one row's four samples against the runtime's own style report. */
 const expectThemeRow = (
   ctx: Smoke.SmokeContext,
   label: string,
@@ -496,12 +451,6 @@ const expectThemeRow = (
     );
   });
 
-/**
- * The platforms whose styles the gallery proves.
- *
- * `default` is the house identity and is already painted by the other two
- * scenarios, so only the three that must differ are sampled here.
- */
 const platformNames: ReadonlyArray<Exclude<PlatformName, "default">> = [
   "darwin",
   "linux",
@@ -562,14 +511,6 @@ export const themePlatformScenario: ScenarioBody = {
     }),
 };
 
-/**
- * One row per authored look, styled through `retroTheme`.
- *
- * The looks are not platform names — `platformNames` is the persisted key and
- * the docs toggle offers it — so they get their own probe rather than a fourth
- * platform row. Each row samples the same four values `platformTheme` is held to,
- * because `applyStyle` is the one merge rule both routes use.
- */
 const LookProbe = () => {
   const base = palettes.dark;
 
@@ -606,12 +547,6 @@ export const themeLookScenario: ScenarioBody = {
         { concurrency: 1, discard: true },
       );
 
-      // The samples only prove `retroTheme` painted the look if they differ from
-      // the base; the probe's negative control is a row that inherited the
-      // base's radius or primary fill. Two looks may legitimately share an `lg`
-      // step — Luna and Omarchy both author 3 — so the aggregate reads the
-      // styles' own table instead of demanding that every look be unique: a look
-      // that fell back to the base would drop a step the table authors.
       const radii = Arr.map(painted, ({ theme }) => theme.radius.lg);
       yield* ctx.expectEqual(
         "every look paints a radius the base does not",

@@ -1,11 +1,5 @@
-/**
- * The desktop's sample data: Gon's machine. Every name is the Hunter's world;
- * the shapes (icons on the left, a Start menu of two columns, a folder of
- * files) are the era's.
- */
 import type { IconName } from "@gpuixui/icons";
 
-/** The two eras the block paints. */
 export const looks = ["luna", "aero"] as const;
 export type DesktopLook = (typeof looks)[number];
 
@@ -13,7 +7,7 @@ export interface Shortcut {
   readonly id: string;
   readonly label: string;
   readonly icon: IconName;
-  /** The tile's fill: the glyph sits on it in white. */
+
   readonly tint: string;
 }
 
@@ -39,7 +33,6 @@ export interface Program {
   readonly tint: string;
 }
 
-/** The Start menu's left column: pinned programs first, then recent ones. */
 export const pinned: ReadonlyArray<Program> = [
   {
     label: "Hunter Site",
@@ -63,7 +56,6 @@ export const recent: ReadonlyArray<Program> = [
   { label: "Kanban", icon: "list", tint: "#5A6B7D" },
 ];
 
-/** The Start menu's right column: places on the machine. */
 export const places: ReadonlyArray<Program> = [
   { label: "Hunter License", icon: "badge-check", tint: "#2F6FD6" },
   { label: "My Nen Notes", icon: "file-text", tint: "#E3A82B" },
@@ -78,7 +70,6 @@ export interface FolderItem {
   readonly kind: "folder" | "file";
 }
 
-/** What the Greed Island folder holds. */
 export const greedIsland: ReadonlyArray<FolderItem> = [
   { name: "Spell Cards", kind: "folder" },
   { name: "Restricted Slots", kind: "folder" },
@@ -88,7 +79,6 @@ export const greedIsland: ReadonlyArray<FolderItem> = [
   { name: "Book.ini", kind: "file" },
 ];
 
-/** The windows the desktop opens with, back to front. */
 export const windows = ["explorer", "license"] as const;
 export type WindowId = (typeof windows)[number];
 
@@ -97,5 +87,4 @@ export const titles: Readonly<Record<WindowId, string>> = {
   license: "Hunter License Properties",
 };
 
-/** The clock in the tray: fixed, so a capture is the same every time. */
 export const clock = { time: "9:41 AM", date: "10/31/2026" } as const;

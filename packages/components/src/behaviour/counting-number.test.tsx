@@ -1,12 +1,3 @@
-/**
- * CountingNumber in the real GPUix renderer.
- *
- * The bugs these guard: a number that jumps instead of counting; a mount that
- * animates although the caller gave no start; a retarget that restarts from the
- * start value the reader never saw; a count that still runs under the reduced
- * preference; and an accessible name that narrates every frame.
- */
-
 import { describe, expect, it } from "vitest";
 import { a11yNodes } from "../internal/a11y.js";
 import { waitFor } from "../internal/interaction.js";
@@ -14,7 +5,6 @@ import { renderComponent } from "../internal/test-root.js";
 import { CountingNumber } from "../counting-number.js";
 import { MotionProvider } from "../motion.js";
 
-/** Every painted string, joined: the number at the frame just painted. */
 const painted = (page: ReturnType<typeof renderComponent>): string =>
   page.renderer.getAllText().join("");
 
@@ -75,10 +65,6 @@ describe("CountingNumber", () => {
   });
 
   it("counts again after the number has rested, instead of jumping", async () => {
-    // The hook stops sampling at rest, so the retained value's last sample is
-    // older than the moment the caller retargets it. A retarget that measures
-    // from that stale sample counts the pause as elapsed motion and lands on
-    // the new value in one frame; the pause is not part of the run.
     const page = renderComponent(
       <CountingNumber testId="count" value={100} from={0} durationMs={120} />,
     );

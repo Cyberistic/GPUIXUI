@@ -1,16 +1,3 @@
-/**
- * The activation contract's two halves, on every composite that owns a key
- * handler.
- *
- * The bug these guard: Space activated a control on the **press**, so one
- * keystroke both ran the action and scrolled the region behind it, and a press a
- * reader cancelled before releasing had already acted. Space now activates on the
- * release (Enter still on the press), and a Space press is swallowed so the
- * platform default cannot run. `internal/key.test.ts` proves the decision and the
- * wiring on a plain control; each case below proves a composite installed it, so
- * a part that kept press activation fails by name.
- */
-
 import * as Option from "effect/Option";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
@@ -57,12 +44,10 @@ const focused = (root: ComponentTestRoot): number => {
   return id;
 };
 
-/** The press half of a Space gesture on whatever holds focus. */
 const pressSpace = (root: ComponentTestRoot): void => {
   root.renderer.nativeSimulateKeyDown(focused(root), "space");
 };
 
-/** The release half, which is where Space activates. */
 const releaseSpace = (root: ComponentTestRoot): void => {
   root.renderer.nativeSimulateKeyUp(focused(root), "space");
 };
@@ -164,7 +149,6 @@ describe("Space activates on the release, not the press", () => {
       </div>,
     );
 
-    // Enter opens on the press and lands on the first row.
     menu.renderer.nativeSimulateKeyDown(
       menu.renderer.findByTestId("trigger")?.id ?? -1,
       "enter",
@@ -209,8 +193,7 @@ describe("Space activates on the release, not the press", () => {
 
     releaseSpace(menu);
     expect(menu.renderer.findByTestId("menu")).toBeDefined();
-    // A keyboard open lands on the first enabled row, so Enter has something to
-    // run — the same edge the Enter press reaches.
+
     expect(focusedTestId(menu)).toEqual(Option.some("rename"));
 
     menu.unmount();
@@ -220,8 +203,7 @@ describe("Space activates on the release, not the press", () => {
     const onValueChange = vi.fn();
     const picker = renderComponent(
       <div style={{ width: 420, padding: 40 }}>
-        {/* Nothing is chosen yet, so the release chooses today rather than
-            clearing a value a second press would toggle off. */}
+        {}
         <DatePicker today="2026-10-17" onValueChange={onValueChange}>
           <DatePickerTrigger label="Due date" />
           <DatePickerContent>
@@ -291,8 +273,6 @@ describe("Space activates on the release, not the press", () => {
     releaseSpace(recorder);
     expect(recorder.renderer.getAllText()).toContain("Press keys…");
 
-    // Recording a Space chord must not treat the release that follows as a
-    // second activation: the recorder would start listening again immediately.
     pressSpace(recorder);
     expect(recorder.renderer.getAllText()).not.toContain("Press keys…");
     releaseSpace(recorder);

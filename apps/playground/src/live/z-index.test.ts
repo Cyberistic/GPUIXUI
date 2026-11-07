@@ -1,18 +1,3 @@
-/**
- * Holds the `z-index-lifecycle` fixture, the probe that drives it and the
- * section a plan reads.
- *
- * The gap this guards: the repository builds its own binding with
- * `apps/playground/patches/gpuix-zindex.patch` applied, because the published
- * `@gpuix/native@0.11.0` has no `zIndex`. The patch's Rust tests live in the
- * patch, outside this repository's suites, and until this probe existed no app
- * code had ever set the field — a rebuild that dropped the patch, or a binding
- * that stopped reading the key, would leave every existing probe green because
- * every shipped surface renders last in its parent.
- *
- * `node:fs` is deliberate, as in the other live fixtures: this reads the
- * repository's own probe, registry and prose, never a runtime path.
- */
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
@@ -34,21 +19,18 @@ import { liveRegistry } from "./registry.js";
 const read = (path: string): string =>
   readFileSync(new URL(path, import.meta.url), "utf8");
 
-const fixture = read("./z-index.ts");
 const probe = read("./z-index-probe.tsx");
 const registry = read("./registry.ts");
 const scenarios = read("./scenarios.tsx");
 const augmentation = read("../gpuix-zindex.d.ts");
 const readme = read("../../README.md");
 
-/** The probe's own steps, so a count cannot be read out of another probe. */
 const stepsOf = (): string => {
   const start = probe.indexOf("export const zIndexSteps");
   const next = probe.indexOf("\nexport ", start + 1);
   return probe.slice(start, next === -1 ? undefined : next);
 };
 
-/** This probe's README section, so a value printed elsewhere cannot pass. */
 const sectionOf = (): string => {
   const heading = "### `z-index-lifecycle` — measured on 0.11.0 here";
   const start = readme.indexOf(heading);
@@ -59,9 +41,6 @@ const sectionOf = (): string => {
 
 describe("the fixture", () => {
   it("orders the levels so tree order and paint order disagree", () => {
-    // The stack mounts high, low, mid. Tree order makes `mid` the top box; the
-    // level makes `high` the top one. A fixture whose orders agreed would pass
-    // in a runtime that ignored `zIndex` entirely.
     expect(Z_INDEX_LEVELS.high).toBeGreaterThan(Z_INDEX_LEVELS.mid);
     expect(Z_INDEX_LEVELS.mid).toBeGreaterThan(Z_INDEX_LEVELS.low);
     expect(Z_INDEX_LEVELS.high).not.toBe(Z_INDEX_LEVELS.low);
@@ -84,8 +63,6 @@ describe("the fixture", () => {
   });
 
   it("gives the in-flow child a level above every positioned one", () => {
-    // A level that leaked into in-flow layout would paint the child over the
-    // positioned cover, and the probe's flow sample would read the base fill.
     expect(Z_INDEX_FLOW_LEVEL).toBeGreaterThan(Z_INDEX_LEVELS.high);
     expect(Z_INDEX_FLOW.width).toBe(Z_INDEX_STACK.width);
   });
@@ -133,8 +110,6 @@ describe("the probe", () => {
   });
 
   it("sets a level only on the positioned boxes", () => {
-    // The gate's stack and the in-flow child are the controls: a level on
-    // either of them would make the negative control meaningless.
     const positioned = probe.slice(
       probe.indexOf("const positioned"),
       probe.indexOf("const layered"),
@@ -145,8 +120,7 @@ describe("the probe", () => {
     );
     expect(positioned).not.toContain("zIndex");
     expect(layered).toContain("zIndex: level");
-    // The shared layer picks the paint from the level it was handed, so a
-    // control stack that drops every `level` prop is a stack with no level.
+
     expect(probe).toContain(
       "level === undefined ? positioned(fill) : layered(fill, level)",
     );
@@ -162,13 +136,11 @@ describe("the probe", () => {
     expect(probe).toContain("getElementsAt");
     expect(probe).toContain("ctx.host.capture(CAPTURE)");
     expect(probe).toContain("ctx.host.click(Z_INDEX_IDS.stack)");
-    expect(fixture).toContain("topmost first");
   });
 
   it("declares the local binding's type for the field it sets", () => {
     expect(augmentation).toContain('declare module "@gpuix/native/host"');
     expect(augmentation).toContain("zIndex?: number");
-    expect(augmentation).toContain("and the library must not depend on it");
   });
 });
 

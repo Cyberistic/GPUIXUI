@@ -1,25 +1,3 @@
-#!/usr/bin/env node
-/**
- * Measure what `@gpuixui/components` costs to load.
- *
- *   nub run --filter @gpuixui/components measure:surface
- *   (cd packages/components && nub scripts/surface.ts --import)
- *
- * The first command prints the module graph the entry reaches; `--json` prints
- * the same measurement for a script to consume. `--import` adds the cold import
- * cost measured on this host: three fresh processes import the runtime alone and
- * three import the package entry, so the difference is the package's own surface
- * rather than the native binding every process pays for. It needs a supported
- * host, the same one `test:behaviour` needs, because the entry reaches
- * `@gpuix/react` and therefore the native binding.
- *
- * `src/surface.test.ts` is the gate; this command is how its budget is
- * regenerated and how the numbers in `README.md` were measured.
- *
- * Node's process API and `console` are deliberate here: this is a one-shot
- * repository report, not runtime code.
- */
-
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import * as Arr from "effect/Array";
@@ -63,7 +41,6 @@ const report = (surface: Surface): void => {
 const IMPORT = (specifier: string): string =>
   `const started = performance.now(); import(${JSON.stringify(specifier)}).then(() => console.log(Math.round(performance.now() - started)));`;
 
-/** One cold import in a fresh process, in milliseconds. */
 const coldImport = (specifier: string): Option.Option<number> => {
   const run = spawnSync("nub", ["-e", IMPORT(specifier)], {
     cwd: packageRoot,
@@ -85,7 +62,6 @@ const RUNS = 3;
 const samples = (specifier: string): ReadonlyArray<number> =>
   Arr.getSomes(Arr.makeBy(RUNS, () => coldImport(specifier)));
 
-/** What a cold process pays, from the runtime alone to the whole barrel. */
 const IMPORTS: ReadonlyArray<readonly [string, string]> = [
   ["runtime only", "@gpuix/react"],
   ["one family (badge)", "@gpuixui/components/badge"],
@@ -116,13 +92,6 @@ const measureImport = (): boolean => {
   return true;
 };
 
-/**
- * The file a `--entry <path>` argument names, resolved against the package root.
- *
- * A consumer of this package imports a family subpath (`./src/dialog.tsx`)
- * rather than the barrel, so measuring one is how a change to a shared seam's
- * cost is read where that consumer pays it.
- */
 const entryArg = (): Option.Option<string> => {
   const index = process.argv.indexOf("--entry");
   return Option.map(

@@ -1,26 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * TimePicker: one time of day, entered as an `HH:mm` hour and minute segment.
- *
- * The public value is `HH:mm` in 24-hour form, or `null` for none: never a
- * `DateTime`, never a locale string. Display is fixed 24-hour because the repo
- * has no i18n layer; AM/PM belongs to a message catalogue, not to this control.
- *
- * The two segments are real `<input>` host elements, not an invented
- * `role="spinbutton"`: `@gpuix/native@0.11.0` has `aria-valuetext` but no
- * `aria-valuenow`, so a custom spinbutton would never announce its value, while
- * an input announces its value natively. Typing clamps each segment (hours
- * `00..23`, minutes `00..59`); `minuteStep` only changes the arrow-key step.
- * Arrow keys add minutes through one clock function, so hours and minutes cannot
- * disagree at the hour or midnight boundary. Emptying a segment clears the
- * whole value; blur pads both segments. Disabled is `readOnly` on both inputs
- * because 0.11.0 has no `aria-disabled`.
- *
- * The root is a field, not a trigger with a popup (the reason it is a field is
- * above): `TimePickerSegment` places the two inputs, `TimePickerSeparator` the
- * colon, and `TimePickerClear` the optional reset.
- */
-
 import type { EventPayload, InputProps, PublicInstance } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import {
@@ -83,10 +61,8 @@ import {
   useTheme,
 } from "./internal/theme.js";
 
-/** The two segments a time is entered in. */
 export type TimeSegment = "hours" | "minutes";
 
-/** The rules a time-picker part follows; throws outside a {@link TimePicker}. */
 interface TimePickerContextValue {
   readonly hoursText: string;
   readonly minutesText: string;
@@ -106,7 +82,6 @@ const TimePickerContext = createContext<TimePickerContextValue | undefined>(
   undefined,
 );
 
-/** The field a part belongs to. Throws when there is none. */
 const useTimePicker = (): TimePickerContextValue => {
   const value = useContext(TimePickerContext);
   if (value === undefined) {
@@ -115,30 +90,27 @@ const useTimePicker = (): TimePickerContextValue => {
   return value;
 };
 
-/** {@link TimePicker} props. */
 export interface TimePickerProps {
-  /** The controlled `HH:mm` value, or `null` for none. `undefined` means uncontrolled. */
   readonly value?: string | null;
   readonly defaultValue?: string | null;
-  /** Every accepted edit, including the clear path. */
+
   readonly onValueChange?: (value: string | null) => void;
-  /** The field group's accessible name; default `"Time"`. */
+
   readonly label?: string;
-  /** Minutes per arrow-key step, normalised to 1..59. Typed minutes are not restricted. Default `1`. */
+
   readonly minuteStep?: number;
-  /** Show a clear control while a time is set. Default `false`. */
+
   readonly clearable?: boolean;
   readonly disabled?: boolean;
-  /** Base id for the parts: `<testId>-hours`, `-minutes`, `-clear`. Default `"time-picker"`. */
+
   readonly testId?: string;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
   readonly children?: PartChildren;
 }
 
 const SEGMENT_WIDTH = 26;
 
-/** The field: value, text state, clamping and the focus ring. */
 export const TimePicker = ({
   value,
   defaultValue,
@@ -179,7 +151,6 @@ export const TimePicker = ({
   });
   const hoursInput = useRef<PublicInstance | null>(null);
 
-  /** Adopt an external value; keep raw text while it still canonicalises to it. */
   useLayoutEffect(() => {
     if (Option.getOrNull(composeIsoTime(hoursText, minutesText)) === selected) {
       return;
@@ -298,21 +269,17 @@ export const TimePicker = ({
   );
 };
 
-/** {@link TimePickerSegment} props. */
 export interface TimePickerSegmentProps {
-  /** Which half of the time this input edits. */
   readonly segment: TimeSegment;
-  /** A style, or a function of the segment's state. */
+
   readonly style?: StateStyle<TimePickerSegmentState>;
 }
 
-/** What a segment draws: the field's input state and its own focus. */
 export interface TimePickerSegmentState {
   readonly disabled: boolean;
   readonly focused: boolean;
 }
 
-/** One labelled segment. Typing clamps, arrows step and blur pads. */
 export const TimePickerSegment = ({
   segment,
   style,
@@ -347,11 +314,9 @@ export const TimePickerSegment = ({
   const props: InputProps = {
     testId: `${testId}-${segment}`,
     "aria-label": `${groupLabel} ${segment}`,
-    // The format hint is painted, so its words travel on the help channel
-    // while the segment is empty.
+
     "aria-description": fieldHelp({ placeholder }, text),
-    // The segments are transparent over the picker's `input` fill; the format
-    // hint is painted, because the host's own placeholder is a fixed grey.
+
     theme: nativeTextTheme(theme, "input"),
     value: text,
     readOnly: disabled,
@@ -390,12 +355,10 @@ export const TimePickerSegment = ({
   );
 };
 
-/** {@link TimePickerSeparator} props. */
 export interface TimePickerSeparatorProps {
   readonly children?: ReactNode;
 }
 
-/** The colon between the two segments. Not focusable. */
 export const TimePickerSeparator = ({
   children = ":",
 }: TimePickerSeparatorProps) => {
@@ -408,13 +371,10 @@ export const TimePickerSeparator = ({
   );
 };
 
-/** {@link TimePickerClear} props. */
 export interface TimePickerClearProps {
-  /** The accessible name. Default `"Clear time"`. */
   readonly label?: string;
 }
 
-/** The reset control. It renders only while `clearable` and a value exist. */
 export const TimePickerClear = ({
   label = "Clear time",
 }: TimePickerClearProps) => {
@@ -443,7 +403,6 @@ export const TimePickerClear = ({
   );
 };
 
-/** Every part of TimePicker, so a misplaced sibling is named. */
 const timePickerParts: ReadonlyArray<PartComponent> = [
   TimePicker,
   TimePickerSegment,
@@ -458,7 +417,6 @@ const timePickerRoot: PartsContract = {
   hint: "Put the segments, separator and clear control directly inside TimePicker.",
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const timePickerMeta = {
   name: "Time pickers",
   tier: 2,

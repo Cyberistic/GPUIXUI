@@ -1,13 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Popover example: choosing which columns a table shows.
- *
- * The popover holds its own open state (uncontrolled) and the *page* owns the
- * selection, so applying a filter is one state update in one place. Each row is a
- * toggle button rather than a checkbox because `packages/primitives` has no
- * checkbox yet; `aria-pressed` is what makes it a toggle to assistive technology.
- */
-
 import * as Arr from "effect/Array";
 import { useState } from "react";
 import { Badge } from "../src/badge.js";
@@ -16,10 +7,8 @@ import { Card, CardDescription, CardHeader, CardTitle } from "../src/card.js";
 import { Popover, PopoverContent, PopoverTrigger } from "../src/popover.js";
 import { textStyle, useTheme } from "../src/internal/theme.js";
 
-/** The columns the table can show. */
 const columns: ReadonlyArray<string> = ["Name", "Owner", "Status", "Updated"];
 
-/** A column list compressed into a one-line summary. */
 const summarise = (visible: ReadonlyArray<string>): string =>
   Arr.match(visible, {
     onEmpty: () => "No columns",
@@ -27,7 +16,6 @@ const summarise = (visible: ReadonlyArray<string>): string =>
       `${values.length} of ${columns.length} columns: ${Arr.join(values, ", ")}`,
   });
 
-/** A table header whose column visibility is chosen in a popover. */
 export const PopoverExample = () => {
   const theme = useTheme();
   const [visible, setVisible] = useState<ReadonlyArray<string>>([

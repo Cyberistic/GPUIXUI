@@ -56,8 +56,3 @@ Stepper
 | `style` | `StateStyle<StepperStepState>` | — | merged last |
 | `className` | `string` | — | joined last |
 | `testId` | `string` | — | stable locator |
-
-## Notes
-- `value` is never clamped: `NaN` or an infinity reads as the first step.
-- A step with a blank label reads as `Step` plus the step's position (`Step 2` for the second).
-- No `aria-current`: the current step carries `aria-selected`.

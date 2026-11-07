@@ -1,25 +1,3 @@
-/**
- * `LogViewer` — a virtualized, bottom-anchored log over `@gpuixui/data`'s list.
- *
- * The list is `@gpuixui/data`'s `VirtualList` in children mode: the runtime's
- * `<virtual-list>` builds and paints only the rows around the viewport, and the
- * `followTail` + `alignment="bottom"` pair keep the reader at the tail until it
- * scrolls up. The parser (`parseLogLine`) and the level filter (`filterByLevel`)
- * are pure; the toolbar composes the filter and the follow toggle, and each row
- * paints its level in the status tone it maps to.
- *
- * ```tsx
- * <LogViewer
- *   height={320}
- *   lines={lines}
- *   followTail={follow}
- *   onFollowTailChange={setFollow}
- *   enabledLevels={levels}
- *   onEnabledLevelsChange={setLevels}
- * />
- * ```
- */
-
 import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { VirtualList } from "@gpuixui/data";
@@ -43,37 +21,30 @@ import {
 } from "./logic.js";
 import { LOG_ROW, LOG_TOOLBAR, LOG_VIEWER_ROOT } from "./recipe.js";
 
-/** {@link LogViewer} props. */
 export interface LogViewerProps extends Omit<Props, "children"> {
-  /** The raw log lines, one per row. */
   readonly lines: ReadonlyArray<string>;
-  /** A definite viewport height, in pixels. */
+
   readonly height: number;
-  /** The painted height of one row. Defaults to the density's `rowHeight`. */
+
   readonly rowHeight?: number;
-  /** The enabled levels. Omit it to let the viewer hold its own filter. */
+
   readonly enabledLevels?: ReadonlyArray<LogLevel>;
-  /** Reports the enabled levels after every change. */
+
   readonly onEnabledLevelsChange?: (levels: ReadonlyArray<LogLevel>) => void;
-  /** Follow the tail as lines arrive. Omit it to let the viewer hold its own. */
+
   readonly followTail?: boolean;
-  /** Reports the follow state after every change. */
+
   readonly onFollowTailChange?: (follow: boolean) => void;
   readonly className?: string;
   readonly testId?: string;
 }
 
-/** The colour a level's token paints in, resolved from its status tone. */
 const levelColour = (theme: Theme, level: LogLevel): string =>
   Option.match(levelTone(level), {
     onNone: () => theme.colors.mutedForeground,
     onSome: (tone) => statusTone(theme, tone).foreground,
   });
 
-/**
- * A virtualized log: a level filter, a follow-tail toggle and the tail-anchored
- * list of parsed lines.
- */
 export const LogViewer = ({
   lines,
   height,

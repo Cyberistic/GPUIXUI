@@ -1,23 +1,3 @@
-/**
- * Holds the `image-zoom` fixture, the probe that drives the shipped component,
- * and the numbers the README teaches.
- *
- * The gap this closes: `ImageZoom` shipped with an offscreen suite that reads
- * the box the runtime was handed, and the *paint* it produces — that an `<img>`
- * host scales its buffer into a bigger box, and that the pan keeps the pointed
- * spot under the pointer — rested on a measurement of a chart's pixel buffer.
- * The probe measures both in a window; this suite keeps the bitmap, the
- * invariants and the prose a reader plans from pointing at the same numbers.
- *
- * The bug this guards is the fixture's own claim: the picture's bytes and the
- * marks the probe samples are two copies of one bitmap, so a mark that moves in
- * the fixture but not in the PNG would have the probe sample the background.
- * The cases decode the embedded bytes and compare them with the declarations, in
- * both directions.
- *
- * `node:fs` is deliberate, as in the other live fixtures: this reads the
- * repository's own probe and prose, never a runtime path.
- */
 import { readFileSync } from "node:fs";
 import { inflateSync } from "node:zlib";
 import * as Arr from "effect/Array";
@@ -61,7 +41,6 @@ const scenarios = read("./scenarios.tsx");
 const readme = read("../../README.md");
 const component = read("../../../../packages/components/src/image-zoom.tsx");
 
-/** The embedded picture, decoded; a byte the decoder refuses fails by name. */
 const picture = (): Pixels.Pixels => {
   const bytes = new Uint8Array(
     Buffer.from(ZOOM_PICTURE_DATA_URL.split(",")[1] ?? "", "base64"),
@@ -74,11 +53,9 @@ const picture = (): Pixels.Pixels => {
   return frame;
 };
 
-/** The colour of the decoded picture at one of its own points. */
 const pictureAt = (point: { readonly x: number; readonly y: number }) =>
   Pixels.pixelAt(picture(), point.x, point.y);
 
-/** The box the shipped component paints at a hover point, at its own scale. */
 const followBox = (point: {
   readonly x: number;
   readonly y: number;
@@ -113,7 +90,7 @@ describe("the picture", () => {
         b: mark.colour.b,
         a: 0xff,
       });
-      // Every corner of the declared box is the mark's paint.
+
       Arr.forEach(
         [
           { x: mark.box.x, y: mark.box.y },
@@ -126,7 +103,7 @@ describe("the picture", () => {
         ],
         (corner) => expect(pictureAt(corner)).toEqual(declared),
       );
-      // A point two pixels outside the box is not: a box drawn too wide fails.
+
       const outside = pictureAt({
         x: mark.box.x - 2,
         y: mark.box.y + mark.box.height / 2,
@@ -147,7 +124,7 @@ describe("the picture", () => {
   it("hovers a mark's own centre, so the pointer is on a colour no page imitates", () => {
     expect(ZOOM_HOVERS.mark).toEqual(markCentre(zoomMark("mark")));
     expect(ZOOM_HOVERS.other).not.toEqual(ZOOM_HOVERS.mark);
-    // Both points are inside the frame the probe aims them at.
+
     Arr.forEach([ZOOM_HOVERS.mark, ZOOM_HOVERS.other], (point) => {
       expect(point.x).toBeGreaterThanOrEqual(0);
       expect(point.x).toBeLessThan(ZOOM_FRAME.width);
@@ -170,7 +147,7 @@ describe("the invariants", () => {
         height: ZOOM_FRAME.height,
       }),
     ).toBe(false);
-    // A box that grew by the wrong factor fails, so the scale is measured.
+
     expect(magnified(zoomed, 2)).toBe(false);
   });
 
@@ -185,7 +162,7 @@ describe("the invariants", () => {
   it("keeps the pointed spot's share under the pointer, and refuses a still or centred box", () => {
     expect(pinned(followBox(ZOOM_HOVERS.mark), ZOOM_HOVERS.mark)).toBe(true);
     expect(pinned(followBox(ZOOM_HOVERS.other), ZOOM_HOVERS.other)).toBe(true);
-    // A picture that grew without panning drifts the spot the reader points at.
+
     expect(
       pinned(
         {
@@ -197,7 +174,7 @@ describe("the invariants", () => {
         ZOOM_HOVERS.mark,
       ),
     ).toBe(false);
-    // So does a box that magnifies about the frame's centre.
+
     expect(
       pinned(
         {
@@ -209,7 +186,7 @@ describe("the invariants", () => {
         ZOOM_HOVERS.mark,
       ),
     ).toBe(false);
-    // The invariant is per axis: a correct across pan with no down pan fails.
+
     expect(
       pinned({ ...followBox(ZOOM_HOVERS.mark), top: 0 }, ZOOM_HOVERS.mark),
     ).toBe(false);
@@ -303,8 +280,6 @@ describe("the probe and the registry", () => {
   });
 
   it("drives the shipped component through the fixture's points and invariants", () => {
-    // A probe that re-implemented the zoom could pass while the README taught
-    // the fixture's numbers, so the composition is the claim.
     expect(probe).toContain("<ImageZoom");
     expect(probe).toContain("src={ZOOM_PICTURE_DATA_URL}");
     expect(probe).toContain("ctx.host.hoverAt(ZOOM_IDS.frame, point)");
@@ -318,14 +293,10 @@ describe("the probe and the registry", () => {
   });
 
   it("publishes the picture id the component paints", () => {
-    // The probe samples the picture's box, so a renamed element would leave it
-    // sampling nothing at all.
     expect(component).toContain(`testId="${ZOOM_IDS.picture}"`);
   });
 
   it("counts the checks the probe can assert", () => {
-    // The printed count is the run's own, so it cannot be derived statically;
-    // the assertion sites are the floor a hollow probe cannot fall below.
     const steps = probe.slice(probe.indexOf("export const imageZoomSteps"));
     const sites = Arr.length(
       Arr.fromIterable(steps.matchAll(/ctx\.expect[A-Za-z]+\(/g)),
@@ -335,13 +306,6 @@ describe("the probe and the registry", () => {
   });
 
   it("counts a leave from the pointer's own arrival", () => {
-    // The bug this guards: the resting check read a **cumulative** leave count,
-    // and the probe's park can take a leave the measured pointer did not (a full
-    // run's previous probe may leave the pointer over the frame's box, so the
-    // frame is entered at mount and left when the pointer parks) — measured on
-    // this box as `point=60,120 moves=2 leaves=1` against a required `leaves=0`.
-    // The view now resets the count on the frame's own entry, so `leaves=0`
-    // means "no leave since the pointer reached the frame".
     expect(probe).toContain("onMouseEnter={() => setLeaves(0)}");
     expect(probe).toContain(
       "onMouseLeave={() => setLeaves((count) => count + 1)}",

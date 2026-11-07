@@ -1,27 +1,3 @@
-/**
- * Guards the disabled state a control paints by fading itself.
- *
- * The bug this holds: the contract measured the role pair (`disabled` behind
- * `disabledForeground`) and the rest of the library faded the whole control —
- * `disabled:opacity-50` in the recipes, `opacity = 0.5` in the primitive cores —
- * which `contrastRatio` refuses, so the mechanism most controls actually use was
- * measured by nothing. Compositing the fade shows why that mattered: a filled
- * action's label lands between 1.51:1 and 2.83:1, and a high-contrast theme's
- * between 1.74:1 and 2.23:1 — under the 3:1 its variant asks for, which is the
- * measured reason the role pair is the contract and the fade is the deviation.
- *
- * The second bug is a page outliving its painter: both token pages taught that
- * the primitive cores and the menu row faded the state after `controlStyle`
- * painted `disabledAction(theme)` for a filled action, the recipe's disabled
- * bucket became the neutral pair and the menu row painted `disabledForeground`.
- * The pages are held to the sources below, not to the mechanism they once
- * described.
- *
- * `node:fs` is deliberate, as in `docs.test.ts`: this is a check over the
- * repository's own Markdown and source, and the package keeps zero runtime
- * dependencies by design.
- */
-
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { blend, lightColors } from "./color.js";
@@ -56,7 +32,6 @@ const shipped = [
   highContrastDarkTheme,
 ] as const;
 
-/** Every platform style in both modes, then every authored look's two editions. */
 const styled = platformNames.flatMap((platform) => [
   platformTheme(themes.light, platform),
   platformTheme(themes.dark, platform),
@@ -69,20 +44,9 @@ const looks = retroNames.flatMap((look) => [
 const measured = (fill: string, over: string): boolean =>
   disabledFadePairs.some((pair) => pair.fill === fill && pair.over === over);
 
-/** The import that makes the name in `fadeShares` the package's constant. */
 const tokenImport =
   /import\s*\{[^}]*\bdisabledOpacity\b[^}]*\}\s*from\s*"@gpuixui\/tokens"/;
 
-/**
- * The share a fade writes, in either form the primitive cores may use: the
- * number the constant equals, or the constant itself.
- *
- * A name is only the package's share when the file imports it — a local
- * `disabledOpacity` of another value would otherwise pass the guard behind the
- * right word — so a naming painter that imports nothing reads as
- * `not-the-constant` and fails the count. The import landed after this guard:
- * reading the number alone failed the package's own constant in three places.
- */
 const fadeShares = (
   source: string,
   file: string = source,
@@ -99,7 +63,7 @@ const fadeShares = (
 describe("disabledOpacity", () => {
   it("is a design constant rather than a theme group", () => {
     expect(disabledOpacity).toBe(0.5);
-    // A brand cannot lower it through `extendTheme`: it is not part of `Theme`.
+
     expect(Object.keys(lightTheme)).not.toContain("disabledOpacity");
   });
 });
@@ -114,8 +78,6 @@ describe("disabledFadePairs", () => {
   });
 
   it("measures a field on every surface, fill and label it paints", () => {
-    // A field is two fills — a plain field's `input`, a composite field's page
-    // role — and two labels: its value and its hint.
     const missing = (["input", "background"] as const).flatMap((fill) =>
       (["inputForeground", "placeholder"] as const).flatMap((label) =>
         (["background", "card", "popover", "muted"] as const)
@@ -136,12 +98,6 @@ describe("disabledFadePairs", () => {
   });
 
   it("measures a field's hint on the strips the keyboard dim measures it on", () => {
-    // The two mechanisms composite the same field on the same four strips — the
-    // page, a card, a popover and the `muted` toolbar or sidebar
-    // (`docs/design-system.md` §7). The fade carried three, so a disabled search
-    // field in a sidebar was the one faded control with no placement at all,
-    // while the dim measured it. A strip one table measures and the other does
-    // not is the bug this case holds.
     const strips = (
       pairs: ReadonlyArray<{ readonly label: string; readonly over: string }>,
     ): ReadonlySet<string> =>
@@ -157,11 +113,6 @@ describe("disabledFadePairs", () => {
   });
 
   it("reports a hint that fades into a sidebar, not only into a page", () => {
-    // A brand with a dark sidebar and a light content area — the desktop layout
-    // this table missed. Its composite search field fades its hint into the
-    // toolbar at 1.30:1 while the same field on the page still reads 2.03:1, so
-    // the strip is what decides the measurement rather than a redundant copy of
-    // the page placement.
     const darkSidebar = { colors: { ...lightColors, muted: "#2A2A2A" } };
     const hintOn = (strip: "background" | "muted") =>
       disabledFadeFailures(darkSidebar).find(
@@ -174,11 +125,6 @@ describe("disabledFadePairs", () => {
   });
 
   it("reads each field's fill from the painter that paints it", () => {
-    // The table is only honest while the recipes paint those fills: a plain
-    // field's `bg-input` (the primitives' `FIELD_BASE`), a composite field's
-    // `bg-background` (the shared recipes), and the fade on both. Renaming a
-    // recipe or moving a fill fails here before the coverage above can claim a
-    // surface nobody paints.
     const read = (path: string): string =>
       readFileSync(new URL(path, import.meta.url), "utf8");
     const recipe = (source: string, name: string): string => {
@@ -204,15 +150,11 @@ describe("disabledFadePairs", () => {
     ].forEach((name) => {
       expect(recipe(tw, name), name).toContain("bg-background");
     });
-    // A composite field fades with the same share as a plain one.
+
     expect(tw).toContain("disabled:opacity-50");
   });
 
   it("measures the tightest field placement the shipped styles paint", () => {
-    // The number `docs/tokens.md` prints: a `muted` toolbar is the darkest strip a
-    // composite field sits on, so the authored Windows 7 light look's hint on it
-    // is the lowest placement in the table. A palette edit that moves it fails
-    // here and in the page.
     const tightest = [...shipped, ...styled, ...looks]
       .flatMap((theme) =>
         disabledFadePairs
@@ -234,8 +176,6 @@ describe("disabledFadePairs", () => {
     expect(tightest.pair).toBe("background/placeholder on muted");
     expect(tightest.ratio?.toFixed(2)).toBe("1.96");
 
-    // The catalogue prints the same number and names the fills and labels the
-    // table measures, so the page cannot teach a placement the report dropped.
     const page = readFileSync(
       new URL("../../../docs/tokens.md", import.meta.url),
       "utf8",
@@ -249,8 +189,6 @@ describe("disabledFadePairs", () => {
 
 describe("disabledFadeFailures", () => {
   it("passes every shipped, platform and authored theme at the disabled floor", () => {
-    // The fade is a mechanism, so it is held to the default disabled floor in
-    // every variant; the floor that rises is the role pair's.
     [...shipped, ...styled, ...looks].forEach((theme) => {
       expect(disabledFadeFailures(theme), theme.name).toEqual([]);
     });
@@ -261,17 +199,11 @@ describe("disabledFadeFailures", () => {
       ({ fill }) => fill === "primary",
     );
 
-    // 50% primary over white, then 50% of the white label over that: 1.57:1.
-    // Measuring the label against the page instead would report ~11:1 and call
-    // a disabled button readable.
     expect(primary?.ratio).toBeCloseTo(1.57, 2);
     expect(primary?.floor).toBe(2);
   });
 
   it("reports a label painted into its own faded fill", () => {
-    // A label equal to the faded fill is the erased state: the control is there,
-    // its text is not. `edge` is that composited fill, so the faded label is the
-    // same colour.
     const erased = blend(
       lightColors.primary,
       lightColors.background,
@@ -310,12 +242,6 @@ describe("disabledFadeFailures", () => {
   });
 
   it("cannot reach the high-contrast disabled floor at the shipped share", () => {
-    // The measurement behind the design decision: a high-contrast theme fades a
-    // filled action to ~1.7:1, under the 3:1 its variant's disabled floor asks
-    // for, so that theme's `disabled` state is the role pair. The fields are
-    // measured on the same floor and some of their placements clear it; the
-    // actions are the ones the mechanism cannot carry. If the fade ever clears
-    // it for them, this case fails and the documentation moves with it.
     const faded = disabledFadeFailures(
       highContrastLightTheme,
       highContrastFloors.disabled,
@@ -331,11 +257,6 @@ describe("disabledFadeFailures", () => {
 
 describe("the fade's page scope", () => {
   it("measures a filled action on the page only", () => {
-    // A fade's result is a property of the strip behind it, so a filled action
-    // is measured where the fade keeps the floor. A card placement would fail
-    // four shipped light styles (the case below), so the table cannot gain one.
-    // A field is the mechanism's other half: it is measured on every content
-    // surface, because its fill is a quiet surface the fade carries there.
     const actions = ["primary", "destructive", "secondary"];
     const offPage = disabledFadePairs
       .filter(({ fill }) => actions.includes(fill))
@@ -346,10 +267,6 @@ describe("the fade's page scope", () => {
   });
 
   it("measures the card the fade does not carry", () => {
-    // The premise of the scope: the same faded `primary` label clears the floor
-    // on the page and lands under it on the card of the four light styles whose
-    // page is lighter than their card. A palette that fixes the card makes the
-    // scope's documentation wrong, so this case fails with the new numbers.
     const cards = [
       ["macOS light", platformTheme(themes.light, "darwin")],
       ["Linux light", platformTheme(themes.light, "linux")],
@@ -377,9 +294,6 @@ describe("the fade's page scope", () => {
   });
 
   it("replaces the fade with the pair the contract already measures", () => {
-    // The alternative the design system calls the contract: the neutral pair a
-    // disabled field paints. Its label is not near the floor in any theme — it
-    // is the pair `contrastPairs` measures on every surface a control sits on.
     [...shipped, ...styled, ...looks].forEach((theme) => {
       const paint = disabledAction(theme);
       expect(paint, theme.name).toEqual({
@@ -394,11 +308,9 @@ describe("the fade's page scope", () => {
   });
 
   it("answers no pair for a theme that lost the roles, not a throw", () => {
-    // A stored theme that predates the group falls back to the fade the control
-    // already knows, rather than losing the window on its first disabled frame.
     expect(disabledAction({})).toBeUndefined();
     expect(disabledAction({ colors: { disabled: "#E3E3E8" } })).toBeUndefined();
-    // The absence is the role, not the group: one role alone is not a pair.
+
     expect(
       disabledAction({
         colors: { disabled: "#E3E3E8", disabledForeground: "#767A82" },
@@ -407,12 +319,6 @@ describe("the fade's page scope", () => {
   });
 });
 
-/**
- * The two pages a consumer reads about the disabled state, and the painters
- * they name. The pages teach which mechanism each package uses, so a page that
- * names a mechanism the source no longer has sends a reader to repaint the
- * state the pages call the contract.
- */
 describe("the pages that teach the disabled state", () => {
   const read = (path: string): string =>
     readFileSync(new URL(path, import.meta.url), "utf8");
@@ -432,17 +338,12 @@ describe("the pages that teach the disabled state", () => {
   };
 
   it("reads the painter behind every claim", () => {
-    // A guard reading a renamed file would pass by finding nothing.
     expect(painters.control).toContain("disabledAction(theme)");
     expect(painters.recipe).toContain(
       "disabled:bg-disabled disabled:text-disabled-foreground",
     );
     expect(painters.menuRow).toContain("theme.colors.disabledForeground");
-    // The fade's share is the token constant, not a literal: the components
-    // package's action delegates to the primitives' button (plan 160), and the
-    // primitives' core style paints the measured pair on a filled variant and
-    // keeps the fade on an unfilled one, so both mechanisms the page teaches are
-    // in the chain.
+
     expect(painters.componentButton).toContain("@gpuixui/primitives/button");
     expect(painters.control).toContain(
       "variant.filledAction === undefined ? undefined : disabledAction(theme)",
@@ -460,10 +361,6 @@ describe("the pages that teach the disabled state", () => {
   });
 
   it("prints the strips a field's fade is measured on, and the tightest one", () => {
-    // The inventory row printed three strips and a stale 1.95:1 while the
-    // catalogue printed 1.99:1, so the row drifted from the report it describes.
-    // All three surfaces now name the tightest placement the case above derives,
-    // and the row names the fourth strip the table gained.
     Object.entries(pages).forEach(([page, text]) => {
       expect(text, page).toContain(
         "composite hint on its `muted` toolbar at **1.96:1**",
@@ -477,10 +374,6 @@ describe("the pages that teach the disabled state", () => {
   });
 
   it("names the painters that still fade", () => {
-    // The components' action delegates to the primitives' button (plan 160), so
-    // the whole-control fades left are the tw recipes and the primitives' own
-    // parts. A page naming the components' file as a *fading* painter sends a
-    // reader to repaint a state that file does not paint.
     Object.entries(pages).forEach(([page, text]) => {
       expect(text, page).toContain("`@gpuixui/tw`");
       expect(text, page).toContain("`packages/primitives/src/core/style.ts`");
@@ -489,13 +382,6 @@ describe("the pages that teach the disabled state", () => {
   });
 
   it("names the one recipe set still on the fade, not two and a Button", () => {
-    // Both pages closed this section by sending a reader to fix "the two recipe
-    // sets and the components' `Button`". The primitives' recipe bucket paints
-    // the pair, and the components' action translates the primitive rather than
-    // writing an opacity of its own, so only `@gpuixui/tw`'s copyable recipe
-    // still carries the fade — and no shipped control paints it. A page that
-    // named the other two sent a reader to repaint a state that already paints
-    // the contract.
     expect(painters.recipe).toContain(
       "disabled:bg-disabled disabled:text-disabled-foreground",
     );
@@ -525,11 +411,6 @@ describe("the pages that teach the disabled state", () => {
   });
 
   it("reads the share each fade actually writes", () => {
-    // `disabledOpacity` is the share `disabledFadeFailures` composites, so a
-    // fade that writes another number is a mechanism the contract does not
-    // measure. The primitives may write the number out or import the constant;
-    // either form is held to the same share, and a name that is not imported
-    // from this package is not the share at all.
     const shares = fadeShares(painters.control);
     expect(shares.length, "the fades in the primitives' core style").toBe(3);
     shares.forEach((share, index) => {
@@ -542,11 +423,6 @@ describe("the pages that teach the disabled state", () => {
   });
 
   it("reads the fade's share whether it is written or imported", () => {
-    // The package exports the constant for exactly this fade, and the guard
-    // read only the number: importing it failed this suite in three places, so
-    // the import could not land. Both forms are read now, and neither lets a
-    // different share through — a typed number, or a name that is not the
-    // package's import (a local copy of another value behind the right word).
     const imported = 'import { disabledOpacity } from "@gpuixui/tokens";\n';
     expect(fadeShares(`${imported}style.opacity = 0.5;`)).toEqual([
       disabledOpacity,
@@ -566,8 +442,6 @@ describe("the pages that teach the disabled state", () => {
   });
 
   it("holds the components action to a translation, not a second painter", () => {
-    // A re-implemented opacity in that file would be a fade the pages no longer
-    // teach and the primitives' branch no longer owns.
     expect(painters.componentButton).toContain("@gpuixui/primitives/button");
     expect(painters.componentButton).not.toContain("opacity");
     Object.entries(pages).forEach(([page, text]) => {
@@ -578,8 +452,6 @@ describe("the pages that teach the disabled state", () => {
   });
 
   it("retracts the painters that no longer fade", () => {
-    // Restoring either page's old sentence fails here rather than sending a
-    // reader to fade a state its painter has already replaced with the pair.
     const retracted = [
       "the primitives' core styles instead fade",
       "`opacity = 0.5` helpers in `packages/primitives/src/core/style.ts`",
@@ -599,20 +471,13 @@ describe("the pages that teach the disabled state", () => {
   });
 
   it("names the components Button's two disabled paths, not a whole-control fade", () => {
-    // The action splits: a filled variant wears the measured pair, a ghost keeps
-    // the fade. The page that calls the whole Button a 50% fade sends a reader
-    // to repaint a state its filled variants already paint as the contract, so
-    // the sentence is read against the branch itself. The components' action
-    // delegates to the primitives' button (plan 160), so the branch is the
-    // primitives' core style's.
     const start = painters.control.indexOf("if (spec.disabled === true) {");
     const branch = painters.control.slice(
       start,
       painters.control.indexOf("} else {", start),
     );
     expect(branch).toContain("disabledAction(theme)");
-    // The branch is a slice, so the import that makes the name the package's
-    // share is read from the file it was cut out of.
+
     expect(fadeShares(branch, painters.control)).toEqual([disabledOpacity]);
 
     Object.entries(pages).forEach(([page, text]) => {

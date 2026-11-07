@@ -1,22 +1,3 @@
-/**
- * A row height the window cannot read.
- *
- * The bug these guard: `rowHeight` is often computed — the density's step, a
- * viewport divided by the rows it should show, a measurement taken before the
- * first layout — and a value nothing could be divided by reached all three
- * consumers at once. The window's calculator normalised it to **one pixel**, so
- * a 240px viewport mounted 204 rows of a thousand; the **scroll anchor**
- * multiplied the runtime's row index by `NaN`, which the offset clamp read as
- * `0`, so the window never followed a gesture again; and `estimatedItemHeight`
- * was handed the same `NaN`. Measured before the fix: the first window painted
- * rows 0–5 and every wheel after it painted rows 195–203 for ever — a table
- * that went blank two hundred rows in, and a reveal of row 900 painted nothing.
- *
- * The fix is one number: `rowHeightOf` reads a height the window can divide (a
- * finite height above zero, else the height this package's own row paints), and
- * the estimate, the anchor and the reveal all read it.
- */
-
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Result from "effect/Result";
@@ -33,10 +14,8 @@ import {
   type DataTestRoot,
 } from "../internal/test-root.js";
 
-/** The logical rows of a windowed table: far more than a viewport holds. */
 const ROWS = 1_000;
 
-/** The row a reveal names, well below the first window. */
 const REVEAL_ROW = 900;
 
 let root: DataTestRoot | undefined;
@@ -46,7 +25,6 @@ afterEach(() => {
   root = undefined;
 });
 
-/** Every `row-N` that reached the frame, in paint order. */
 const paintedRows = (mounted: DataTestRoot): ReadonlyArray<number> =>
   Arr.filterMap(mounted.renderer.getPaintedText(), (line) => {
     const index = /^row-(\d+)$/.exec(line)?.[1];
@@ -55,7 +33,6 @@ const paintedRows = (mounted: DataTestRoot): ReadonlyArray<number> =>
       : Result.succeed(Number(index));
   });
 
-/** Every `row-N` React retained, painted or not. */
 const retainedRows = (mounted: DataTestRoot): ReadonlyArray<number> =>
   Arr.filterMap(mounted.renderer.getAllText(), (line) => {
     const index = /^row-(\d+)$/.exec(line)?.[1];
@@ -73,7 +50,6 @@ const boundsOf = (mounted: DataTestRoot, testId: string) => {
   return bounds;
 };
 
-/** The table the cases mount: rows paint their natural height, not `rowHeight`. */
 const table = (options: {
   readonly rowHeight: number;
   readonly reveal?: { readonly index: number };
@@ -107,7 +83,6 @@ const table = (options: {
   return <Example />;
 };
 
-/** Wheel over the painted rows, inside the body the wheel belongs to. */
 const wheel = (mounted: DataTestRoot, deltaY: number): void => {
   const header = boundsOf(mounted, "height-header");
   mounted.renderer.nativeSimulateScrollWheel(
@@ -121,8 +96,6 @@ const wheel = (mounted: DataTestRoot, deltaY: number): void => {
 
 describe("a row height the window cannot read", () => {
   it("names the height this package's own row paints", () => {
-    // The fallback is not a guess: a body row with no declared height paints
-    // this box in the default theme, which is why the estimate uses it.
     const mounted = renderData(table({ rowHeight: DEFAULT_ROW_HEIGHT }));
     root = mounted;
     settle(mounted);
@@ -135,8 +108,6 @@ describe("a row height the window cannot read", () => {
     root = mounted;
     settle(mounted);
 
-    // Measured before the fix: 204 rows of the thousand were retained, because
-    // the calculator divided the viewport by one pixel.
     expect(retainedRows(mounted).length).toBeLessThan(60);
     expect(paintedRows(mounted).length).toBeGreaterThanOrEqual(5);
     expect(paintedRows(mounted)[0]).toBe(0);
@@ -147,14 +118,11 @@ describe("a row height the window cannot read", () => {
     root = mounted;
     settle(mounted);
 
-    // Measured before the fix: the anchor's `index * NaN` clamped the offset to
-    // `0` after every gesture, so the paint stalled at row 203 and the rest of
-    // the set was blank.
     Arr.forEach(Arr.range(1, 100), () => wheel(mounted, -600));
 
     const painted = paintedRows(mounted);
     expect(Option.getOrUndefined(Arr.last(painted))).toBe(ROWS - 1);
-    // A window is contiguous: a gap would leave an estimate box between rows.
+
     expect(painted).toEqual(Arr.range(painted[0] ?? 0, painted.at(-1) ?? 0));
   });
 
@@ -165,13 +133,10 @@ describe("a row height the window cannot read", () => {
     root = mounted;
     settle(mounted);
 
-    // Before the fix the window never moved, so the scroll named a row that
-    // was not mounted and the frame kept the first window.
     expect(paintedRows(mounted)).toContain(REVEAL_ROW);
   });
 });
 
-/** Two hundred flat roots: a tree far taller than its viewport. */
 const NODES = 200;
 
 const nodes = Arr.map(Arr.range(0, NODES - 1), (index) => ({
@@ -208,9 +173,6 @@ const Tree = ({ rowHeight }: { readonly rowHeight: number }) => {
 
 describe("a windowed tree whose row height cannot be read", () => {
   it("retains a window and keeps the cursor's row mounted", () => {
-    // The tree divides by the height twice — the tab stop's row and the row a
-    // window move lands on — so a `NaN` height reached no row at all; it also
-    // lost the window, which mounted every one of the two hundred rows.
     const mounted = renderData(<Tree rowHeight={Number.NaN} />);
     root = mounted;
     settle(mounted);
@@ -233,8 +195,6 @@ describe("a windowed tree whose row height cannot be read", () => {
     mounted.renderer.nativeSimulateScrollWheel(row.x + 20, row.y + 4, 0, -600);
     mounted.renderer.flush();
 
-    // The cursor moved to a mounted row rather than one computed from `NaN`,
-    // and the window still holds only a viewport of the set.
     expect(painted()).toContain(active().replace("node-", "node "));
     expect(painted().length).toBeLessThan(60);
   });

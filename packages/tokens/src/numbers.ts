@@ -1,81 +1,3 @@
-/**
- * The numeric token contract: a number a theme carries is a value the renderer
- * lays out, and a number it cannot lay out fails in silence.
- *
- * GPUix serialises a style batch with `JSON.stringify` before it reaches native
- * (`@gpuix/native@0.11.0`, `dist/mutations.js`), so `NaN` and `Infinity` become
- * `null` and the property is dropped: the element paints as if it were never
- * set. Measured in the runtime's test renderer, `borderRadius: NaN` beside a
- * valid `borderWidth`, `fontSize` and `backgroundColor` left those three on the
- * element and dropped only the radius. A negative size is accepted rather than
- * dropped and paints nothing a reader can use — `fontSize: -4` laid a text
- * element out at height 0 — so a size that must be positive is held to that.
- *
- * A control height is also the box a pointer presses. The library builds a
- * control at its `controlHeight` and reserves no extra hit area, so a height
- * under `targetSize.minimum` is a target a reader cannot reliably hit — the
- * claim `docs/design-system.md` §6 makes about the shipped presets, held here
- * for a brand's density too.
- *
- * A row height is the same box one step down. A list row is a press target —
- * every row answers a press, and a selectable one also takes a `tabIndex` and a
- * hover wash — while a `dense` row is built at exactly `density.rowHeight`
- * (`packages/components/src/list.tsx`), so a theme that shaves the row ships a
- * target under the floor even when every control height is right. It is a box of
- * text too: a tree row paints its label at `body`'s leading inside it and a log
- * viewer's line is `code`, so the row is held to the fit a control's box is.
- *
- * A type role carries two numbers that only mean something together: a leading
- * shorter than the role's own size puts the next baseline inside this line's
- * glyph box, so ascenders and descenders collide. A type scale computed from a
- * factor can produce one (`lineHeight: size * 0.9`) and every suite would stay
- * green, so the pair is compared rather than the numbers alone.
- *
- * The type scale also carries a pair of roles, not two rungs: `bodyStrong` is
- * `body`'s emphasis, painted where a line has to stand out at the same size
- * (`Text role="bodyStrong"`, a card's title). The pair is designed at one size
- * and one leading (14/20) and differs by weight, so all three numbers are
- * compared. A brand that forwards one stored weight to every role paints the
- * emphasis exactly like the text it lifts; a brand that raises the body size and
- * leaves the strong role behind paints a card title smaller than the copy under
- * it. Both keep every number finite, positive and ordered, so only the pair
- * sees either.
- *
- * A control height is the other pair across groups: the box is exactly
- * `density.controlHeight[size]` and the text inside it is laid at
- * `typography.label`'s or `typography.body`'s leading, so a brand that grows its
- * type without growing the box (or shaves the box while keeping its type) paints
- * a label taller than the control that carries it. Every number stays finite,
- * positive and pressable, so nothing else sees it.
- *
- * The box carries a drawing as well as a line: an `Icon` defaults to `md`, the
- * selection boxes and a spinner's dot are drawn at the same step
- * (`packages/icons/src/icon.tsx`, `packages/primitives/src/components/Spinner.tsx`),
- * and an `IconButton` is a square at its control height. A brand that grows the
- * icon scale without growing the controls paints a glyph taller than the box it
- * is centred in, which clips or overflows an action — again with every number
- * finite, positive, ordered and pressable.
- *
- * A zero `borderWidth.strong` is the same class one role over: that width is the
- * width of **both** focus rings — `keyboardFocusRing`'s outline and
- * `focusRing`'s spread — and the ring's colour is measured against the fills it
- * hugs, so a brand can keep every colour report clean while the focus cue paints
- * nothing. The decorative `thin` divider may be zero; the strong width may not.
- *
- * A type role carries three numbers, and the third was inspected by nothing:
- * `fontWeight` is a positive real number the runtime clamps into its 1–1000
- * range, so a weight the theme computes to `NaN`/`Infinity` is serialised as
- * `null`, dropped, and the role paints at the runtime's default weight — a
- * heading silently loses its emphasis while every other number is usable. The
- * weight is read as `finite` rather than as one of the four steps the scale
- * ships: a weight is a number, the runtime accepts any value in its range, so a
- * variable font's 450 is a design choice, and only a value that cannot survive
- * the batch is the report's business.
- *
- * `invalidColorRoles` covers the values the renderer cannot parse as a colour;
- * this covers the ones it cannot lay out or press.
- */
-
 import type { BoxShadow, Elevation } from "./elevation.js";
 import { isStepRecord, requireGroups } from "./missing.js";
 import {
@@ -92,7 +14,6 @@ import {
 import type { Stored } from "./theme.js";
 import type { TextRole, Typography } from "./typography.js";
 
-/** A group of numeric tokens, in the order the catalogue lists them. */
 export type NumberGroup =
   | "spacing"
   | "radius"
@@ -102,46 +23,6 @@ export type NumberGroup =
   | "density"
   | "elevation";
 
-/**
- * What makes a number usable.
- *
- * - `finite` — any real number, including a negative shadow offset, and a font
- *   weight, which the runtime clamps into its 1–1000 range: only a value the
- *   serialised batch drops (`NaN`, `Infinity`) is unusable there. A value that is
- *   not a number at all — a stored `"8"`, a design tool's `"8px"`, a `null` — is
- *   reported under this rule, because every other rule describes a number and the
- *   kind is the finding;
- * - `nonNegative` — a length that cannot go below zero but may be zero
- *   (`radius.none`, a hairline divider, a shadow with no blur);
- * - `positive` — a size a reader has to see (a type size, an icon, the strong
- *   border that is the focus ring's width), where zero paints nothing;
- * - `pressable` — a control height or a dense list row, which is also the box a
- *   pointer presses, so it reaches {@link targetSize.minimum}. The library
- *   builds a control at its `controlHeight` and a dense row at its `rowHeight`
- *   with no extra inset, so a shorter one is a target a reader cannot reliably
- *   hit;
- * - `leading` — a type role's line height, which reaches the role's own font
- *   size. Below that the next baseline sits inside this line's glyph box, so the
- *   two lines collide. It is a rule about two tokens, so it is applied
- *   where the pair sits together ({@link inspectType}) rather than to one value;
- * - `fits` — a control height or a row height, which contains the leading of the
- *   tallest type role that box paints (`label`/`body` for a control,
- *   `body`/`code` for a row) and the icon it draws (`iconSize.md`). The box is
- *   exactly `density.controlHeight[size]` or `density.rowHeight`, and both
- *   painters lay their text at that leading, so a box below it clips or spills
- *   the label while every number is finite, positive and pressable; the same box
- *   is a square action's icon, so a glyph taller than it overflows the control.
- *   Reported on the height, the number that has to grow, and only once: a height
- *   that already misses the pressable floor is reported as `pressable`.
- * - `emphasis` — the pair `bodyStrong` and `body`: the strong role's size and
- *   leading equal the body's, and its weight exceeds it. The two roles are one
- *   emphasis at one size (14/20): a brand that forwards one weight to every role
- *   paints them identically, and a brand that raises the body's size or leading
- *   alone paints the role meant to stand out smaller or looser than the copy it
- *   lifts. Reported on the strong role, the number that has to change, and
- *   applied where the pair sits together ({@link inspectEmphasis}) because it is
- *   about two roles.
- */
 export type NumberRule =
   | "finite"
   | "positive"
@@ -151,77 +32,32 @@ export type NumberRule =
   | "fits"
   | "emphasis";
 
-/** The rules one value can be measured against on its own. */
 type SingleRule = Exclude<NumberRule, "leading" | "fits" | "emphasis">;
 
-/** One numeric token that is not a number the renderer can lay out. */
 export interface InvalidNumber {
-  /** The group it belongs to, so a failure names the decision that broke. */
   readonly group: NumberGroup;
-  /**
-   * Its path inside that group: `md` for `radius.md`,
-   * `controlHeight.md`, `body.fontSize`, `lg[0].blurRadius`.
-   */
+
   readonly path: string;
-  /**
-   * The value the theme carries: a number the renderer cannot lay out, or the
-   * value a store wrote where a number belongs — `"8"`, `"8px"`, `true`, `null`.
-   * It is `unknown` for that reason: a report that says a value is unusable has
-   * to show the value, and narrowing it here would be the assumption the report
-   * exists to refuse.
-   */
+
   readonly value: unknown;
-  /** The rule it missed. */
+
   readonly rule: NumberRule;
 }
 
-/**
- * The type scale as the report reads it: each role's numbers as the value the
- * batch sees, which a store can write as `"8"`, `"8px"` or `null`.
- *
- * The families stay in the shape so a role a store left out is a step the gate
- * names by path rather than one this walk throws on, and each role is opened so
- * a weight or a size a theme **computed** rather than chose is still inspected.
- */
 type TypographyNumbers = Stored<Typography>;
 
-/**
- * The fields the number audit reads: every numeric group of a theme except its
- * colours.
- *
- * Each group is the **storage shape** (`Stored`), because that is what the report
- * exists for: a theme a store handed back can carry a step as `"8"`, a group as
- * `null` and a role the release did not ship, and the report names each rather
- * than throwing on it. A group is optional for the same reason — a theme that
- * lost one is the gate's refusal by name (`requireGroups`), and the walk that
- * follows reads only what a caller's value carries. This is the type its own
- * `@example` documents (`invalidNumbers(JSON.parse(row))`), which compiled
- * before only because `JSON.parse` answers `any`.
- */
 export type NumberSource = {
   readonly spacing?: Stored<Spacing>;
   readonly radius?: Stored<Radius>;
   readonly borderWidth?: Stored<BorderWidth>;
   readonly iconSize?: Stored<IconSize>;
   readonly density?: Stored<Density> | DensityName;
-  /** Opened so a stored weight a computed scale produced is still inspected. */
+
   readonly typography?: TypographyNumbers;
-  /**
-   * A level the theme does not carry is the shadow report's business
-   * (`invalidShadowColors`), not a number this report can inspect, so a stored
-   * theme older than a level — or than the whole scale — is measured over the
-   * levels it has.
-   */
+
   readonly elevation?: Stored<Elevation>;
 };
 
-/**
- * Whether `value` is a number that meets `rule`.
- *
- * The value is `unknown` because a theme restored from storage, or pasted from a
- * design-tool export, can carry `"8"` where the type promises `8`; a value that
- * is not a number at all cannot meet any rule about numbers.
- */
 const layable = (value: unknown, rule: SingleRule): boolean => {
   if (typeof value !== "number" || !Number.isFinite(value)) {
     return false;
@@ -235,11 +71,6 @@ const layable = (value: unknown, rule: SingleRule): boolean => {
   return rule === "finite" || value >= 0;
 };
 
-/**
- * One value held to `rule`. A value that is not a number is reported under
- * `finite` rather than the group's rule: "a length of zero or more" describes a
- * number the reader has, and the finding here is that it is not one.
- */
 const inspect = (
   group: NumberGroup,
   path: string,
@@ -257,15 +88,6 @@ const inspect = (
         },
       ];
 
-/**
- * Inspect every value in a record of lengths — spacing, radii, icon sizes and a
- * control's horizontal padding. A stored scale is only shaped like the record the
- * type declares, so every entry that is there is inspected: skipping one that is
- * not a number let a theme whose gaps and glyphs painted nothing pass the gate in
- * silence. An entry a store wrote as `null` is a **missing step**, which the gate
- * refuses by path (`missingTokens`) before any report runs, so it is not a value
- * this walk inspects twice.
- */
 const inspectLengths = (
   group: NumberGroup,
   scale: unknown,
@@ -278,11 +100,6 @@ const inspectLengths = (
       : inspect(group, `${prefix}${key}`, value, rule),
   );
 
-/**
- * Every border width, each held to its own rule. `thin` is a decorative divider
- * a surface may drop to zero; `strong` is the width of both focus rings, so a
- * zero there removes the only cue keyboard focus has.
- */
 const inspectBorderWidths = (
   borderWidth: NumberSource["borderWidth"],
 ): readonly InvalidNumber[] => {
@@ -293,48 +110,27 @@ const inspectBorderWidths = (
   ];
 };
 
-/** A type role as a store writes one: the three numbers, each still unread. */
 interface StoredTextStyle {
   readonly fontSize: unknown;
   readonly lineHeight: unknown;
   readonly fontWeight: unknown;
 }
 
-/**
- * The size and leading of every text role, the leading against its size, and the weight.
- *
- * A role is read as the record it is when it carries a size — the rule the report
- * keeps for a stored value: a role written as `"14px"` or a number is the gate's
- * absence, not a style, and `inspect` names each number it cannot lay out.
- */
 const isTextStyle = (value: unknown): value is StoredTextStyle =>
   isStepRecord(value) && "fontSize" in value;
 
-/**
- * Whether a stored number is usable: a positive finite one. Every rule about two
- * tokens reads through this, so a value the store wrote as `"14"` or `null` is
- * the single-value report's — the pair comparisons say nothing about a number
- * that cannot be laid out on its own.
- */
 const usable = (value: unknown): value is number =>
   typeof value === "number" && Number.isFinite(value) && value > 0;
 
-/** Whether two stored numbers are both numbers, and the first is the larger. */
 const exceeds = (value: unknown, than: unknown): boolean =>
   typeof value === "number" && typeof than === "number" && value > than;
 
 const isShadowList = (value: unknown): value is readonly BoxShadow[] =>
   Array.isArray(value);
 
-/**
- * Whether a stored entry is one shadow. A list a store wrote can carry `null` or
- * a number where a shadow belongs; that entry is `invalidShadowColors`' line, so
- * this report only reads the entries it can.
- */
 const isShadowEntry = (value: unknown): value is BoxShadow =>
   typeof value === "object" && value !== null;
 
-/** Every number a text role carries, and the two comparisons between them. */
 const inspectType = (
   typography: NumberSource["typography"],
 ): readonly InvalidNumber[] =>
@@ -363,8 +159,7 @@ const inspectType = (
           "finite",
         ),
       ];
-      // Only comparable when both numbers are usable; an unusable one is already
-      // reported by the size check above, and would be reported twice here.
+
       const collides =
         usable(value.fontSize) &&
         usable(value.lineHeight) &&
@@ -383,29 +178,16 @@ const inspectType = (
     },
   );
 
-/**
- * The one pair of type roles that is one emphasis at one size. `bodyStrong` is
- * `body` at the same size and leading, so the weight is the whole difference
- * between reading and emphasis — a card title, a lead-in, a line a reader is
- * meant to notice. All three numbers are compared: a brand that forwards one
- * weight to every role draws both roles identically, and a brand that raises the
- * body's size or leading alone leaves the strong role behind. Both keep every
- * size, leading and weight layable, so nothing else sees either.
- */
 const inspectEmphasis = (
   typography: NumberSource["typography"],
 ): readonly InvalidNumber[] => {
   const roles = isStepRecord(typography) ? typography : {};
   const { body, bodyStrong } = roles;
-  // A stored theme that predates either role is the gate's refusal to name; there
-  // is no pair to compare, and reading through an absent one would throw.
+
   if (!isTextStyle(body) || !isTextStyle(bodyStrong)) {
     return [];
   }
-  // An unusable number is already the single-value report's: comparing it would
-  // report one broken value twice, under a rule that says nothing about it. A
-  // leading inside its own glyph box is the same — the `leading` rule owns that
-  // line — so the pair compares only leadings that are decisions.
+
   const reaching = (role: StoredTextStyle): boolean =>
     usable(role.fontSize) &&
     usable(role.lineHeight) &&
@@ -447,31 +229,10 @@ const inspectEmphasis = (
   ];
 };
 
-/**
- * The type roles a **control**'s box carries: the label a button, a toggle and a
- * select trigger lay their text at, and the value a field lays at `body`'s
- * (`packages/primitives/src/core/style.ts`'s `controlStyle` and
- * `fieldTextStyle`).
- */
 const controlRoles = ["label", "body"] as const satisfies readonly TextRole[];
 
-/**
- * The type roles a **row**'s box carries: the label a tree row paints
- * (`packages/data/src/tree/row.tsx`) and the line a log viewer paints
- * (`packages/files/src/log/log-viewer.tsx`), both inside a box of exactly
- * `density.rowHeight`.
- */
 const rowRoles = ["body", "code"] as const satisfies readonly TextRole[];
 
-/**
- * The ceiling a box has to contain: the tallest leading among `roles` and the
- * glyph it leads with. An `Icon` defaults to `iconSize.md`
- * (`packages/icons/src/icon.tsx`), which is also the step a selection box, a
- * spinner's dot and a tree row's chevron slot are drawn at, so a box is a square
- * action's glyph as well as a line of text. An unusable leading is the type
- * report's, and an unusable icon the icon report's, not this one's, so a role a
- * theme lost makes the ceiling unknown rather than smaller.
- */
 const contentCeiling = (
   typography: NumberSource["typography"],
   iconSize: NumberSource["iconSize"],
@@ -483,8 +244,7 @@ const contentCeiling = (
   const leadings = styles.flatMap((style) =>
     isTextStyle(style) ? [style.lineHeight] : [],
   );
-  // A role or the glyph a theme lost makes the ceiling unknown rather than
-  // smaller, which is the single report's line — not this one's.
+
   if (leadings.length !== styles.length || typeof glyph !== "number") {
     return undefined;
   }
@@ -496,12 +256,6 @@ const contentCeiling = (
     : undefined;
 };
 
-/**
- * A box's own fit: its height reaches the ceiling of what it carries. A box that
- * already missed the pressable floor is reported once, by that rule, because the
- * number that has to change is the same one; an unknown ceiling is not a pass or
- * a failure, so it reports nothing.
- */
 const missingFit = (
   path: string,
   value: number,
@@ -511,9 +265,6 @@ const missingFit = (
     ? []
     : [{ group: "density", path, value, rule: "fits" }];
 
-/**
- * Every control height, held to the pressable floor and to what it carries.
- */
 const inspectControlHeights = (
   density: NumberSource["density"],
   typography: NumberSource["typography"],
@@ -526,9 +277,7 @@ const inspectControlHeights = (
   return controlSizes.flatMap((size: ControlSize) => {
     const path = `controlHeight.${size}`;
     const value = isStepRecord(heights) ? heights[size] : undefined;
-    // A scale the theme lost, and a step inside one it lost, are the gate's
-    // refusal by path — not a second report here, the rule `inspectLengths`
-    // follows.
+
     if (value === undefined || value === null) {
       return [];
     }
@@ -539,17 +288,6 @@ const inspectControlHeights = (
   });
 };
 
-/**
- * The row box, held to both rules a row answers.
- *
- * A `dense` list row, a tree row and a log viewer's line are built at exactly
- * `density.rowHeight` and take a press, so the row is a target the library does
- * not pad. It is also a box of text: the tree paints its label at `body` and a
- * log viewer its line at `code`, and the tree's chevron sits in an `iconSize.md`
- * slot. `pressable` alone was the half of the contract that let a brand shave a
- * row to 24 while its body leading was 26 — a clipped row with every control
- * height still fitting, so no other report saw it.
- */
 const inspectRowHeight = (
   density: NumberSource["density"],
   typography: NumberSource["typography"],
@@ -569,7 +307,6 @@ const inspectRowHeight = (
       );
 };
 
-/** The four numbers a shadow carries. Offsets and spread may be negative. */
 const inspectShadow = (
   level: string,
   index: number,
@@ -589,92 +326,6 @@ const inspectShadow = (
   ];
 };
 
-/**
- * Every numeric token in a theme that the renderer cannot lay out or a pointer
- * cannot press.
- *
- * An empty array means every size, length and shadow a theme carries is one the
- * runtime can paint, every control height and row height is one a reader can hit,
- * every control height contains the text and the icon it carries, every row
- * height the line and the glyph slot it carries, every type
- * role's leading reaches its own size, and the strong body role outweighs the
- * body it emphasises. A number
- * that is not finite is dropped rather than clamped, a size at or below zero
- * paints an element no one can find, a control height under
- * {@link targetSize.minimum} is a press target the library's own components do
- * not pad up, the same floor holds a dense list row to `rowHeight`, a leading
- * shorter than its type stacks the next line into the current one, a control
- * height below the leading of the label or value it paints — or below the
- * `iconSize.md` glyph it draws — clips the text or the icon, a row height below
- * the line a tree row or a log viewer paints in it clips that line, a
- * zero `borderWidth.strong` leaves the focus ring nothing to paint, a
- * `bodyStrong` that does not share `body`'s size and leading or does not weigh
- * more than it paints an emphasis as plain reading or as a smaller title, and a
- * text role's `fontWeight` that is not finite is dropped so the role paints at
- * the runtime's default weight — all
- * reported by path instead of shipping as a default.
- *
- * A **value that is not a number at all** is the same silent drop: a theme
- * restored from storage, or pasted from a design tool that writes `"8"` or
- * `"8px"` where a length belongs, carries a value that is there and is not one
- * the renderer can lay out. It is reported under `finite` with the value the
- * store wrote, because every other rule describes a number and the kind is the
- * finding. An absent step — a key a store dropped or wrote as `null` — is not
- * this report's: it is a `missingTokens` refusal, because a component reads the
- * step by name and cannot paint around it. A **whole group** is that rule one
- * level up and the one absence this walk cannot step around — there is no step
- * to skip in a group that is not there — so the report makes the gate's own
- * refusal and names the group, instead of reading `Object.entries(undefined)`.
- *
- * @example
- * ```ts
- * import { extendTheme, invalidNumbers, lightTheme } from "@gpuixui/tokens";
- *
- * invalidNumbers(extendTheme(lightTheme, { radius: { md: 0 } })); // []
- * invalidNumbers(extendTheme(lightTheme, { radius: { md: Number.NaN } }));
- * // [{ group: "radius", path: "md", value: NaN, rule: "nonNegative" }]
- * invalidNumbers(JSON.parse(fromStorage));
- * // a design tool wrote the length as a string; the runtime drops it
- * // [{ group: "spacing", path: "md", value: "8", rule: "finite" }]
- * invalidNumbers(extendTheme(lightTheme, { density: { controlHeight: { sm: 20 } } }));
- * // [{ group: "density", path: "controlHeight.sm", value: 20, rule: "pressable" }]
- * invalidNumbers(extendTheme(lightTheme, { density: { rowHeight: 20 } }));
- * // [{ group: "density", path: "rowHeight", value: 20, rule: "pressable" }]
- * invalidNumbers(
- *   extendTheme(lightTheme, { typography: { body: { lineHeight: 12 } } }),
- * );
- * // [{ group: "typography", path: "body.lineHeight", value: 12, rule: "leading" }]
- * invalidNumbers(
- *   extendTheme(lightTheme, {
- *     density: "compact",
- *     typography: { body: { lineHeight: 26 } },
- *   }),
- * );
- * // [{ group: "density", path: "controlHeight.sm", value: 24, rule: "fits" }]
- * invalidNumbers(
- *   extendTheme(lightTheme, {
- *     density: "compact",
- *     iconSize: { md: 26, lg: 28, xl: 30 },
- *   }),
- * );
- * // [{ group: "density", path: "controlHeight.sm", value: 24, rule: "fits" }]
- * invalidNumbers(
- *   extendTheme(lightTheme, { typography: { bodyStrong: { fontWeight: 400 } } }),
- * );
- * // [{ group: "typography", path: "bodyStrong.fontWeight", value: 400, rule: "emphasis" }]
- * invalidNumbers(extendTheme(lightTheme, { borderWidth: { strong: 0 } }));
- * // [{ group: "borderWidth", path: "strong", value: 0, rule: "positive" }]
- * const stored = {
- *   ...lightTheme,
- *   typography: {
- *     ...lightTheme.typography,
- *     h1: { ...lightTheme.typography.h1, fontWeight: Number.NaN },
- *   },
- * };
- * invalidNumbers(stored);
- * // [{ group: "typography", path: "h1.fontWeight", value: NaN, rule: "finite" }]
- * ```
- */
 export function invalidNumbers(theme: NumberSource): readonly InvalidNumber[] {
   requireGroups(theme);
   return [

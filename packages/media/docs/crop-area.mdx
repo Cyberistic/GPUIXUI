@@ -46,19 +46,3 @@ const [crop, setCrop] = useState(
 | `disabled` | `boolean` | `false` |
 | `className` | `string` | — |
 | `style` | `StyleDesc` | — |
-
-## Notes
-- **No rotation**: rotate the bytes before cropping.
-- A gesture reports a rectangle **once**, when it changes; `minSize` is 24 points and a stored rectangle is clamped first.
-- **Gestures begin on the primary button**: a secondary press on the picture starts no move and one on a handle starts no resize, so the press a context menu wants cannot drag the hole.
-- A **disabled frame drops the gesture in flight**: it refuses every move, so a drag interrupted by `disabled` cannot resume on the first hover after it can act again — the next drag begins with a fresh press.
-- A `minSize` or `handleSize` that is not a positive number reads as its default, so a stored `0` or `-1` cannot paint a hole that collapses or a one-point handle no pointer can grab.
-- A corner handle is held **inside** the frame: the frame clips its children, so a hole touching an edge would otherwise paint half a handle and keep half the press target.
-- A **move** never changes the hole's sides: the caller's `minSize` travels with a pointer drag and with `Alt`+arrow, so a hole allowed below the default does not grow to it.
-- **A ratio-locked resize stops at the frame**: the corner opposite the one being dragged stays still, so a drag that reaches an edge caps the hole at the room that corner leaves instead of sliding the whole crop across the picture. A stored hole shaped to the ratio is moved inside the frame when its origin leaves no room for the ratio's minimum.
-- **A guide never paints past the hole it divides**: a rule-of-thirds line is one point wide, so a hole narrower than that caps the line at the hole's own side and holds its origin inside the rectangle.
-- **`fill` is not a choice**: crop coordinates only match a filled frame.
-- A **blank `label`** reads as `"Crop area"` and is trimmed, so a stored empty name cannot publish an unnamed group and four handles called "`nw` handle".
-- **A blank picture name reads as `"Picture"`**: the runtime publishes the `<img>` as an `Image` node named by its `alt`, so an empty or non-text name is announced as a picture rather than with no name at all. A name given is trimmed and kept.
-- **A picture restored from storage that is not text paints no picture**: `src` is read as text once, so a saved record's `null` leaves the frame, its mask and its handles paintable instead of throwing out of the render.
-- **An absent `value` paints the default hole**: a saved record that carried no crop reads as the frame's origin at the smallest side (`0, 0, 24 × 24` by default), the rectangle an unreadable field reads as — the frame, the mask and the four handles stay paintable instead of the render throwing on the missing sides.

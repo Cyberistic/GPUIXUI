@@ -1,14 +1,3 @@
-/**
- * ScrollProgress in the real GPUix renderer.
- *
- * The bugs these guard: a bar that reads its own box instead of the content's
- * height (so every list looks like one screen); a reading that does not move
- * when the scroller does; a fraction that does not clamp at either end; a line
- * that appears on content with nowhere to scroll; a bar that swallows presses
- * on the rows beneath it; a side that paints on the wrong edge; and a content
- * height captured once, so a growing list stops moving the reading.
- */
-
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import { ScrollProgress } from "../scroll-progress.js";
@@ -18,7 +7,6 @@ import {
   type ComponentTestRoot,
 } from "../internal/test-root.js";
 
-/** A bounded reader of `rows` 24px rows. */
 const Reader = ({
   rows = 30,
   side,
@@ -49,11 +37,9 @@ const elementId = (page: ComponentTestRoot, testId: string): number =>
     },
   );
 
-/** The width the fill paints: the runtime resolves a percentage to its share. */
 const widthOf = (page: ComponentTestRoot) =>
   page.renderer.findByTestId("progress-bar")?.style.width;
 
-/** Scroll the reader to an absolute offset. */
 const scrollTo = (page: ComponentTestRoot, offsetY: number): void => {
   page.renderer.scrollTo(elementId(page, "progress"), 0, offsetY);
   settle(page);
@@ -67,7 +53,6 @@ describe("ScrollProgress", () => {
       settle(page);
       expect(widthOf(page)).toBe(0);
 
-      // 560px of travel in a 720px body: 280px is half.
       scrollTo(page, -280);
       expect(widthOf(page)).toBe(0.5);
 
@@ -140,7 +125,6 @@ describe("ScrollProgress", () => {
       scrollTo(page, -100_000);
       expect(widthOf(page)).toBe(1);
 
-      // 40 rows = 960px against the same 160px box and a 560px offset.
       page.rerender(<Reader rows={40} />);
       settle(page);
       settle(page);

@@ -1,18 +1,3 @@
-/**
- * Holds `docs/design-system.md`'s numbers to the tokens they describe.
- *
- * The bug this guards: the design-system page is the reasoning a consumer reads
- * before adopting the library, and it prints concrete numbers — role count,
- * density heights, type sizes, spacing, radii, platform radii and avatar
- * diameters. `docs.test.ts` guards the token catalogue in `docs/tokens.md`, but
- * nothing read this page, so a scale change could leave it teaching a system the
- * package no longer ships. Each check fails on a changed token or a contradiction
- * in the prose, whichever drifts first.
- *
- * `node:fs` is deliberate, as in `docs.test.ts` and `inventory.test.ts`: this
- * checks the repository's own Markdown, and the package keeps zero runtime
- * dependencies.
- */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { colorRoles, darkColors, lightColors } from "./color.js";
@@ -40,11 +25,9 @@ const doc = readFileSync(
   "utf8",
 );
 
-/** The three platforms with their own style; `default` is the identity. */
 const styled = platformNames.filter((name) => name !== "default");
 const styleOf = (platform: (typeof styled)[number]) => platformStyles[platform];
 
-/** The one capture group of `pattern`, asserted to exist. */
 const capture = (pattern: RegExp): string => {
   const match = pattern.exec(doc)?.[1];
   expect(
@@ -54,11 +37,9 @@ const capture = (pattern: RegExp): string => {
   return match ?? "";
 };
 
-/** The integers a captured list prints, in order. */
 const numbers = (text: string): ReadonlyArray<number> =>
   (text.match(/\d+/g) ?? []).map(Number);
 
-/** The numbers a captured `4/6/10/14` list prints. */
 const slashed = (text: string): ReadonlyArray<number> =>
   text.split("/").map(Number);
 
@@ -239,8 +220,6 @@ describe("docs/design-system.md", () => {
     expect(Number(floors?.[1])).toBe(contrastFloors.disabled);
     expect(Number(floors?.[2])).toBe(highContrastFloors.disabled);
 
-    // The row lists the surfaces the table actually measures, so a pair the
-    // contract gains cannot go unprinted here.
     const unprinted = contrastPairs
       .filter(
         (pair) =>
@@ -250,8 +229,7 @@ describe("docs/design-system.md", () => {
       .filter((background) => !(line ?? "").includes(`\`${background}\``));
 
     expect(unprinted).toEqual([]);
-    // The §8 interaction-state table points at the floor by its export name, so
-    // a reader who lands there rather than in §9 still finds it.
+
     expect(doc).toContain("`contrastFloors.disabled`");
   });
 
@@ -265,9 +243,6 @@ describe("docs/design-system.md", () => {
       "docs/design-system.md no longer states the secondary-text row",
     ).toBeDefined();
 
-    // The row lists the surfaces the table measures for the muted role inside a
-    // field, so a pair the contract gains on that fill cannot go unprinted: the
-    // row and the pair fail in opposite directions.
     const fieldFill = contrastPairs.filter(
       (pair) =>
         pair.foreground === "mutedForeground" && pair.background === "input",
@@ -289,14 +264,10 @@ describe("docs/design-system.md", () => {
     expect(Number(row?.[1])).toBe(contrastFloors.boundary);
     expect(Number(row?.[2])).toBe(highContrastFloors.boundary);
 
-    // The page's reason is a measurement, not an opinion: the solid status role
-    // is a surface that carries text, so it is below the mark floor.
     const warning = contrastRatio(lightColors.warning, lightColors.background);
     expect(warning).toBeDefined();
     expect(doc).toContain(`\`warning\` is ${warning?.toFixed(2)}:1`);
 
-    // §8 states the busy state the mission asks for, and that it is not the
-    // disabled fade: a faded control says "unavailable", a busy one "wait".
     expect(doc).toContain(
       "**Busy is a state of its own, and it is not faded.**",
     );
@@ -316,16 +287,12 @@ describe("docs/design-system.md", () => {
     expect(Number(row?.[1])).toBe(decorativeFloor);
     expect(Number(row?.[2])).toBe(decorativeFloor);
 
-    // §8 names the runtime constant and the per-element escape hatch, and states
-    // the measured reason a control opts out rather than asking for a floor the
-    // mechanism cannot keep.
     expect(doc).toContain("`keyboardFocusDimOpacity`");
     expect(doc).toContain("`keyboardFocusDim: false`");
     expect(doc).toContain(
       `the tightest shipped placement is Linux light's \`primary\` over a card`,
     );
 
-    // The measured share is the page's number, not an assumption.
     expect(doc).toContain(`(\`${keyboardFocusDimOpacity}\`, on by default`);
     expect(doc).toMatch(new RegExp(`${keyboardDimPairs.length}\\s+placements`));
   });

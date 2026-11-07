@@ -30,8 +30,3 @@ import { LogViewer } from "@gpuixui/files";
 | `followTail` | `boolean` | `true` | follow appends; omit to let the viewer hold its own |
 | `onFollowTailChange` | `(follow: boolean) => void` | — | reports the follow state after every change |
 | `testId` | `string` | — | the list's test id |
-
-## Notes
-- Children mode keeps every React child and lets the runtime skip the build and paint off screen.
-- The parser is the documented `level message` grammar; a caller with a richer format (timestamps, JSON) parses to `LogEntry` itself and renders rows.
-- The docs site cannot render this component live — it is a GPUix host tree, not DOM.

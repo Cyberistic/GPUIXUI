@@ -1,11 +1,3 @@
-/**
- * Guards the live CLI's contract.
- *
- * The bugs these catch: `--list` or an argument typo loading the native binding
- * (a crash instead of a message), an unknown `--only` opening a window anyway,
- * the registry and the probe bodies drifting apart, and a bare command starting
- * a full live run by accident.
- */
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as Arr from "effect/Array";
@@ -67,8 +59,6 @@ describe("live main", () => {
   });
 
   it.effect("reports a typo beside --list instead of printing over it", () => {
-    // The same contract as the headless CLI: `--list` answers `0` only after
-    // the arguments were validated, so a typo cannot ride along unnoticed.
     const deps = probe(["--list", "--onlyy", "focus-visible"]);
     return Effect.gen(function* () {
       const code = yield* main(deps);
@@ -108,8 +98,6 @@ describe("live main", () => {
   );
 
   it.effect("accepts a declared backdrop mode", () => {
-    // `--list` answers before the preflight, so the flag is parsed without a
-    // binding: the guard is that it is a known argument, not that it opened one.
     const deps = probe(["--list", "--window-background", "blurred"]);
     return Effect.gen(function* () {
       const code = yield* main(deps);
@@ -145,8 +133,6 @@ describe("live main", () => {
 
 describe("the live report's host line", () => {
   it("names the window's backdrop, so a report says which window it came from", () => {
-    // `layout=verified` for `window-backdrop` means nothing if the report cannot
-    // say whether the window was opaque, and the docs cite the report.
     expect(hostLabel("transparent")).toContain("window-background transparent");
     expect(hostLabel("opaque")).toContain("window-background opaque");
     expect(hostLabel("blurred")).toContain(
@@ -155,8 +141,6 @@ describe("the live report's host line", () => {
   });
 
   it("names a transparent titlebar and leaves the default line alone", () => {
-    // A chrome run proves something an ordinary window does not, so the report
-    // has to carry it; a default run keeps printing the line the README quotes.
     expect(hostLabel("opaque", "transparent")).toBe(
       hostLabel("opaque").replace("opaque)", "opaque, titlebar transparent)"),
     );

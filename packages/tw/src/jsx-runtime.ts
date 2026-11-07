@@ -1,12 +1,3 @@
-/**
- * A JSX runtime that lets shadcn-style host elements keep `className`.
- *
- * The runtime only wraps GPUix host elements that carry a class string; every
- * other element goes straight to React's runtime. The wrapper (`TwHost`) reads
- * the theme and resolves the classes at render time, so theme changes and
- * stateful variants work without a build step.
- */
-
 import type * as React from "react";
 import {
   Fragment,

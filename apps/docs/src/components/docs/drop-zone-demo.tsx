@@ -1,15 +1,5 @@
 import { useRef, useState, type ChangeEvent, type DragEvent } from "react";
 
-/**
- * Browser preview for the DropZone page.
- *
- * The native zone reports a drop through the runtime's `onFileDrop` and offers
- * the caller's pick; the preview accepts a browser drop and opens the browser's
- * own file picker. The highlight is the component's: the pointer wash, not a
- * drag-over state — 0.11.0 has no drag-enter event, and the preview does not
- * invent one.
- */
-
 const namesOf = (files: FileList | null): ReadonlyArray<string> =>
   files === null ? [] : Array.from(files, (file) => file.name);
 

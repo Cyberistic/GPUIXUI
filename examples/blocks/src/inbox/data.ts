@@ -1,6 +1,3 @@
-/**
- * The inbox's sample data: mail between the four, and the Association.
- */
 export interface Thread {
   readonly id: string;
   readonly from: string;

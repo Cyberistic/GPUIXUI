@@ -1,17 +1,9 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Badge example: the status column of a runs list.
- *
- * A realistic composition, not a gallery: the badge is never the only carrier of
- * meaning, so a reader who cannot see the colour still reads "Failed".
- */
-
 import * as Arr from "effect/Array";
 import { Badge, type BadgeVariant } from "../src/badge.js";
 import { Card, CardDescription, CardHeader, CardTitle } from "../src/card.js";
 import { textStyle, useTheme } from "../src/internal/theme.js";
 
-/** One named run and its status. */
 const runs: ReadonlyArray<{
   readonly name: string;
   readonly status: string;
@@ -24,7 +16,6 @@ const runs: ReadonlyArray<{
   { name: "release · 0.11.0", status: "Failed", variant: "danger" },
 ];
 
-/** A runs list whose status column is made of badges. */
 export const BadgeExample = () => {
   const theme = useTheme();
   return (

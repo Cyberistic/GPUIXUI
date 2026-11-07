@@ -1,30 +1,3 @@
-/**
- * The ring a filled action wears.
- *
- * The bug this guards: `keyboardFocusRing`'s outline sat at `outlineOffset: 0`,
- * flush against the fill the control paints. `ring` *is* the brand (`ring` and
- * `primary` are the same ramp step in 15 of the 18 styles), so a
- * focused primary action painted its focus line in its own fill — measured at
- * **1.00–1.38:1** on both `primary` and `destructive` in every
- * style, at rest and under the pointer. The pair was unsatisfiable, not unmet:
- * at offset 0 one colour must clear the boundary floor against both the page and
- * the fill, and no luminance does in 10 of the 18 styles for either face.
- *
- * The fix is the geometry, not the palette: the line now sits **one line's
- * width outside the border box**, so the strip behind the control shows through
- * the gap and the ring is read against that strip instead of the fill. The
- * playground's `focus-ring-offset` probe measured the offset in a window on
- * `0.11.0` (28 checks): a two-point offset paints the ring three points out with
- * the strip showing through the gap, and the control and its sibling keep their
- * boxes. The suite holds the offset in every style, the measured premise that
- * forced it, the strips the ring is read on, the painters that declare it, the
- * probe that measured the geometry, and both pages.
- *
- * `node:fs` is deliberate here for the same reason as in `field-boundary.test.ts`:
- * this holds the token contract to the two consumer packages' painters and the
- * playground's probe, and `@gpuixui/tokens` keeps no dependency on either.
- */
-
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import type { ThemeColors } from "./color.js";
@@ -73,18 +46,11 @@ const styles: ReadonlyArray<readonly [string, Theme]> = [
 const document = (path: string): string =>
   readFileSync(new URL(`../../../${path}`, import.meta.url), "utf8");
 
-/**
- * WCAG relative luminance, read through the public ratio: the package keeps
- * `relativeLuminance` private, and a ratio against black is exactly
- * `20 × luminance + 1`, so the proof needs no second copy of the transfer
- * function.
- */
 const luminance = (colour: string): number | undefined => {
   const ratio = contrastRatio(colour, "#000000");
   return ratio === undefined ? undefined : (ratio - 1) / 20;
 };
 
-/** The luminances at which `colour` reaches `floor`, as closed intervals. */
 const reachable = (
   colour: string,
   floor: number,
@@ -112,7 +78,6 @@ const overlap = (
       .filter(([low, high]) => low <= high),
   );
 
-/** The face a filled role paints in one state, for a complete theme. */
 const face = (
   theme: Theme,
   role: FilledRole,
@@ -120,11 +85,6 @@ const face = (
 ): string | undefined =>
   state === "rest" ? theme.colors[role] : filledFeedback(theme, role, state);
 
-/**
- * Every luminance that would have cleared the floor against **both** the page
- * the control sits on and the face it paints — the set a flush ring colour has
- * to come from, and the reason the line is separated now.
- */
 const flushColours = (
   theme: Theme,
   role: FilledRole,
@@ -152,7 +112,6 @@ const ringRatio = (
     : contrastRatio(theme.colors.ring, fill);
 };
 
-/** The styles in which a flush ring missed its floor on one face. */
 const misses = (
   role: FilledRole,
   state: FilledFeedbackState | "rest",
@@ -172,12 +131,6 @@ const ratios = (
 const spread = (values: ReadonlyArray<number>): string =>
   `${Math.min(...values).toFixed(2)}–${Math.max(...values).toFixed(2)}`;
 
-/**
- * The strips a focused control is drawn on: the four content surfaces, a
- * segmented panel, the fill a field paints, the four row washes, and the four
- * soft tints a message's own action sits in. A separated line lies on the strip
- * behind the control, so these — not the control's own fill — are its pairs.
- */
 const ringStrips: ReadonlyArray<keyof ThemeColors> = [
   "background",
   "card",
@@ -204,7 +157,6 @@ const stripRatio = (
   over: keyof ThemeColors,
 ): number | undefined => contrastRatio(theme.colors.ring, theme.colors[over]);
 
-/** The tightest ring placement over every style and strip. */
 const tightest = (): {
   readonly style: string;
   readonly over: string;
@@ -227,8 +179,6 @@ describe("the ring separated from a filled action", () => {
       expect(focusVisible.outlineOffset, name).toBeGreaterThan(0);
     });
 
-    // A theme that widens its border widens the gap with it, so the geometry is
-    // the theme's rather than a literal.
     const wide: Theme = {
       ...themes.light,
       borderWidth: { thin: 1, strong: 3 },
@@ -237,8 +187,6 @@ describe("the ring separated from a filled action", () => {
   });
 
   it("keeps the measured reason a flush line cannot serve a filled action", () => {
-    // The brand faces: a flush line merges with the fill in every style, at rest
-    // and under the pointer.
     expect(misses("primary", "rest")).toHaveLength(styles.length);
     expect(misses("destructive", "rest")).toHaveLength(styles.length);
     expect(misses("primary", "pressed")).toHaveLength(styles.length);
@@ -246,13 +194,9 @@ describe("the ring separated from a filled action", () => {
     expect(spread(ratios("primary", "rest"))).toBe("1.00–1.15");
     expect(spread(ratios("destructive", "rest"))).toBe("1.00–1.38");
 
-    // The neutral faces at rest held, which is what made the finding a statement
-    // about brand faces rather than about the model.
     expect(misses("secondary", "rest")).toEqual([]);
     expect(misses("accent", "rest")).toEqual([]);
 
-    // The derived pointer fills did not: the press dropped the neutral faces
-    // under the floor in 9 and 7 of the 18 styles.
     expect(misses("secondary", "pressed")).toHaveLength(9);
     expect(misses("accent", "pressed")).toHaveLength(7);
     expect(misses("secondary", "hover")).toHaveLength(3);
@@ -261,8 +205,6 @@ describe("the ring separated from a filled action", () => {
       expect(misses("secondary", state).length).toBeLessThan(styles.length);
     });
 
-    // No flush colour could clear both the page and a brand face, and where one
-    // existed it was far from the brand.
     const brandFaces: ReadonlyArray<FilledRole> = ["primary", "destructive"];
     const sameStep = styles.filter(
       ([, theme]) => theme.colors.ring === theme.colors.primary,
@@ -273,27 +215,12 @@ describe("the ring separated from a filled action", () => {
     expect(empty("primary")).toBe(10);
     expect(empty("destructive")).toBe(10);
 
-    // The header and the three pages print these figures, so they are derived
-    // here: a style that joins the sweep fails until every surface counts it.
-    const header = readFileSync(
-      new URL("./ring-fill.test.ts", import.meta.url),
-      "utf8",
-    ).replace(/\s+/g, " ");
     const tokens = document("docs/tokens.md").replace(/\s+/g, " ");
     const design = document("docs/design-system.md").replace(/\s+/g, " ");
     const readme = document("packages/tokens/README.md").replace(/\s+/g, " ");
     const secondary = misses("secondary", "pressed").length;
     const accent = misses("accent", "pressed").length;
 
-    expect(header).toContain(
-      `same ramp step in ${sameStep} of the ${styles.length} styles`,
-    );
-    expect(header).toContain(
-      `in ${empty("primary")} of the ${styles.length} styles for either face`,
-    );
-    expect(header).toContain(
-      `in ${secondary} and ${accent} of the ${styles.length} styles`,
-    );
     expect(tokens).toContain(
       `same ramp step in ${sameStep} of the ${styles.length} styles`,
     );
@@ -324,15 +251,11 @@ describe("the ring separated from a filled action", () => {
     expect(ringPairs.map(({ background }) => background)).toEqual([
       ...ringStrips,
     ]);
-    // The two brand faces are no longer ring surfaces: the line never touches a
-    // control's own fill, and no shipped control sits on a `primary` or
-    // `destructive` fill. The neutral filled roles (`secondary`, `accent`) stay,
-    // because they are also strips a control sits on or inside.
+
     const paired = new Set(ringPairs.map(({ background }) => background));
     expect(paired.has("primary")).toBe(false);
     expect(paired.has("destructive")).toBe(false);
-    // The fill a field paints is a strip because a focusable action lives inside
-    // it (`TimePickerClear` is a `role="button"` in a field filled `input`).
+
     expect(document("packages/components/src/time-picker.tsx")).toContain(
       "keyboardRing(theme)",
     );
@@ -349,8 +272,6 @@ describe("the ring separated from a filled action", () => {
       });
     });
 
-    // The tightest placement is Windows light on its red message tint, the
-    // number both pages print.
     const cell = tightest();
     expect(`${cell.style} ring/${cell.over}`).toBe(
       "Light · win32 ring/destructiveSoft",
@@ -359,9 +280,6 @@ describe("the ring separated from a filled action", () => {
   });
 
   it("paints the offset the window probe measured", () => {
-    // The probe is the evidence the geometry works: it paints a control at the
-    // token's offset and samples the ring band. Its constant must stay the
-    // offset the token sets, so the proof cannot drift from the paint.
     const probe = document("apps/playground/src/live/ring-offset.ts");
     const offset = keyboardFocusRing(themes.dark).focusVisible.outlineOffset;
     expect(probe).toContain(`RING_OFFSET = ${offset}`);
@@ -371,8 +289,6 @@ describe("the ring separated from a filled action", () => {
   });
 
   it("reads the geometry and the painters that make it true", () => {
-    // Both seams declare the ring on a control, so the token is what the
-    // packages paint.
     expect(document("packages/primitives/src/core/focus.ts")).toContain(
       "controlFocusRing",
     );
@@ -396,11 +312,11 @@ describe("the ring separated from a filled action", () => {
       expect(text).toContain("3.05");
       expect(text).toContain("gap");
     });
-    // The probe is the evidence the pages owe, on the two that cite it.
+
     [surfaces[0], surfaces[2]].forEach((text) =>
       expect(text).toContain("focus-ring-offset"),
     );
-    // The retracted story: the fix is no longer an open interlock.
+
     expect(surfaces[0]).not.toContain("a two-tone ring is the other route");
   });
 });

@@ -1,30 +1,3 @@
-/**
- * `virtual-list-expand` — a row that grows **while it is painted** re-measures.
- *
- * `virtual-list-rows` measured rows that differ from each other and a row that
- * grows while it is outside the window. The case an expandable row needs — Tier
- * 3's "expandable rows", and an expandable table row in a data grid — is the
- * third one: the reader presses a row that is on screen, it renders a detail
- * block, and the layout below has to follow without a scroll event to prompt a
- * re-measure.
- *
- * 200 rows of 32px; row 3 grows to 32 + 88px while its detail is open. Measured
- * on 0.11.0:
- *
- *   - an expansion that never scrolls re-measures the row immediately (the box
- *     paints 120px on the next frame);
- *   - the list paints only rows that fit the viewport whole, so the grown row
- *     leaves 24px below and the next row leaves the painted window until the
- *     reader scrolls — the layout below moved, it is just not painted yet;
- *   - after one wheel the rows return at their shifted positions
- *     (`row 4 = row 3 + 120`), and a press lands on the row that is painted
- *     there, so the shift is layout, not a stale hit-test;
- *   - collapsing returns the rows to one 32px pitch, and the detail unpaints;
- *   - the grown height joins the estimate: `scrollToItem(150)` still lands that
- *     row on the viewport's top edge, so a reveal is not 88px out;
- *   - the height survives the row leaving the window and painting again, so a
- *     row reopened by state keeps its measured box.
- */
 import { useRef, useState } from "react";
 import { useGpuix } from "@gpuix/react";
 import type { PublicInstance } from "@gpuix/react";
@@ -142,7 +115,6 @@ export const virtualListExpandScenario: ScenarioBody = {
           () => "",
         );
 
-      // 1. Collapsed: the target row and the row below it share one pitch.
       yield* ctx.expectEqual(
         "the target row starts collapsed",
         heightOfRow(TARGET),
@@ -155,8 +127,6 @@ export const virtualListExpandScenario: ScenarioBody = {
         1,
       );
 
-      // 2. Expanding a painted row grows its box on the next frame, with no
-      //    scroll to prompt a re-measure.
       const topRow = yOf("xrow-0");
       const offsetBefore = yield* ctx.expectSome(
         "the list reports an offset before the expansion",
@@ -195,16 +165,12 @@ export const virtualListExpandScenario: ScenarioBody = {
         offsetBefore.y,
       );
 
-      // 3. The 88px growth leaves less than a row below it, and the list paints
-      //    only whole rows, so the next row leaves the window until a scroll.
       yield* ctx.expectEqual(
         "the row below leaves the painted window until the reader scrolls",
         Option.isNone(boundsOf(`xrow-${TARGET + 1}`)),
         true,
       );
 
-      // 4. One wheel repaints the rows at their shifted positions, and a press
-      //    lands on the row painted there (layout, not a stale hit-test).
       ctx.host.wheel("xrows", 0, -80);
       ctx.host.advance(50);
       yield* ctx.expectNear(
@@ -221,7 +187,6 @@ export const virtualListExpandScenario: ScenarioBody = {
         `open=true selected=${TARGET + 1}`,
       );
 
-      // 5. Collapsing returns the rows to one pitch and unpaints the detail.
       ctx.host.click("x-top");
       ctx.host.advance(50);
       ctx.host.click("x-toggle");
@@ -244,7 +209,6 @@ export const virtualListExpandScenario: ScenarioBody = {
         1,
       );
 
-      // 6. The grown height joins the estimates: a far reveal is not 88px out.
       ctx.host.click("x-toggle");
       ctx.host.advance(50);
       ctx.host.click("x-reveal");
@@ -261,7 +225,6 @@ export const virtualListExpandScenario: ScenarioBody = {
         2,
       );
 
-      // 7. The expanded height survives the row leaving the window and returning.
       ctx.host.click("x-top");
       ctx.host.advance(50);
       yield* ctx.expectEqual(

@@ -12,20 +12,6 @@ import {
   previewCardLayout,
 } from "./preview-card-preview";
 
-/**
- * The preview card's three alignments, its gap bridge and its action.
- *
- * The bugs these guard: the card defaulted to `align="start"` while the popover
- * centres on its trigger; and the card sat 6px below its trigger with nothing
- * filling the gap, so leaving the trigger closed it before the pointer could
- * reach `Open file`. Each alignment case below holds the relation its name
- * promises against the trigger's own box, and the bridge case holds the strip
- * to the component's own `sideOffset`.
- *
- * `node:fs` is a test-time read of the component's source, as the popover's
- * alignment test already does.
- */
-
 const component = readFileSync(
   new URL(
     "../../../../../packages/components/src/preview-card.tsx",
@@ -48,7 +34,6 @@ const cardOf = (align: (typeof PREVIEW_CARD_ALIGNMENTS)[number]) => {
   };
 };
 
-/** React writes a zero length without its unit. */
 const cssLength = (value: number): string => (value === 0 ? "0" : `${value}px`);
 
 const relations = [
@@ -85,8 +70,6 @@ describe("the preview card's alignments", () => {
     const layout = previewCardLayout("center");
     const gap = Number(/sideOffset = (\d+)/.exec(component)?.[1]);
 
-    // The strip is the gap: a shorter one leaves a hole the pointer falls
-    // through, which is the bug this case guards.
     expect(gap).toBe(PREVIEW_CARD_SIDE_OFFSET);
     expect(layout.left).toBeGreaterThanOrEqual(0);
 

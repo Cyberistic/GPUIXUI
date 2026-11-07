@@ -1,8 +1,3 @@
-/**
- * The menu bar's state, pure: which menu is open, and which app the bar names.
- * Opening, switching and closing are one function so the three directions the
- * tests hold cannot drift apart.
- */
 import type { Menu } from "./data.js";
 
 /** The menu a press on `title` leaves open; pressing the open one closes it. */

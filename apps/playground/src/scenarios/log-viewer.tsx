@@ -1,23 +1,3 @@
-/**
- * `log-viewer` — `<virtual-list alignment="bottom" followTail>`.
- *
- * A log viewer asks two things of the runtime that a plain list does not:
- * does it start at the **tail**, and does it **stay** there when lines are
- * appended? The runtime types advertise `alignment="bottom"` and `followTail`;
- * this probe measures the composition with 20px lines in a 280px list, so only
- * ~14 of the declared lines fit.
- *
- * The two props overlap: `alignment="bottom"` alone and `alignment="top"` with
- * `followTail` alone both anchor at the tail (measured, plan `154` §8). The
- * probe pins the composition a log viewer uses; it does not claim which prop
- * causes the anchoring. Scrolling up and then appending does **not** snap back,
- * so a reader is left where they stopped — and a window measures the other half
- * the offscreen host cannot: flipping `followTail` on returns the list to the
- * tail in the same press (`log-viewer-lifecycle`), so a toggle is the app's
- * state plus the prop, not the prop plus a second scroll.
- *
- * Two-direction proof: dropping both props makes the tail assertions fail.
- */
 import { useState } from "react";
 import { Effect } from "effect";
 import * as Arr from "effect/Array";

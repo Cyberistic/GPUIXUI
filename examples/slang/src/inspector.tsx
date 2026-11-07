@@ -1,13 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * The inspector: the place a calculator's menus become a workspace.
- *
- * History is always here; under it, the mode's own editor appears — the STAT
- * data grid, the EQN coefficients, the matrix/vector cells, the TABLE fields or
- * the BASE-N switch. Everything is driven by the engine's actions, so a click
- * and a key enter through the same door.
- */
-
 import {
   coefficientLabels,
   columnsOf,

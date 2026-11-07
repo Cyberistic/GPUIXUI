@@ -7,10 +7,6 @@ import {
   SbWorkspacePanel,
 } from "./sidebar-kit";
 
-/**
- * Sidebar 15 — both ends: the workspace and its favorites on the left, the
- * open project in the middle and the calendar on the right.
- */
 export const Sidebar15Render = () => (
   <SbShell height="tall">
     <SbWorkspacePanel />

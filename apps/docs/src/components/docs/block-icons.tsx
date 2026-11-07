@@ -1,13 +1,5 @@
 import type { ReactNode } from "react";
 
-/**
- * The glyphs the block previews draw.
- *
- * A block renders in the browser, not through GPUix, so it cannot use the
- * library's `Icon` — which paints a native host element. These are the same
- * strokes on a plain `<svg>`, shared by the file manager and the mail client so
- * one geometry serves every block.
- */
 export type BlockIconName =
   | "alert"
   | "archive"
@@ -33,6 +25,8 @@ export type BlockIconName =
   | "mail"
   | "mark"
   | "more"
+  | "panelLeft"
+  | "panelRight"
   | "paperclip"
   | "phone"
   | "plus"
@@ -174,6 +168,18 @@ const GLYPHS: Readonly<Record<BlockIconName, ReactNode>> = {
       <circle cx="19" cy="12" fill="currentColor" r="1.4" />
     </>
   ),
+  panelLeft: (
+    <>
+      <rect height="18" rx="2" width="18" x="3" y="3" />
+      <path d="M9 3v18" />
+    </>
+  ),
+  panelRight: (
+    <>
+      <rect height="18" rx="2" width="18" x="3" y="3" />
+      <path d="M15 3v18" />
+    </>
+  ),
   paperclip: (
     <path d="M21.4 11.05 12.25 20.2a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
   ),
@@ -250,7 +256,6 @@ const GLYPHS: Readonly<Record<BlockIconName, ReactNode>> = {
   ),
 };
 
-/** One block glyph, `currentColor` at `size` pixels. */
 export function BlockIcon({
   name,
   size = 14,

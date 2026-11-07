@@ -77,15 +77,3 @@ font of its own.
 | `style` | `StateStyle` | — | the caller's style, merged last |
 | `children` | `ReactNode` | — | what a caller paints beside the drawing — a legend, a note |
 | `testId` | `string` | — | the test id the drawing and the failure state answer to |
-
-## Notes
-- The drawing is painted as **one image**, so a mark inside it is not an
-  accessibility element and cannot be selected.
-- An image cannot carry a **link**: Pele reports the links in its result, so a
-  caller can read them, but the pixels are not clickable.
-- A theme switch **re-renders** the diagram, because the values are baked into
-  the drawing.
-- The drawing's font is Pele's `sans-serif` and `monospace`, not the theme's
-  family.
-- A source the parser refuses paints the parser's sentence in the drawing's
-  place; there is no partial render.

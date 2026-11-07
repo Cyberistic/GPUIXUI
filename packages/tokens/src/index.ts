@@ -20,6 +20,8 @@ export * from "./scale.js";
 export * from "./scales.js";
 export * from "./selection.js";
 export * from "./series.js";
+export * from "./shadcn-vars.js";
+export * from "./shadcn.js";
 export * from "./styles.js";
 export * from "./switch.js";
 export * from "./syntax.js";

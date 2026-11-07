@@ -1,13 +1,3 @@
-/**
- * Guards the row set and the sort rule the `table-lifecycle` probe asserts
- * against.
- *
- * Three paint checks rest on the fixture, not on the runtime: pressing the size
- * header must paint a different first row than the name header, flipping it must
- * paint another, and a size sort must have one order rather than a tie whose
- * winner the renderer picks. A fixture whose orders coincided would keep the
- * probe green while it measured only that a press repainted something.
- */
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";

@@ -2,15 +2,6 @@ import type * as PageTree from "fumadocs-core/page-tree";
 import { describe, expect, it } from "vitest";
 import { completeSection, type SectionPage } from "./page-tree";
 
-/**
- * The sidebar completion.
- *
- * The site writes a page for a few components; the package writes one for all of
- * them. The tree must keep one row per URL, fold both sources into one
- * alphabetical lane, and stay stable when the package adds a page — so the
- * guards below check all three.
- */
-
 const tree = (children: ReadonlyArray<PageTree.Node>): PageTree.Root => ({
   name: "Docs",
   children: [...children],
@@ -32,7 +23,6 @@ const separator = (name: string): PageTree.Node => ({
   name,
 });
 
-/** The page URLs under the first folder with this name. */
 const urlsIn = (root: PageTree.Root, name: string): ReadonlyArray<string> =>
   root.children.flatMap((node) =>
     node.type === "folder" && node.name === name
@@ -42,7 +32,6 @@ const urlsIn = (root: PageTree.Root, name: string): ReadonlyArray<string> =>
       : [],
   );
 
-/** The page labels under the first folder with this name. */
 const namesIn = (root: PageTree.Root, name: string): ReadonlyArray<string> =>
   root.children.flatMap((node) =>
     node.type === "folder" && node.name === name
@@ -111,8 +100,6 @@ describe("the component section", () => {
       shipped,
     );
 
-    // Button and Tabs are curated; Tabs must not appear a second time, and the
-    // curated order is not privileged over the alphabet.
     expect(namesIn(completed, "Components")).toEqual([
       "Accordion",
       "Badge",
@@ -125,7 +112,7 @@ describe("the component section", () => {
       "/components/button",
       "/components/tabs",
     ]);
-    // Siblings outside the folder are untouched, order included.
+
     expect(completed.children.map((node) => node.name)).toEqual([
       "Introduction",
       "Components",

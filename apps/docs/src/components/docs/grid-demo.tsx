@@ -1,11 +1,3 @@
-/**
- * Browser preview for the Grid page.
- *
- * `Grid` is the runtime's fixed equal-track grid, not a CSS grid, so the
- * preview is a labelled diagram: a dashed outline around each grid with a
- * caption naming its column count and gap. The Code tab shows the native usage.
- */
-
 const cells = Array.from({ length: 6 }, (_, index) => index + 1);
 
 export const GridDemo = () => (

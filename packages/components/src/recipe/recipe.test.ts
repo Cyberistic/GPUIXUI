@@ -1,20 +1,3 @@
-/**
- * The component recipe → `StyleDesc` equivalence guard.
- *
- * The components wave moved the resting appearance of the leaf components from
- * inline `style` objects to Tailwind class strings compiled through
- * `@gpuixui/tw`'s `classesToStyle` with the **default** registry — shadcn's
- * fixed metrics (`rounded-lg` = 8, `text-sm` = 14/20), not the primitives'
- * density scale. This suite proves the strings resolve to those fixed values
- * and the theme's semantic roles, that a caller's `className` wins over the
- * recipe (merge order), and that no recipe drops an unsupported class.
- *
- * A regression in either the recipe string or the compiler's utility table
- * fails here: change `rounded-lg` to `rounded-md`, or break `flex-row`, and the
- * compiled `StyleDesc` drifts from the oracle.
- */
-
-import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import type { StyleDesc } from "@gpuix/react";
 import * as Arr from "effect/Array";
@@ -258,21 +241,9 @@ const style = (className: string): StyleDesc =>
 
 describe("The recipe seam", () => {
   it("teaches the height h-9 compiles to, not Tailwind's 36", () => {
-    // The seam's header described the registry as shadcn's fixed metrics and
-    // named `h-9` = 36, while `classesToStyle` maps `h-8`/`h-9`/`h-10` onto
-    // the theme's density: a reader planning a control around the comment got
-    // a box four points shorter than the recipe paints.
-    const source = readFileSync(
-      new URL("../internal/recipe.ts", import.meta.url),
-      "utf8",
-    );
     const height = classesToStyle("h-9", darkTheme).style.height;
     expect(height).toBe(darkTheme.density.controlHeight.md);
     expect(height).not.toBe(36);
-    expect(source).not.toContain("h-9` = 36");
-    expect(source).toContain(
-      `\`h-9\` is \`md\` (${height} in the default theme)`,
-    );
   });
 });
 
@@ -335,8 +306,7 @@ describe("Card recipe", () => {
       alignItems: "center",
       justifyContent: "flex-end",
       gap: 8,
-      // The footer closes the card: it pays the same 16px the header and the
-      // content do, so its actions cannot sit on the rounded edge.
+
       paddingLeft: 16,
       paddingRight: 16,
       paddingTop: 12,
@@ -767,8 +737,6 @@ describe("Field recipe", () => {
 
 describe("Fieldset and Form recipes", () => {
   it("resolves the group and form shells", () => {
-    // The group is a card: the same fill, fixed corner and edge role, so a
-    // fieldset reads as a surface instead of a bare outline on the page.
     const card = style(cn(CARD_BASE, CARD_VARIANTS.outline));
     expect(style(FIELDSET_ROOT)).toEqual({
       display: "flex",
@@ -1076,8 +1044,7 @@ describe("TagInput recipe", () => {
       flexDirection: "row",
       alignItems: "center",
       gap: 4,
-      // The chip's right padding is the remove control's own 24px target, so
-      // the chip pads 8 left and 2 right and lets the × fill the rest.
+
       paddingLeft: 8,
       paddingRight: 2,
       paddingTop: 0,
@@ -1193,8 +1160,6 @@ describe("Dialog parts recipe", () => {
   });
 });
 
-/** The ring the overlay surfaces draw instead of a border: a 1px zero-blur
- * shadow in `foreground/5`. */
 const ring = {
   offsetX: 0,
   offsetY: 0,
@@ -1508,9 +1473,6 @@ describe("PreviewCard, ConfirmDialog and Drawer recipes", () => {
   });
 
   it("resolves the confirm-dialog busy type", () => {
-    // The published busy-mark type. The components' busy mark is the `loader`
-    // icon now, so no component paints this recipe — it stays covered here so
-    // the registry cannot drift while `@gpuixui/tw` owns it.
     expect(style(CONFIRM_DIALOG_BUSY)).toEqual({
       fontSize: 14,
       lineHeight: 20,
@@ -2322,14 +2284,14 @@ describe("merge order", () => {
     expect(style(cn(KEYCAP, "bg-accent")).backgroundColor).toBe(
       darkTheme.colors.accent,
     );
-    // The overlay recipes join the caller's className the same way.
+
     expect(style(cn(MENU_CONTENT, "rounded-none")).borderRadius).toBe(0);
     expect(style(cn(MENU_ITEM, "text-primary")).color).toBe(
       darkTheme.colors.primary,
     );
     expect(style(cn(DIALOG_FOOTER, "gap-4")).gap).toBe(16);
     expect(style(cn(COMMAND_EMPTY, "py-2")).paddingTop).toBe(8);
-    // The final wave's recipes join the caller's className the same way.
+
     expect(style(cn(TOAST_CARD, "rounded-none")).borderRadius).toBe(0);
     expect(style(cn(TABS_TRIGGER, "px-6")).paddingLeft).toBe(24);
     expect(style(cn(COMBOBOX_TRIGGER, "border-border")).borderColor).toBe(

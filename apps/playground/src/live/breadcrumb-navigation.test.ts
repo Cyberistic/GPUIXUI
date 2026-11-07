@@ -1,19 +1,3 @@
-/**
- * Holds the `breadcrumb-navigation-lifecycle` fixture, the probe that paints it
- * and the section a reader plans from.
- *
- * The gap this guards: Tier 4's **Breadcrumb navigation** row was `?`. A trail
- * looks like composition, but the shipped list is `flex-wrap` — so an
- * unbudgeted trail **wraps** in a narrow pane rather than clipping — and the
- * component's own collapsed middle is a decorative ellipsis, not a control. The
- * probe measures both answers in a window (a trail budgeted from the pane's own
- * report stays one row; a menu trigger the app composes reaches the hidden
- * levels), and this suite keeps the fixture, the probe and the prose that
- * publishes them pointing at one another.
- *
- * `node:fs` is deliberate, as in the other live fixtures: this reads the
- * repository's own probe and prose, never a runtime path.
- */
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import * as Order from "effect/Order";
@@ -47,7 +31,6 @@ const readme = read("../../README.md");
 
 const theme = getTheme("dark");
 
-/** This probe's own README section, so a value printed elsewhere cannot pass. */
 const sectionOf = (): string => {
   const heading =
     "### `breadcrumb-navigation-lifecycle` — measured on 0.11.0 here";
@@ -61,10 +44,10 @@ describe("the budget a trail derives", () => {
   it("is a count over the pane's width, floored so a trail keeps its three parts", () => {
     expect(budgetFor(BREADCRUMB_WIDTHS.wide)).toBe(BREADCRUMB_LEVELS.length);
     expect(budgetFor(BREADCRUMB_WIDTHS.narrow)).toBe(3);
-    // Three entries are the floor: the root, the gap and the current page.
+
     expect(budgetFor(0)).toBe(3);
     expect(budgetFor(BREADCRUMB_ENTRY_WIDTH)).toBe(3);
-    // A measurement that never arrived is the minimum; no limit is every level.
+
     expect(budgetFor(Number.NaN)).toBe(3);
     expect(budgetFor(Number.POSITIVE_INFINITY)).toBe(BREADCRUMB_LEVELS.length);
   });
@@ -104,7 +87,7 @@ describe("the trail the budget leaves", () => {
       Arr.forEach(Arr.range(3, BREADCRUMB_LEVELS.length), (budget) => {
         const trail = trailView(page, budget);
         expect(trail.visible).toContain(page);
-        // The two sets partition the path to the current page.
+
         expect(
           Arr.sort(Arr.appendAll(trail.visible, trail.hidden), Order.Number),
         ).toEqual(Arr.range(0, page));
@@ -113,8 +96,6 @@ describe("the trail the budget leaves", () => {
   });
 
   it("leaves a chosen deep level with levels still hidden, and a shallow one without", () => {
-    // The probe chooses Overlays then Components: the first keeps the trigger,
-    // the second fits the budget and unpaints it.
     expect(trailView(3, 3).hidden.length).toBeGreaterThan(0);
     expect(trailView(2, 3).hidden).toEqual([]);
   });
@@ -151,8 +132,7 @@ describe("the fixture the view and the steps share", () => {
     expect(breadcrumbReadout(BREADCRUMB_WIDTHS.narrow, 3, levelAt(3))).toBe(
       `w=${BREADCRUMB_WIDTHS.narrow} budget=3 page=Overlays selected=Overlays`,
     );
-    // A width nobody measured reads as the minimum, so the readout cannot
-    // advertise a budget the trail never had.
+
     expect(breadcrumbReadout(Number.NaN, 4, "none")).toContain("budget=3");
   });
 
@@ -168,8 +148,7 @@ describe("the fixture the view and the steps share", () => {
     expect(panePaint(theme)).toBe(theme.colors.card);
     expect(pagePaint(theme)).toBe(theme.colors.background);
     expect(BREADCRUMB_TARGET).toBe(targetSize.minimum);
-    // The three surfaces are different paints, so a sample cannot pass by
-    // matching the one behind it.
+
     expect(
       new Set([ellipsisPaint(theme), panePaint(theme), pagePaint(theme)]).size,
     ).toBe(3);
@@ -183,7 +162,7 @@ describe("the probe", () => {
     expect(probe).toContain("<DropdownMenu");
     expect(probe).toContain("<DropdownMenuTrigger");
     expect(probe).toContain("onLayout={(payload) => setMeasured(");
-    // The budget is the report's, never the state that asked for a width.
+
     expect(probe).toContain("const budget = budgetFor(measured);");
     expect(probe).toContain("width: BREADCRUMB_WIDTHS[pane],");
   });
@@ -197,7 +176,7 @@ describe("the probe", () => {
     expect(probe).toContain('ctx.host.key("enter")');
     expect(probe).toContain('ctx.host.key("down")');
     expect(probe).toContain("ctx.host.click(BREADCRUMB_IDS.hiddenRow(3))");
-    // The three states a reader can look at.
+
     expect(probe).toContain("capture(ctx, BREADCRUMB_FRAMES.wide)");
     expect(probe).toContain("capture(ctx, BREADCRUMB_FRAMES.narrow)");
     expect(probe).toContain("ctx.host.capture(BREADCRUMB_FRAMES.menu)");
@@ -223,8 +202,7 @@ describe("the probe", () => {
     expect(probe).toContain(
       "the keyboard continues past the trail into the next control",
     );
-    // The count in the fixture is the floor the check sites can add to; an
-    // assertion planted without a matching count fails here.
+
     const sites = Arr.length(
       Arr.fromIterable(probe.matchAll(/ctx\.expect\w+\(/g)),
     );
@@ -265,15 +243,14 @@ describe("the registry and the README", () => {
 
   it("prints the widths, heights and readouts the probe measured", () => {
     const flat = sectionOf().replace(/\s+/g, " ");
-    // The pane reports 280 and the budget follows it; the unbudgeted trail is
-    // two 16px rows (36) and the budgeted one is its 28px trigger's row.
+
     Arr.forEach(["280", "w=280 budget=3", "**36**", "**28**"], (measured) => {
       expect(flat).toContain(measured);
     });
     expect(flat).toContain("flex-wrap");
     expect(flat).toContain("A trail never clips; it wraps");
     expect(flat).toContain("decorative by design");
-    // The three rules are stated, not implied.
+
     expect(flat).toContain("A selection can remove its own trigger");
   });
 

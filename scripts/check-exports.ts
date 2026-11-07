@@ -1,20 +1,3 @@
-#!/usr/bin/env node
-/**
- * Every `exports` target a package declares must resolve to a real file.
- *
- * The bug this guards is a broken subpath that nothing imports in the
- * workspace: a package's `exports` map points a consumer at a file that does
- * not exist (renamed, moved, or a build artifact in a clean checkout), and the
- * suites stay green because only a consumer's import would notice. A release
- * publishes the map, so a release check must resolve it.
- *
- * Two targets are deliberately not file-checks in a clean checkout:
- * - a glob (`./src/*.tsx`) resolves to a set of files, so it must match at
- *   least one, and
- * - a built target (`./dist/…`) is produced by `nub run build`, so the package
- *   must carry a `build` script instead of a committed artifact.
- */
-
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -22,13 +5,11 @@ import { fileURLToPath } from "node:url";
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const PACKAGES = join(ROOT, "packages");
 
-/** The file targets one export entry declares, in condition order. */
 const targetsOf = (entry) =>
   typeof entry === "string"
     ? [entry]
     : Object.values(entry).filter((value) => typeof value === "string");
 
-/** The files a single-level glob like `./src/*.tsx` matches. */
 const globMatches = (dir, target) => {
   const [prefix = "", suffix = ""] = target.replace(/^\.\//, "").split("*");
   return readdirSync(join(dir, prefix))
@@ -38,7 +19,6 @@ const globMatches = (dir, target) => {
 
 const isBuilt = (target) => target.startsWith("./dist/");
 
-/** One failure: `@gpuixui/name ./subpath -> ./target (reason)`. */
 const failure = (name, subpath, target, reason) =>
   `${name} ${subpath} -> ${target}: ${reason}`;
 

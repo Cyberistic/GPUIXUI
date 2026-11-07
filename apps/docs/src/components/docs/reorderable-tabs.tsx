@@ -16,34 +16,17 @@ import {
   type TabBox,
 } from "./reorderable-tabs-logic";
 
-/**
- * A tab strip whose tabs can be dragged into a new order and closed.
- *
- * The browser's half of the editor chrome the landing page opens inside its
- * terminal block: a tab follows the pointer, its neighbours open a gap with a
- * CSS transform, and the release snaps the tab into the gap before the caller
- * receives the new order. Closing collapses the tab's own width first, so the
- * strip closes the hole instead of cutting a tab out of the frame.
- *
- * The component owns the gesture and the animation; the caller owns the order
- * and which tab is open (`tabs`, `active`, `onReorder`, `onClose`), so a replay
- * or an explorer press can put a closed tab back. Tabs are a single roving tab
- * stop, arrows move the selection and `Alt`+Left/Right moves the tab itself.
- */
-
-/** One tab on the rail. */
 export interface ReorderableTab {
   readonly id: string;
   readonly label: string;
   readonly leading?: ReactNode;
 }
 
-/** Props for {@link ReorderableTabs}. */
 export interface ReorderableTabsProps {
   readonly tabs: ReadonlyArray<ReorderableTab>;
-  /** The open tab, or `null` when every tab is closed. */
+
   readonly active: string | null;
-  /** The accessible name of the strip. */
+
   readonly label: string;
   readonly onActivate: (id: string) => void;
   readonly onReorder: (tabs: ReadonlyArray<ReorderableTab>) => void;
@@ -53,11 +36,10 @@ export interface ReorderableTabsProps {
   readonly closeClassName?: string;
 }
 
-/** How far a pointer must travel before a press becomes a drag. */
 const DRAG_THRESHOLD = 4;
-/** How long the tab takes to snap into the gap. */
+
 const DROP_MS = 160;
-/** How long a closing tab takes to collapse. */
+
 const CLOSE_MS = 180;
 
 interface Drag {
@@ -79,9 +61,6 @@ interface Closing {
   readonly collapsed: boolean;
 }
 
-/**
- * The tab strip. See {@link ReorderableTabsProps}.
- */
 export function ReorderableTabs({
   tabs,
   active,
@@ -112,13 +91,11 @@ export function ReorderableTabs({
     [],
   );
 
-  /** The rail's viewport x, the origin the pointer's clientX is measured from. */
   const railLeft = useCallback(
     (): number => list.current?.getBoundingClientRect().left ?? 0,
     [],
   );
 
-  /** The painted boxes of the tabs that are not being closed. */
   const measure = useCallback((): ReadonlyArray<TabBox> => {
     const rail = list.current;
     if (rail === null) return [];
@@ -132,7 +109,6 @@ export function ReorderableTabs({
     });
   }, []);
 
-  /** Focus the tab named by `id`, once React has painted the new order. */
   const focusTab = useCallback((id: string): void => {
     const rail = list.current;
     if (rail === null) return;
@@ -142,7 +118,6 @@ export function ReorderableTabs({
     element?.focus();
   }, []);
 
-  /** Move the selection and the focus to a tab by its index. */
   const selectAt = (index: number): void => {
     const tab = tabs[index];
     if (tab === undefined) return;
@@ -237,7 +212,6 @@ export function ReorderableTabs({
     setDrag(next);
   };
 
-  /** Snap the dragged tab into its gap, then hand the order to the caller. */
   const drop = (event: PointerEvent<HTMLDivElement>): void => {
     const current = dragRef.current;
     if (current === null || current.pointerId !== event.pointerId) return;
@@ -270,9 +244,7 @@ export function ReorderableTabs({
       const ordered = moveTabTo(tabs, current.id, current.target);
       pendingClear.current = true;
       onReorder(ordered);
-      // The caller owns the order, so the clearing happens in a layout effect
-      // once the new array arrives. If the caller refuses the move, this is the
-      // fallback that returns the strip to the order it still holds.
+
       dropTimer.current = setTimeout(() => {
         if (!pendingClear.current) return;
         pendingClear.current = false;
@@ -288,7 +260,6 @@ export function ReorderableTabs({
     setDrag(null);
   };
 
-  /** Collapse the tab's measured width before the caller removes it. */
   const close = (
     event: PointerEvent<HTMLButtonElement> | MouseEvent<HTMLButtonElement>,
     tab: ReorderableTab,
@@ -322,10 +293,7 @@ export function ReorderableTabs({
   useLayoutEffect(() => {
     if (!pendingClear.current) return;
     pendingClear.current = false;
-    // The order is about to move under the transforms. Suppress the transform
-    // transition for this commit, or the browser animates the cleared offset
-    // again while the base position has already changed — the second, phantom
-    // swap after the tab was dropped.
+
     setSettling(true);
     dragRef.current = null;
     setDrag(null);

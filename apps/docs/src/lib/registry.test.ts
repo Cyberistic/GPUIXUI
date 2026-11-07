@@ -9,20 +9,6 @@ import { importsOf } from "./registry";
 import { readRegistry } from "./registry-source";
 import { siteOrigin } from "./site";
 
-/**
- * The shadcn registry, held to the install it promises.
- *
- * Bug guarded: every component source imports `@gpuixui/*`, and those packages
- * are private to the workspace. An item that copies the source alone still
- * produces valid JSON, passes a schema check and installs a tree that resolves
- * nowhere — `shadcn add` reports success and the consumer gets a build error.
- * So this test rebuilds the install the CLI would write for each item (the item
- * plus the runtime items it declares) and demands that every import in it
- * resolves inside that tree or to a declared npm dependency. It also holds the
- * targets apart across packages, because the flat registry documents two
- * components named `progress` in different packages.
- */
-
 const root = fileURLToPath(new URL("../../../../", import.meta.url));
 
 interface Page {
@@ -30,7 +16,6 @@ interface Page {
   readonly file: string;
 }
 
-/** The component pages this site writes, minus a pattern page with no library source. */
 const sitePages = (): ReadonlyArray<Page> =>
   readdirSync(join(root, "apps/docs/content/docs/components"))
     .filter((name) => name.endsWith(".mdx") && name !== "index.mdx")
@@ -45,7 +30,6 @@ const sitePages = (): ReadonlyArray<Page> =>
         : [];
     });
 
-/** The package pages the site serves, after a curated page's shadow and redirects. */
 const packagePages = (): ReadonlyArray<Page> =>
   packageCollections
     .filter((collection) => collection.origin !== "icons")
@@ -58,7 +42,6 @@ const packagePages = (): ReadonlyArray<Page> =>
         })),
     );
 
-/** Every page the site serves, in the precedence the site uses. */
 const servedPages = (): ReadonlyArray<Page> => {
   const site = sitePages();
   const urls = new Set(site.map((page) => page.url));
@@ -83,7 +66,6 @@ const COMPONENT_LANES = [
   "/effects",
 ] as const;
 
-/** The served pages a registry item can describe: a guide documents no module. */
 const installablePages = (): ReadonlyArray<Page> =>
   servedPages().filter((page) =>
     COMPONENT_LANES.some(
@@ -114,7 +96,7 @@ interface Item {
 }
 
 const registry = readRegistry(root);
-/** An item as served, before the optional fields are normalised. */
+
 type ServedItem = Omit<Item, "registryDependencies"> & {
   readonly registryDependencies?: ReadonlyArray<string>;
   readonly files: ReadonlyArray<ItemFile>;
@@ -140,11 +122,22 @@ const items = registry.items.map((item) =>
 const components = items.filter((item) => item.meta.kind === "component");
 const runtime = items.filter((item) => item.meta.kind === "runtime");
 
-/** The item a registry dependency address names, e.g. `.../gpuix-tokens.json`. */
+const nameCollisions = (rows: ReadonlyArray<Item>): ReadonlyArray<string> => {
+  const byName = new Map<string, Set<string>>();
+  for (const row of rows) {
+    const files = row.files.map((file) => file.path).join("|");
+    const seen = byName.get(row.name) ?? new Set<string>();
+    seen.add(files);
+    byName.set(row.name, seen);
+  }
+  return [...byName.entries()]
+    .filter(([, files]) => files.size > 1)
+    .map(([name]) => name);
+};
+
 const dependencyName = (address: string): string =>
   basename(new URL(address).pathname, ".json");
 
-/** An item and everything its `registryDependencies` install, transitively. */
 const installedTree = (item: Item): ReadonlyArray<Item> => {
   const byName = new Map(items.map((entry) => [entry.name, entry]));
   const seen = new Set<string>();
@@ -162,13 +155,11 @@ const installedTree = (item: Item): ReadonlyArray<Item> => {
   return walk(item);
 };
 
-/** The package an npm record names, without the version the registry pins. */
 const packageOfDependency = (dependency: string): string => {
   const at = dependency.lastIndexOf("@");
   return at > 0 ? dependency.slice(0, at) : dependency;
 };
 
-/** The bare package a specifier imports, the way `dependenciesOf` reads it. */
 const packageOfSpecifier = (specifier: string): string => {
   const parts = specifier.split("/");
   return specifier.startsWith("@")
@@ -176,7 +167,6 @@ const packageOfSpecifier = (specifier: string): string => {
     : (parts[0] ?? "");
 };
 
-/** Every file a relative specifier could name, as an installed target. */
 const candidates = (from: string, specifier: string): ReadonlyArray<string> => {
   const base = posix
     .normalize(posix.join(posix.dirname(from), specifier))
@@ -184,7 +174,6 @@ const candidates = (from: string, specifier: string): ReadonlyArray<string> => {
   return [`${base}.ts`, `${base}.tsx`, `${base}/index.ts`, `${base}/index.tsx`];
 };
 
-/** A source with every import specifier blanked, to compare content alone. */
 const withoutSpecifiers = (source: string): string =>
   source
     .replace(
@@ -195,9 +184,6 @@ const withoutSpecifiers = (source: string): string =>
 
 describe("the shadcn registry", () => {
   it("names only pages the site still serves", () => {
-    // The generator predates the guide consolidation, so it can still carry a
-    // page the site no longer has. Printing the difference is the point: a count
-    // says "seven", this says which seven.
     const served = new Set(installablePages().map((page) => page.url));
     expect(
       components.map((item) => item.meta.url).filter((url) => !served.has(url)),
@@ -212,15 +198,10 @@ describe("the shadcn registry", () => {
         .map((page) => page.url)
         .toSorted(),
     );
-    expect(new Set(index.items.map((item) => item.name)).size).toBe(
-      items.length,
-    );
+    expect(nameCollisions(items)).toEqual([]);
   });
 
   it("ships the repository's source, with only workspace specifiers rewritten", () => {
-    // A walk that reads the wrong file, or truncates one, still emits valid
-    // JSON. Blanking the specifiers is what lets this compare content: the
-    // rewrite is the only difference the generator is allowed to make.
     const broken = items.flatMap((item) =>
       item.files.flatMap((file) => {
         const source = readFileSync(join(root, file.path), "utf8");
@@ -237,9 +218,6 @@ describe("the shadcn registry", () => {
   });
 
   it("installs only package sources, under one root", () => {
-    // A package export can point outside `src` (`@gpuixui/data/examples`), and
-    // a target derived from that path would install into a folder with no
-    // package. This names the file instead of emitting a malformed address.
     const malformed = items.flatMap((item) =>
       item.files.flatMap((file) => {
         const packageName = file.path.split("/")[1] ?? "";
@@ -259,11 +237,6 @@ describe("the shadcn registry", () => {
     "resolves every import inside the tree the CLI installs",
     { timeout: 30_000 },
     () => {
-      // The bug this file exists for: `@gpuixui/*` is private, so an item that
-      // ships its source without the runtime is a successful install of a tree
-      // that cannot build. This walks each item's install exactly as the CLI
-      // would resolve it — the item plus its runtime dependencies — and demands
-      // that every specifier lands on a file in that tree or a declared package.
       const broken = components.flatMap((component) => {
         const tree = installedTree(component);
         const targets = new Set(
@@ -306,12 +279,6 @@ describe("the shadcn registry", () => {
       }),
     ).toEqual([]);
 
-    // A component page and the runtime for its own package both ship a file the
-    // other needs, so the same target can appear in two items; the shadcn CLI
-    // writes it once. What must never happen is two *sources* on one target:
-    // `primitives-progress` and `components-progress` are distinct components,
-    // and a target without its package would make the second install overwrite
-    // the first.
     const shipped = new Map<string, { name: string; content: string }>();
     const conflicts = items.flatMap((item) =>
       item.files.flatMap((file) => {
@@ -326,8 +293,6 @@ describe("the shadcn registry", () => {
   });
 
   it("declares a runtime item for every package a component borrows", () => {
-    // The install test proves the files arrive; this proves they arrive as
-    // their own item rather than copied into every component.
     const names = new Set(runtime.map((item) => item.name));
     expect(runtime.length).toBeGreaterThan(1);
     expect(
@@ -346,8 +311,6 @@ describe("the shadcn registry", () => {
   });
 
   it("ships the part files a component imports, not just its entry module", () => {
-    // A closure read from the wrong directory still emits the entry module and
-    // valid JSON; the install then fails on the first relative import.
     const shipped = (name: string, target: string): boolean =>
       items
         .find((item) => item.name === name)
@@ -366,12 +329,6 @@ describe("the shadcn registry", () => {
   });
 
   it("declares dependencies the workspace's manifests declare, at their pins", () => {
-    // The scan reads source text; a doc comment that said "import … from"
-    // once became a dependency named `stay`. Every declared name must be a
-    // package the workspace already pins — and the version is part of the entry,
-    // because the CLI installs a bare name at `latest`: `@tanstack/hotkeys`
-    // 0.22 changed the signature the keyboard source calls, and an unpinned
-    // install was a successful copy of code that no longer compiled.
     const rootManifest = JSON.parse(
       readFileSync(join(root, "package.json"), "utf8"),
     ) as {
@@ -457,10 +414,6 @@ describe("the shadcn registry", () => {
   });
 
   it("submits a directory entry that resolves to this site", () => {
-    // shadcn's directory is how `@sudokw/<item>` reaches the CLI, so the entry
-    // is the one document that must agree with both the origin and the flat
-    // layout: a homepage on another host, or a template without `{name}`, is a
-    // namespace the CLI resolves to nothing.
     const entry = JSON.parse(
       readFileSync(join(root, "registry/shadcn-directory.json"), "utf8"),
     ) as ReadonlyArray<Record<string, string>>;
@@ -482,21 +435,18 @@ describe("the shadcn registry", () => {
     ]);
   });
 
-  it("serves each item at a flat, unique root address", () => {
+  it("serves each item at a flat address, once per source", () => {
     const names = items.map((item) => item.name);
     expect(
       names.filter((name) => !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(name)),
     ).toEqual([]);
-    expect(new Set(names).size).toBe(names.length);
+    expect(nameCollisions(items)).toEqual([]);
     expect(index.name).toBe("gpuixui");
     expect(index.homepage).toBe("https://gpuixui.sudokw.com/");
     expect(runtime.map((item) => item.name)).toContain("gpuix-primitives");
   });
 
   it("documents the install the CLI performs", () => {
-    // The page is the only place a reader learns the address and the one
-    // setting the files need; the CLI strips the files' header comments, so the
-    // JSX runtime cannot ride on the source's pragma.
     const page = readFileSync(
       join(root, "apps/docs/content/docs/registry.mdx"),
       "utf8",

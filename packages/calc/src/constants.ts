@@ -1,16 +1,6 @@
-/**
- * The fx-991ES Plus's 40 scientific constants and 40 metric conversions.
- *
- * The values are the manual's CODATA (2014) set and NIST SP 811 factors. The
- * calculator shows each constant by its symbol; this table also carries the
- * name and unit so the app's browser and the ⌘K palette can search in words a
- * reader knows.
- */
-
 export interface ScientificConstant {
-  /** The two-digit number on the CONST menu. */
   readonly index: string;
-  /** The symbol the calculator displays. */
+
   readonly symbol: string;
   readonly name: string;
   readonly value: number;
@@ -305,7 +295,7 @@ export interface MetricConversion {
   readonly from: string;
   readonly to: string;
   readonly factor: number;
-  /** A non-multiplicative conversion (temperature) overrides the factor. */
+
   readonly convert?: (value: number) => number;
 }
 

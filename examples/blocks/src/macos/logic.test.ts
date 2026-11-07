@@ -1,8 +1,3 @@
-/**
- * The menu bar's three directions: a press opens, the same press closes, and a
- * different press switches. Held here so the desktop's only state cannot regress
- * to "opens but never closes".
- */
 import { describe, expect, it } from "vitest";
 import { menus } from "./data.js";
 import { focusedApp, nextMenu, openMenu } from "./logic.js";

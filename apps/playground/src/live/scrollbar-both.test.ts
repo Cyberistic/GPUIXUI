@@ -1,19 +1,3 @@
-/**
- * Holds the arithmetic the `scrollbar-thumb-both` probe reads a window with, and
- * the claims its README section prints.
- *
- * The finding this file guards is a coupling, not a formula: once a scroller
- * shows both thumbs the binding shortens **each** track by the other thumb's
- * thickness (`paint_scrollbars` in the pinned binding: `height - thickness`,
- * `width - thickness`, the corner left to the vertical, which paints first)
- * while the content keeps moving a full viewport's worth. A vertical thumb on a
- * 120 px box with 400 px of content is therefore 31 px long, not 36, and the
- * window reads 30 against 31 — one point for the rounded cap, exactly as
- * `scrollbar.test.ts` records for the one-axis probe.
- *
- * `node:fs` is deliberate, as in `scrollbar.test.ts`: this reads the
- * repository's own probe, painter and Markdown, never a runtime path.
- */
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -59,30 +43,25 @@ const scrollbar = readFileSync(
   "utf8",
 );
 
-/** The section's prose on one line, so a wrapped sentence still reads whole. */
 const flat = readme.replace(/\s+/g, " ");
 
 describe("a two-axis scroller's thumbs", () => {
   it("leaves the corner to the other thumb, on both tracks", () => {
     expect(bothTrack("vertical")).toBe(BOTH_VIEWPORT.height - BOTH_THICKNESS);
     expect(bothTrack("horizontal")).toBe(BOTH_VIEWPORT.width - BOTH_THICKNESS);
-    // The scroll distance is the viewport's, not the shortened track's: the
-    // content still moves a full box's worth on each axis.
+
     expect(bothScroll("vertical")).toBe(
       BOTH_CONTENT.height - bothViewport("vertical"),
     );
     expect(bothScroll("horizontal")).toBe(
       BOTH_CONTENT.width - bothViewport("horizontal"),
     );
-    // The two numbers cannot be conflated: deriving the scroll distance from
-    // the shortened track would move the clamp 10 px further down.
+
     expect(bothScroll("vertical")).toBe(280);
     expect(maxOffset(BOTH_CONTENT.height, bothTrack("vertical"))).toBe(290);
   });
 
   it("sizes each thumb on the track the corner leaves it", () => {
-    // A one-axis rule would answer 36 and 53; the corner costs the thickness's
-    // share, and a component that sized from the viewport alone is wrong by it.
     expect(thumbOf(BOTH_VIEWPORT.height, BOTH_CONTENT.height, 0)).toEqual(
       Option.some({ start: 0, length: 36 }),
     );
@@ -120,8 +99,7 @@ describe("a two-axis scroller's thumbs", () => {
       { x: 0, y: BOTH_VERTICAL_CLAMP },
       { x: -BOTH_WHEEL_BY, y: BOTH_VERTICAL_CLAMP },
     ]);
-    // A wheel on one axis leaves the other where it was: the vertical wheel
-    // never reports a moved `x`, and the sideways one lands on a clamped `y`.
+
     expect(BOTH_VERTICAL_CLAMP).toBe(-280);
     expect(Arr.map(BOTH_STOPS, (stop) => stop.thumb.start)).toEqual([
       28, 79, 32,
@@ -129,8 +107,7 @@ describe("a two-axis scroller's thumbs", () => {
     expect(Arr.map(BOTH_STOPS, (stop) => stop.thumb.length)).toEqual([
       31, 31, 48,
     ]);
-    // At the clamp the vertical thumb ends on its own track — the corner —
-    // rather than on the box's bottom edge.
+
     const end = BOTH_STOPS[1];
     expect((end?.thumb.start ?? 0) + (end?.thumb.length ?? 0)).toBe(
       bothTrack("vertical"),
@@ -167,8 +144,7 @@ describe("a two-axis scroller's thumbs", () => {
       width: 150,
       height: 10,
     });
-    // Neither band contains the corner point, so one thumb's paint cannot be
-    // read as a short thumb on the other axis.
+
     const corner = { x: BOTH_VIEWPORT.width - 1, y: BOTH_VIEWPORT.height - 1 };
     const holds = (band: {
       x: number;
@@ -189,8 +165,7 @@ describe("a two-axis scroller's thumbs", () => {
       { x: 150, y: 0, width: 10, height: 31 },
       { x: 0, y: 110, width: 48, height: 10 },
     ]);
-    // The order is the paint order: the vertical thumb is the one that reaches
-    // the corner, so its box is the one that overlaps it.
+
     expect(BOTH_AXES).toEqual(["vertical", "horizontal"]);
   });
 
@@ -232,9 +207,6 @@ describe("the scrollbar-thumb-both probe's record", () => {
   });
 
   it("prints the reads the capture gave, not only the rule", () => {
-    // The rounded caps cost a point of length and half a point of start, so the
-    // section prints both numbers; a page printing the rule alone would claim a
-    // measurement it does not have.
     Arr.forEach(
       [
         [31, 30],
@@ -287,15 +259,11 @@ describe("the probe asks the question the section answers", () => {
   });
 
   it("shares the rule with the one-axis probe instead of restating it", () => {
-    // The two-axis case needs the track and the scroll distance apart, which is
-    // why `scrollbar.ts` carries `thumbBox` and `thumbOf` delegates to it: one
-    // statement of the binding's rule, not two that can drift.
     expect(fixture).toContain(
       'import { maxOffset, thumbBox, type ThumbBox } from "./scrollbar.js"',
     );
     expect(scrollbar).toContain("export const thumbBox");
-    // The one-axis helper keeps no arithmetic of its own: it hands the rule the
-    // two numbers it can derive.
+
     const oneAxis = scrollbar.slice(
       scrollbar.indexOf("export const thumbOf"),
       scrollbar.indexOf("export const thumbBox"),

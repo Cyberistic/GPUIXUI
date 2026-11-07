@@ -1,13 +1,3 @@
-/**
- * Guards the material reader (plan 721).
- *
- * A translucent fill in an opaque window composites against the window's black
- * surface (measured by the playground's `window-backdrop` probe), so a material
- * painted outside a blurred window — or for a reader who asked for less
- * transparency — would be a dark smear, not a sidebar. These cases hold
- * `materialFill` to the window and the preference, and every other platform to
- * the opaque roles it painted before materials existed.
- */
 import { describe, expect, it } from "vitest";
 import {
   darkTheme,

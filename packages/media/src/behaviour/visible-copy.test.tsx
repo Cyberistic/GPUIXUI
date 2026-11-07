@@ -1,15 +1,3 @@
-/**
- * Copy that arrived blank, measured in a real renderer.
- *
- * The bug guarded: `ImagePreview`'s caption and `DropZone`'s description were
- * painted whenever they were not `undefined`, and a caption an i18n table or a
- * saved record handed over whitespace laid out a full blank line under the
- * picture or the zone's label — the rule `visibleCopy` documents from the
- * pinned runtime: `""` is 0px tall and a run of spaces is 16px. Both surfaces
- * read the copy through `visibleCopy` now, so a blank caption paints no line at
- * all while a real one is painted as written.
- */
-
 import { createTestRoot } from "@gpuix/react/testing";
 import { lightTheme } from "@gpuixui/tokens";
 import { ThemeProvider } from "@gpuixui/tokens/react";

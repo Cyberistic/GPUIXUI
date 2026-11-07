@@ -1,14 +1,3 @@
-/**
- * The mote field's arithmetic, without a renderer.
- *
- * The bugs these guard: a field that reshuffles on every mount (so a decorative
- * background jumps between frames); a mote seeded or drifting outside the box it
- * was measured in (clipped at the edge, or half outside its own surface); every
- * mote turning at the same instant, which reads as a pulse rather than a float;
- * a return leg that drifts away from the seeded place instead of returning to
- * it; and a count or a size the runtime cannot paint.
- */
-
 import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
 import {
@@ -21,7 +10,6 @@ import {
   type ParticleSpec,
 } from "./logic.js";
 
-/** A 360×240 field of eight motes on a 2 second leg. */
 const field = (
   overrides: Partial<ParticleFieldInput> = {},
 ): ReadonlyArray<ParticleSpec> =>
@@ -39,7 +27,7 @@ const field = (
 describe("particleField", () => {
   it("paints the same field for the same seed and a different one otherwise", () => {
     expect(field()).toEqual(field());
-    // Comparing whole specs keeps the key, size, drift and weight in the claim.
+
     expect(field({ seed: 8 })).not.toEqual(field());
   });
 
@@ -70,7 +58,7 @@ describe("particleField", () => {
 
     expect(Arr.every(sizes, (size) => size >= particleMinSize)).toBe(true);
     expect(Arr.every(sizes, (size) => size <= particleMaxSize)).toBe(true);
-    // A single size would read as a dotted grid rather than a field.
+
     expect(Arr.length(Arr.dedupe(sizes))).toBeGreaterThan(1);
   });
 
@@ -79,7 +67,7 @@ describe("particleField", () => {
 
     expect(Arr.every(durations, (ms) => ms >= 1_500)).toBe(true);
     expect(Arr.every(durations, (ms) => ms <= 2_500)).toBe(true);
-    // Two motes on one beat would turn together.
+
     expect(Arr.length(Arr.dedupe(durations))).toBeGreaterThan(1);
   });
 

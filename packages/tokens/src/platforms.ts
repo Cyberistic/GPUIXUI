@@ -1,15 +1,5 @@
-/**
- * Platform styles.
- *
- * GPUix takes one `fontFamily` string per element, and GPUI resolves the
- * `.SystemUIFont` sentinel to the operating system's own UI font, so the UI face
- * follows the platform at runtime. What a component cannot infer is the
- * platform's monospace family, its corner radii, the control density its native
- * windows use, or which platform a preview is showing. All of it comes from
- * here: one table a consumer can copy, edit and ship.
- */
-
 import type { ThemeColors } from "./color.js";
+import { shadcnOverrides, type ShadcnVars } from "./shadcn-vars.js";
 import {
   radius as defaultRadius,
   type DensityName,
@@ -28,242 +18,115 @@ import type {
   TypographyOverrides,
 } from "./theme.js";
 
-/** GPUI's system UI font sentinel; it resolves to each platform's own UI font. */
 export const systemUiFont = ".SystemUIFont";
 
-/**
- * Platforms the library knows, in documentation order. `PlatformName` derives
- * from this list, so a new platform must also gain a style in `platformStyles`.
- */
 export const platformNames = ["darwin", "linux", "win32", "default"] as const;
 
-/** A platform a GPUIXUI application runs on. */
 export type PlatformName = (typeof platformNames)[number];
 
-/**
- * Narrow unknown input — a stored preference or a URL parameter — to a
- * platform. A consumer iterates {@link platformNames} instead of retyping the
- * four names.
- */
 export const isPlatformName = (value: unknown): value is PlatformName =>
   platformNames.some((name) => name === value);
 
-/** The families one platform's type resolves to. */
 export interface PlatformType {
-  /** Human-readable name for documentation and previews. */
   readonly label: string;
-  /** UI font family. */
+
   readonly sans: string;
-  /** The monospace family the platform has installed. */
+
   readonly mono: string;
 }
 
-/** The chrome roles a platform style changes, per mode. */
 export type PlatformColors = Readonly<Record<ThemeMode, Partial<ThemeColors>>>;
 
-/**
- * One look: the families its type resolves to, the radii and control density its
- * controls use, and the chrome roles it paints in each mode. `platformStyles` is
- * one table of these keyed by operating system; `retroStyles` is another keyed by
- * era, and a consumer can author a third, because `applyStyle` takes this shape
- * rather than a name. A role a style omits keeps the base theme's value.
- */
 export interface PlatformStyle extends PlatformType {
-  /** Corner radii the platform's own controls use. */
   readonly radius: Radius;
-  /** Control density preset the platform's native controls sit at. */
+
   readonly density: DensityName;
-  /** The roles the platform repaints, in each mode. */
+
   readonly colors: PlatformColors;
-  /**
-   * The paint the platform's own switch uses, per mode. Apple's switch is green
-   * on and grey off — the system blue never paints a toggle — so the fill is
-   * not a role the accent family can carry. A style that declares none keeps
-   * the library's switch: the accent fill, the muted track and the foreground
-   * knob.
-   */
+
   readonly switch?: Readonly<Partial<Record<ThemeMode, SwitchColors>>>;
-  /**
-   * The box the platform's own switch paints, in pixels. Paired with
-   * {@link switch} because a platform's toggle is one control: its track, its
-   * knob and the gap between them come from the same system specification.
-   */
+
   readonly switchMetrics?: SwitchMetrics;
-  /**
-   * The material fills the platform's window paints, per mode, and the window
-   * background they need (`materials.ts`). A style that declares none paints
-   * every material as its opaque role.
-   */
+
   readonly materials?: Readonly<Partial<Record<ThemeMode, MaterialFills>>>;
   readonly window?: WindowBackground;
-  /** How the platform's controls answer the pointer (`Theme.interaction`). */
+
   readonly interaction?: Interaction;
-  /**
-   * The text roles the platform sizes differently, merged field by field: the
-   * Mac's body is 13 points, its small text 11. Families stay `sans`/`mono`.
-   */
+
   readonly type?: Omit<TypographyOverrides, "sans" | "mono">;
-  /**
-   * The categorical scale the look paints its data marks in, per mode. A mode it
-   * omits — and every style that declares none — resolves the base theme's scale
-   * for that mode and contrast variant, which is where the library's own tables
-   * are designed to be read.
-   *
-   * A look that repaints the surfaces a plot is drawn on needs its own: Luna's
-   * beige page (`#ECE9D8`) and deeper toolbar (`#E0DCCB`) swallow the shared
-   * light amber, which measures 2.75:1 on that toolbar — one series a reader
-   * cannot find — so the look carries a scale designed for its own strips.
-   *
-   * It is named **position by position**, like the code palette: the positions a
-   * look repaints are its own and every position it does not name answers the
-   * base's scale, so a look can retint its amber without restating four hues.
-   *
-   * It follows the same rule as {@link colors}: a base theme of another contrast
-   * variant keeps its own scale, because a scale designed for a look's surfaces
-   * is not a high-contrast scale.
-   */
+
   readonly series?: Readonly<Partial<Record<ThemeMode, StoredSeries>>>;
-  /**
-   * The syntax palette a look highlights code with, per mode. A mode it omits —
-   * and every style that declares none — resolves the base theme's table for
-   * that mode, which is designed to be read on every shipped fill.
-   *
-   * A look that repaints the surface a code block paints owns one for the same
-   * reason it owns a `series`: the tokens are read against that page. It follows
-   * the same rule as {@link colors} — a base of another contrast variant keeps
-   * its own palette.
-   *
-   * A mode's table is read **token by token**, like a theme's: the tokens a look
-   * names are its own and the rest answer the base theme's table for that mode,
-   * so a style can repaint a keyword without restating twenty-three tokens.
-   */
+
   readonly syntax?: Readonly<Partial<Record<ThemeMode, Partial<SyntaxColors>>>>;
-  /**
-   * The contrast variant the palette is designed for. A base theme that needs
-   * more keeps its own colours — accessibility outranks the platform look — so
-   * `platformTheme` applies a palette only where this matches the base.
-   */
+
   readonly contrast: ThemeContrast;
 }
 
-/**
- * A style as a store hands it back: the table a consumer copied, edited and
- * saved, or a file its boundary decoded.
- *
- * A platform style is documented as copyable and editable, and a copy that was
- * written to a file is read back through a decoder — so every group may be
- * absent or `null` (JSON has no `undefined`) and the two names and the contrast
- * label arrive as whatever the file said. {@link applyStyle} takes this shape
- * rather than the authored one, so a saved style reaches it without the
- * assertion `AGENTS.md` §2 forbids and a group it lost keeps the base's value
- * instead of throwing or silently dropping the palette it still carries.
- *
- * The authored {@link PlatformStyle} is a member of this shape: a style written
- * as a TypeScript literal is read exactly as it always was.
- */
 export interface PlatformStyleSource {
-  /**
-   * The name a preview prints. A name this release cannot read — absent, blank,
-   * a number a decoder wrote — leaves the base theme's name alone.
-   */
   readonly label?: unknown;
-  /** The UI family. A value that is not a non-blank name keeps the base's face. */
+
   readonly sans?: unknown;
-  /** The monospace family, read by the same rule as {@link sans}. */
+
   readonly mono?: unknown;
-  /** The corner scale, or the steps a store kept. */
+
   readonly radius?: Partial<Radius> | null;
-  /** A preset name, a whole box, or the metrics a store kept. */
+
   readonly density?: ThemeOverrides["density"] | null;
-  /**
-   * The variant the palette is designed for. A style that states none — or a
-   * name this release does not ship — is read as `default`, the variant every
-   * shipped style declares: a look is not an accessibility claim, and reading an
-   * unknown label as the strict variant denied its palette to every ordinary
-   * base.
-   */
+
   readonly contrast?: unknown;
-  /** The chrome roles the style repaints, per mode. A mode it lost is the base's. */
+
   readonly colors?: Partial<
     Record<ThemeMode, Partial<ThemeColors> | null>
   > | null;
-  /** The categorical scale the look paints, per mode, or `null` for none. */
+
   readonly series?: Partial<Record<ThemeMode, StoredSeries>> | null;
-  /** The syntax palette the look highlights with, per mode, or `null` for none. */
+
   readonly syntax?: Partial<Record<ThemeMode, StoredSyntax | null>> | null;
-  /** The platform's own switch paint, per mode, or `null` for the accent switch. */
+
   readonly switch?: Partial<Record<ThemeMode, SwitchColors>> | null;
-  /** The box the platform's own switch is drawn in. */
+
   readonly switchMetrics?: SwitchMetrics | null;
-  /** The material fills, per mode, or `null` for the opaque roles. */
+
   readonly materials?: Partial<Record<ThemeMode, MaterialFills>> | null;
-  /** The window background; anything but `"blurred"` is opaque. */
+
   readonly window?: unknown;
-  /** The interaction model; anything but `"appkit"` is the pointer's. */
+
   readonly interaction?: unknown;
-  /** The text roles the style resizes. */
+
   readonly type?: Omit<TypographyOverrides, "sans" | "mono"> | null;
 }
 
-/**
- * The dark syntax table the three platform styles carry.
- *
- * A platform style repaints the page, and a `<markdown>` host's fenced code
- * block paints 3.5% of a neutral ink over that page (`nativeFenceFill`), so the
- * fence sits a step above the base theme's and the dark `keyword` — the one
- * token with no room — needs a brighter value. Measured: the identity's
- * `#A7A9FF` clears the page in every dark style and misses the body floor on the
- * fence in all three platforms (6.49:1 on Linux dark, 6.85:1 on Windows,
- * 6.92:1 on macOS), and `#B0B2FF` is the smallest 2% step toward white that
- * clears them (7.09:1). A light base keeps its page, so the light mode resolves
- * the identity's table.
- */
 const platformDarkSyntax: SyntaxColors = {
   ...darkSyntax,
   keyword: "#B0B2FF",
 };
 
-/**
- * Platform styles. `sans` is GPUI's sentinel everywhere — GPUI maps it to the
- * platform's own UI font, so a theme never names a face the operating system
- * may not have. `mono` names the family each platform installs. `default` is
- * the library's own identity: it changes nothing but the name.
- *
- * The colours are ordinary semantic roles, so a consumer edits a value here and
- * every component follows. Each set is held to the contrast floors in
- * `contrast.ts` by `platforms.test.ts`; `contrast` names the variant those
- * floors are, so a high-contrast base keeps its own palette. The dark sets carry
- * a lighter `placeholder` than the base theme because their field surfaces are
- * lighter than its canvas. Four styles also carry their own `skeleton`, because
- * a placeholder fill is measured against the card, the muted strip and the
- * popover fill it stands in (`decorative.ts`) and the inherited fill matched
- * theirs. Each `darwin` set
- * and all three dark sets carry their own `secondary`, because a tonal action's
- * fill has to be visible on the strip it sits on and their surfaces are
- * lighter than the base theme's — macOS light's window sits 1.015:1 from the
- * base fill, and the dark popovers sit 1.039–1.049:1 from it. The `linux` and
- * `win32` dark sets carry a 24% `selection` — the base dark theme's share —
- * rather than 30%, because a stronger wash over their lighter cards left the
- * text it selects at 6.6:1, under the body floor (`selection.ts`). Windows light
- * also deepens the destructive status text to red 900: its pressed wash is
- * darker than the base theme's, and the shared red 800 label measured 6.93:1 on
- * a pressed destructive row, under the body floor. A role a set omits keeps the
- * base theme's value.
- */
+const palette = (
+  modes: Readonly<Record<ThemeMode, PlatformPalette>>,
+): PlatformColors => ({
+  light: { ...mappedOf(modes.light), ...modes.light.extras },
+  dark: { ...mappedOf(modes.dark), ...modes.dark.extras },
+});
+
+const mappedOf = (palette: PlatformPalette): Partial<ThemeColors> =>
+  shadcnOverrides(palette.shadcn, { derive: false }).colors ?? {};
+
+interface PlatformPalette {
+  readonly shadcn: ShadcnVars;
+  readonly extras: Partial<ThemeColors>;
+}
+
 export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
   darwin: {
     label: "macOS",
     sans: systemUiFont,
     mono: "Menlo",
-    // Apple's corner scale: a control at 6, the window's own 10, then one step
-    // for each larger surface — a card at 14 and a sheet at 18.
+
     radius: { none: 0, sm: 6, md: 10, lg: 14, xl: 18, full: 9999 },
     density: "compact",
     contrast: "default",
     syntax: { dark: platformDarkSyntax },
-    // Apple's switch: a 38×22pt track with a 20pt knob at a 1pt inset and a
-    // hairline rim, green on and grey off. The values are the system palette's
-    // own, published on the HIG's colour page.
+
     switch: {
       light: {
         on: "#34C759",
@@ -279,12 +142,10 @@ export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
       },
     },
     switchMetrics: { width: 38, height: 22, knob: 20, inset: 1, border: 0 },
-    // The window is vibrant; each material is its opaque role at a share the
-    // blur shows through (plan 721). Text on a material is held to the floors on
-    // the opaque role, the worst case a translucent surface cannot promise.
+
     window: "blurred",
     interaction: "appkit",
-    // AppKit's text: a 13-point body, 12-point labels, 11-point small text.
+
     type: {
       body: { fontSize: 13, lineHeight: 16 },
       bodyStrong: { fontSize: 13, lineHeight: 16 },
@@ -307,68 +168,59 @@ export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
         sheet: "#26262AE6",
       },
     },
-    colors: {
+    colors: palette({
       light: {
-        background: "#F2F2F7",
-        card: "#FFFFFF",
-        popover: "#FFFFFF",
-        input: "#FFFFFF",
-        secondary: "#DEE3EA",
-        // The bar rail is `muted`, the strip a settings sidebar paints.
-        muted: "#E9E9EF",
-        skeleton: "#DCDFE7",
-        hover: "#E2E2E8",
-        active: "#DEDEE6",
-        border: "#D9D9E0",
-        borderStrong: "#67686D",
-        primary: "#0A6CD6",
-        primaryForeground: "#FFFFFF",
-        ring: "#0A6CD6",
-        accent: "#CADEF7",
-        accentForeground: "#08407A",
-        selected: "#D3E5FB",
-        selectedForeground: "#0B3D6B",
-        selection: "#0A6CD63D",
+        shadcn: {
+          background: "#F2F2F7",
+          card: "#FFFFFF",
+          popover: "#FFFFFF",
+          input: "#FFFFFF",
+          secondary: "#DEE3EA",
+          muted: "#E9E9EF",
+          border: "#D9D9E0",
+          primary: "#0A6CD6",
+          "primary-foreground": "#FFFFFF",
+          ring: "#0A6CD6",
+          accent: "#CADEF7",
+          "accent-foreground": "#08407A",
+        },
+        extras: {
+          skeleton: "#DCDFE7",
+          hover: "#E2E2E8",
+          active: "#DEDEE6",
+          borderStrong: "#67686D",
+          selected: "#D3E5FB",
+          selectedForeground: "#0B3D6B",
+          selection: "#0A6CD63D",
+        },
       },
       dark: {
-        background: "#1C1C1E",
-        card: "#26262A",
-        popover: "#2C2C30",
-        input: "#1F1F22",
-        secondary: "#3A3A3C",
-        // The bar rail is `muted`, measured on the page, a card, this popover
-        // and a field's `input` fill. The inherited value sat 1.028:1 from the
-        // popover; the card and the popover are one step apart, and the field
-        // fill the diff pane paints sits just above the page, so no step between
-        // them clears the rail. The quiet surface takes the recessed step below
-        // the page instead — the same direction the light themes take it.
-        muted: "#16161A",
-        // A loading dialog paints its skeleton rows on this popover fill; the
-        // inherited base skeleton sat 1.049:1 from it, so the dialog looked
-        // empty rather than loading.
-        skeleton: "#303036",
-        hover: "#35353B",
-        active: "#3A3A40",
-        border: "#3A3A40",
-        borderStrong: "#ACACB1",
-        // Apple's dark system blue, one step lighter than the HIG's `#0A84FF`:
-        // a filled `primary` action placed in an `Alert`'s description paints
-        // its face on the tone's soft tint, and the system blue read 2.33:1 on
-        // the warning tint — under the 3:1 a face a reader has to find needs.
-        // The smallest step toward white that clears all four tints is 20%
-        // (`3.009:1` on the warning tint, the tightest), and it keeps the
-        // `#11141A` label at 6.54:1 on the fill.
-        primary: "#3B9DFF",
-        primaryForeground: "#11141A",
-        ring: "#4CA2FF",
-        accent: "#1A3D60",
-        accentForeground: "#B2D3F9",
-        selected: "#0C3864",
-        selectedForeground: "#C7E0FF",
-        placeholder: "#8A93A3",
-        selection: "#0A84FF4D",
+        shadcn: {
+          background: "#1C1C1E",
+          card: "#26262A",
+          popover: "#2C2C30",
+          input: "#1F1F22",
+          secondary: "#3A3A3C",
+          muted: "#16161A",
+          border: "#3A3A40",
+          primary: "#3B9DFF",
+          "primary-foreground": "#11141A",
+          ring: "#4CA2FF",
+          accent: "#1A3D60",
+          "accent-foreground": "#B2D3F9",
+        },
+        extras: {
+          skeleton: "#303036",
+          hover: "#35353B",
+          active: "#3A3A40",
+          borderStrong: "#ACACB1",
+          selected: "#0C3864",
+          selectedForeground: "#C7E0FF",
+          placeholder: "#8A93A3",
+          selection: "#0A84FF4D",
+        },
       },
-    },
+    }),
   },
   linux: {
     label: "Linux",
@@ -378,83 +230,75 @@ export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
     density: "spacious",
     contrast: "default",
     syntax: { dark: platformDarkSyntax },
-    // Adwaita's switch: a 44×24px track with an 18px knob at a 3px inset.
-    // Blue 4 is the on fill; the off track is Adwaita's own grey step.
+
     switch: {
       light: { on: "#3584E4", off: "#DEDDDA", knob: "#FFFFFF" },
       dark: { on: "#78AEED", off: "#3D3D3D", knob: "#FFFFFF" },
     },
     switchMetrics: { width: 44, height: 24, knob: 18, inset: 3, border: 0 },
-    colors: {
+    colors: palette({
       light: {
-        // Adwaita's window fill; the control and window corners are 6px and
-        // 12px (`$button_radius`, `$window_radius` in libadwaita 1.5).
-        background: "#FAFAFA",
-        card: "#FFFFFF",
-        popover: "#FFFFFF",
-        input: "#FFFFFF",
-        muted: "#ECEBE9",
-        hover: "#E3E2DF",
-        active: "#DCDBD8",
-        border: "#D4D2CF",
-        borderStrong: "#6A6965",
-        // Adwaita's standalone accent is Blue 4: it is the action fill that
-        // carries white text and a visible pointer step. Blue 3 tints the
-        // selection wash below.
-        primary: "#1A6DD3",
-        primaryForeground: "#FFFFFF",
-        ring: "#1A6DD3",
-        accent: "#D2E4F7",
-        accentForeground: "#12457F",
-        selected: "#CADDF3",
-        selectedForeground: "#0F3E74",
-        selection: "#3584E43D",
+        shadcn: {
+          background: "#FAFAFA",
+          card: "#FFFFFF",
+          popover: "#FFFFFF",
+          input: "#FFFFFF",
+          muted: "#ECEBE9",
+          border: "#D4D2CF",
+          primary: "#1A6DD3",
+          "primary-foreground": "#FFFFFF",
+          ring: "#1A6DD3",
+          accent: "#D2E4F7",
+          "accent-foreground": "#12457F",
+        },
+        extras: {
+          hover: "#E3E2DF",
+          active: "#DCDBD8",
+          borderStrong: "#6A6965",
+          selected: "#CADDF3",
+          selectedForeground: "#0F3E74",
+          selection: "#3584E43D",
+        },
       },
       dark: {
-        background: "#242424",
-        card: "#303030",
-        popover: "#383838",
-        input: "#212121",
-        secondary: "#404040",
-        muted: "#2A2A2A",
-        // A loading dialog paints its skeleton rows on this popover fill; the
-        // previous step sat 1.031:1 from it.
-        skeleton: "#3E3E3E",
-        hover: "#343434",
-        active: "#3D3D3D",
-        border: "#464646",
-        borderStrong: "#B2B3B4",
-        primary: "#78AEED",
-        primaryForeground: "#11141A",
-        ring: "#78AEED",
-        accent: "#1B3E60",
-        accentForeground: "#BBD9F7",
-        selected: "#1F4363",
-        selectedForeground: "#CFE4FA",
-        placeholder: "#8A93A3",
-        selection: "#78AEED3D",
+        shadcn: {
+          background: "#242424",
+          card: "#303030",
+          popover: "#383838",
+          input: "#212121",
+          secondary: "#404040",
+          muted: "#2A2A2A",
+          border: "#464646",
+          primary: "#78AEED",
+          "primary-foreground": "#11141A",
+          ring: "#78AEED",
+          accent: "#1B3E60",
+          "accent-foreground": "#BBD9F7",
+        },
+        extras: {
+          skeleton: "#3E3E3E",
+          hover: "#343434",
+          active: "#3D3D3D",
+          borderStrong: "#B2B3B4",
+          selected: "#1F4363",
+          selectedForeground: "#CFE4FA",
+          placeholder: "#8A93A3",
+          selection: "#78AEED3D",
+        },
       },
-    },
+    }),
   },
   win32: {
     label: "Windows",
-    // `.SystemUIFont` resolves to Segoe UI Variable on Windows 11, the Fluent 2
-    // UI face; naming the family here would pin an older Segoe UI.
+
     sans: systemUiFont,
     mono: "Consolas",
-    // Fluent 2's 4px grid: a control corners at 4px and a surface at 8px. `sm`
-    // and `md` are the control steps (`controlStyle` paints `md`), `lg` and
-    // `xl` the surface steps (`surfaceStyle` paints the radius it is given, and
-    // cards and dialogs name `lg`/`xl`).
+
     radius: { none: 0, sm: 4, md: 4, lg: 8, xl: 8, full: 9999 },
     density: "comfortable",
     contrast: "default",
     syntax: { dark: platformDarkSyntax },
-    // Fluent 2's switch: a 40×20px track with a 12px knob at a 4px inset. The
-    // off state is a transparent track whose 1px outline is the control's
-    // edge. WinUI's knob is the secondary text colour while off (`#9E000000`
-    // and `#C5FFFFFF` over the card) and the on-accent text colour once on:
-    // white on the light accent, black on the dark one.
+
     switch: {
       light: {
         on: "#0078D4",
@@ -472,66 +316,58 @@ export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
       },
     },
     switchMetrics: { width: 40, height: 20, knob: 12, inset: 4, border: 1 },
-    colors: {
+    colors: palette({
       light: {
-        background: "#F3F3F3",
-        card: "#FFFFFF",
-        popover: "#FFFFFF",
-        input: "#FFFFFF",
-        muted: "#EBEBEB",
-        hover: "#E0E0E0",
-        active: "#D6D6D6",
-        border: "#E5E5E5",
-        borderStrong: "#696A6B",
-        // The Fluent 2 accent (`#0078D4`) is the action fill and the focus
-        // rect; the selection wash keeps the 24% share the style has carried.
-        primary: "#0078D4",
-        primaryForeground: "#FFFFFF",
-        ring: "#0078D4",
-        accent: "#CFE6F9",
-        accentForeground: "#003E6F",
-        selected: "#C8E0F3",
-        selectedForeground: "#093A5C",
-        // The pressed wash is darker here than the base theme's, so the shared
-        // red 800 label landed at 6.93:1 on a pressed destructive row. The
-        // deeper 900 keeps the row readable without flattening hover into press.
-        destructiveSoftForeground: "#5C1619",
-        selection: "#0067C03D",
+        shadcn: {
+          background: "#F3F3F3",
+          card: "#FFFFFF",
+          popover: "#FFFFFF",
+          input: "#FFFFFF",
+          muted: "#EBEBEB",
+          border: "#E5E5E5",
+          primary: "#0078D4",
+          "primary-foreground": "#FFFFFF",
+          ring: "#0078D4",
+          accent: "#CFE6F9",
+          "accent-foreground": "#003E6F",
+        },
+        extras: {
+          hover: "#E0E0E0",
+          active: "#D6D6D6",
+          borderStrong: "#696A6B",
+          selected: "#C8E0F3",
+          selectedForeground: "#093A5C",
+          destructiveSoftForeground: "#5C1619",
+          selection: "#0067C03D",
+        },
       },
       dark: {
-        // Fluent's dark canvas and the layer a card sits on: the `#202020`
-        // page, then the elevated `#2C2C2C` layer. The popover sits one step
-        // above the card, which elevation separates rather than a third fill.
-        background: "#202020",
-        card: "#2C2C2C",
-        popover: "#2D2D2D",
-        input: "#1F1F1F",
-        secondary: "#3A3A3A",
-        // The bar rail is `muted`; a step below the card keeps a bar visible in
-        // a dialog and on a card.
-        muted: "#262626",
-        // A loading dialog paints its skeleton rows on this popover fill; the
-        // inherited base skeleton sat 1.039:1 from it.
-        skeleton: "#323232",
-        hover: "#333333",
-        active: "#3A3A3A",
-        border: "#3D3D3D",
-        borderStrong: "#ACACAD",
-        // Fluent 2's dark accent (`#4CC2FF`) is the action fill and the focus
-        // rect. Its hover and press still read against the fill: the pointer
-        // steps land at 1.080:1 and 1.129:1, above the 1.05 perceptibility
-        // floor, while the dark on-colour stays at 9.19:1.
-        primary: "#4CC2FF",
-        primaryForeground: "#11141A",
-        ring: "#4CC2FF",
-        accent: "#1B3A50",
-        accentForeground: "#C9E9FF",
-        selected: "#143E59",
-        selectedForeground: "#CDEBFF",
-        placeholder: "#8A93A3",
-        selection: "#60CDFF3D",
+        shadcn: {
+          background: "#202020",
+          card: "#2C2C2C",
+          popover: "#2D2D2D",
+          input: "#1F1F1F",
+          secondary: "#3A3A3A",
+          muted: "#262626",
+          border: "#3D3D3D",
+          primary: "#4CC2FF",
+          "primary-foreground": "#11141A",
+          ring: "#4CC2FF",
+          accent: "#1B3A50",
+          "accent-foreground": "#C9E9FF",
+        },
+        extras: {
+          skeleton: "#323232",
+          hover: "#333333",
+          active: "#3A3A3A",
+          borderStrong: "#ACACAD",
+          selected: "#143E59",
+          selectedForeground: "#CDEBFF",
+          placeholder: "#8A93A3",
+          selection: "#60CDFF3D",
+        },
       },
-    },
+    }),
   },
   default: {
     label: "Default",
@@ -544,39 +380,17 @@ export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
   },
 };
 
-/**
- * The families and label per platform. A view of {@link platformStyles}, kept
- * because a caller that only needs a face should not carry the palette.
- */
 export const platformTypes: Readonly<Record<PlatformName, PlatformType>> =
   platformStyles;
 
-/**
- * The host's platform name, or the identity when the runtime names an operating
- * system the library does not style. The index decides membership, so a platform
- * added to {@link platformNames} — and given a style in {@link platformStyles} —
- * is recognised on its own host without a second list of names to edit.
- */
 const knownPlatform = (name: string): PlatformName =>
   isPlatformName(name) ? name : "default";
 
-/**
- * The host's operating system, when the runtime has one.
- *
- * Declared rather than taken from `@types/node`: the library renders in hosts
- * that ship no Node types — a browser, a bundled app — and `platform` is the
- * only field it reads.
- */
 declare const process: { readonly platform?: string } | undefined;
 
-/**
- * The platform the code runs on, or `default` when it is not one the library
- * knows — a browser, for example.
- */
 export const currentPlatform: PlatformName =
   typeof process === "undefined" || process.platform === undefined
     ? "default"
     : knownPlatform(process.platform);
 
-/** The platform's monospace family. */
 export const systemMonoFamily: string = platformTypes[currentPlatform].mono;

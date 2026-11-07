@@ -1,10 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Editor — a code editor in the Mac look: the explorer on the left, the open
- * file's code painted token by token in the centre, and a status bar under it.
- * Pressing a file opens it (the tab, the code and the status line change
- * together). Everything is a library component except the code paint itself.
- */
 import { Match } from "effect";
 import * as Option from "effect/Option";
 import * as Arr from "effect/Array";

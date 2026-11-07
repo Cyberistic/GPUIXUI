@@ -1,20 +1,3 @@
-/**
- * Holds the icon page to the package it documents.
- *
- * The bug this guards: the description said "Forty-seven monochrome icons"
- * while the registry shipped 48, because the count is prose and the set is data.
- * The size scale is the second stale value of the same kind: the page and the
- * README print it, and the scale lives in `@gpuixui/tokens`. The page's prose
- * sections were pruned to usage, API and limitations, so the table that survives
- * is the README's §Sizes and the guards read it there.
- *
- * The page is read from disk, as `packages/primitives/src/docs.test.ts` and the
- * tokens catalogue guards do: this checks a document, not a runtime.
- * `node:fs` is deliberate — `@gpuixui/icons` has no Effect platform dependency
- * and the read happens once, when the suite loads, so there is no event loop to
- * block and nothing to provide a `FileSystem` layer for.
- */
-
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
@@ -34,11 +17,9 @@ const lucideRecord = readFileSync(
   "utf8",
 );
 
-/** A frontmatter field's value, or nothing when the field is absent. */
 const frontmatter = (field: string): Option.Option<string> =>
   Option.fromNullishOr(new RegExp(`^${field}: (.+)$`, "m").exec(page)?.[1]);
 
-/** The body of one `##` section, without its heading. */
 const section = (heading: string): string =>
   Option.getOrElse(
     Option.map(
@@ -59,9 +40,6 @@ describe("the icon page", () => {
   });
 
   it("prints each size step at the scale's pixel value", () => {
-    // The page's size table was pruned with the prose sections; the package
-    // README's §Sizes is the table a consumer copies, and it still has to print
-    // the scale `@gpuixui/tokens` owns.
     const sizes = readme.slice(readme.indexOf("## Sizes"));
     Arr.forEach(R.toEntries(ICON_SIZES), ([step, pixels]) => {
       expect(sizes, step).toContain(`\`${step}\` ${pixels}`);
@@ -69,13 +47,6 @@ describe("the icon page", () => {
   });
 
   it("teaches the answer a stored size name gets", () => {
-    // This test guards a document claim, not a behaviour: `iconPixels` is proven
-    // by `sizes.test.ts` and the painted box by
-    // `runtime/icons.runtime.test.tsx`. But a reader who stores a size (a
-    // density preference, a saved layout) is the one caller the type does not
-    // protect, and the page said nothing about what such a name resolves to
-    // while the resolver answered `undefined`. The words are held to the
-    // behaviour so they cannot drift apart.
     const api = section("API");
     expect({
       resolvesToDefault: api.includes("resolves to `md`"),
@@ -91,11 +62,6 @@ describe("the icon page", () => {
   });
 
   it("teaches the answer a stored name gets", () => {
-    // The name is a stored value as often as a literal — a saved toolbar, a
-    // workspace layout, an action record — and the registry read used to paint
-    // an empty box for a name the set no longer carries. The page and the README
-    // say what such a name resolves to now, held to the resolver's own answer so
-    // the words cannot drift from the behaviour.
     expect({
       pageTeaches: section("API").includes("paints the `help` mark"),
       readmeTeaches: /answers the `help` mark/.test(readme),
@@ -110,10 +76,6 @@ describe("the icon page", () => {
   });
 
   it("documents every prop IconProps declares", () => {
-    // The bug guarded: the page lists the props it remembers, so a new prop
-    // (`testId`, `size`'s raw-pixel form) ships without a reader learning it
-    // exists. The same rule `packages/primitives/src/docs.test.ts` holds every
-    // Tier 1 page to, applied to the one component page outside that package.
     const declared = Arr.filterMap(
       Arr.fromIterable(
         (
@@ -146,11 +108,6 @@ describe("the icon page", () => {
   });
 
   it("cites a provenance record that carries both notices", () => {
-    // The claim that used to be false: the page said no third-party icon file
-    // was copied while most of the geometry is Lucide's, and pointed at a
-    // `.agents/slop/LICENSES/` directory with no Lucide record — an ISC/MIT notice the
-    // release owed and did not carry. The record is cited from the README now
-    // that the page's provenance section is pruned, and the notices stay whole.
     expect(readme).toContain(".agents/slop/LICENSES/lucide.md");
     expect(lucideRecord).toContain("lucide-static` `1.61.0`");
     expect(lucideRecord).toContain("## ISC License");
@@ -164,17 +121,11 @@ describe("the icon page", () => {
 
 describe("the icons README", () => {
   it("cites the provenance record instead of claiming nothing is copied", () => {
-    // The same retracted claim the page carried: most of the geometry *is*
-    // Lucide's, so a README that denies it and points at a directory with no
-    // Lucide record undoes the page's correction.
     expect(readme).toContain(".agents/slop/LICENSES/lucide.md");
     expect(readme).not.toContain("copied verbatim");
   });
 
   it("imports only names @gpuixui/tokens exports", () => {
-    // The bug guarded: the README's first example imported `{ theme }` from
-    // "@gpuixui/tokens", which publishes `lightTheme`/`darkTheme`/`getTheme` —
-    // the package's own usage example failed at its first import.
     const names = Arr.flatMap(
       [...readme.matchAll(/import\s+\{([^}]*)\}\s+from\s+"@gpuixui\/tokens"/g)],
       (match) =>
@@ -191,10 +142,6 @@ describe("the icons README", () => {
   });
 
   it("teaches the plural role path the theme it names actually has", () => {
-    // The same bug's second half: `theme.color.mutedForeground` and
-    // `theme.color.destructive.background` name a `color` group that does not
-    // exist, and `destructive` is a role string, not an object with a
-    // `.background`.
     const source = `${readme}\n${iconSource}`;
     expect(source).not.toMatch(/\.color\./);
     const roles = Arr.flatMap(

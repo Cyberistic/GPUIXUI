@@ -8,17 +8,6 @@ import { Match } from "effect";
 import { useState, type ReactNode } from "react";
 import { parseMarkdown, type MarkdownBlock } from "./markdown-preview";
 
-/**
- * Browser preview for the MarkdownEditor page.
- *
- * The native editor edits the **source** and previews it through the runtime's
- * `<markdown>` host — it is the honest rich-text alternative, not a rich-text
- * field. The preview reads the same draft into DOM blocks (`markdown-preview.ts`
- * runs the package's own `closeFences` rule) and offers the same three views;
- * the split's divider is drawn at the component's default half, and the status
- * line is the package's own `statsLabel`.
- */
-
 export const MARKDOWN_SAMPLE = `# Release notes
 
 A **small** release with \`@gpuixui/editor\` fixes.
@@ -33,7 +22,6 @@ const value = "source";
 
 const INLINE = /(`[^`]*`|\*\*[^*]+\*\*)/g;
 
-/** A paragraph's bold and code runs, as the runtime's markdown host paints them. */
 const inline = (text: string): ReactNode =>
   text
     .split(INLINE)

@@ -12,10 +12,6 @@ import {
   SbSubRow,
 } from "./sidebar-kit";
 
-/**
- * Sidebar 04 — block 03's always-open tree on shadcn's floating panel: a
- * rounded, lifted box with a gutter instead of an edge-to-edge rail.
- */
 export const Sidebar04Render = () => (
   <SbShell variant="floating">
     <SbPanel

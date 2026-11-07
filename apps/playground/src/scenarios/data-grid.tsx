@@ -1,21 +1,3 @@
-/**
- * Tier 3 probe: `data-grid-fixed-header` — a grid whose header stays put.
- *
- * The docking-style question for a data grid is where the header lives. GPUI's
- * style model has `position: "relative" | "absolute"`, not `sticky`, so a header
- * declared sticky **inside** the row scroller scrolls away with the rows; this
- * probe measures that and then measures the pattern a grid can use instead: the
- * header is a sibling above the vertical scroller, and one horizontal scroller
- * wraps both, so a horizontal wheel moves the header and the cells together.
- *
- * Those are the two axes a data grid needs, and neither is the runtime's:
- * - vertical scrolling moves the rows and not the header (a sibling, not sticky);
- * - horizontal scrolling moves the header cells and the row cells by the same
- *   amount (one shared scroller, not two synchronised ones).
- *
- * The `sticky` sample is asserted to move, so the day the runtime paints a
- * sticky header this scenario fails and the alternative stops being necessary.
- */
 import { useState } from "react";
 import { Effect } from "effect";
 import * as Option from "effect/Option";
@@ -68,8 +50,7 @@ const GridProbe = () => {
         testId="grid-frame"
         style={{ width: 620, height: 260, overflow: "hidden" }}
       >
-        {/* One scroller for both axes of the header: the content is wider than
-            the frame, so the header and the rows share its x offset. */}
+        {}
         <div
           testId="grid-hscroll"
           style={{ width: 620, height: 260, overflowX: "scroll" }}
@@ -102,8 +83,7 @@ const GridProbe = () => {
                 </div>
               ))}
             </div>
-            {/* The vertical scroller sits under the header, so the header is
-                never its child and cannot scroll with the rows. */}
+            {}
             <div
               testId="grid-body"
               style={{ height: 200, overflowY: "scroll" }}
@@ -133,7 +113,6 @@ const GridProbe = () => {
   );
 };
 
-/** The painted box of `testId`, or a failed check. */
 const box = (
   ctx: Smoke.SmokeContext,
   testId: string,
@@ -167,7 +146,6 @@ export const dataGridScenario: ScenarioBody = {
         1,
       );
 
-      // Vertical: the rows move, the header does not.
       ctx.host.wheel("grid-body", 0, -200);
       const scrolled = yield* offset(ctx, "grid-body");
       yield* ctx.expectEqual(
@@ -205,7 +183,6 @@ export const dataGridScenario: ScenarioBody = {
         "scrolls=1",
       );
 
-      // Horizontal: header cells and row cells share one offset.
       const headerCell = yield* box(ctx, "grid-header-status");
       const rowCell = yield* box(ctx, "grid-cell-3-status");
       yield* ctx.expectEqual(

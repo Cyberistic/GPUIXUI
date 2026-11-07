@@ -9,22 +9,6 @@ import {
   type PageItem,
 } from "./pagination-preview";
 
-/**
- * Browser previews for the Pagination page.
- *
- * The shipped control is controlled: the app owns the page, the control clamps
- * it and derives one stable crop around it. The drawing takes the same rules —
- * one `pageWindow` for every crop, an ellipsis only where it hides two or more
- * pages, Previous/Next disabled at an end — so a reader pressing through the
- * preview meets the component's arithmetic rather than a generic page rail.
- *
- * The paint is the library's: a page button is the `sm` control height square,
- * the current page wears the primary fill, and the rest are ghost rows. What the
- * page says it is an approximation of is the type scale and the drawing's
- * spacing; the geometry comes from the platform variables a `PreviewSurface`
- * sets.
- */
-
 interface PaginationBarProps {
   readonly page: number;
   readonly pageCount: number;
@@ -34,7 +18,6 @@ interface PaginationBarProps {
   readonly label?: string;
 }
 
-/** The control itself: Previous, the derived window, Next. */
 const PaginationBar = ({
   page,
   pageCount,
@@ -106,7 +89,6 @@ const PaginationBar = ({
   );
 };
 
-/** A deployments list paged five at a time, the composition the component is for. */
 const PaginationWorkflow = (): ReactNode => {
   const pageCount = pageCountFor(DEPLOYMENTS);
   const [page, setPage] = useState(1);
@@ -163,7 +145,6 @@ interface TileProps {
   readonly showEdges?: boolean;
 }
 
-/** One tile: its own page state, so the reader can page the crop it shows. */
 const PaginationTile = ({
   title,
   page,
@@ -194,7 +175,6 @@ const PaginationTile = ({
   );
 };
 
-/** The window rule, the two knobs, the clamp and the empty result set. */
 const PaginationStates = (): ReactNode => (
   <div className="gx-demo-pagination">
     <div className="gx-pagination-tiles">

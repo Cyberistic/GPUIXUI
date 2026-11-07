@@ -1,14 +1,3 @@
-/**
- * The Button keyboard contract.
- *
- * The published `@gpuix/react` ships **no** button (see `docs/gpuix-capabilities.md`), so this is
- * behaviour the library owns — and the part most worth guarding. Each test
- * below flips a real bug: Enter firing on key *up* (double activation with the
- * platform's own click), Space on key *down* (repeating while held), a held key
- * activating, a busy button still firing, and a disabled button keeping its tab
- * stop.
- */
-
 import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
 import * as Arr from "effect/Array";
@@ -76,11 +65,6 @@ const resting = (props: Parameters<typeof renderButton>[0]): ReactElement =>
 
 describe("Button", () => {
   it("paints a size name the scale does not carry as the default size", () => {
-    // The bug guarded: `size` is one of the choices a consumer stores
-    // (`@gpuixui/tokens` publishes `controlSizes`/`isControlSize` for that
-    // read), so a preference a release renamed reached `BUTTON_SIZE[unknown]`
-    // and painted no height or padding class at all — an action shorter than
-    // the label it holds, next to the controls that kept their height.
     const stored = resting({ size: "xl" as ControlSize, children: "Save" });
     const fallback = resting({ size: "md", children: "Save" });
     expect(expectSome(hostStyleRecord(stored))).toEqual(
@@ -92,11 +76,6 @@ describe("Button", () => {
   });
 
   it("paints a variant name the table does not carry as the default action", () => {
-    // The bug guarded: `variant` is a stored choice as often as a literal (an
-    // action record, a saved toolbar, a workspace layout), so a name a release
-    // renamed reached `buttonVariants[name].filledAction` and threw mid-render —
-    // the window emptied instead of the action painting the default it
-    // documents. The fallback is `primary`, the component's own default.
     const stored = resting({
       variant: "brand" as ButtonVariant,
       children: "Save",
@@ -134,9 +113,6 @@ describe("Button", () => {
   });
 
   it("hands the activation the event that caused it", () => {
-    // The bug (plan 160's measured Phase 2 STOP): `onActivate` carried no
-    // event, so an adapter mapping a trigger's `onClick` to it either dropped
-    // the payload or ran the handler twice, and a ripple had no press point.
     const onActivate = vi.fn();
     const element = resting({ onActivate });
     const click = {
@@ -150,12 +126,10 @@ describe("Button", () => {
     expect(onActivate).toHaveBeenLastCalledWith(click);
     expect(onActivate).toHaveBeenCalledTimes(1);
 
-    // Enter reports the key-down it decided on...
     const enter = keyEvent("enter");
     expectSome(hostHandler(element, "onKeyDown"))(enter);
     expect(onActivate).toHaveBeenLastCalledWith(enter);
 
-    // ...and Space the release, which is the event that activated.
     expectSome(hostHandler(element, "onKeyDown"))(keyEvent("space"));
     expect(onActivate).toHaveBeenCalledTimes(2);
     const space = keyUpEvent("space");
@@ -165,11 +139,6 @@ describe("Button", () => {
   });
 
   it("reaches the action from a key and never the caller's press", () => {
-    // The measured split (`key-hold-lifecycle`, 17 checks on 0.11.0): a keyboard
-    // activation reaches `onActivate` alone — six key events ran no press — so a
-    // consumer wiring the React habit `onClick` has a control no keyboard can
-    // trigger. The page and `InteractionProps`' JSDoc state the split; this case
-    // is what fails if the implementation ever merges the two routes.
     const onActivate = vi.fn();
     const onClick = vi.fn();
     const element = resting({ onActivate, onClick });
@@ -189,8 +158,6 @@ describe("Button", () => {
   });
 
   it("publishes its plain text child as the name", () => {
-    // The bug: a div named by its text has no accessible name unless the
-    // wrapper writes it, so `<Button>Save</Button>` was announced unnamed.
     expect(
       expectSome(hostProp(resting({ children: "Save" }), "aria-label")),
     ).toBe("Save");
@@ -214,10 +181,6 @@ describe("Button", () => {
   });
 
   it("draws an outlined action's edge in the measured boundary role", () => {
-    // The bug: the outline variant painted `border`, the decorative role a
-    // divider uses — 1.16:1 on the light page against the design system's 3:1
-    // control-boundary claim. `borderStrong` is the role the boundary pairs
-    // measure on every strip a control sits on.
     Arr.forEach([lightTheme, darkTheme] as const, (theme) => {
       const element = renderButton(
         { variant: "outline", children: "Cancel" },
@@ -234,7 +197,7 @@ describe("Button", () => {
           ).toBeGreaterThanOrEqual(contrastFloors.boundary);
         },
       );
-      // The premise: the role it replaced cannot carry a control's shape.
+
       expect(
         contrastRatio(theme.colors.border, theme.colors.background) ?? Infinity,
       ).toBeLessThan(contrastFloors.boundary);
@@ -242,16 +205,6 @@ describe("Button", () => {
   });
 
   it("gives the secondary action an edge a row's wash cannot swallow", () => {
-    // The bug: `secondary` was fill-only. Its fill is designed against the four
-    // content strips a control rests on and passes there, but the documented
-    // place for an explicit action is a list row's trailing slot, where the row
-    // is wearing a wash — it measures under the 1.05:1 perceptibility floor in
-    // 36 of its 64 wash placements over the 16 styles, as low as 1.000:1 in the
-    // High contrast pair, Light · macOS and the Omarchy look's hovered fills. A
-    // tonal action there was
-    // a label with no button around it. The edge is the same measured
-    // `borderStrong` boundary the components package paints, held against the
-    // washes it can sit on as well as the strips the pair table already names.
     const styled: ReadonlyArray<readonly [string, Theme]> = [
       [lightTheme.name, lightTheme],
       [darkTheme.name, darkTheme],
@@ -293,10 +246,6 @@ describe("Button", () => {
       });
     });
 
-    // The premise: no fill the palette can carry answers the washes. `secondary`
-    // is under the perceptibility floor in 36 of its 64 wash placements, and a
-    // row's `accent` is one of them on each base theme, so "the fill is the
-    // whole button" cannot hold there.
     const swallowed = Arr.flatMap(styled, ([name, theme]) =>
       Arr.flatMap(washes, (wash) =>
         (contrastRatio(theme.colors.secondary, theme.colors[wash]) ??
@@ -314,12 +263,6 @@ describe("Button", () => {
   });
 
   it("paints a link in the derived brand text, not the fill role", () => {
-    // The bug: `link` painted `primary`, which is a *fill*: it carries
-    // `primaryForeground` and no contract reads it as text. On the base light
-    // theme it measures 4.30:1 on the `active` wash a pressed link tints behind
-    // itself, and 3.10:1 in macOS dark. `brandText` is the brand moved toward
-    // `foreground` until the least readable surface a link can sit on clears the
-    // text floor — and the brand itself where it already reads.
     const linkColour = (theme: typeof lightTheme): string =>
       expectSome(
         hostStyleString(
@@ -340,8 +283,6 @@ describe("Button", () => {
       });
     });
 
-    // The premise: where the shipped brand cannot carry a link's text, the fill
-    // role misses the floor on a surface the link tints.
     const lightUnderFloor = Arr.filter(
       brandTextSurfaces,
       (surface) =>
@@ -350,16 +291,11 @@ describe("Button", () => {
     );
     expect(lightUnderFloor.length).toBeGreaterThan(0);
     expect(linkColour(lightTheme)).not.toBe(lightTheme.colors.primary);
-    // ...and where it already reads, the derivation leaves the brand alone.
+
     expect(linkColour(darkTheme)).toBe(darkTheme.colors.primary);
   });
 
   it("paints every variant's label in the role the action route publishes", () => {
-    // The bug: a layer over an action (a busy loader, a chevron, an effect's
-    // wash) could only guess the label role, and a role from another fill is
-    // invisible — `secondaryForeground` on a `primary` fill is 1.42:1 in Windows
-    // dark. The route's `actionOnColor` and the painted label are held together
-    // here, so a second map cannot drift from the painter.
     Arr.forEach([lightTheme, darkTheme] as const, (theme) => {
       Arr.forEach(BUTTON_VARIANTS, (variant) => {
         const element = renderButton({ variant, children: "Save" }, theme, {
@@ -382,10 +318,6 @@ describe("Button", () => {
   });
 
   it("forwards a tooltip trigger's pointer pair and description", () => {
-    // Bug guarded: GPUix's `TooltipTrigger asChild` merges its handlers into
-    // the child element and the runtime delivers a hover only to the element
-    // that registered the listener, so an action could not open a tooltip on
-    // hover and the tip's `aria-description` was dropped at the component.
     const entered = vi.fn();
     const left = vi.fn();
     const element = resting({
@@ -405,9 +337,6 @@ describe("Button", () => {
   });
 
   it("squares its own corners inside an attached group", () => {
-    // The bug: an attached group only rounded and clipped the container, so two
-    // adjacent rounded fills left a notch at every seam and the page showed
-    // through — the buttons did not read as one control.
     const radius = (attached: boolean): unknown =>
       expectSome(
         hostStyleRecord(
@@ -421,7 +350,7 @@ describe("Button", () => {
       )["borderRadius"];
     expect(radius(false)).toBe(testTheme.radius.md);
     expect(radius(true)).toBe(0);
-    // The ends are the container's; a caller who wants one rounded says so.
+
     const rounded = expectSome(
       hostStyleRecord(
         renderButton(
@@ -436,13 +365,6 @@ describe("Button", () => {
   });
 
   it("hands a trigger's own element the host props it opens with", () => {
-    // Bug guarded (plan 160's measured Phase 1 STOP): six triggers pass a `ref`
-    // so the surface they open can be anchored, five pass `aria-expanded`,
-    // pagination passes `aria-selected` and the hover-opened surfaces pass the
-    // pointer pair — and none of them reached the element while `Button`
-    // accepted only its own fields, so the components package had to keep a
-    // second button implementation. The runtime's own host props now pass
-    // through, and the props the control owns are written after the spread.
     const ref = vi.fn();
     const layout = vi.fn();
     const element = resting({
@@ -470,9 +392,6 @@ describe("Button", () => {
   });
 
   it("says the busy state in the caller's words, in both channels", () => {
-    // Bug guarded: `loading` replaced the caller's help with the English word
-    // "Loading" in the description and the spinner's name, so a localised
-    // interface could not say what was happening to the action.
     const localised = resting({ loading: true, loadingLabel: "Chargement" });
     expect(expectSome(hostProp(localised, "aria-description"))).toBe(
       "Chargement",
@@ -485,9 +404,7 @@ describe("Button", () => {
         ),
       ),
     ).toBe("Chargement");
-    // A blank word is no word: the caller says the state somewhere else, so the
-    // action publishes no description and the spinner beside it is decoration
-    // rather than an unnamed status (`presentational.test.tsx` holds the rule).
+
     const silent = resting({ loading: true, loadingLabel: "" });
     expect(Option.isNone(hostProp(silent, "aria-description"))).toBe(true);
     const silentSpinner =
@@ -496,8 +413,6 @@ describe("Button", () => {
   });
 
   it("gives a busy button a spinner that reads on its fill", () => {
-    // The bug: a filled button rendered the default brand spinner on its own
-    // brand fill (1.00:1), so the busy indicator disappeared.
     const accentOf = (variant: ButtonVariant, disabled = false): unknown =>
       expectSome(
         elementProp(
@@ -516,9 +431,6 @@ describe("Button", () => {
   });
 
   it("hands the busy spinner the caller's reduced-motion preference", () => {
-    // The bug guarded: the button's busy state is a spinner, so a reader who
-    // asked not to see motion still got three dots advancing every 120 ms
-    // inside the action that was already reporting itself as busy.
     const preference = (reducedMotion: boolean): Option.Option<unknown> =>
       elementProp(
         elementChildren(resting({ loading: true, reducedMotion }))[0] ??
@@ -527,7 +439,7 @@ describe("Button", () => {
       );
     expect(preference(true)).toStrictEqual(Option.some(true));
     expect(preference(false)).toStrictEqual(Option.some(false));
-    // Omitted stays omitted, so the spinner's own default decides.
+
     const omitted = elementProp(
       elementChildren(resting({ loading: true }))[0] ??
         expect.fail("the busy button drew no spinner"),
@@ -537,9 +449,6 @@ describe("Button", () => {
   });
 
   it("moves a disabled busy button's spinner onto the neutral pair", () => {
-    // The bug: a disabled filled action paints `disabled` behind
-    // `disabledForeground`, but its spinner kept the action's on-colour — white
-    // dots on the light theme's neutral fill, which is a 1.0x:1 indicator.
     const accentOf = (variant: ButtonVariant): unknown =>
       expectSome(
         elementProp(
@@ -553,47 +462,26 @@ describe("Button", () => {
     Arr.forEach(["primary", "secondary", "destructive"] as const, (variant) => {
       expect(accentOf(variant), variant).toBe("on-disabled");
     });
-    // A disabled action with no fill keeps the page accent: it is not painted
-    // on the neutral pair, so there is no fill to read against.
+
     Arr.forEach(["outline", "ghost", "link"] as const, (variant) => {
       expect(accentOf(variant), variant).toBe("primary");
     });
   });
 
   it("keeps a disabled button out of the Tab order, and reachable from code", () => {
-    // The bug this guards: `loading` won the tab-stop condition, so a button
-    // that was disabled **and** busy (the `disabled={pending} loading={pending}`
-    // pair) stayed in the Tab order — while the disabled rule declares no ring,
-    // so Tab landed on a control with no cue that refuses every key.
-    //
-    // The stop it paints is `-1` rather than no stop at all: the runtime builds
-    // a `-1` element's focus handle with `tab_stop(false)`, so it is still out
-    // of the Tab order while a caller can focus it — the stop a trigger's focus
-    // target and a `ConfirmDialog`'s cancel target need. `packages/components`'
-    // stand-in always painted `-1` and three of its behaviour cases assert it.
     expect(hostProp(resting({ disabled: true }), "tabIndex")).toStrictEqual(
       Option.some(-1),
     );
     expect(
       hostProp(resting({ disabled: true, loading: true }), "tabIndex"),
     ).toStrictEqual(Option.some(-1));
-    // Loading alone still keeps its stop: the action is the reader's place.
+
     expect(hostProp(resting({ loading: true }), "tabIndex")).toStrictEqual(
       Option.some(0),
     );
   });
 
   it("lets the surface an action sits in name its Tab stop", () => {
-    // The bug this guards: the stop was hardcoded to `disabled ? -1 : 0`, so a
-    // surface that keeps its box painted for its exit tween could not take its
-    // own controls out of the Tab order: a dismissed overlay's action stayed a
-    // stop while the surface was a ghost, and a walk then left the window's
-    // focus on an element that unmounted with it. `packages/components`' fix
-    // spreads `presenceTabStop` into its own close controls, and it was inert
-    // until this prop existed.
-    //
-    // An explicit stop is the caller's word in both directions — the disabled
-    // default is the pair this rule documents, not a second policy over it.
     expect(hostProp(resting({}), "tabIndex")).toStrictEqual(Option.some(0));
     expect(hostProp(resting({ tabIndex: -1 }), "tabIndex")).toStrictEqual(
       Option.some(-1),
@@ -601,7 +489,7 @@ describe("Button", () => {
     expect(
       hostProp(resting({ disabled: true, tabIndex: 0 }), "tabIndex"),
     ).toStrictEqual(Option.some(0));
-    // A `-1` stop is not a disabled control: the action still runs.
+
     const acted = vi.fn();
     const leaving = resting({ tabIndex: -1, onActivate: acted });
     expect(hostProp(leaving, "tabIndex")).toStrictEqual(Option.some(-1));
@@ -610,8 +498,6 @@ describe("Button", () => {
   });
 
   it("declares the keyboard ring once, so focus does not repaint the chrome", () => {
-    // The bug: focus merged a shadow ring, so a mouse press looked like a Tab and
-    // the resting style changed when focus moved.
     const idle = expectSome(hostStyleRecord(resting({})));
     const focused = expectSome(
       hostStyleRecord(renderButton({}, testTheme, { focused: true })),
@@ -644,10 +530,6 @@ describe("Button", () => {
   });
 
   it("tells a style callback that a busy button is disabled, because it refuses activation", () => {
-    // The bug: the callback was handed the `disabled` prop alone, so a button
-    // that was busy but not disabled reported `disabled: false` while refusing
-    // every press and key — the one state a caller styles from was the state
-    // the control was not in.
     const seen: ButtonState[] = [];
     renderButton(
       {
@@ -677,11 +559,6 @@ describe("Button", () => {
   });
 
   it("paints a filled action's feedback as an opaque, derived fill", () => {
-    // The bug: the hover was a half-alpha lift (`bg-primary/90`), so the
-    // surface behind the control showed through — the same action read as two
-    // colours on a card and on a dialog — and a translucent fill cannot be
-    // measured for label contrast at all. The fill is derived from the theme
-    // instead: it moves toward the theme's foreground and stays opaque.
     const filled = [
       ["primary", "primary"],
       ["secondary", "secondary"],
@@ -699,12 +576,11 @@ describe("Button", () => {
         expect(expectSome(hostStyle(element, "active"))).toEqual({
           backgroundColor: filledPressed(theme, action),
         });
-        // The fill is opaque, so it measures against every surface it sits on.
+
         expect(
           contrastRatio(filledHover(theme, action), theme.colors.background),
         ).toBeDefined();
-        // And the label keeps the text floor on it, which is the reason the
-        // fill is derived rather than lifted.
+
         const label = theme.colors[`${action}Foreground`];
         Arr.forEach(
           [filledHover(theme, action), filledPressed(theme, action)],
@@ -719,11 +595,6 @@ describe("Button", () => {
   });
 
   it("paints a disabled filled action with the measured pair, not a fade", () => {
-    // The bug: a disabled filled action faded itself. A fade composites the
-    // label into whatever sits behind the control, so on the card of the four
-    // light platform/look styles it lands at 1.47:1–1.49:1 — under the disabled
-    // floor — while the neutral pair (`disabledAction`) is the pair
-    // `contrastPairs` measures on every surface a control sits on.
     const cards = [
       ["macOS light", platformTheme(themes.light, "darwin")],
       ["Linux light", platformTheme(themes.light, "linux")],
@@ -732,8 +603,6 @@ describe("Button", () => {
     ] as const;
 
     Arr.forEach(cards, ([name, theme]) => {
-      // The fade's composite: the control shows half its fill over the card,
-      // and the label fades the same way over that faded fill.
       const fadedFill = blend(
         theme.colors.primary,
         theme.colors.card,
@@ -744,8 +613,7 @@ describe("Button", () => {
         fadedFill,
         1 - disabledOpacity,
       );
-      // The premise: the fade is under the floor on the card, which is where a
-      // dialog's action lives. A palette that fixes it makes this case fail.
+
       expect(contrastRatio(fadedLabel, fadedFill), name).toBeLessThan(
         contrastFloors.disabled,
       );
@@ -772,17 +640,16 @@ describe("Button", () => {
           pair.backgroundColor,
         );
         expect(expectSome(hostStyleString(element, "color"))).toBe(pair.color);
-        // No fade is left on top of the opaque pair.
+
         expect(hostStyle(element, "opacity")).toStrictEqual(Option.none());
-        // And the pointer states are paint-stable: a disabled action does not
-        // change colour under the pointer.
+
         expect(expectSome(hostStyle(element, "hover"))).toEqual({
           backgroundColor: pair.backgroundColor,
         });
         expect(expectSome(hostStyle(element, "active"))).toEqual({
           backgroundColor: pair.backgroundColor,
         });
-        // The pair reads on every surface a disabled action can sit on.
+
         Arr.forEach(surfaces, (surface) => {
           expect(
             contrastRatio(pair.color, theme.colors[surface]) ?? 0,
@@ -793,12 +660,10 @@ describe("Button", () => {
   });
 
   it("keeps the fade on a disabled action with no fill to collapse", () => {
-    // `outline`, `ghost` and `link` paint no fill of their own, so the neutral
-    // pair would turn each into a grey box instead of the action it is.
     Arr.forEach(["outline", "ghost", "link"] as const, (variant) => {
       const element = resting({ variant, disabled: true, children: "Cancel" });
       expect(expectSome(hostStyle(element, "opacity"))).toBe(0.5);
-      // The label keeps its resting role; the fade is the whole state.
+
       expect(expectSome(hostStyleString(element, "color"))).toBe(
         buttonVariants[variant].foreground(testTheme),
       );
@@ -806,10 +671,6 @@ describe("Button", () => {
   });
 
   it("keeps a filled action's label while Tab is elsewhere", () => {
-    // The bug: the runtime dims every other focusable element to 40% while one
-    // control has keyboard focus, which on a filled action composites the label
-    // into its own fill. The pair is held to 4.5:1 at rest; dimmed it lands
-    // between 1.3:1 and 3.2:1, so the label has to stay at full opacity.
     const filled = [
       ["primary", "primary", "primaryForeground"],
       ["secondary", "secondary", "secondaryForeground"],

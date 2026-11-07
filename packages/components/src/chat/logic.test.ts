@@ -1,13 +1,3 @@
-/**
- * The conversation state machine, with no renderer.
- *
- * The bugs these guard: a second Enter during a reply sending a second message;
- * a Stop that arrives as a submit; a Stop on an idle conversation doing
- * anything; a token starting a conversation nobody asked for; and a failed
- * reply that cannot be retried. Every command is checked from every state, so a
- * permissive branch cannot pass by accident.
- */
-
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
 import {
@@ -26,7 +16,6 @@ const statuses: ReadonlyArray<ChatStatus> = [
   "error",
 ];
 
-/** The status a command reaches, and the intent it emits (or none). */
 const move = (
   status: ChatStatus,
   command: ChatCommand,
@@ -58,7 +47,6 @@ describe("submit", () => {
   });
 
   it("refuses a second submit while a reply is open", () => {
-    // The guard: a held or repeated Enter must not queue two sends.
     expect(move("submitting", "submit")).toEqual(["submitting", "none"]);
     expect(move("streaming", "submit")).toEqual(["streaming", "none"]);
   });

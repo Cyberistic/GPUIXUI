@@ -1,14 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Slang, the calculator app: one native window holding the fx-991ES Plus as the device
- * is — body, LCD and keypad — beside a panel (history, the mode's editor, the
- * catalogue) that folds away, and the ⌘K palette over every model command.
- *
- * The app is a composition of the library, not a second design system. Every
- * colour comes from `@gpuixui/tokens` except the LCD's physical ink; every
- * interaction goes through the engine's session (or the palette's actions).
- */
-
 import {
   calculatorKeyOf,
   defaultModel,
@@ -55,13 +45,11 @@ import { Keypad } from "./keypad.js";
 import { SetupSheet } from "./setup-sheet.js";
 import { device } from "./theme.js";
 
-/** The app's mark: `media/logo.svg`, rendered at 128 px. */
 const LOGO = fileURLToPath(new URL("./logo.png", import.meta.url));
 
 const model = defaultModel;
 
 export interface CalculatorAppProps {
-  /** Start in the dark appearance. Defaults to light. */
   readonly initialDark?: boolean;
 }
 
@@ -100,7 +88,7 @@ export const CalculatorApp = ({ initialDark = false }: CalculatorAppProps) => {
           setPanelOpen(true);
         },
       }),
-    // `run` is stable for the store; the callbacks only close over setters.
+
     [run],
   );
   const actions = useMemo(
@@ -437,7 +425,6 @@ export const CalculatorApp = ({ initialDark = false }: CalculatorAppProps) => {
   );
 };
 
-/** The model line and the solar panel above the LCD. */
 const DeviceHeader = ({
   u,
   theme,

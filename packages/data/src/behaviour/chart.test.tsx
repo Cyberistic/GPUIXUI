@@ -1,26 +1,3 @@
-/**
- * Charts in the real GPUix renderer, mounted through the shipped example.
- *
- * The bugs these guard are the ones a chart drawn as `<svg>` masks ships with:
- *
- * - every series painted in one colour, because the masks were stacked into one
- *   element instead of one element per series;
- * - a legend that names colours the plot does not paint;
- * - a layer that does not cover the plot, so a mark is clipped or offset;
- * - a zero value painting a slice (a layer that claims a value the data does
- *   not have);
- * - an axis that prints raw maxima instead of its ticks;
- * - an axis whose numbers descend down the page (its floor at the top), so a
- *   reader takes the bar's top for the smallest value;
- * - a stacked bar's axis measured over the widest series rather than the
- *   totals, so every stack claims a value the axis does not name;
- * - a scale measured over values that draw nowhere, so a stray value past the
- *   last label flattens every painted bar;
- * - a category label wider than its slot painting over the label beside it, so
- *   two neighbouring readings were unreadable;
- * - a sparkline drawn from a different colour than the chart's first series.
- */
-
 import { afterEach, describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -50,7 +27,6 @@ import {
 
 let root: DataTestRoot | undefined;
 
-/** Mount the example; `afterEach` tears it down even when an assertion fails. */
 const mount = (): DataTestRoot => {
   root = renderData(<ChartExample />);
   settle(root);
@@ -59,7 +35,6 @@ const mount = (): DataTestRoot => {
 
 const palette = seriesColors(darkTheme);
 
-/** One swatch of the scale, failing the case when the theme has fewer. */
 const colourAt = (index: number): string => {
   const colour = palette[index];
   if (colour === undefined) {
@@ -68,15 +43,6 @@ const colourAt = (index: number): string => {
   return colour;
 };
 
-/**
- * The top edge of a series' marks, in plot pixels.
- *
- * A chart's geometry lives in the document it paints, so a claim about where a
- * mark lands has to be read from the markup rather than from the layer's own
- * box (which covers the whole plot). The document carries the grid and every
- * series, so the marks counted are the ones in the **series' own colour** —
- * the one thing that tells its bars from the grid's rules.
- */
 const topOfLayer = (
   root: DataTestRoot,
   testId: string,
@@ -101,12 +67,6 @@ const topOfLayer = (
   return top;
 };
 
-/**
- * The shapes a series painted, in the document's own order.
- *
- * The document carries the grid and every series, so a suite that counts a
- * series' shapes counts the ones in the **series' own colour**.
- */
 const shapesOf = (
   root: DataTestRoot,
   testId: string,
@@ -128,8 +88,7 @@ describe("the charts", () => {
 
     expect(revenue.color).toBe(colourAt(0));
     expect(cost.color).toBe(colourAt(1));
-    // The two series are different masks: one element painting both would show
-    // a single colour and one image in the accessibility tree.
+
     expect(revenue.color).not.toBe(cost.color);
   });
 
@@ -161,7 +120,6 @@ describe("the charts", () => {
   it("labels every category and divides the axis into ticks", () => {
     const root = mount();
 
-    // The example's largest value is 60, so the scale reads to 100.
     expect(paintedText(root)).toContain("Q1");
     expect(paintedText(root)).toContain("Q4");
     expect(root.renderer.findByTestId("chart-bars-tick-0")).toBeDefined();
@@ -176,18 +134,11 @@ describe("the charts", () => {
     const ceiling = requireBounds(root, "chart-bars-tick-100");
     const plot = requireBounds(root, "chart-bars-plot");
 
-    // A column reads top to bottom, so the scale's ceiling is the topmost
-    // label and its floor sits on the plot's floor — the same edge the bars
-    // stand on. Ascending order paints the axis upside down: every bar's top
-    // is then read against a value below it.
     expect(ceiling.y).toBeLessThan(floor.y);
     expect(floor.y - ceiling.y).toBeGreaterThan(plot.height / 2);
   });
 
   it("labels a small scale with the precision its ticks need", () => {
-    // A chart of rates over 0.005 used to print 0, 0, 0, 0, 0.01: a fixed two
-    // decimals rounded the axis away, so the bars had no number to be read
-    // against. The labels take their precision from the step between them.
     root = renderData(
       <BarChart
         aria-label="Fractional rates"
@@ -212,17 +163,13 @@ describe("the charts", () => {
   it("paints one slice per datum and no slice for a value of zero", () => {
     const root = mount();
 
-    // A datum keeps its image even when it draws nothing — its value is the
-    // reading — so only the geometry is skipped: the zero source paints an
-    // empty mask rather than a slice.
     const slices = ["direct", "social", "referral"] as const;
     Arr.forEach(slices, (key) => {
       expect(
         root.renderer.findByTestId(`chart-donut-layer-${key}`),
       ).toBeDefined();
     });
-    // The slices paint in the palette's own colours, so a slice's marks are
-    // the ones in its colour. The zero datum paints none, so it has none.
+
     const sourceOf = (key: string, colour: string): string =>
       seriesMarkupOf(root, "chart-donut", key, colour);
     expect(sourceOf("direct", colourAt(0))).toContain("<path");
@@ -239,10 +186,6 @@ describe("the charts", () => {
   });
 
   it("draws a sparkline whose stored colour is blank in the first series colour", () => {
-    // Bug guarded: `color` is a stored preference as often as a literal, and
-    // `color ?? swatch` only covers an **absent** prop — a saved `""` (or a
-    // whitespace run) reached `style.color`, the runtime dropped it, and the
-    // line painted no tint at all while its description still read the values.
     root = renderData(
       <div>
         <Sparkline testId="blank-spark" values={[4, 8, 6]} color="" />
@@ -272,9 +215,6 @@ describe("the charts", () => {
   });
 
   it("labels a stack's axis with the totals its bars are drawn against", () => {
-    // The example's two series happen to share a ceiling (60 -> 100 for the
-    // widest value, 84 -> 100 for the totals), so a mount of it cannot see the
-    // bug this guards. Two series that each fill the plot do.
     root = renderData(
       <StackedBar
         aria-label="Two halves of one total"
@@ -290,21 +230,14 @@ describe("the charts", () => {
     );
     settle(root);
 
-    // The stack is 120 tall, so the axis must reach 200 rather than the 100 the
-    // widest single series would round to — its ticks are 0, 50, 100, 150, 200,
-    // not the 0, 25, 50, 75, 100 the per-series ceiling would print.
     expect(root.renderer.findByTestId("chart-totals-tick-200")).toBeDefined();
     expect(root.renderer.findByTestId("chart-totals-tick-150")).toBeDefined();
     expect(root.renderer.findByTestId("chart-totals-tick-25")).toBeUndefined();
-    // …and the top of the stack lands where that axis says it does: 120 of 200
-    // leaves the stack 40px down from the plot's ceiling.
+
     expect(topOfLayer(root, "chart-totals", "b", colourAt(1))).toBe(40);
   });
 
   it("paints no bar in a column the labels do not name", () => {
-    // A series longer than its labels used to paint a bar over a category that
-    // does not exist — past the plot's right edge, and against an axis that
-    // never names it. One label means one column; the 500 draws nowhere.
     root = renderData(
       <BarChart
         aria-label="A series past its labels"
@@ -317,23 +250,16 @@ describe("the charts", () => {
     );
     settle(root);
 
-    // The document carries the grid's rules too, so the bar is counted by the
-    // colour the series paints in.
     expect(
       shapesOf(root, "chart-past-labels", "revenue", colourAt(0)),
     ).toHaveLength(1);
-    // The discarded 500 draws nowhere, so it cannot raise the axis either: the
-    // scale is the labelled 5, and its bar stands the whole plot at y = 0. A
-    // scale that still read the tail would paint the same bar one pixel tall
-    // under a 500 ceiling, which reads as a value of almost nothing.
+
     expect(topOfLayer(root, "chart-past-labels", "revenue", colourAt(0))).toBe(
       0,
     );
   });
 
   it("measures the axis over the slots the labels name", () => {
-    // A series ten times longer than its labels: only the first two values are
-    // painted, so a 999 tail that draws nowhere must not flatten them.
     root = renderData(
       <BarChart
         aria-label="A ragged series"
@@ -346,26 +272,19 @@ describe("the charts", () => {
     );
     settle(root);
 
-    // The painted maximum is 6, whose ceiling is 10 — not the 1000 the stray
-    // value would round to.
     expect(
       root.renderer.findByTestId("chart-ragged-bars-tick-10"),
     ).toBeDefined();
     expect(
       root.renderer.findByTestId("chart-ragged-bars-tick-1000"),
     ).toBeUndefined();
-    // The 6 of a 10 ceiling leaves the bar 40px down the plot.
+
     expect(topOfLayer(root, "chart-ragged-bars", "revenue", colourAt(0))).toBe(
       40,
     );
   });
 
   it("lays out the default plot when a computed size cannot paint", () => {
-    // A size is often computed — a share of a pane, a measurement taken before
-    // the first layout. `Math.max(1, NaN)` is `NaN`, so the unreadable side
-    // reached the viewBox, the axis and every label's slot width: the plot
-    // collapsed to 0×0 and the labels lost their tracks while the chart kept
-    // its name.
     root = renderData(
       <BarChart
         aria-label="Revenue by quarter"
@@ -384,12 +303,9 @@ describe("the charts", () => {
 
     const source = chartMarkupOf(root, "chart-unreadable-layer-revenue");
     expect(source).toContain('viewBox="0 0 320 160"');
-    // The labels keep their slots: 320 / two categories.
+
     expect(requireBounds(root, "chart-unreadable-label-0").width).toBe(160);
-    // The axis column is laid out from the same box as the plot. It used to
-    // take the caller's raw `height`, so a computed infinity made the plot
-    // 160px tall and its tick column infinite — the numbers a reader compares
-    // a bar against were spread over a box the plot does not have.
+
     expect(requireStyle(root, "chart-unreadable-axis").height).toBe(
       plot.height,
     );
@@ -399,9 +315,6 @@ describe("the charts", () => {
   });
 
   it("labels an axis measured in thousands", () => {
-    // A chart of revenue in the thousands has a tick step of 1250: the label's
-    // precision came out at `-1`, and `toFixed(-1)` throws `RangeError`, so
-    // mounting the chart crashed the renderer. The axis prints whole numbers.
     root = renderData(
       <BarChart
         aria-label="Revenue in thousands"
@@ -414,7 +327,6 @@ describe("the charts", () => {
     );
     settle(root);
 
-    // The scale is the 5000 the widest value rounds to, in four 1250 steps.
     expect(
       root.renderer.findByTestId("chart-thousands-tick-5000"),
     ).toBeDefined();
@@ -427,12 +339,6 @@ describe("the charts", () => {
   });
 
   it("clips a category label to the slot it is given", () => {
-    // A slot is the plot's width divided by the number of labels, so the words
-    // a caller hands over are often wider than the box they sit in. Nothing
-    // bounded the run: the label painted over the category beside it, so two
-    // neighbouring readings were unreadable — and the inventory row's claim
-    // that such a label is clipped was false. The label's own box is its slot
-    // now, on one line, and the slot clips whatever still runs past it.
     root = renderData(
       <BarChart
         aria-label="Long category names"
@@ -445,14 +351,11 @@ describe("the charts", () => {
     );
     settle(root);
 
-    // Four labels over a 200px plot: 50px each, side by side.
     const slot = requireBounds(root, "chart-clipped-labels-label-0");
     const next = requireBounds(root, "chart-clipped-labels-label-1");
     expect(slot.width).toBe(50);
     expect(next.x).toBe(slot.x + slot.width);
 
-    // The label's box is the slot — a word longer than it has an edge to stop
-    // at instead of painting into its neighbour.
     const text = root.renderer.findByTestId("chart-clipped-labels-label-0");
     if (text === null || text === undefined) {
       throw new Error("behaviour: no first category slot");
@@ -463,20 +366,15 @@ describe("the charts", () => {
     }
     const label = root.renderer.getElementBounds(labelId);
     expect(label).toMatchObject({ x: slot.x, width: slot.width });
-    // …and the slot is told to clip, because the runtime clips a box only when
-    // the box says so (the rule the sidebar and the half-star glyph follow).
+
     expect(requireStyle(root, "chart-clipped-labels-label-0").overflow).toBe(
       "hidden",
     );
-    // The word still paints: the clip is a boundary, not an omission.
+
     expect(paintedText(root)).toContain("September");
   });
 
   it("puts a line's points over the labels it draws under", () => {
-    // The labels (and the bars) are centred in `width / labels.length` slots,
-    // so a path spaced edge to edge stood its first and last points half a slot
-    // off and a two-value series under four labels stretched across the whole
-    // plot. Two of four 50px slots put the points at x = 25 and 75.
     root = renderData(
       <LineChart
         aria-label="Churn"
@@ -490,16 +388,12 @@ describe("the charts", () => {
     settle(root);
 
     const source = chartMarkupOf(root, "chart-ragged-line-layer-churn");
-    // The scale is the widest value (20), so y = 50 and 0.
+
     expect(source).toContain("M25 50L75 0");
     expect(source).not.toContain("M0");
   });
 
   it("paints the series a config and a data make, in the config's colours", () => {
-    // The config is shadcn's: a keyed table of label and colour, decoupled
-    // from the data. A chart that names one and a table of rows paints the
-    // series the two make — so one table can be shared by several charts and
-    // a theme can own the colours.
     root = renderData(
       <BarChart
         aria-label="Visitors"
@@ -518,14 +412,13 @@ describe("the charts", () => {
     );
     settle(root);
 
-    // The two series the config names, each in its own colour.
     expect(requireStyle(root, "chart-configured-layer-desktop").color).toBe(
       "#2563eb",
     );
     expect(requireStyle(root, "chart-configured-layer-mobile").color).toBe(
       "#60a5fa",
     );
-    // The categories the data names, and the legend's own rows.
+
     expect(paintedText(root)).toContain("January");
     expect(paintedText(root)).toContain("February");
     expect(
@@ -535,8 +428,6 @@ describe("the charts", () => {
   });
 
   it("keeps the caller's own series when no config is named", () => {
-    // The config is an addition, not a replacement: a chart that names none
-    // keeps the series it was given.
     root = renderData(
       <BarChart
         aria-label="Revenue"

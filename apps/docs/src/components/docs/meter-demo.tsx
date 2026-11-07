@@ -1,11 +1,3 @@
-/**
- * Browser preview for the Meter page.
- *
- * A meter reports where a measurement sits in a known range — not task
- * progress. The preview draws the four tones at different fills. The Code tab
- * shows the native usage.
- */
-
 const meters = [
   { tone: "primary", value: 68, label: "Disk usage" },
   { tone: "success", value: 40, label: "Storage" },

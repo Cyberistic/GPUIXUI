@@ -1,128 +1,49 @@
-/**
- * Keyframes with normalized offsets, a stagger helper, and a small keyed
- * sequence driver.
- *
- * The keyframe sampling follows `gpui-ce-motion`'s `Animation` segment model
- * (the upper keyframe's easing shapes the segment ending there); the sequence
- * driver follows open-gpui `crates/motion/src/sequence.rs` (Apache-2.0).
- *
- * The values a caller builds a timeline from are repaired before they reach the
- * formulas: a frame whose offset or value cannot be read is not a stop, a step
- * whose timing cannot be read is placed at the start with no duration, a step
- * that cannot be read is no wait, a stagger direction the package does not name
- * is the house start, and a curve that cannot read the frame it is handed — or
- * cannot be called at all — falls back to the linear progress (`eased` in
- * `progress.ts`). A `NaN` anywhere used to paint a frame the runtime draws as
- * nothing and leave `Sequence.complete` false forever. The sequence's own end
- * follows the same rule: a step whose duration it cannot run ends at its start,
- * and a step whose end the arithmetic cannot represent is no duration either, so
- * the end is never before a step the sequence still has to run and is always a
- * number a clock can reach.
- */
-
 import { linear, type Easing } from "./easing.js";
 import { clamp01, eased, mix } from "./progress.js";
 
-/** A number a formula can read, or the fallback it stands for. */
 const finiteOr = (value: number, fallback: number): number =>
   Number.isFinite(value) ? value : fallback;
 
-/**
- * A duration a step can run.
- *
- * A duration the step cannot run — one that is not a number, or one that is
- * not positive — is no duration at all. The step's own sample already read it
- * that way (a step with no duration is done at its start), so the sequence's
- * end time has to agree: a negative duration used to be added to the step's
- * start, landing the sequence's end *before* a step it still had to run.
- */
 const durationOf = (durationMs: number): number =>
   Number.isFinite(durationMs) && durationMs > 0 ? durationMs : 0;
 
-/**
- * The duration a step can run from `startMs`.
- *
- * The sequence's end is read from each step's start **plus** its duration, and
- * two readable numbers can add to an `Infinity` no clock reaches: a step placed
- * at `1e308` running for `1e308` answered `duration()` `Infinity`, so
- * `complete()` never returned true — a driver sampled it for the life of the
- * tree, the class the `NaN` clock and the negative duration above already close
- * — and `append` placed the next step at that end, which `at` repaired from an
- * infinity to `0`: the appended step landed before every step it was meant to
- * follow. A duration the start cannot move off is the same failure in miniature:
- * `1e308 + 5` rounds back to `1e308`, so the step's own sample was still active
- * at the moment `complete` called the sequence ended. An end the arithmetic
- * cannot represent is therefore no duration at all, so the step completes at its
- * start and the two entry points agree on a number the clock can reach.
- */
 const endOf = (startMs: number, durationMs: number): number => {
   const duration = durationOf(durationMs);
   const end = startMs + duration;
   return Number.isFinite(end) && end > startMs ? duration : 0;
 };
 
-/**
- * A step's place: the group's start plus a wait it can sit out.
- *
- * A wait the sum cannot represent is no wait, which is the rule
- * {@link staggerDelay} applies to the product it computes: the member sits at
- * the group's start, where a repaired-to-`0` start would put it before the
- * sequence does.
- */
 const placedAt = (startMs: number, waitMs: number): number => {
   const placed = startMs + waitMs;
   return Number.isFinite(placed) ? placed : startMs;
 };
 
-/** One timed target at a normalized offset in `[0, 1]`. */
 export interface Keyframe {
   readonly at: number;
   readonly value: number;
   readonly easing?: Easing;
 }
 
-/** Builds a keyframe at a normalized offset. */
 export const keyframe = (
   at: number,
   value: number,
   easing?: Easing,
 ): Keyframe => ({ at, value, easing });
 
-/** Whether a value is a frame the sampler can stop on. */
 const isFrame = (frame: Keyframe | null | undefined): frame is Keyframe =>
   typeof frame === "object" &&
   frame !== null &&
   Number.isFinite(frame.at) &&
   Number.isFinite(frame.value);
 
-/**
- * The frames a sample can stop on, in the order it was given.
- *
- * A timeline is a config as often as a literal: a stored one whose list never
- * decoded arrives with **no list at all** — JSON has no `undefined`, so the field
- * reads back as `null` — and a list a caller assembled can carry an entry that is
- * not a frame. Reading `.filter`/`.at` off either threw `TypeError` out of the
- * render that sampled the progress. A list the caller does not have is a set with
- * no stops (the answer this module already gives one), and an entry that is not a
- * frame is dropped like an offset or value that cannot be read.
- */
 const stopsOf = (
   frames: readonly (Keyframe | null | undefined)[] | null | undefined,
 ): ReadonlyArray<Keyframe> =>
   Array.isArray(frames) ? frames.filter(isFrame) : [];
 
-/** The stop the set starts at: the least offset, the first declared at it. */
 const firstStop = (stops: ReadonlyArray<Keyframe>): Keyframe =>
   stops.reduce((first, frame) => (frame.at < first.at ? frame : first));
 
-/**
- * The stop in effect at `progress`: the last frame declared at the greatest
- * offset at or below it.
- *
- * The later declaration wins among frames sharing an offset because that is how
- * a keyframe format reads a repeated stop — an instant jump at it — and the
- * sample below lands on this frame's value exactly at the offset.
- */
 const lowerStop = (
   stops: ReadonlyArray<Keyframe>,
   progress: number,
@@ -137,7 +58,6 @@ const lowerStop = (
     undefined,
   );
 
-/** The stop the segment ends at: the first frame declared above `progress`. */
 const upperStop = (
   stops: ReadonlyArray<Keyframe>,
   progress: number,
@@ -150,27 +70,6 @@ const upperStop = (
     undefined,
   );
 
-/**
- * Samples a set of keyframes at unit progress, interpolating between the stops
- * around it and applying the upper stop's easing.
- *
- * The frames are read as a **set of stops**, not as the order they were
- * declared: a caller who builds them from a map or a decoded config hands them
- * over in whatever order the source iterates, and reading the first and last
- * entries as the ends made one frame declared first answer for every progress
- * below its offset — a step function instead of the journey the frames describe.
- * Two frames at one offset are an instant jump, the way a keyframe format reads
- * them: from that offset on the value declared last at it is in effect.
- *
- * A progress that is not a number reads as `0`, a frame whose offset or value
- * cannot be read is dropped rather than becoming the segment's endpoint — an
- * unreadable stop would make every value between it and its neighbour `NaN`,
- * which the runtime paints as nothing — and a curve that cannot read the segment
- * falls back to its linear progress. The set itself is read the same way: a list
- * a caller does not have, or an entry in it that is not a frame, is no stop
- * ({@link stopsOf}), so a config that did not decode paints `0` rather than
- * throwing out of the render.
- */
 export const sampleKeyframes = (
   frames: readonly (Keyframe | null | undefined)[] | null | undefined,
   progress: number,
@@ -188,32 +87,11 @@ export const sampleKeyframes = (
   return mix(lo.value, hi.value, eased(easing, local));
 };
 
-/** Where a stagger group starts. */
 export type StaggerFrom = "start" | "end" | "center";
 
-/**
- * The direction a group starts from.
- *
- * `from` may be a persisted choice a caller reads back, so a name the package
- * does not carry takes the house default (`start`). The distance arithmetic used
- * to end in a `center` arm, so an unreadable direction silently staggered a
- * group from its middle.
- */
 const staggerFromOf = (from: StaggerFrom): StaggerFrom =>
   from === "start" || from === "end" || from === "center" ? from : "start";
 
-/**
- * The delay (ms) the `index`-th of `count` children waits under `from`.
- *
- * A step that is not a wait is no wait: a non-finite one is unreadable and a
- * negative one is no delay at all, and a step times a distance the arithmetic
- * cannot represent is no wait either. The same holds for the `index` and
- * `count` a caller passes — a position or a length it could not compute is no
- * wait rather than a `NaN`/infinite delay reached the runtime. This is the one
- * rule both stagger entry points share — the standalone {@link stagger} and the
- * {@link Sequence}'s own group — so a caller cannot get two answers for the same
- * input.
- */
 const staggerDelay = (
   stepMs: number,
   index: number,
@@ -234,15 +112,6 @@ const staggerDelay = (
   return Number.isFinite(delay) ? delay : 0;
 };
 
-/**
- * The delay (ms) for the `index`-th of `count` children under `from`. Returns
- * `0` for an out-of-range index or empty group, and for a step that is not a
- * wait: a non-finite one is unreadable, a negative one is no delay at all, and
- * a step times a distance the arithmetic cannot represent is no wait either. An
- * `index` or `count` that cannot be read is no wait too, so a caller's failed
- * measurement never reaches the runtime as a `NaN` or infinite delay. A `from`
- * the package does not name is the house default (`"start"`), not the centre.
- */
 export const stagger = (
   stepMs: number,
   index: number,
@@ -250,14 +119,12 @@ export const stagger = (
   from: StaggerFrom = "start",
 ): number => staggerDelay(stepMs, index, count, from);
 
-/** Per-step sample state. */
 export type SequenceStepState = "pending" | "active" | "completed";
 
-/** A sampled keyed step of a sequence. */
 export interface SequenceStepSample<K> {
   readonly key: K;
   readonly state: SequenceStepState;
-  /** Eased progress `0..1`. */
+
   readonly value: number;
 }
 
@@ -268,50 +135,15 @@ interface Step<K> {
   readonly easing: Easing;
 }
 
-/**
- * The elapsed time a sequence reads from a clock.
- *
- * A clock before the sequence starts (`NaN`, a negative number, `-Infinity`) is
- * the start of the run, which is how every other sampler reads one. `sample` and
- * `complete` share this read, so the two entry points cannot disagree about the
- * same clock: a sequence with nothing left to run used to answer `complete(-5)`
- * false while `sample(-5)` painted every step completed.
- */
 const clockOf = (elapsedMs: number): number =>
   Number.isNaN(elapsedMs) ? 0 : Math.max(elapsedMs, 0);
 
-/**
- * The keys a group places: only a real list is a list.
- *
- * A group's keys are caller data as often as a literal — a workspace rebuilding
- * a saved animation hands over the list it decoded, and a config that did not
- * decode carries no list at all (JSON keeps `null` for a key it never wrote).
- * Reading `.length`/`.forEach` off it threw `TypeError` out of the render that
- * built the sequence; a value that is not a list places no step, the answer an
- * empty group already gives.
- */
 const keysOf = <K>(keys: readonly K[] | null | undefined): ReadonlyArray<K> =>
   Array.isArray(keys) ? keys : [];
 
-/**
- * A deterministic keyed sequence of tween steps. Steps are positioned in
- * absolute elapsed time and sampled by a single `elapsedMs`; the caller owns
- * the clock, exactly like the hooks own `performance.now()`.
- */
 export class Sequence<K> {
   private readonly steps: Step<K>[] = [];
 
-  /**
-   * Appends a step at an absolute start time.
-   *
-   * A start that cannot be read is repaired to `0`: a `NaN` start used to leave
-   * the step permanently active at `NaN` and a `NaN` duration made
-   * `duration()`/`complete()` `NaN`, so a driver loop never stopped. A duration
-   * the step cannot run is no duration at all, and neither is one whose **end**
-   * the arithmetic cannot represent ({@link endOf}), so the sequence's end is
-   * never before a step it still has to run and is always a number a clock can
-   * reach.
-   */
   at(
     key: K,
     startMs: number,
@@ -328,27 +160,10 @@ export class Sequence<K> {
     return this;
   }
 
-  /** Appends a step after the current end time. */
   append(key: K, durationMs: number, easing: Easing = linear): this {
     return this.at(key, this.duration(), durationMs, easing);
   }
 
-  /**
-   * Inserts `keys` as steps with a fixed stagger from `startMs`.
-   *
-   * The group is placed with the package's own stagger rule, so an unusable
-   * step is no wait — every member sits at the group's start — and no member
-   * starts before the sequence does. A step used to be placed at
-   * `startMs + stepMs * index` directly, which put a member *before* the
-   * group for a negative step (already running when the sequence began) and
-   * collapsed the whole group to the start of the clock for an unreadable one.
-   * An offset the sum cannot represent is no wait either ({@link placedAt}), so
-   * a member never lands at `0` before the group it belongs to.
-   *
-   * A list the caller does not have places no step ({@link keysOf}), so a saved
-   * animation that decoded without its layers builds no group instead of
-   * throwing out of the render that built the sequence.
-   */
   stagger(
     keys: readonly K[] | null | undefined,
     startMs: number,
@@ -370,13 +185,6 @@ export class Sequence<K> {
     return this;
   }
 
-  /**
-   * The sequence end time — always a number a clock can reach.
-   *
-   * `at` repairs each step's duration so its end is representable
-   * ({@link endOf}), which is what keeps this sum finite: an end of `Infinity`
-   * made `complete` false forever and `append` land at the sequence's start.
-   */
   duration(): number {
     return this.steps.reduce(
       (max, step) => Math.max(max, step.startMs + step.durationMs),
@@ -384,7 +192,6 @@ export class Sequence<K> {
     );
   }
 
-  /** Samples every step at sequence elapsed time. A clock before the sequence is its start. */
   sample(elapsedMs: number): readonly SequenceStepSample<K>[] {
     const elapsed = clockOf(elapsedMs);
     return this.steps.map((step) => {
@@ -402,7 +209,6 @@ export class Sequence<K> {
     });
   }
 
-  /** Whether every step has completed at sequence elapsed time. */
   complete(elapsedMs: number): boolean {
     return clockOf(elapsedMs) >= this.duration();
   }

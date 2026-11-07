@@ -1,22 +1,3 @@
-/**
- * `ThemeProvider` — the three decisions it makes.
- *
- * The bugs behind these: a provider that quietly invents a palette, one whose
- * density override reaches a colour, and one that owns a **second** theme
- * context. The first is guarded by the error naming the provider (there is no
- * default theme by design — a silent one is how two design systems end up in
- * one app). The second is guarded by the override returning the theme *itself*
- * when there is nothing to change, so a re-render can never silently clone or
- * re-tint a palette. The third is guarded by the provider writing
- * `@gpuixui/tokens/react`'s context — the one `@gpuixui/components` reads — so
- * a tree that mixes the two packages wraps once and cannot paint two palettes.
- *
- * `node:fs` is a test-time repository read, the same boundary
- * `core/theme.test.ts` uses to hold the package's other single-source rules: a
- * one-shot read of the package's own source at test time, never runtime domain
- * code.
- */
-
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -39,7 +20,6 @@ const compact: Density = {
   rowHeight: 28,
 };
 
-/** The package's `src/` directory: this file lives one level below it. */
 const sourceRoot = fileURLToPath(new URL("../", import.meta.url));
 
 const isSource = (name: string): boolean =>
@@ -47,12 +27,6 @@ const isSource = (name: string): boolean =>
   !name.endsWith(".test.ts") &&
   !name.endsWith(".test.tsx");
 
-/**
- * A context that carries a theme.
- *
- * The package's other contexts carry a *part* (a slider's thumb, a checkbox's
- * indicator); only a theme-typed one is the second context this change removed.
- */
 const THEME_CONTEXT =
   /createContext\s*<\s*(PrimitiveTheme|Theme)\b|ThemeContext\s*=/;
 
@@ -65,7 +39,6 @@ const walk = (dir: string): ReadonlyArray<string> =>
         : [],
   );
 
-/** One prop of an element, read as unknown — React types an element's props loosely. */
 const prop = (element: ReactElement, name: string): unknown =>
   Option.getOrElse(
     Option.flatMap(
@@ -77,7 +50,6 @@ const prop = (element: ReactElement, name: string): unknown =>
     () => undefined,
   );
 
-/** The density group the provider hands to the shared context. */
 const densityOf = (element: ReactElement): unknown =>
   Option.getOrElse(
     Option.flatMap(
@@ -95,12 +67,6 @@ describe("withDensity", () => {
   });
 
   it("reads a stored override that was never carried as no override", () => {
-    // The bug guarded: a density override is read from a settings row, and JSON
-    // writes `null` for a field the record never carried. `withDensity` tested
-    // only `undefined`, so `density={null}` replaced the theme's own box with a
-    // hole: a brand that ships a compact preset painted the library's metrics
-    // while its palette, type and radii stayed the brand's, and a consumer
-    // reading `theme.density` directly threw on the null.
     const stored: Density | null = null;
     expect(withDensity(testTheme, stored)).toBe(testTheme);
     const element = ThemeProvider({
@@ -129,9 +95,6 @@ describe("a primitive without a provider", () => {
 
 describe("the provider writes the shared token context", () => {
   it("is the token package's own provider, so a mixed tree finds one theme", () => {
-    // The bug: a package-local provider is a second context, so a page mixing
-    // `@gpuixui/primitives` with `@gpuixui/components` had to wrap twice and
-    // the two palettes could disagree.
     const element = ThemeProvider({ theme: testTheme, children: null });
     expect(element.type).toBe(TokensThemeProvider);
     expect(prop(element, "theme")).toBe(testTheme);
@@ -147,11 +110,8 @@ describe("the provider writes the shared token context", () => {
   });
 
   it("declares no theme context of its own", () => {
-    // The package's other contexts carry a *part* (a slider's thumb, a
-    // checkbox's indicator); only a theme-typed one is the second context this
-    // change removed, so the scan looks for that and nothing else.
     const sources = walk(sourceRoot);
-    // The walk must reach the provider itself, or the scan proves nothing.
+
     expect(
       Arr.some(sources, (path) => path.endsWith("ThemeProvider.tsx")),
     ).toBe(true);
@@ -162,11 +122,6 @@ describe("the provider writes the shared token context", () => {
   });
 
   it("asks the token package whether a provider is above it", () => {
-    // The bug: the seam kept its own presence marker, so a tree wrapped only in
-    // `@gpuixui/tokens/react`'s provider — the one `@gpuixui/components` uses —
-    // made every primitive throw. `useThemePresence` answers the same question
-    // from the context both packages write, so either provider satisfies the
-    // fail-loud rule.
     const provider = Option.getOrElse(
       Arr.findFirst(walk(sourceRoot), (path) =>
         path.endsWith("ThemeProvider.tsx"),

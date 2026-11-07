@@ -1,15 +1,3 @@
-/**
- * Carousel behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: every slide mounted at once (the runtime ignores
- * `display: none`, so a spare slide painted beside the active one and kept its
- * controls as tab stops), a step that runs past the last slide, loop ignored,
- * arrow keys that do not move, a controlled carousel that moves on its own, a
- * style callback that cannot see the slide's position, an indicator that jumps
- * between its two widths because the state is a style value rather than a motion
- * target, and a reduced-motion reader who is made to watch the dot travel anyway.
- */
-
 import { describe, expect, it, vi } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -42,7 +30,6 @@ import {
 } from "../internal/test-root.js";
 import { nodesWithRole } from "../internal/a11y.js";
 
-/** A controlled gallery with previous/next controls. */
 const Gallery = ({
   value,
   onValueChange,
@@ -80,7 +67,6 @@ const Gallery = ({
   </div>
 );
 
-/** A stateful gallery, for the uncontrolled path. */
 const StatefulGallery = ({
   initial = 0,
   loop = false,
@@ -103,14 +89,12 @@ const StatefulGallery = ({
   );
 };
 
-/** Which slides are mounted: a spare slide unmounts rather than paints. */
 const mounted = (root: ComponentTestRoot): ReadonlyArray<number> =>
   Arr.filter(
     [0, 1, 2],
     (index) => root.renderer.findByTestId(`slide-${index}`) !== undefined,
   );
 
-/** The dot a press target draws — its one painted child. */
 const dotted = (root: ComponentTestRoot, testId: string) => {
   const target = root.renderer.findByTestId(testId);
   const drawn = target?.children
@@ -122,7 +106,6 @@ const dotted = (root: ComponentTestRoot, testId: string) => {
   return drawn;
 };
 
-/** The width `testId`'s dot is painted at, from the renderer's own bounds. */
 const dotWidth = (root: ComponentTestRoot, testId: string): number => {
   const bounds = root.renderer.getElementBounds(dotted(root, testId).id);
   if (bounds === null) {
@@ -131,11 +114,9 @@ const dotWidth = (root: ComponentTestRoot, testId: string): number => {
   return bounds.width;
 };
 
-/** Let the renderer's frame loop publish what the last commit queued. */
 const delay = (): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, 30));
 
-/** The two widths a dot is drawn at: the resting circle and the active pill. */
 const DOT_REST = 6;
 const DOT_ACTIVE = 18;
 
@@ -143,9 +124,6 @@ describe("Carousel", () => {
   it("mounts only the slide on screen", () => {
     const gallery = renderComponent(<Gallery value={1} />);
 
-    // The bug this guards: every slide was mounted and hidden with
-    // `display: none`, which the pinned renderer ignores — so all three painted
-    // in one row and the spare slides' controls stayed in the tab order.
     expect(gallery.renderer.getAllText()).toEqual(["Two"]);
     expect(mounted(gallery)).toEqual([1]);
 
@@ -179,8 +157,7 @@ describe("Carousel", () => {
 
     clickCentreOf(gallery, "next");
     expect(onValueChange).not.toHaveBeenCalled();
-    // An edge control is disabled: it leaves the tab order and wears the
-    // measured neutral pair rather than a fade (`internal/button.tsx`).
+
     const disabled = disabledAction(darkTheme);
     expect(gallery.renderer.findByTestId("next")?.style.backgroundColor).toBe(
       disabled.backgroundColor,
@@ -252,10 +229,6 @@ describe("Carousel", () => {
 
     gallery.unmount();
 
-    // A caller's index is usually arithmetic, and `Math.floor(offset / width)`
-    // stamps `NaN` before a width has been measured. The clamp passes it
-    // through, so an unreadable index used to hide every slide — and keep them
-    // hidden, because the step compares against it and never matches.
     const unreadable = renderComponent(
       <Gallery value={Number.NaN} onValueChange={onValueChange} />,
     );
@@ -305,8 +278,6 @@ describe("Carousel", () => {
       </Carousel>,
     );
 
-    // The callback runs for the slide on screen, and its `index` is the position
-    // the track gave it — the one state a mounted slide has left.
     expect(gallery.renderer.findByTestId("slide-0")).toBeUndefined();
     expect(gallery.renderer.findByTestId("slide-1")?.style.opacity).toBe(2);
     expect(gallery.renderer.findByTestId("track")?.style.backgroundColor).toBe(
@@ -338,10 +309,6 @@ describe("Carousel", () => {
   });
 
   it("paints the chevron in the control's own label role", () => {
-    // The bug this guards: a glyph painted in a role chosen for another fill.
-    // `secondaryForeground` on the `primary` fill measures 1.42:1 in Windows
-    // dark, so the arrow would be invisible; on the `secondary` fill the pair
-    // the control actually paints is 7.2–17.1:1 in every shipped style.
     Arr.forEach(
       [
         ["dark", darkTheme],
@@ -360,12 +327,9 @@ describe("Carousel", () => {
           const fill = String(control?.style.backgroundColor);
           const painted = String(glyph?.style.color);
 
-          // The glyph is the control's label in vectors, not a colour of its own.
           expect(painted).toBe(label);
           expect(painted).toBe(theme.colors.secondaryForeground);
 
-          // And the painted pair — read back off the renderer, not the theme —
-          // clears the floor a non-text mark needs.
           expect(contrastRatio(painted, fill) ?? 0).toBeGreaterThanOrEqual(
             contrastFloorsFor(theme).boundary,
           );
@@ -400,8 +364,6 @@ describe("Carousel", () => {
       );
       expect(selected).toEqual([false, true, false]);
 
-      // One roving stop, on the slide on screen: Tab reaches the dots once and
-      // the arrows move the stop with the slide.
       const stops = [0, 1, 2].map(
         (index) =>
           gallery.renderer.findByTestId(`dots-${index}`)?.customProps?.tabIndex,
@@ -440,7 +402,6 @@ describe("Carousel", () => {
       );
       expect(focusedTestId(gallery)).toEqual(Option.some("dots-0"));
 
-      // The root owns the arrow keys, and a key dispatched at a dot reaches it.
       gallery.renderer.simulateKeystrokes("right");
 
       expect(onValueChange).toHaveBeenLastCalledWith(1);
@@ -456,9 +417,6 @@ describe("Carousel", () => {
   });
 
   it("reserves the press floor around a smaller drawing", () => {
-    // A dot is a small mark but a real press target: the 24px floor WCAG 2.2
-    // SC 2.5.8 asks for, with the drawing inside it and the press hit-tested on
-    // the target rather than on six painted pixels.
     const gallery = renderComponent(<Gallery value={0} />);
 
     try {
@@ -471,9 +429,7 @@ describe("Carousel", () => {
       const painted = gallery.renderer.getElementBounds(drawing.id);
       expect(painted?.height).toBe(6);
       expect(painted?.width).toBe(6);
-      // The drawing paints a fill, which is the boundary a press stops at, so
-      // it removes its own hitbox and the press reaches the 24px target
-      // (`press-routing-lifecycle`'s `text-filled`/`inert-control` cases).
+
       expect(drawing.style.pointerEvents).toBe("none");
     } finally {
       gallery.unmount();
@@ -481,10 +437,6 @@ describe("Carousel", () => {
   });
 
   it("marks the active dot in a measured role and widens it, in both themes", () => {
-    // The bugs these guard: a mark painted in a role that vanishes into the
-    // page, and a state carried by hue alone. `indicatorRoles` measures both
-    // inks at the mark floor; the active drawing is a pill, so its state
-    // survives a reader who cannot separate the two hues.
     Arr.forEach(
       [
         ["dark", darkTheme],
@@ -502,8 +454,6 @@ describe("Carousel", () => {
           expect(activeInk).toBe(theme.colors.primary);
           expect(restInk).toBe(theme.colors.mutedForeground);
 
-          // Both inks are marks on the strip the carousel paints: the page,
-          // because the root has no surface of its own.
           Arr.forEach([activeInk, restInk], (ink) => {
             expect(
               contrastRatio(ink, theme.colors.background) ?? 0,
@@ -521,11 +471,6 @@ describe("Carousel", () => {
   });
 
   it("grows the active dot over its level instead of jumping", async () => {
-    // The bug this guards: the width was a style value, so a selection swapped
-    // the two dots' widths in one frame and the reader had to compare a dot with
-    // the one it replaced. It is a motion target now, so both dots travel from
-    // the widths on screen — `fast`, the level the motion package names for an
-    // indicator.
     const gallery = renderComponent(<StatefulGallery />);
 
     try {
@@ -539,7 +484,6 @@ describe("Carousel", () => {
       clickCentreOf(gallery, "dots-2");
       await delay();
 
-      // One frame in, neither dot has moved: the run starts from what is painted.
       expect(dotWidth(gallery, "dots-0")).toBe(from);
       expect(dotWidth(gallery, "dots-2")).toBe(rest);
 
@@ -554,10 +498,6 @@ describe("Carousel", () => {
   });
 
   it("eases the dot's growth at both ends, as a movement between resting states", async () => {
-    // The bug this guards: a dot growing from the 6px circle to the 18px pill is
-    // a movement between two resting states — the timing table's `standard`
-    // phase — and it painted the *enter* curve (`easeOut`). At half the level a
-    // between-states movement is 12px wide; an arriving surface is already ~14px.
     const gallery = renderComponent(<StatefulGallery />);
 
     try {
@@ -590,8 +530,6 @@ describe("Carousel", () => {
       settle(gallery);
       await waitFor(() => expect(dotWidth(gallery, "dots-0")).toBe(DOT_ACTIVE));
 
-      // The clock is frozen, so a journey would never arrive: the assertion is
-      // that the preference removes the travel rather than shortening it.
       gallery.renderer.clockPause();
       clickCentreOf(gallery, "dots-2");
       await delay();
@@ -612,8 +550,6 @@ describe("Carousel", () => {
     );
 
     try {
-      // A dot per slide: with no slides there is nothing to jump to, so the
-      // group is not mounted rather than mounted empty.
       expect(empty.renderer.findByTestId("dots")).toBeUndefined();
     } finally {
       empty.unmount();

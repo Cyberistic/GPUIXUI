@@ -18,20 +18,6 @@ import {
   stepIndex,
 } from "./carousel-preview";
 
-/**
- * The carousel preview's arithmetic.
- *
- * The component keeps **one** clamp and **one** loop rule behind three routes
- * to a slide (controls, arrow keys, dots). A preview that wraps on a dot but
- * stops at a control shows a carousel nobody ships, and a preview whose active
- * dot is only a different hue tells a reader who cannot separate the two hues
- * nothing. The drawing's numbers are the component's constants, read from its
- * source rather than trusted, so the preview cannot lose the pill or grow past
- * the 24px press floor.
- *
- * `node:fs` is the test's own read of a checked-in file, not runtime I/O.
- */
-
 const source = readFileSync(
   new URL(
     "../../../../../packages/components/src/carousel.tsx",
@@ -42,10 +28,6 @@ const source = readFileSync(
 
 describe("the carousel preview", () => {
   it("clamps the active slide into the set it has", () => {
-    // A controlled value outlives a slide being removed, and the component
-    // resolves it into the range before painting. An empty track paints no
-    // slide, so the index it resolves to is the only one that cannot point at
-    // one.
     expect([
       resolveActive(2, 4),
       resolveActive(9, 4),
@@ -63,8 +45,6 @@ describe("the carousel preview", () => {
   });
 
   it("stops at both ends when the carousel does not loop", () => {
-    // This is why the control at an edge is disabled: the step is a no-op, and
-    // a live control that does nothing reads as a broken one.
     expect(stepIndex({ active: 3, count: 4, delta: 1, loop: false })).toBe(3);
     expect(stepIndex({ active: 0, count: 4, delta: -1, loop: false })).toBe(0);
     expect(atEdge(3, 4, 1)).toBe(true);
@@ -98,7 +78,7 @@ describe("the carousel preview", () => {
     expect(disabled(1, 1, false)).toBe(false);
     expect(disabled(0, -1, true)).toBe(false);
     expect(disabled(2, 1, true)).toBe(false);
-    // An empty track has nothing to step to at either end.
+
     expect(controlDisabled({ active: 0, count: 0, delta: 1, loop: true })).toBe(
       true,
     );
@@ -110,9 +90,6 @@ describe("the carousel preview", () => {
   });
 
   it("draws the active dot as a wider pill, inside the shared press floor", () => {
-    // Both facts are read off the component: a state carried only by colour is
-    // a state a colour-blind reader cannot see, and a 6px dot is not a target
-    // until something reserves the floor around it.
     expect(source).toContain("const DOT_HEIGHT = 6;");
     expect(source).toContain("const DOT_REST_WIDTH = 6;");
     expect(source).toContain("const DOT_ACTIVE_WIDTH = 18;");

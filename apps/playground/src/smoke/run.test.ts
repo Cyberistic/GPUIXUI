@@ -1,12 +1,3 @@
-/**
- * Guards the smoke CLI's contract.
- *
- * The bugs these catch: an unsupported host reporting success (or crashing
- * before it can explain why), `--list` or a flag typo silently running the
- * whole suite, an unknown `--only` running zero scenarios and reporting a
- * pass, a scenario added with a duplicate id or an uncovered capability, and a
- * preflight message that does not tell the operator what to do.
- */
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as Arr from "effect/Array";
@@ -179,9 +170,6 @@ describe("main", () => {
   });
 
   it.effect("reports a typo beside --list instead of printing over it", () => {
-    // The parser's promise is that a typo is never silently ignored; `--list`
-    // used to answer `0` before that guard ran, so this exact pair was a silent
-    // pass. `--list` now waits for both guards.
     const deps = probe(["--list", "--onlyy", "layout-flex"]);
     return Effect.gen(function* () {
       const code = yield* main(deps);

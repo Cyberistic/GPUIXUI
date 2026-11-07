@@ -12,16 +12,6 @@ import {
   selectedMail,
 } from "./email-inbox-block";
 
-/**
- * The mail client block's rendered states.
- *
- * The two filters are the block's interaction: the selected message fills the
- * reading pane and the active tab decides which rows exist. A pane that kept
- * showing Bob's thread after a row click, or a tab that listed every category,
- * would still build — so both are asserted against the markup at a chosen
- * state rather than against the default only.
- */
-
 const noop = () => {};
 
 const render = (state: InboxState): string =>
@@ -65,10 +55,10 @@ describe("the email inbox preview", () => {
       "Quick actions",
       "Delete",
     ]) {
-      expect(initial).toContain(`>${action}</button>`);
+      expect(initial).toContain(`>${action}</span>`);
     }
     expect(initial.match(/role="tab"/g)).toHaveLength(5);
-    expect(initial.match(/class="gx-mail-tab"/g)).toHaveLength(3);
+    expect(initial.match(/class="gx-tab gx-mail-tab"/g)).toHaveLength(3);
     expect(initial).toContain('aria-selected="true"');
     expect(initial).toContain(">Primary<");
     expect(initial).toContain(">Promotions<");

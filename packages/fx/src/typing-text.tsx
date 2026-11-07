@@ -1,19 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * TypingText: a string that arrives a character at a time.
- *
- * The reveal is a timer over the characters the string already has — not a
- * second copy of the text and not an animation the runtime is asked to run. The
- * runtime cannot animate text content (`@gpuix/native@0.11.0` has no `transform`
- * and no per-glyph paint), so the component owns the clock and the string is the
- * frame. A changed string retypes from the beginning; the same string does not
- * restart, so a parent re-render does not replay the effect.
- *
- * The whole string is the accessible name from the first frame. A reader using
- * assistive technology must not be fed "Sav" and have to infer "Save changes";
- * see `docs/typing-text.mdx` §Accessibility.
- */
-
 import type { Props } from "@gpuix/react";
 import {
   mergeStyles,
@@ -39,59 +24,39 @@ import {
   type TypingTiming,
 } from "./typing-text/logic.js";
 
-/** What a typing text draws at one frame. */
 export interface TypingTextState {
-  /** How many characters are painted. */
   readonly revealed: number;
-  /** Whether the last character has arrived. */
+
   readonly complete: boolean;
-  /** Whether the reader asked for less motion, which paints the whole string. */
+
   readonly reducedMotion: boolean;
 }
 
-/** {@link TypingText} props. */
 export interface TypingTextProps extends Omit<Props, "children" | "style"> {
-  /**
-   * The string to reveal. A new value retypes from the first character, and a
-   * value a saved record left absent reveals nothing rather than taking the
-   * render down.
-   */
   readonly text: string;
-  /** Milliseconds between two characters. Default `45`; `0` paints instantly. */
+
   readonly speed?: number;
-  /** Milliseconds before the first character. Default `0`. */
+
   readonly delay?: number;
-  /** Paint a caret after the text until the last character lands. Default `false`. */
+
   readonly caret?: boolean;
-  /**
-   * The accessible name. Default: the whole `text`, so a partial reveal is
-   * never what a screen reader hears.
-   */
+
   readonly label?: string;
-  /** Called once, after the last character (and once on mount when instant). */
+
   readonly onComplete?: () => void;
-  /** A typographic role from the theme. Default `"body"`; a stored name the type scale does not carry reads as the default, and the caret follows it. */
+
   readonly role?: TextRole;
-  /** A Tailwind class string, joined after the resting style so it wins. */
+
   readonly className?: string;
-  /** A style, or a function of the reveal. */
+
   readonly style?: StateStyle<TypingTextState>;
 }
 
-/** The reveal progress, tagged with the run it belongs to. */
 interface Progress {
   readonly run: string;
   readonly revealed: number;
 }
 
-/**
- * The caret's one measurement: a rule as tall as the role's line.
- *
- * The line is read through `textStyle`, the seam the string beside it already
- * paints through: that answers the library's `body` step for a stored role this
- * release does not carry, so a renamed role cannot throw out of the first frame
- * while the text it belongs to paints.
- */
 const caretStyle = (theme: Theme, role: TextRole) => ({
   width: 2,
   height: textStyle(theme, role).lineHeight,
@@ -99,13 +64,6 @@ const caretStyle = (theme: Theme, role: TextRole) => ({
   borderRadius: 1,
 });
 
-/**
- * A string that types itself in.
- *
- * Under `MotionProvider preference="reduced"` — or with `speed={0}` — the whole
- * string paints on the first frame and `onComplete` runs once. The reveal is a
- * real-time timer, so a paused renderer clock does not hold it.
- */
 export const TypingText = ({
   text,
   speed,
@@ -120,7 +78,7 @@ export const TypingText = ({
 }: TypingTextProps) => {
   const theme = useTheme();
   const reducedMotion = useMotionPreference() === "reduced";
-  /** The string a saved record may have lost; JSON writes `null` for it. */
+
   const phrase = textOf(text);
   const timing: TypingTiming = useMemo(
     () => typingTiming({ speedMs: speed, delayMs: delay }),
@@ -129,11 +87,9 @@ export const TypingText = ({
   const charactersOf = useMemo(() => characters(phrase), [phrase]);
   const total = charactersOf.length;
   const instant = reducedMotion || timing.speedMs === 0;
-  /** The reveal a measured progress belongs to: a new string or pace restarts. */
+
   const run = `${timing.speedMs}:${timing.delayMs}:${phrase}`;
 
-  // Progress belongs to the run it was measured for, so a changed string reads
-  // as zero immediately instead of flashing the previous count.
   const [progress, setProgress] = useState<Progress>({ run, revealed: 0 });
   const revealed = instant
     ? total
@@ -159,8 +115,6 @@ export const TypingText = ({
     };
   }, [instant, run, timing.delayMs, timing.speedMs, total]);
 
-  // One completion per string: a parent that re-renders with a new inline
-  // callback must not re-announce a finish that already happened.
   const announced = useRef<{ readonly text: string } | undefined>(undefined);
   useEffect(() => {
     if (!complete || announced.current?.text === phrase) return;
@@ -196,7 +150,6 @@ export const TypingText = ({
   );
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 600). */
 export const typingTextMeta = {
   name: "Typing text",
   tier: 5,

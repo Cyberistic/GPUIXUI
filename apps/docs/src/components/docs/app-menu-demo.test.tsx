@@ -11,16 +11,6 @@ import {
   appMenuSpecs,
 } from "./app-menu-demo";
 
-/**
- * The Application menu preview.
- *
- * `packages/shell/docs/app-menu.mdx` is the package's Markdown, so the site
- * mounts the drawing from `package-preview.ts` and the page itself carries no
- * `<ComponentPreview>`. These cases hold the bar to `@gpuixui/shell`'s `step`,
- * `hoverOpen` and `dismiss`: the traversal, the macOS hover rule and the close
- * that names the trigger the focus returns to.
- */
-
 const root = new URL("../../../../../", import.meta.url);
 
 const read = (path: string): string =>
@@ -31,7 +21,6 @@ const markup = (node: Parameters<typeof renderToStaticMarkup>[0]): string =>
 
 const specs = appMenuSpecs(APP_MENU_ENTRIES);
 
-/** The bar painted with a state the package's own reducers produced. */
 const bar = (state: Parameters<typeof AppMenuFrame>[0]["state"]): string =>
   markup(
     <AppMenuFrame
@@ -44,7 +33,6 @@ const bar = (state: Parameters<typeof AppMenuFrame>[0]["state"]): string =>
 
 describe("the Application menu preview", () => {
   it("opens nothing on hover while the bar is closed", () => {
-    // The macOS rule the package encodes: a closed bar opens nothing on hover.
     const hovered = hoverOpen(initial, specs, 1);
 
     expect(hovered).toEqual(initial);
@@ -63,7 +51,7 @@ describe("the Application menu preview", () => {
     const html = bar(hovered);
     expect(html).toContain('data-menu="edit" data-open="true"');
     expect(html).toContain('data-menu="file" data-open="false"');
-    // The Edit dropdown's rows are the Edit menu's rows.
+
     expect(html).toContain('data-item="undo"');
     expect(html).toContain('data-item="redo"');
     expect(html).not.toContain('data-item="save"');
@@ -82,8 +70,7 @@ describe("the Application menu preview", () => {
     expect(appMenuReadout(moved, APP_MENU_ENTRIES)).toBe(
       "File is open · the highlighted row is New file",
     );
-    // The highlight is the package's own: the row it names is the one the
-    // drawing marks.
+
     expect(Option.getOrNull(activeRow(moved, APP_MENU_ENTRIES))).toEqual({
       menuId: "file",
       itemId: "new",
@@ -95,8 +82,7 @@ describe("the Application menu preview", () => {
     const moved = step(opened, specs, { _tag: "MoveItem", delta: 1 });
 
     expect(Option.getOrNull(moved.activeItem)).toBe(0);
-    // The only other row is disabled, so the package leaves the highlight where
-    // it is rather than move it onto a row that cannot be run.
+
     const again = step(moved, specs, { _tag: "MoveItem", delta: 1 });
     expect(Option.getOrNull(again.activeItem)).toBe(0);
     expect(Option.isNone(activeRow(again, APP_MENU_ENTRIES))).toBe(false);
@@ -124,8 +110,7 @@ describe("the Application menu preview", () => {
     expect(demo).toContain("hoverOpen");
     expect(demo).toContain("dismiss");
     expect(demo).toContain("step");
-    // The traversal is the package's: the drawing names its actions, not a
-    // table of its own.
+
     expect(demo).toContain('_tag: "MoveBar"');
     expect(demo).toContain('_tag: "MoveItem"');
     expect(demo).toContain('_tag: "Open"');

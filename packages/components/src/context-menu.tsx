@@ -1,17 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * ContextMenu: the shared menu rows, positioned at the pointer.
- *
- * `@gpuix/native@0.11.0` has no `onContextMenu`; a right click arrives as
- * `onAuxClick` with `isRightClick` (`mutations.ts` maps `onAuxClick` →
- * `"auxClick"`), so the trigger records the pointer point and opens.
- *
- * `anchored position` is window coordinates — plan 112 §1c measured it inside a
- * nested container — so the point is passed through unchanged. `FloatingLayer`
- * is anchor-relative and cannot take a pointer point, which is why the surface is
- * a bare `anchored` element plus the shared {@link MenuSurface}.
- */
-
 import type {
   EventPayload,
   KeyEvent,
@@ -69,22 +56,20 @@ import {
 import { MenuSub, MenuSubContent, MenuSubTrigger } from "./menu/sub.js";
 import { MenuSurface } from "./menu/surface.js";
 
-/** A point in window coordinates. */
 interface Point {
   readonly x: number;
   readonly y: number;
 }
 
-/** The rules a context-menu part follows; throws outside a root. */
 interface ContextMenuContextValue {
   readonly open: boolean;
   readonly setOpen: (open: boolean) => void;
   readonly point: Point;
-  /** Open at `point` from a pointer; closing leaves focus where it went. */
+
   readonly openAt: (point: Point) => void;
-  /** Open at `point` from the keyboard; closing returns focus to the trigger. */
+
   readonly openFromKeyboard: (point: Point) => void;
-  /** Register the trigger's native id; returns the unregister function. */
+
   readonly setTrigger: (id: number) => () => void;
 }
 
@@ -100,7 +85,6 @@ const useContextMenuContext = (): ContextMenuContextValue => {
   return value;
 };
 
-/** Why the menu opened or closed, in Base UI's vocabulary. */
 export type ContextMenuOpenChangeReason =
   | "trigger-press"
   | "escape-key"
@@ -109,20 +93,14 @@ export type ContextMenuOpenChangeReason =
   | "focus-out"
   | "pointer-leave";
 
-/** What {@link ContextMenuProps.onOpenChange} receives beside the new state. */
 export interface ContextMenuOpenChangeDetails {
   readonly reason: ContextMenuOpenChangeReason;
 }
 
-/** {@link ContextMenu} props. */
 export interface ContextMenuProps {
-  /** The controlled open state. `undefined` means uncontrolled. */
   readonly open?: boolean;
   readonly defaultOpen?: boolean;
-  /**
-   * Called with the new state and why it changed: a trigger press, a chosen row,
-   * Escape, a press outside, focus leaving, or the pointer leaving the menu.
-   */
+
   readonly onOpenChange?: (
     open: boolean,
     details: ContextMenuOpenChangeDetails,
@@ -130,11 +108,6 @@ export interface ContextMenuProps {
   readonly children?: PartChildren;
 }
 
-/**
- * The reason a close reports. Base UI names the gesture, not the menu's internal
- * bookkeeping, so a row's activation is `item-press` even though the menu calls
- * it `activate`.
- */
 export const openChangeReason = (
   reason: MenuCloseReason,
 ): ContextMenuOpenChangeReason =>
@@ -147,16 +120,6 @@ export const openChangeReason = (
     Match.exhaustive,
   );
 
-/**
- * The context menu's open state, pointer point and dismiss layer. It paints
- * nothing itself: the surface appears where {@link ContextMenuContent} is
- * mounted.
- *
- * The pointer-leave intent is the whole tree's — the root surface and every
- * submenu surface hold it — so a diagonal trip from a row into its submenu is one
- * gesture and leaving both closes the menu, without a scroll or a reflow: the
- * surface is an `anchored` layer, out of the layout flow.
- */
 export const ContextMenu = ({
   open: openProp,
   defaultOpen = false,
@@ -164,8 +127,7 @@ export const ContextMenu = ({
   children,
 }: ContextMenuProps) => {
   const renderer = useGpuix().renderer;
-  // `useControllableState` reports a plain value, so the reason of the change it
-  // is about to report is recorded first.
+
   const changeReason = useRef<ContextMenuOpenChangeReason>("trigger-press");
   const [open, setOpen] = useControllableState({
     value: openProp,
@@ -176,7 +138,6 @@ export const ContextMenu = ({
   const triggerId = useRef<number | undefined>(undefined);
   const restoreFocus = useRef(false);
 
-  // The layer callback must see the latest setter without being re-pushed.
   const setOpenRef = useRef(setOpen);
   useLayoutEffect(() => {
     setOpenRef.current = setOpen;
@@ -198,8 +159,7 @@ export const ContextMenu = ({
     },
     [renderer],
   );
-  // One timer for the whole tree: entering any row or surface of it cancels the
-  // wait, leaving every one of them arms the grace.
+
   const pointer = useHoverDelays({
     open,
     setOpen: (next) => {
@@ -252,7 +212,7 @@ export const ContextMenu = ({
   return (
     <ContextMenuContext.Provider value={context}>
       <MenuContext.Provider value={menu}>
-        {/* The tree's pointer intent, inherited by every submenu surface. */}
+        {}
         <MenuPointer.Provider value={pointer}>
           <div style={{ display: "flex", flexDirection: "column" }}>
             {children}
@@ -263,12 +223,10 @@ export const ContextMenu = ({
   );
 };
 
-/** {@link ContextMenuTrigger} props. */
 export interface ContextMenuTriggerProps extends Props {
   readonly disabled?: boolean;
 }
 
-/** The area whose right click — or Shift+F10 — opens the menu. */
 export const ContextMenuTrigger = ({
   disabled = false,
   onAuxClick,
@@ -286,15 +244,12 @@ export const ContextMenuTrigger = ({
     undefined,
   );
 
-  // Stable identity: a fresh ref callback each render would re-register on every
-  // paint (ListItem has the same constraint).
   const attach = useCallback((next: PublicInstance | null) => {
     setInstance(next ?? undefined);
   }, []);
   const setElement = useMergedRef(attach, ref);
 
   useLayoutEffect(() => {
-    // The native id is what focus returns to after a keyboard-opened menu.
     if (instance === undefined) return;
     return setTrigger(instance.id);
   }, [instance, setTrigger]);
@@ -347,20 +302,13 @@ export const ContextMenuTrigger = ({
   );
 };
 
-/** {@link ContextMenuContent} props. */
 export interface ContextMenuContentProps extends Omit<Props, "children"> {
-  /** The menu's accessible name. Default `"Context menu"`. */
   readonly label?: string;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
   readonly children?: PartChildren;
 }
 
-/**
- * The surface at the pointer, rendered while open. Escape and an outside press
- * close it, the arrow keys and Enter follow the shared menu rules, and the pointer
- * leaving the menu and every submenu's closes it after a grace.
- */
 export const ContextMenuContent = ({
   label = "Context menu",
   children,
@@ -383,8 +331,6 @@ export const ContextMenuContent = ({
       position={point}
       deferred
       priority={1}
-      // The occlusion is what makes the open menu a target; a leaving menu is
-      // still painted for its tween but must not block the press underneath.
       occlude={presence.present}
       style={presenceStyle(presence.present)}
     >
@@ -401,12 +347,8 @@ export const ContextMenuContent = ({
         }}
         style={mergeStyles(
           {
-            // The anchored host does no layout of its own; the surface carries the
-            // floating look. `position: relative` keeps it a positioned box for the
-            // anchored layer's own measurement.
             position: "relative",
-            // A leaving box is still painted for its exit tween, but the press the
-            // dismissal was for belongs to the control underneath it.
+
             ...presenceStyle(presence.present),
           },
           style,
@@ -447,7 +389,6 @@ export type {
   MenuSubTriggerProps as ContextMenuSubTriggerProps,
 } from "./menu/sub.js";
 
-/** Every part of the context menu, so a misplaced sibling is named. */
 const contextMenuParts: ReadonlyArray<PartComponent> = [
   ContextMenu,
   ContextMenuTrigger,
@@ -486,7 +427,6 @@ const contextMenuContent: PartsContract = {
   hint: "Put rows, groups, labels, separators and submenus directly inside ContextMenuContent.",
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const contextMenuMeta = {
   name: "Context menus",
   tier: 2,

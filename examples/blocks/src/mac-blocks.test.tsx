@@ -1,15 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * The Mac-app blocks on the real GPUix renderer (plan 729): each mounts and
- * answers its primary interaction.
- *
- * Bugs guarded: a note row that does not open its note; a preferences search
- * that leaves every pane listed; a launcher whose query filters nothing; a
- * menu-bar switch that leaves the status line stale; an agent whose Send adds
- * nothing; a calendar switch that keeps the calendar's events; a welcome whose
- * Continue does not advance; a viewer whose thumbnail does not open the HUD.
- * Plan 731: overlapping events split into equal slivers instead of cascading.
- */
 import { createTestRoot } from "@gpuix/react/testing";
 import { lightTheme, platformTheme } from "@gpuixui/tokens";
 import { ThemeProvider } from "@gpuixui/tokens/react";
@@ -112,7 +101,7 @@ describe("the Mac-app blocks", () => {
     press(r, "send");
     expect(has(r, "turn-t3")).toBe(true);
     expect(has(r, "turn-t4")).toBe(true);
-    // The reply streams: Send is Stop until the last word lands.
+
     expect(has(r, "stop")).toBe(true);
     expect(has(r, "send")).toBe(false);
   });
@@ -135,7 +124,7 @@ describe("the Mac-app blocks", () => {
     const day = box("day-0");
     const first = box("event-e1");
     const second = box("event-e2");
-    // e2 overlaps e1: it starts a third of the way in and lies over it.
+
     expect(second.x).toBeGreaterThan(first.x);
     expect(second.width).toBeGreaterThan(day.width / 2);
     expect(first.width).toBeGreaterThan(day.width * 0.9);

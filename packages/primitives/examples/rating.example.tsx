@@ -1,17 +1,7 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Rating example: a review card.
- *
- * Two ratings in the roles they differ in — an interactive one the reader owns,
- * scored in halves, and a read-only one showing an aggregate. The summary is
- * derived from the interaction, so the card demonstrates the controlled API a
- * review form uses.
- */
-
 import { useState, type ReactElement } from "react";
 import { Box, Rating, Separator, Stack, Text } from "../src/index.js";
 
-/** A review card: rate the release, beside the aggregate rating. */
 export const RatingExample = (): ReactElement => {
   const [score, setScore] = useState(0);
 

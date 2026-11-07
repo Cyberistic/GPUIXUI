@@ -1,26 +1,3 @@
-/**
- * A caller's host handlers run alongside a control's own.
- *
- * The guarded defect: every control declared its own host handlers and a
- * consumer could attach none — `onClick` on a Checkbox, `onFocus` on a Switch,
- * the keys that drive a Toggle, and the click a text field's consumer wants to
- * observe were all dropped, so the only way to react to an interaction was to
- * wrap the control in an element that cannot see inside it.
- *
- * The rule pinned here (`InteractionProps`, `composeEvent`/`composePress`):
- *
- * - the caller's handler runs **first**, once, with the runtime's own event;
- * - the part still acts afterwards, exactly once — a handler observes, it does
- *   not replace the control's contract;
- * - the buttons are the one exception, on activating keys only: the action runs
- *   first, so a trigger's `onKeyDown` can record the row its surface must focus
- *   (plan 160). A click keeps the caller-first order;
- * - a blocked press installs no handler at all, so neither the caller's
- *   `onClick` nor the action runs;
- * - keys and focus stay observable on a disabled control, because a control
- *   disabled while focused must still report the event it holds.
- */
-
 import type { ReactElement } from "react";
 import { describe, expect, it, vi, type Mock } from "vitest";
 import * as Option from "effect/Option";
@@ -53,18 +30,16 @@ import { elementChildren, expectSome, hostHandler } from "./testing/element.js";
 
 type Spy = Mock<(...args: ReadonlyArray<unknown>) => void>;
 
-/** A rendered part and what its own behaviour reported. */
 interface Rendered {
   readonly element: ReactElement;
-  /** Value changes the part made on its own. */
+
   readonly changes: number;
-  /** Invocation order of the part's own first change. */
+
   readonly changeOrder: number;
-  /** Focus transitions the part's own tracking saw. */
+
   readonly focus: number;
 }
 
-/** A part, rendered with caller handlers and optionally disabled. */
 interface Probe {
   readonly name: string;
   readonly render: (handlers: InteractionProps, disabled: boolean) => Rendered;
@@ -196,7 +171,6 @@ const CONTROLS: ReadonlyArray<Probe> = [
   switchControl,
 ];
 
-/** The two fields read the same props; only their host element differs. */
 const field = (
   name: string,
   render: (props: FieldProps, focus: FocusState, change: Spy) => ReactElement,
@@ -290,10 +264,6 @@ describe("a caller's keys", () => {
   it.each([button, iconButton])(
     "runs $name's activation before the caller's key handler",
     ({ render }) => {
-      // The one part whose keys invert the rule above (plan 160's Phase 4
-      // delta): a trigger opens in its `onKeyDown` and records the row the
-      // surface must focus, so an activation that ran afterwards cleared that
-      // record. A click keeps the caller-first order, held by the suite above.
       const onKeyDown = nothing();
       const part = render({ onKeyDown }, false);
       handler(part.element, "onKeyDown")(keyEvent("enter"));
@@ -352,15 +322,6 @@ describe("a caller's focus", () => {
   );
 });
 
-/**
- * The parts that compose several elements — a group's rows, a slider's track and
- * thumbs, a field's input and steppers — install the caller's handler on **every**
- * element that part gives that handler to, so the caller observes the interaction
- * wherever it landed. The defect these cases guard: those parts accepted no host
- * handlers at all, so a consumer had to wrap the whole control and could not see
- * which row, thumb or cell the interaction came from.
- */
-
 const RADIO_OPTIONS = [
   { value: "alpha", label: "Alpha" },
   { value: "beta", label: "Beta" },
@@ -382,15 +343,12 @@ const radioHandlers = (onSelect: Spy) => ({
   registerItem: () => () => {},
 });
 
-/** The option row at `index`; a group draws its rows as direct children. */
 const rowOf = (element: ReactElement, index: number): ReactElement =>
   elementChildren(element)[index] ?? expect.fail("the group drew no row");
 
-/** The provider a part wraps its children in, and the children it draws. */
 const bodyOf = (element: ReactElement): ReadonlyArray<ReactElement> =>
   elementChildren(elementChildren(element)[0] ?? element);
 
-/** The rail of a slider and the parts on it. */
 const railParts = (element: ReactElement): ReadonlyArray<ReactElement> =>
   elementChildren(bodyOf(element)[0] ?? element);
 
@@ -427,7 +385,7 @@ describe("a caller's handlers on a group with rows", () => {
       radioFocus(),
       radioHandlers(nothing()),
     );
-    // The third option is disabled: neither the caller nor the group may run.
+
     expect(hostHandler(rowOf(element, 2), "onClick")).toStrictEqual(
       Option.none(),
     );
@@ -583,15 +541,13 @@ describe("a caller's handlers on a slider", () => {
       },
       handlers,
     );
-    // The rail holds indicator, thumb 0, indicator, thumb 1.
+
     const thumb = railParts(element)[1] ?? expect.fail("no thumb");
     const event = keyEvent("right");
     expectSome(hostHandler(thumb, "onKeyDown"))(event);
     expect(onKeyDown).toHaveBeenCalledOnce();
     expect(onSpanChange).toHaveBeenCalledWith([21, 80]);
-    // The bug guarded: the docs promise the caller's whole key pair is
-    // composed, but the range installed only key-down, so an `onKeyUp` was
-    // silently dropped on every thumb.
+
     expectSome(hostHandler(thumb, "onKeyUp"))(event);
     expect(onKeyUp).toHaveBeenCalledOnce();
     expectSome(hostHandler(thumb, "onClick"))(clickEvent);
@@ -645,8 +601,6 @@ describe("a caller's handlers on a field with several elements", () => {
   });
 
   it("keeps a NumberField's input press observable while disabled", () => {
-    // A field is an observation surface: its keys and focus stay observable
-    // while disabled, exactly as `Input`'s do — only the action is refused.
     const onClick = nothing();
     const onValue = nothing();
     const element = renderNumberField(

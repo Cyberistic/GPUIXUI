@@ -1,10 +1,3 @@
-/**
- * Browser preview for the Reveal page.
- *
- * The native content fades and travels a few pixels into place on mount; the
- * preview replays the same entrance on a key change.
- */
-
 import { useState } from "react";
 
 export function RevealDemo() {

@@ -1,19 +1,9 @@
-/**
- * The sidebar store's one source of truth.
- *
- * The bugs these guard: a collapse that lands in the store but not the
- * preference (so a remount forgets it), a tooltip that stays open after its row
- * leaves, a subscriber that is not told in the turn of the write, and a mobile
- * sheet that is persisted as if it were the desktop choice.
- */
-
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as Option from "effect/Option";
 import { makeSidebarStore, tooltipShown } from "./store.js";
 import type { SidebarPreference } from "./preference.js";
 
-/** A preference held in one closure cell, so a write is observable. */
 const remembered = (initial?: boolean): SidebarPreference => {
   let held = Option.fromNullishOr(initial);
   return {
@@ -91,7 +81,7 @@ describe("SidebarStore", () => {
       expect(tooltipShown(store.local.read().tooltip, "Settings")).toBe(true);
       yield* store.hideTooltip;
       expect(Option.isNone(store.local.read().tooltip)).toBe(true);
-      // A second close is a no-op rather than a notification.
+
       let notified = 0;
       const unsubscribe = store.local.subscribe(() => {
         notified += 1;

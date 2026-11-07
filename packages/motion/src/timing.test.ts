@@ -1,13 +1,3 @@
-/**
- * The house timing contract.
- *
- * The bugs these guard: a level silently changing the feel of every surface; a
- * phase that eases the wrong way (an exit that decelerates reads as a surface
- * refusing to leave); and a reduced-motion run that still animates — the flag is
- * the only thing standing between the reader's request and a transition, since
- * the runtime exposes no preference of its own.
- */
-
 import { describe, expect, it } from "vitest";
 import {
   isMotionEasing,
@@ -36,8 +26,6 @@ describe("motion levels", () => {
   });
 
   it("converts a level to the runtime's seconds", () => {
-    // The runtime reads `duration` in seconds; a level left in milliseconds
-    // would make a dialog take five minutes.
     const levels = Object.keys(motionLevels).filter(isMotionLevel);
     expect(levels).toHaveLength(Object.keys(motionLevels).length);
     const converted = levels.map((level) => ({
@@ -53,8 +41,6 @@ describe("motion levels", () => {
   });
 
   it("keeps every level a positive duration a reader can perceive", () => {
-    // A zero-length level is reduced motion's job, not a level's: a surface
-    // that asks for `fast` must move.
     Object.values(motionLevels).forEach((ms) => {
       expect(ms).toBeGreaterThan(0);
       expect(Number.isInteger(ms)).toBe(true);
@@ -81,17 +67,11 @@ describe("phases", () => {
   });
 
   it("reads the renderer's easing grammar, not a list of its own", () => {
-    // The bug this guards: the grammar is the renderer's — five names, or a
-    // cubic-bezier with finite values whose two `x` controls lie in `[0, 1]` —
-    // and the renderer rejects the **whole** motion description for an easing it
-    // cannot read, which paints no frame at all. A stored timing therefore has
-    // to be read through this before it is handed over, and a name the package
-    // does not ship must not pass a lookup that reads inherited keys.
     motionEasingNames.forEach((name) => {
       expect(isMotionEasing(name)).toBe(true);
     });
     expect(isMotionEasing([0.2, 0, 0.4, 1])).toBe(true);
-    // `y` may overshoot; only the time controls are bounded.
+
     expect(isMotionEasing([0.42, -0.5, 0.58, 1.5])).toBe(true);
 
     ["easeOutBack", "linear ", "", "toString", "__proto__"].forEach((name) => {
@@ -107,9 +87,6 @@ describe("phases", () => {
   });
 
   it("answers a name only for the five the grammar carries", () => {
-    // `motionCurve` reads a stored name through this guard to pick the curve
-    // the runtime resolves it to, so membership is the list's own rather than a
-    // table lookup: `toString` must not name a curve the runtime never paints.
     motionEasingNames.forEach((name) => {
       expect(isMotionEasingName(name)).toBe(true);
     });
@@ -122,21 +99,14 @@ describe("phases", () => {
 });
 
 describe("a level or phase the table does not carry", () => {
-  // The house surface arrival: the level a surface enters and leaves on.
   const house = { duration: 0.2, ease: "easeInOut" } as const;
 
   it("takes the house timing instead of painting a NaN duration", () => {
-    // The bug this guards: the level may come from a persisted setting a
-    // release no longer ships, so a key the table does not carry read
-    // `undefined / 1000` — a `NaN` duration the runtime drops, leaving the
-    // surface on its own default timing while the caller believes it asked for
-    // `normal`.
     // @ts-expect-error — a persisted level the library did not type-check.
     expect(motionTiming("elapsed")).toEqual(house);
   });
 
   it("keeps a reduced run instant whatever the level", () => {
-    // The fallback must not resurrect the journey the preference removes.
     // @ts-expect-error — the same untrusted level.
     expect(motionTiming("elapsed", { preference: "reduced" })).toEqual({
       duration: 0,
@@ -144,8 +114,6 @@ describe("a level or phase the table does not carry", () => {
   });
 
   it("eases between two resting states for a phase it does not name", () => {
-    // A phase read from the same persisted setting: an absent curve reaches
-    // the runtime as `ease: undefined`.
     expect(motionTiming("fast", { phase: "settle" })).toEqual({
       duration: 0.16,
       ease: motionEasings.standard,
@@ -153,13 +121,6 @@ describe("a level or phase the table does not carry", () => {
   });
 
   it("reads a phase from the table's own keys, not the ones it inherits", () => {
-    // The bug this guards: `phase in motionEasings` is true for every name on
-    // `Object.prototype`, so a persisted phase of `"toString"`,
-    // `"constructor"` or `"hasOwnProperty"` passed the guard and the lookup
-    // handed the runtime that method where a curve belongs — a function, not an
-    // easing, which is exactly the absent-easing failure the fallback above
-    // exists to prevent, reached through the prototype chain instead of a
-    // missing key.
     const inherited = [
       "toString",
       "__proto__",
@@ -176,12 +137,6 @@ describe("a level or phase the table does not carry", () => {
 });
 
 describe("a level a store wrote", () => {
-  /**
-   * The shapes a persisted animation speed decodes to: a name a release
-   * dropped, a name with the case and whitespace a setting keeps, an empty
-   * field, a number, a nested record, the list a multi-select wrote, `null`,
-   * and the names `Object.prototype` answers to.
-   */
   const stored: ReadonlyArray<unknown> = [
     "elapsed",
     "Faster",
@@ -198,10 +153,6 @@ describe("a level a store wrote", () => {
   ];
 
   it("names the levels the table carries, and no inherited key", () => {
-    // The bug this guards: the level table's membership was tested with `in`,
-    // which answers true for every name `Object.prototype` carries — so
-    // `"toString"` was a level, and the lookup beside the guard handed the
-    // runtime a method where a duration belongs.
     expect(Object.keys(motionLevels).filter(isMotionLevel)).toEqual([
       "step",
       "fast",
@@ -209,23 +160,15 @@ describe("a level a store wrote", () => {
       "slow",
       "notice",
     ]);
-    // A readable pair beside the refusals, so a guard that answered `false`
-    // everywhere cannot pass.
+
     expect(isMotionLevel("slow")).toBe(true);
     stored.forEach((value) => expect(isMotionLevel(value)).toBe(false));
   });
 
   it("reads it as the house surface arrival instead of a NaN duration", () => {
-    // The bug this guards: a component's `level` is a persisted choice as often
-    // as a literal — a saved dashboard's per-widget speed, a settings row a
-    // release renamed — while the timing builders take the union this package
-    // carries. A decoded row could therefore reach the timing only through an
-    // assertion, and the read the tables' own documentation promised (a name
-    // they do not carry is the house arrival) had no port to come through.
     stored.forEach((value) => {
       expect(motionLevelOf(value)).toBe("normal");
-      // The reader and the timing cannot disagree: the level the reader answers
-      // is the one both timing builders move on.
+
       expect(motionTiming(motionLevelOf(value))).toEqual(
         motionTiming("normal"),
       );
@@ -233,8 +176,7 @@ describe("a level a store wrote", () => {
         presenceTiming("normal"),
       );
     });
-    // A name the table carries keeps its own duration, so the reader is not a
-    // constant.
+
     expect(motionLevelOf("slow")).toBe("slow");
     expect(motionTiming(motionLevelOf("slow"))).toEqual({
       duration: 0.32,
@@ -243,7 +185,6 @@ describe("a level a store wrote", () => {
   });
 
   it("keeps the reduced preference's read of it", () => {
-    // The repair must not resurrect the journey the preference removes.
     expect(
       motionTiming(motionLevelOf("elapsed"), { preference: "reduced" }),
     ).toEqual({ duration: 0 });
@@ -252,8 +193,6 @@ describe("a level a store wrote", () => {
 
 describe("reduced motion", () => {
   it("collapses the run to an instant assignment with no easing", () => {
-    // No easing, because a duration-zero transition with a named curve is still
-    // a description of a journey the reader asked not to take.
     expect(motionTiming("slow", { preference: "reduced" })).toEqual({
       duration: 0,
     });
@@ -269,19 +208,11 @@ describe("reduced motion", () => {
 
 describe("the preference a run resolves", () => {
   it("is the provider's when the caller states no override", () => {
-    // One provider supplies the flag for the whole tree: a reader who asked for
-    // less motion is answered by every hook and surface below it, not only by
-    // the ones a caller remembered to pass the flag to. A tree that states
-    // nothing moves (`MotionProvider`'s own default).
     expect(reducedMotionOf(undefined, "reduced")).toBe(true);
     expect(reducedMotionOf(undefined, "animated")).toBe(false);
   });
 
   it("yields to the caller's override in both directions", () => {
-    // The option is a per-run override, not a second state of the policy: a
-    // decorative run can be silenced in an animated tree, and one that must move
-    // keeps moving under a reduced provider. `undefined` is the absence that
-    // means "no override", so `false` has to be honoured rather than read as one.
     expect(reducedMotionOf(true, "animated")).toBe(true);
     expect(reducedMotionOf(false, "reduced")).toBe(false);
     expect(reducedMotionOf(false, "animated")).toBe(false);
@@ -289,21 +220,12 @@ describe("the preference a run resolves", () => {
 });
 
 describe("a preference the table does not carry", () => {
-  /**
-   * The bug these guard: the preference is a **stored** choice — an application
-   * reads its motion setting back from storage and hands it to `MotionProvider`
-   * — and every timing read `preference === "reduced"` directly. A setting that
-   * came back as a name the union never described (a renamed value, a `"true"`
-   * from a checkbox column) therefore animated a reader who had asked for less
-   * motion, silently, because a reduced run is the one policy this package
-   * cannot leave to the caller's intent.
-   */
   it("is the reduced policy when it is present and not a name", () => {
     const stored = ["Reduced", "true", 1, {}];
     stored.forEach((preference) => {
       expect(preferenceOf(preference)).toBe("reduced");
     });
-    // The same rule for the entry points a surface builds its timing with.
+
     expect(motionTiming("normal", { preference: "Reduced" })).toEqual({
       duration: 0,
     });
@@ -313,15 +235,6 @@ describe("a preference the table does not carry", () => {
   });
 
   it("is the same policy in reducedMotionOf, the rule a package composes", () => {
-    // The bug this guards: `reducedMotionOf` is published as *the* rule a
-    // package composing the timing table reuses ("so a package composing the
-    // table does not re-decide what less motion means"), and it compared the
-    // preference with `=== "reduced"` while `preferenceOf` — the reader every
-    // timing entry point sits on — reads a value that is present and not a name
-    // as the reduced policy. A package that handed it its own decoded settings
-    // row therefore animated a reader whose stored preference this release no
-    // longer names: the two readers disagreed about the same value, on the one
-    // direction the policy cannot leave to intent.
     const stored: ReadonlyArray<unknown> = [
       "Reduced",
       "REDUCED",
@@ -338,15 +251,12 @@ describe("a preference the table does not carry", () => {
         preferenceOf(preference) === "reduced",
       );
     });
-    // The two names above are also the only ones a caller's override yields to.
+
     expect(reducedMotionOf(false, "REDUCED")).toBe(false);
     expect(reducedMotionOf(true, "animated")).toBe(true);
   });
 
   it("is the house animated one when the application stored nothing", () => {
-    // Absence is not the failure above: a nullish value is what a config that
-    // never carried the setting decodes to, and a tree that states no
-    // preference has always moved. The two names are their own answers.
     [null, undefined].forEach((preference) => {
       expect(preferenceOf(preference)).toBe("animated");
     });
@@ -361,9 +271,6 @@ describe("a preference the table does not carry", () => {
 
 describe("motionTimingOf", () => {
   it("names a duration outside the shared levels, with the phase easing", () => {
-    // A toast enters at 220 ms and leaves at 180 ms: durations the level table
-    // does not carry, so the surface builds its timing from here instead of
-    // borrowing a level that would change the feel of every other surface.
     expect(motionTimingOf(220, { phase: "enter" })).toEqual({
       duration: 0.22,
       ease: "easeOut",
@@ -381,12 +288,6 @@ describe("motionTimingOf", () => {
   });
 
   it("takes the curve a surface names, and refuses one it cannot read", () => {
-    // The bug this guards: a surface with a feel of its own named its duration
-    // here but not its curve, so the toast's swipe-back borrowed the `standard`
-    // phase's ease-in-out and settled flat. A stored curve reaches this
-    // function as often as a literal, and the renderer refuses the **whole**
-    // description for one it cannot read — no frame at all — so an unreadable
-    // value is the phase's curve rather than the runtime's refusal.
     const curve = [0.22, 1, 0.36, 1] as const;
     expect(motionTimingOf(260, { phase: "standard", ease: curve })).toEqual({
       duration: 0.26,
@@ -396,16 +297,13 @@ describe("motionTimingOf", () => {
       duration: 0.26,
       ease: "easeInOut",
     });
-    // The preference still removes the journey: a curve never resurrects it.
+
     expect(motionTimingOf(260, { preference: "reduced", ease: curve })).toEqual(
       { duration: 0 },
     );
   });
 
   it("reads a duration it cannot run as the house surface arrival", () => {
-    // The same fallback `motionTiming` applies to an unknown level: a NaN or a
-    // zero must not hand the runtime a NaN or an instant tween the caller did
-    // not ask for.
     expect(motionTimingOf(Number.NaN)).toEqual({
       duration: 0.2,
       ease: "easeInOut",
@@ -417,34 +315,19 @@ describe("motionTimingOf", () => {
   });
 
   it("reads a duration past the clock the renderer schedules as the house arrival", () => {
-    // The bug this guards: the binding converts a transition's seconds into a
-    // `Duration` and rejects the **whole** description for a value it cannot
-    // represent (`@gpuix/native@0.11.0`, `packages/native/src/motion.rs`'s
-    // `validate_seconds`), and its own suite pins `duration: 1e300` as refused.
-    // A refused description paints no frame at all, so a surface built from a
-    // stored duration above the clock's range appeared without its fade and
-    // left without its travel. `motionTimingOf` read only finiteness and sign;
-    // `presenceTimingOf` already reads the same field as no journey.
     const house = { duration: 0.2, ease: "easeInOut" } as const;
     expect(motionTimingOf(1e300)).toEqual(house);
     expect(motionTimingOf(1e19)).toEqual(house);
-    // A large duration inside the clock is kept, so the rule cannot pass by
-    // discarding every value past a house level.
+
     expect(motionTimingOf(1e12)).toEqual({ duration: 1e9, ease: "easeInOut" });
   });
 
   it("reads an options object the caller does not have as the house timing", () => {
-    // The bug this guards: `options` is a config as often as a literal, and a
-    // settings row the store never wrote reads back as `null` (JSON has no
-    // `undefined`), so `options.phase` threw out of the render that built a
-    // surface's timing. An absent object is the house timing a caller who says
-    // nothing gets, and an option it does not name falls back the same way.
     const house = { duration: 0.2, ease: "easeInOut" } as const;
     expect(motionTimingOf(200, null)).toEqual(house);
     expect(motionTiming("normal", null)).toEqual(house);
     expect(motionTimingOf(200, undefined)).toEqual(house);
-    // A stored field is the absence too: `??` is the rule the object's own
-    // defaults use, so a phase or preference a store nulled is not a crash.
+
     expect(motionTimingOf(200, { phase: null })).toEqual(house);
     expect(motionTimingOf(200, { preference: null })).toEqual(house);
   });

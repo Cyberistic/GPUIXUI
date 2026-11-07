@@ -17,23 +17,6 @@ import {
   type KeywordRules,
 } from "./tag-input-preview";
 
-/**
- * Browser previews for the Tag input page.
- *
- * The shipped field is a group that owns the draft and the add rules while the
- * caller owns the tokens, so the preview keeps the same split: a chip removes
- * by value, a comma arrives through the input's own `onChange` and commits the
- * words before it, and Enter commits the whole draft. The group takes the
- * density's `md` control height and the field the `sm` one, both from the theme
- * bridge, so a platform switch re-heights the field the way it re-heights the
- * native group.
- *
- * The preview is a browser rendering: the native field paints its hint in the
- * `placeholder` role because the runtime hands an empty host a fixed grey, and
- * the native removal control is a 24px press target with a 14px glyph.
- */
-
-/** The removal control's glyph, at the `sm` icon step the component paints. */
 const RemoveGlyph = () => (
   <svg
     aria-hidden="true"
@@ -47,26 +30,17 @@ const RemoveGlyph = () => (
 );
 
 interface PreviewGroupProps {
-  /** The group's accessible name, the way a caller labels the field. */
   readonly label: string;
   readonly state: Keywords;
   readonly rules: KeywordRules;
   readonly disabled?: boolean;
-  /** A quiet note at the end of the field: the cap, a key that commits. */
+
   readonly hint?: string;
-  /** The caller's own state under the field: the preset and the budget. */
+
   readonly caption?: string;
   readonly onChange?: (next: Keywords) => void;
 }
 
-/**
- * One token group: the chips, the field and the removal controls.
- *
- * Every edit path goes through the preview's rules, so the drawing answers the
- * way the component does — including the disabled group, which refuses a
- * typed comma, an Enter and a removal without moving either the tokens or the
- * draft.
- */
 const PreviewGroup = ({
   label,
   state,
@@ -135,7 +109,6 @@ const PreviewGroup = ({
   );
 };
 
-/** A publish form: keywords, the budget, the gate and a read-only toggle. */
 const TagInputWorkflow = () => {
   const [keywords, setKeywords] = useState<Keywords>({
     tokens: ["react", "gpuix", "components", "design", "docs"],
@@ -146,9 +119,7 @@ const TagInputWorkflow = () => {
 
   const update = (next: Keywords): void => {
     const added = next.tokens.length - keywords.tokens.length;
-    // A commit that clears the draft without adding a token was refused — a
-    // duplicate or the fifth keyword — and the form says so rather than letting
-    // the reader think the field lost their word.
+
     if (added === 0 && keywords.draft.trim() !== "" && next.draft === "") {
       setRefused((count) => count + 1);
     }
@@ -193,7 +164,6 @@ const TagInputWorkflow = () => {
   );
 };
 
-/** Rest, at the limit, duplicates allowed and disabled. */
 const TagInputStates = () => {
   const [rest, setRest] = useState<Keywords>(emptyKeywords);
   const [full, setFull] = useState<Keywords>({
@@ -349,7 +319,6 @@ const Keywords = ({ tokens }: { tokens: ReadonlyArray<string> }) => (
   </TagInput>
 </>;`;
 
-/** One exported example per preview, with the usage its Code tab shows. */
 export {
   TagInputStates,
   TagInputWorkflow,

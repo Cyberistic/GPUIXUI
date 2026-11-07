@@ -1,17 +1,3 @@
-/**
- * ImageZoom in the real GPUix renderer.
- *
- * The bugs these guard: a picture that never grows because the pointer lands on
- * the image instead of the frame; a zoom that jumps instead of travelling; a pan
- * that drifts the spot the reader points at, or slides the picture off its frame
- * and shows the page behind it; a frame that re-lays out as the picture grows; a
- * reduced-motion reader losing the magnification instead of its journey; and a
- * picture with no accessible name.
- *
- * The motion clock is paused for the frame readings, so a box is the target the
- * runtime was handed rather than wherever real time had got.
- */
-
 import * as Arr from "effect/Array";
 import { describe, expect, it, vi } from "vitest";
 import { ImageZoom, type ImageZoomProps } from "../image-zoom.js";
@@ -21,7 +7,6 @@ import { renderComponent } from "../internal/test-root.js";
 import { darkTheme } from "../internal/theme.js";
 import { MotionProvider } from "../motion.js";
 
-/** A 200 × 120 frame: at 1.6× the picture is 320 × 192, so 120 px and 72 px pan. */
 const frame = { width: 200, height: 120 };
 
 const render = (props: Partial<ImageZoomProps> = {}) => {
@@ -39,7 +24,6 @@ const render = (props: Partial<ImageZoomProps> = {}) => {
   return page;
 };
 
-/** The picture's box relative to the frame, and the frame's own box. */
 const painted = (page: ReturnType<typeof renderComponent>) => {
   const outer = requireBounds(page, "frame");
   const picture = requireBounds(page, "image-zoom-image");
@@ -54,7 +38,6 @@ const painted = (page: ReturnType<typeof renderComponent>) => {
   };
 };
 
-/** Point at a fraction of the frame, then settle the frame the runtime paints. */
 const pointAt = (
   page: ReturnType<typeof renderComponent>,
   across: number,
@@ -68,7 +51,6 @@ const pointAt = (
   settle(page);
 };
 
-/** Advance the paused motion clock and settle the frame it delivers. */
 const advance = (page: ReturnType<typeof renderComponent>, ms: number) => {
   page.renderer.clockFastForward(ms);
   settle(page);
@@ -95,15 +77,13 @@ describe("ImageZoom", () => {
       pointAt(page, 0.75, 0.5);
       advance(page, 400);
 
-      // Three quarters across a 320 px picture is 240 px in, so the picture
-      // starts 90 px to the left; half way down leaves 36 px above the frame.
       expect(painted(page).picture).toEqual({
         left: -90,
         top: -36,
         width: 320,
         height: 192,
       });
-      // The frame is the fixed thing the picture moves inside.
+
       expect(requireBounds(page, "frame")).toEqual(outer);
     } finally {
       page.unmount();
@@ -111,9 +91,6 @@ describe("ImageZoom", () => {
   });
 
   it("magnifies both axes by the same factor, so the picture keeps the frame's shape", () => {
-    // The rule the docs preview broke: a magnifier is a box measured against the
-    // frame, so both sides grow by the zoom and the picture is never stretched.
-    // A preview that inherited a width cap grew the height alone.
     const page = render();
     try {
       page.renderer.clockPause();
@@ -173,8 +150,7 @@ describe("ImageZoom", () => {
       const far = painted(page).picture;
       expect(far.left).toBeLessThanOrEqual(-119.5);
       expect(far.top).toBeLessThanOrEqual(-71.5);
-      // The far edge of the picture is still at or past the frame's, so the pan
-      // never pulls the picture away and shows the page behind it.
+
       expect(far.left + far.width).toBeGreaterThanOrEqual(frame.width);
       expect(far.top + far.height).toBeGreaterThanOrEqual(frame.height);
     } finally {
@@ -201,10 +177,6 @@ describe("ImageZoom", () => {
   });
 
   it("pans from the frame the surface is in now, not the one it first reported", () => {
-    // A frame moved by a layout above it keeps the box it last reported, because
-    // `onLayout` fires on a size change and not a move. The pan is then taken
-    // against a frame the picture is no longer inside: pointing at three
-    // quarters across the frame as it sits now reads as the far edge.
     const Shifted = ({ inset }: { readonly inset: number }) => (
       <div style={{ paddingLeft: inset, paddingTop: inset }}>
         <ImageZoom
@@ -235,7 +207,7 @@ describe("ImageZoom", () => {
 
       const frameNow = requireBounds(page, "shifted-frame");
       const picture = requireBounds(page, "image-zoom-image");
-      // Three quarters across the 320 px picture: the same pan as at the origin.
+
       expect({
         left: picture.x - frameNow.x,
         top: picture.y - frameNow.y,
@@ -265,7 +237,6 @@ describe("ImageZoom", () => {
 
       pointAt(page, 0.5, 0.5);
 
-      // No clock advanced: the resting frame is already the magnified box.
       expect(painted(page).picture).toEqual({
         left: -60,
         top: -36,

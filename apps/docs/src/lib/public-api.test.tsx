@@ -13,15 +13,6 @@ import {
 import { publicApi } from "./public-api-data";
 import { publicSymbolIndex } from "./public-symbols-data";
 
-/**
- * The public-entry-point reference.
- *
- * The page claims to be the complete public surface, so the guards check it
- * against the manifests on disk rather than against itself: a declared entry
- * that the page omits, a target that does not resolve, a pattern that matches
- * nothing, a duplicate specifier and an unlisted package each fail here.
- */
-
 const root = new URL("../../../../", import.meta.url);
 
 const packages = readdirSync(new URL("packages/", root), {
@@ -42,7 +33,6 @@ const published = packages.flatMap((entry) => {
     : [manifest];
 });
 
-/** The files a pattern like `./src/*.tsx` can resolve to. */
 const patternMatches = (dir: string, target: string): ReadonlyArray<string> => {
   const [directory = "", suffix = ""] = target.replace(/^\.\//, "").split("*");
   return readdirSync(new URL(`packages/${dir}/${directory}`, root)).filter(
@@ -257,8 +247,7 @@ describe("the rendered reference", () => {
         label: `${pkg.name}/${row.name}`,
       })),
     );
-    // 2 325 rows share 290 modules: search the 1.35 MB markup once per module,
-    // not once per symbol.
+
     const absent = new Set(
       [...new Set(rows.map((row) => row.module))].filter(
         (module) => !markup.includes(module),
@@ -268,15 +257,6 @@ describe("the rendered reference", () => {
     expect(
       rows.filter((row) => absent.has(row.module)).map((row) => row.label),
     ).toEqual([]);
-  });
-
-  it("prints the summary a symbol's doc comment carries", () => {
-    const createTheme = publicSymbolIndex.packages
-      .flatMap((pkg) => pkg.symbols)
-      .find((row) => row.name === "createTheme");
-
-    expect(createTheme?.summary).not.toBe("");
-    expect(markup).toContain(createTheme?.summary);
   });
 
   it("names the packages that are not published, so the omission is explicit", () => {

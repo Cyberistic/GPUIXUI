@@ -1,16 +1,8 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * UserMenu example: the standalone account row.
- *
- * It runs outside a sidebar, so the trigger opens below itself. Every row is a
- * callback; the example only records the last one so the paint shows it ran.
- */
-
 import { useState } from "react";
 import { textStyle, useTheme } from "../src/internal/theme.js";
 import { UserMenu } from "../src/user-menu.js";
 
-/** The account menu with one handler per row. */
 export const UserMenuExample = () => {
   const theme = useTheme();
   const [last, setLast] = useState("none");

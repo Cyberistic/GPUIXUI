@@ -16,38 +16,17 @@ import {
 } from "@gpuixui/tokens";
 import { describe, expect, it } from "vitest";
 
-/**
- * The variant tables a curated page prints, held to the recipe it documents.
- *
- * Bug guarded: `badge.mdx` and `card.mdx` answered a variant prop with "the
- * table above" while the page printed no variants table at all — the only
- * table under `## API reference` was the prop list, and the prune that removed
- * the old prose took the table with it. A reader was told what a variant
- * changes and could not find it, on two of the pages the mission's template
- * asks to carry the important variants.
- *
- * The tables are now held from both sides: a page states every variant the
- * recipe ships and no other, and each cell is exactly the roles the component's
- * own classes compile to — resolved through `classesToStyle` with the shipped
- * themes, so a paint change moves the page instead of leaving it teaching an
- * old role. The same file refuses a page that points at a table its own section
- * does not print.
- */
-
 const dir = new URL("../../content/docs/components/", import.meta.url);
 const page = (name: string): string => readFileSync(new URL(name, dir), "utf8");
 
 type Role = (typeof colorRoles)[number];
 
-/** A role a recipe names, if the name is one the theme carries. */
 const role = (name: string): Role | undefined =>
   colorRoles.find((candidate) => candidate === name);
 
-/** `muted-foreground` → `mutedForeground`: a utility's name for a role. */
 const camel = (name: string): string =>
   name.replace(/-([a-z0-9])/g, (_, letter: string) => letter.toUpperCase());
 
-/** The roles one recipe paints, read from the classes the component passes. */
 interface Paint {
   readonly fill?: Role;
   readonly ink?: Role;
@@ -55,15 +34,6 @@ interface Paint {
   readonly lift?: "sm" | "md" | "lg";
 }
 
-/**
- * `border-input` and `border-strong` are the two edges `@gpuixui/tw` names
- * outright rather than resolving from a role.
- *
- * The compiler maps the token, not the utility family: `input` is the fill a
- * field paints, so `bg-input` stays the `input` role while an edge named
- * `input` is the `border` role; `strong` is the picker trigger's stronger edge,
- * a role shadcn has no name for (`packages/tw/src/utilities.ts`).
- */
 const edgeRole = (name: string): Role | undefined =>
   name === "input"
     ? role("border")
@@ -99,7 +69,6 @@ const paintOf = (classes: string): Paint =>
     return paint;
   }, {});
 
-/** The cells of one Markdown table row. */
 const cells = (line: string): ReadonlyArray<string> =>
   line
     .replace(/^\|/, "")
@@ -107,7 +76,6 @@ const cells = (line: string): ReadonlyArray<string> =>
     .split("|")
     .map((cell) => cell.trim());
 
-/** The table under one bold label, as a header and its rows. */
 const tableUnder = (
   body: string,
   heading: string,
@@ -128,7 +96,6 @@ const tableUnder = (
   return { header: cells(header), rows: rows.map(cells) };
 };
 
-/** The paint the shipped themes give one recipe, and the roles it names. */
 const paintsIn = (theme: Theme, classes: string) => {
   const style = classesToStyle(classes, theme).style;
   const paint = paintOf(classes);
@@ -150,10 +117,8 @@ const paintsIn = (theme: Theme, classes: string) => {
   return { style, paint };
 };
 
-/** The cell a variant with no role to name prints. */
 const none = "none";
 
-/** The edge cell a soft tone prints: the solid role at the share it is mixed. */
 const edgeCell = (edge: Paint["edge"]): string =>
   edge === undefined
     ? none
@@ -234,10 +199,6 @@ describe("the card page's treatment table", () => {
   });
 
   it("states the shared surface and the token its edge is spelled as", () => {
-    // The note is the only place a reader learns that `border-input` is
-    // compiled to the `border` role — the mistake the package page made before
-    // it was corrected — and that a card's corner is fixed rather than the
-    // platform's.
     const body = page("card.mdx");
     const start = body.search(/^\*\*Treatments\*\*$/m);
     expect(start).toBeGreaterThan(-1);
@@ -257,8 +218,6 @@ describe("the card page's treatment table", () => {
 
 describe("the component page template", () => {
   it("points only at a table the section prints", () => {
-    // The two pages above were the only writers of the phrase, and both were
-    // wrong; the rule is general so a third page cannot repeat it.
     const pages = readdirSync(dir).filter(
       (name) => name.endsWith(".mdx") && name !== "index.mdx",
     );
@@ -273,9 +232,7 @@ describe("the component page template", () => {
           const found = /the table (above|below)/i.exec(line);
           if (found === null) return [];
           const direction = found[1];
-          // A row of the table it prints in is not the table it points at: the
-          // prop row that writes the phrase must not satisfy its own reference,
-          // so the scan starts after the table the phrase sits in.
+
           const boundary = lines
             .slice(0, index + 1)
             .findLastIndex((candidate) => !candidate.startsWith("|"));

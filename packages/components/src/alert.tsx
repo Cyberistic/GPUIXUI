@@ -1,22 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Alert: a persistent, in-flow message about the current context.
- *
- * In-flow, not floating: an alert occupies its place in the layout and stays
- * until the state it describes changes. A message that appears and leaves on its
- * own is a toast; a message that blocks the window is a dialog.
- *
- * Compound parts (`docs/component-api.md` §8): the root owns `role="alert"` and
- * the tone; `AlertIcon`, `AlertContent`, `AlertTitle`, `AlertDescription`,
- * `AlertLink` and `AlertDismiss` read that tone through a context, so a part is
- * never given a duplicated `tone` prop. The resting appearance is a Tailwind
- * recipe (`ALERT_*`), compiled against shadcn's fixed metrics; the caller's
- * `className` is joined after each part's recipe and its `style` is merged last.
- * The tone's readable foreground is still one dynamic value, so the icon and
- * title paint it through `style`; a link action's colour is derived against the
- * message's own tint, which is not a page surface.
- */
-
 import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { Icon } from "@gpuixui/icons";
@@ -49,19 +31,16 @@ import {
   useTheme,
 } from "./internal/theme.js";
 
-/** The four status tones an alert can carry. */
 export type AlertTone = "info" | "success" | "warning" | "danger";
 
 interface AlertContextValue {
-  /** The root's tone, so a part can paint its own region. */
   readonly tone: AlertTone;
-  /** The tone's readable text colour on the soft surface. */
+
   readonly foreground: string;
 }
 
 const AlertContext = createContext<AlertContextValue | undefined>(undefined);
 
-/** The root's tone. A part outside an alert is a composition error. */
 const useAlert = (): AlertContextValue => {
   const value = useContext(AlertContext);
   if (value === undefined) {
@@ -70,23 +49,12 @@ const useAlert = (): AlertContextValue => {
   return value;
 };
 
-/** {@link Alert} props. */
 export interface AlertProps extends Omit<Props, "children"> {
-  /** Default `"info"`. */
   readonly tone?: AlertTone;
   readonly className?: string;
   readonly children?: PartChildren;
 }
 
-/**
- * The tone-tinted surface and the alert live region.
- * Defaults to `info`, so an unqualified alert reads as neutral information.
- *
- * A tone is stored with the message (a notification record, a saved status
- * item), so a name this release no longer carries reads as `info` — the family
- * the token palette substitutes for it — rather than dropping the class, the
- * edge and the wash while the ink stays the tone's.
- */
 export const Alert = ({
   tone: requestedTone = "info",
   className,
@@ -107,8 +75,7 @@ export const Alert = ({
         style={mergeStyles(
           mergeStyles(
             recipeStyle(cn(ALERT_BASE, ALERT_TONES[value], className), theme),
-            // The wash inherits to the copy inside, and the tint is the surface
-            // it is read on — not a page role the designed wash answers for.
+
             { selectionColor: messageSelection(theme, value) },
           ),
           style,
@@ -120,12 +87,10 @@ export const Alert = ({
   );
 };
 
-/** {@link AlertIcon} props. */
 export interface AlertIconProps extends Props {
   readonly className?: string;
 }
 
-/** The leading glyph, painted in the tone's foreground. */
 export const AlertIcon = ({ className, style, ...rest }: AlertIconProps) => {
   const theme = useTheme();
   const { foreground } = useAlert();
@@ -143,13 +108,11 @@ export const AlertIcon = ({ className, style, ...rest }: AlertIconProps) => {
   );
 };
 
-/** {@link AlertContent} props. */
 export interface AlertContentProps extends Omit<Props, "children"> {
   readonly className?: string;
   readonly children?: PartChildren;
 }
 
-/** The growing column between the glyph and the dismiss control. */
 export const AlertContent = ({
   className,
   children,
@@ -172,12 +135,10 @@ export const AlertContent = ({
   );
 };
 
-/** {@link AlertTitle} props. */
 export interface AlertTitleProps extends Props {
   readonly className?: string;
 }
 
-/** The heading. It always uses the tone's readable foreground. */
 export const AlertTitle = ({ className, style, ...rest }: AlertTitleProps) => {
   const theme = useTheme();
   const { foreground } = useAlert();
@@ -195,15 +156,10 @@ export const AlertTitle = ({ className, style, ...rest }: AlertTitleProps) => {
   );
 };
 
-/** {@link AlertDescription} props. */
 export interface AlertDescriptionProps extends Props {
   readonly className?: string;
 }
 
-/**
- * Body prose in the page foreground rather than the tone's, because body text
- * has to stay readable on the tint. It is a container, so it may hold an action.
- */
 export const AlertDescription = ({
   className,
   style,
@@ -222,15 +178,12 @@ export const AlertDescription = ({
   );
 };
 
-/** {@link AlertDismiss} props. */
 export interface AlertDismissProps extends Omit<Props, "children"> {
-  /** The dismiss handler. Required, so a dismiss control always does something. */
   readonly onDismiss: () => void;
-  /** The accessible name. Default `"Dismiss"`. */
+
   readonly label?: string;
 }
 
-/** The focusable dismiss control; omitted from the composition when unwanted. */
 export const AlertDismiss = ({
   onDismiss,
   label = "Dismiss",
@@ -250,24 +203,11 @@ export const AlertDismiss = ({
   );
 };
 
-/** {@link AlertLink} props. */
 export interface AlertLinkProps extends Props {
-  /** Called on click, or on Enter/Space while the link holds focus. */
   readonly onSelect?: () => void;
   readonly className?: string;
 }
 
-/**
- * A text action inside the message: "Try again", "View the log", "Learn more".
- *
- * It paints the brand **derived against this message's own tint** rather than
- * the shared link colour, because a tint is not a page surface: measured, the
- * page's brand is under the text floor on 28 of the 72 tint placements the
- * shipped styles carry (`brandTextOn` in `@gpuixui/tokens`). The run tints no
- * wash of its own, so the underline is the pointer cue and the tint is the only
- * surface the colour is read on. It is a block-level row, so it starts its own
- * line inside `AlertDescription`.
- */
 export const AlertLink = ({
   onSelect,
   onClick,
@@ -306,8 +246,6 @@ export const AlertLink = ({
             theme,
           ),
           {
-            // A pressable target, not a run of prose: the target floor is the
-            // same 24px every clear and remove control reaches.
             height: targetSize.minimum,
             color: messageLink(theme, value),
             hover: { textDecoration: "underline" },
@@ -323,7 +261,6 @@ export const AlertLink = ({
   );
 };
 
-/** Every part of Alert, so a misplaced sibling is named. */
 const alertParts: ReadonlyArray<PartComponent> = [
   Alert,
   AlertIcon,
@@ -355,7 +292,6 @@ const alertContent: PartsContract = {
   hint: "Put AlertTitle, AlertDescription and AlertLink directly inside AlertContent.",
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const alertMeta = {
   name: "Alerts",
   tier: 2,

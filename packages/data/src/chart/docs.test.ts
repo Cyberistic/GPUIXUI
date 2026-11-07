@@ -1,21 +1,3 @@
-/**
- * The charts page's API tables, held to the props the types declare.
- *
- * The bug this guards: `docs/charts/charts.mdx` documented only the series charts'
- * shared contract, so the page a consumer reads for `DonutChart`,
- * `Sparkline` and `ChartLegend` never named `data`, `size`, `values`, `color`,
- * `items` or their defaults — the three parts were exported, mounted by the
- * examples and documented nowhere. The reader fails by name in both
- * directions: a prop a type gains without a row, and a row no type declares.
- *
- * The last case holds the one claim about the labels' box: a category label
- * wider than its slot is clipped, which the paint did not do while the
- * inventory row said it did.
- *
- * `node:fs` is test-only, the shape `sort/docs.test.ts` uses: this checks the
- * repository's Markdown from a plain vitest suite.
- */
-
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
@@ -24,12 +6,7 @@ const read = (path: string): string =>
   readFileSync(new URL(path, import.meta.url), "utf8");
 
 const page = read("../../docs/charts/charts.mdx");
-/**
- * The source of each module a chart part's props are read from.
- *
- * A type is read from the file that **declares** it: the legend's props
- * live beside the legend, not in the file that happens to use it.
- */
+
 const sources = {
   chart: `${read("./chart.tsx")}\n${read("./frame.tsx")}`,
   legend: read("./legend.tsx"),
@@ -40,7 +17,6 @@ const source = sources.chart;
 const recipe = read("./recipe.ts");
 const inventory = read("../../../../.agents/slop/COMPONENTS.md");
 
-/** The value a recipe constant is declared with. */
 const recipeConstant = (name: string): string => {
   const body = new RegExp(`export const ${name} =\\s*([\\s\\S]*?);\\n`).exec(
     recipe,
@@ -49,7 +25,6 @@ const recipeConstant = (name: string): string => {
   return body[1];
 };
 
-/** The inventory's `Charts` row, found by its own prefix. */
 const chartsRow = (): string => {
   const row = inventory
     .split("\n")
@@ -59,24 +34,14 @@ const chartsRow = (): string => {
   return row;
 };
 
-/** One page section and the props type it documents. */
 interface Section {
-  /** The heading as the page writes it, backticks included. */
   readonly heading: string;
-  /** The declared type whose fields the section's table must carry. */
+
   readonly type: string;
-  /**
-   * The module that declares the type.
-   *
-   * A type is read from the file that **declares** it: the legend's props
-   * live beside the legend, not in the file that happens to use it. A page
-   * section is checked against the type the library ships, wherever it is
-   * written.
-   */
+
   readonly module: "chart" | "legend" | "structure";
 }
 
-/** Every chart part the page must document, and the type behind it. */
 const sections: ReadonlyArray<Section> = [
   { heading: "`BarChart`", type: "BarChartProps", module: "chart" },
   { heading: "`StackedBar`", type: "StackedBarProps", module: "chart" },
@@ -122,10 +87,8 @@ const sections: ReadonlyArray<Section> = [
   { heading: "The shared frame", type: "ChartProps", module: "chart" },
 ];
 
-/** The runtime host props a chart takes from `Props`, documented once. */
 const hostProps: ReadonlyArray<string> = ["aria-label", "style", "ref"];
 
-/** The text under one `###` heading, up to the next heading at its level. */
 const sectionOf = (site: string, heading: string): string => {
   const start = site.indexOf(`### ${heading}\n`);
   if (start === -1) throw new Error(`no ${heading} section`);
@@ -134,13 +97,10 @@ const sectionOf = (site: string, heading: string): string => {
   return next === -1 ? body : body.slice(0, next);
 };
 
-/** The fields a props interface declares itself, in source order. */
 const declaredProps = (
   type: string,
   module: Section["module"],
 ): ReadonlyArray<string> => {
-  // A props interface may extend another's — the cartesian ones do — or
-  // stand alone, and a doc comment may sit between the name and the brace.
   const body = new RegExp(
     `export interface ${type}[^{]*\\{([\\s\\S]*?)\\n\\}`,
   ).exec(sources[module]);
@@ -150,13 +110,11 @@ const declaredProps = (
   );
 };
 
-/** The props one section's table documents, in page order. */
 const documentedProps = (body: string): ReadonlyArray<string> =>
   [...body.matchAll(/^\| `([^`]+)` \|/gm)].flatMap((match) =>
     match[1] === undefined ? [] : [match[1]],
   );
 
-/** Every declared prop a section leaves without a row, named by section. */
 const undocumented = (section: Section): ReadonlyArray<string> => {
   const documented = documentedProps(sectionOf(page, section.heading));
   return Arr.map(
@@ -168,7 +126,6 @@ const undocumented = (section: Section): ReadonlyArray<string> => {
   );
 };
 
-/** Every row naming a prop the section neither declares nor inherits. */
 const invented = (section: Section): ReadonlyArray<string> => {
   const declared = declaredProps(section.type, section.module);
   return Arr.map(
@@ -232,21 +189,12 @@ describe("the charts page's API tables", () => {
   });
 
   it("clips a category label to its slot, and says so", () => {
-    // A slot is the plot's width divided by the number of labels, so the words
-    // are often wider than the box they sit in. Measured, "September" in a
-    // 50px slot painted a 63px run from 6.5px before the slot's left edge, over
-    // the category beside it — while the inventory row claimed such a label is
-    // clipped. The paint is three together: the slot clips, the label's box is
-    // the slot, and the label is one line. The page and the row have to say
-    // what the paint does.
     expect(recipeConstant("CHART_CATEGORY")).toContain("overflow-hidden");
     expect(recipeConstant("CHART_CATEGORY_LABEL")).toContain("text-ellipsis");
     expect(recipeConstant("CHART_CATEGORY_LABEL")).toContain(
       "whitespace-nowrap",
     );
-    // The label's own width is its slot, which is what gives it an edge to end
-    // at. Without it the run keeps its intrinsic width and only the parent's
-    // clip hides it.
+
     expect(source).toContain("CHART_CATEGORY_LABEL");
     expect(source).toMatch(/width: slot \* stride,\s*\n\s*textAlign: "center"/);
     expect(page).toContain("clipped at the slot's edge");
@@ -254,23 +202,17 @@ describe("the charts page's API tables", () => {
   });
 
   it("names the scene compiler and the subpaths the chart depends on", () => {
-    // The page tells a consumer where the chart's geometry comes from. If the
-    // dependency changes, the page has to change with it — and it has to name
-    // the **DOM-free** subpaths, because TanStack's DOM renderers need a
-    // `document` this runtime does not have.
     const bridge = read("./scene.ts");
     expect(bridge).toContain("@tanstack/charts/scene");
     expect(bridge).toContain("@tanstack/charts/scales/linear");
     expect(page).toContain("TanStack Charts");
     expect(page).toContain("/scales/*");
-    // The DOM renderers are named only to be ruled out.
+
     expect(bridge).not.toContain("@tanstack/charts/canvas");
     expect(bridge).not.toContain("@tanstack/charts/dom");
   });
 
   it("says that a chart is one element with every series' colour", () => {
-    // The claim the whole route rests on, and the one a consumer checking
-    // against Recharts would want stated plainly.
     expect(page).toContain("every series' own colour");
     expect(page).toContain("one element");
     expect(page).toContain("real gradient");

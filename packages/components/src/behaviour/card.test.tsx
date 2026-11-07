@@ -1,15 +1,3 @@
-/**
- * Card behaviour, driven through the real GPUix test renderer.
- *
- * The bugs these guard: a variant that does not change the surface treatment; a
- * part that renders nothing; the title losing its heading role or level; and a
- * consumer's `style` losing to the variant instead of overriding it.
- *
- * Runs wherever GPUix publishes a native binding, which on 2026-10-17 includes
- * this Intel Mac because plan 140's locally built `darwin-x64` binding is in the
- * store; `nub run --filter @gpuixui/components test:behaviour` is how it is run.
- */
-
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import {
@@ -81,14 +69,9 @@ describe("Card", () => {
   });
 
   it("paints the outlined default for a stored variant name it does not ship", () => {
-    // The bug guarded: the variant indexed `CARD_VARIANTS` raw, so a name a
-    // release renamed (a card saved as `"bordered"`) answered `undefined`, the
-    // recipe dropped the entry, and the surface painted neither the documented
-    // `outline` edge nor a lift — a card with no boundary at all on a page.
     const card = renderComponent(
       <Card
         testId="card"
-        // A store keeps the name it wrote; this release does not declare it.
         // @ts-expect-error — the value a saved variant actually carries
         variant="bordered"
       />,

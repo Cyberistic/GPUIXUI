@@ -1,69 +1,29 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * The one way a behaviour suite renders: the real GPUix test renderer, under one
- * theme, at a fixed window size so bounds assertions are stable (plan 110 §10).
- *
- * Only `src/behaviour/**` may import this file. `createTestRoot` comes from
- * `@gpuix/react/testing`, whose import needs a published native binding: on a
- * host without one the file fails to load rather than skipping, which is why the
- * behaviour suites are a separate vitest project (plan 117 §5a–§5c).
- */
-
 import { createTestRoot, type TestRoot } from "@gpuix/react/testing";
 import type { ReactNode } from "react";
 import { darkTheme, lightTheme, ThemeProvider, type Theme } from "./theme.js";
 
 const testThemes = { light: lightTheme, dark: darkTheme } as const;
 
-/** A theme a behaviour suite can render under. */
 export type TestTheme = keyof typeof testThemes;
 
-/**
- * What a behaviour suite may pass as the theme: a base theme's name, or a
- * resolved `Theme` a case derives (`platformTheme(lightTheme, "darwin")`) when
- * the paint under test only differs in a style the two base themes do not carry.
- */
 export type RenderTheme = TestTheme | Theme;
 
-/** A native test root, rerenderable under the theme it was created with. */
 export interface ComponentTestRoot {
-  /** The renderer whose real hit-testing, focus and layout the assertions read. */
   readonly renderer: TestRoot["renderer"];
-  /** Render a new tree in the same root and theme. */
+
   readonly rerender: (node: ReactNode) => void;
-  /** Tear the root down. */
+
   readonly unmount: () => void;
 }
 
-/**
- * Whether a root from this module is mounted. The native renderer paints one
- * window at a time: a second `createTestRoot` takes the window over and the
- * first root's tree reads as empty, which looks like a component that rendered
- * nothing. Measured on this host, 2026-10-17 — a theme test that held two roots
- * read `backgroundColor: undefined` for the first.
- *
- * A tree also paints its **last** root child alone: rendering
- * `<><Badge>A</Badge><Badge>B</Badge></>` reads `["B"]`, and a provider wrapping
- * a `Card` and a `Badge` paints only the badge. Measured 2026-10-22 while
- * testing the published `ThemeProvider`, which is why that suite renders one
- * root element and composes inside it.
- */
 let mounted = false;
 
-/**
- * Render `node` in the native GPUix test renderer under one theme. Throws when a
- * previous root is still mounted, so the one-window rule is enforced rather than
- * misread as a missing component. A raw `throw` is deliberate: misusing a test
- * harness is a programming error at the boundary, not a domain failure a caller
- * could recover from (plan 110 §8.6 takes the same line for compound parts).
- */
-/** The window a suite renders in. Default 1280×800, the size every suite reads. */
 export interface TestViewport {
   readonly width: number;
   readonly height: number;
 }
 
-/** The default test window: wide enough for the desktop layouts. */
 export const DEFAULT_VIEWPORT: TestViewport = { width: 1280, height: 800 };
 
 export const renderComponent = (

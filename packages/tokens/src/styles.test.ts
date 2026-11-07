@@ -89,28 +89,17 @@ describe("textStyle", () => {
     );
   });
 
-  /**
-   * A role name is content before it is a literal: a saved markdown node, a
-   * rich-text span or a restored inspector row carries a heading level, and a
-   * release that renames or drops a role hands `textStyle` a string the union no
-   * longer names. The lookup answered `undefined`, so the first property read
-   * threw `TypeError: Cannot read properties of undefined (reading 'fontSize')`
-   * and took the window down mid-render. A role the scale does not carry reads as
-   * `body` — the rule `@gpuixui/primitives`' `typeOf` already follows — so the
-   * text still paints at the base role instead of painting nothing at all.
-   */
   it("reads a role the scale does not carry as the body role", () => {
-    // The cast is the storage boundary: a document's role is unknown input.
     const stored = JSON.parse('"subtitle"') as TextRole;
 
     expect(textStyle(lightTheme, stored)).toEqual(
       textStyle(lightTheme, "body"),
     );
-    // The family follows the role that paints, not the name that arrived.
+
     expect(textStyle(lightTheme, stored).fontFamily).toBe(
       lightTheme.typography.sans,
     );
-    // And a role the scale does carry is still its own.
+
     expect(textStyle(lightTheme, "h1")).toEqual({
       fontSize: lightTheme.typography.h1.fontSize,
       lineHeight: lightTheme.typography.h1.lineHeight,
@@ -119,18 +108,6 @@ describe("textStyle", () => {
     });
   });
 
-  /**
-   * The bug this guards: a theme restored from storage can predate the type
-   * group, lose it to a truncating store, or carry a role JSON nulled or wrote
-   * as `"14"` where a size belongs. `textStyle` read `theme.typography[name]`
-   * directly, so `AvatarGroup`, `CodeBlock`, `PinnedList` and the five motion
-   * text components — every painter that spreads this seam — threw
-   * `TypeError: Cannot read properties of undefined (reading 'body')` on their
-   * first paint and took the window down. The gate refuses such a theme
-   * (`missingTokens`), but a surface can paint one nobody has audited yet, so
-   * the seam answers the library's own role, the rule the primitives' `typeOf`
-   * and `familyOf` already follow. The shipped type group is unchanged.
-   */
   it("answers the library's type for a theme that lost it", () => {
     const stored = (typography: unknown) =>
       ({ ...lightTheme, typography }) as Theme;
@@ -141,7 +118,7 @@ describe("textStyle", () => {
     expect(textStyle(nulled, "codeBlock")).toEqual(
       textStyle(lightTheme, "codeBlock"),
     );
-    // A family the store blanked, and a role it nulled, are the same absence.
+
     expect(textStyle(lost, "code").fontFamily).toBe(lightTheme.typography.mono);
     const blank = stored({
       typography: { ...lightTheme.typography, sans: " " },
@@ -153,7 +130,7 @@ describe("textStyle", () => {
     expect(textStyle(droppedRole, "body")).toEqual(
       textStyle(lightTheme, "body"),
     );
-    // A value the serialiser drops is no size at all.
+
     const droppedSize = stored({
       typography: {
         ...lightTheme.typography,
@@ -163,7 +140,7 @@ describe("textStyle", () => {
     expect(textStyle(droppedSize, "caption").fontSize).toBe(
       lightTheme.typography.caption.fontSize,
     );
-    // A complete theme still paints its own scale and face.
+
     const brand = extendTheme(lightTheme, {
       typography: { body: { fontSize: 16, lineHeight: 24 }, sans: "Brand" },
     });
@@ -174,19 +151,6 @@ describe("textStyle", () => {
     });
   });
 
-  /**
-   * The source is what a store handed back, not a `Theme`.
-   *
-   * The bug this guards: this seam was total on the group — it read a lost or
-   * nulled type group as the library's own — but its parameter was `Theme`, so a
-   * consumer holding the value `JSON.parse` returned could paint it only through
-   * a cast, which `AGENTS.md` §2 forbids and which the page's "a surface can
-   * paint a theme nobody has audited yet" teaches. `TypeSource` is the storage
-   * port: the group absent or `null`, a role partial or `null`. The call below
-   * must compile without a cast; deleting `TypeSource` and restoring the `Theme`
-   * parameter fails `check-types` on it (TS2305 and TS2345), which is the
-   * direction this case is measured in.
-   */
   it("reads the shape a store hands back, without a cast", () => {
     const stored: TypeSource = {
       typography: {
@@ -200,10 +164,10 @@ describe("textStyle", () => {
       fontWeight: 500,
       fontFamily: "Inter",
     });
-    // A role a store wrote partially is the absence the seam already answers.
+
     const partial: TypeSource = { typography: { h1: { fontSize: 40 } } };
     expect(textStyle(partial, "h1")).toEqual(textStyle(lightTheme, "h1"));
-    // The group itself may be absent or the `null` JSON keeps.
+
     const empty: TypeSource = {};
     const nulled: TypeSource = { typography: null };
     expect(textStyle(empty, "code")).toEqual(textStyle(lightTheme, "code"));
@@ -211,16 +175,6 @@ describe("textStyle", () => {
   });
 });
 
-/**
- * The type group's paint rule, held on every surface a reader meets it on.
- *
- * The bug the seam cases above guard has a documentation half: three pages said
- * a stored theme that lost the type group (or a step in it) was "refused" and
- * left it at that, so a reader could only conclude the paint seam throws. The
- * rule is the split `controlHeight` already documents — the gate refuses, a
- * surface that paints before the audit answers the library's scale — and the
- * catalogue, the design system and the README state it together.
- */
 describe("the type group's paint rule", () => {
   const read = (path: string): string =>
     readFileSync(new URL(path, import.meta.url), "utf8").replace(/\s+/g, " ");
@@ -236,21 +190,19 @@ describe("the type group's paint rule", () => {
     expect(host).toContain('familyOf(theme, "sans")');
     expect(host).toContain("stepOf(theme.radius, radius");
     expect(host).toContain("stepOf(theme.spacing, spacing");
-    // The direct reads the seam replaced would throw on a lost group.
+
     expect(seam).not.toContain("theme.typography[name];");
     expect(host).not.toContain("theme.typography.sans");
   });
 
   it("states the split on the catalogue, the design system and the README", () => {
-    // The same rule, in each page's own words: the gate refuses, the paint
-    // answers the library's scale.
     expect(catalogue).toContain("the paint is a fallback");
     expect(designSystem).toContain("The paint seams still do not throw");
     expect(readme).toContain("The paint seams are not the refusal");
     [catalogue, designSystem, readme].forEach((page) => {
       expect(page).toContain("missingTokens");
       expect(page).toContain("library's own role");
-      // The retracted sentence: the seam does not throw.
+
       expect(page).not.toContain("so an absent role throws");
     });
   });
@@ -268,19 +220,7 @@ describe("control metrics", () => {
     });
   });
 
-  /**
-   * A control size is a stored preference as often as a literal — a toolbar's
-   * compact mode, a settings row, a saved panel — and `density.controlHeight[size]`
-   * answered `undefined` for a name this release does not ship while the helper
-   * declares `number`: the caller spread it into `style.height`, the property was
-   * dropped and the box laid out at whatever its content needed, so a saved
-   * `"xs"` from an older release silently un-sized every control. `md` is the
-   * default step — the size every component falls back to and the one
-   * `switchMetricsAt` calls the platform's published control — the rule
-   * `iconPixels` already follows for an icon size.
-   */
   it("reads a size the scale does not carry as the default step", () => {
-    // The cast is the storage boundary: a saved preference is unknown input.
     const stored = JSON.parse('"xs"') as ControlSize;
 
     expect(controlHeight(lightTheme, stored)).toBe(
@@ -292,19 +232,7 @@ describe("control metrics", () => {
     expect(controlHeight(lightTheme, stored)).toBeGreaterThan(0);
   });
 
-  /**
-   * A density group is a group a store can lose — a theme that predates the
-   * scale, or a `JSON` round-trip truncated past it — and both metrics read
-   * `theme.density.controlHeight[size]` off it: `TypeError: Cannot read
-   * properties of undefined (reading 'controlHeight')` from the first control a
-   * caller laid out, out of two helpers whose job is a number. They answer
-   * absence now, the rule `statusTone`, `focusRing`, `filledHover` and
-   * `selectionOn` follow for the colour roles: the runtime paints the box the
-   * caller sized, and `missingTokens` is what refuses the theme.
-   */
   it("answers a density the theme lost as no box, not a throw", () => {
-    // These shapes are the storage boundary: a restored theme is unknown input,
-    // and `DensitySource` is the port it reads through.
     const lost: DensitySource = { density: null };
     const empty: DensitySource = { density: {} };
     const noGroup: DensitySource = {};
@@ -313,20 +241,20 @@ describe("control metrics", () => {
       expect(controlHeight(theme, "md")).toBeUndefined();
       expect(controlPaddingX(theme, "md")).toBeUndefined();
     });
-    // A theme still carrying one metric answers that one and not the other.
+
     expect(
       controlHeight({ density: { controlHeight: { md: 30 } } }, "md"),
     ).toBe(30);
     expect(
       controlPaddingX({ density: { controlHeight: { md: 30 } } }, "md"),
     ).toBeUndefined();
-    // A stored length that is not a finite number is the same absence.
+
     const stored: DensitySource = JSON.parse(
       '{"density":{"controlHeight":{"md":"8"},"controlPaddingX":{"md":null}}}',
     );
     expect(controlHeight(stored, "md")).toBeUndefined();
     expect(controlPaddingX(stored, "md")).toBeUndefined();
-    // A complete theme is unchanged by the seam.
+
     expect(controlHeight(lightTheme, "md")).toBe(
       lightTheme.density.controlHeight.md,
     );
@@ -387,10 +315,6 @@ describe("statusTone", () => {
   });
 
   it("gives a status message text the page floor measures", () => {
-    // The same role a component paints on the soft surface is the one it paints
-    // as page text (a field error, an inline warning), so both surfaces are
-    // measured. The solid status fill would read 4.4:1 here, below the body
-    // floor — which is why the soft foreground is the text role.
     toneThemes.forEach(([label, theme]) => {
       tones.forEach((tone) => {
         const ratio = contrastRatio(
@@ -404,20 +328,7 @@ describe("statusTone", () => {
     });
   });
 
-  /**
-   * A tone is content as often as a literal: a notification record, a log line's
-   * level or a saved status item carries the family it was written with, and a
-   * release that renames one hands the painter a name `statusTones` no longer
-   * carries. The lookup answered `undefined` — `dangerSoft` is no role — so a
-   * message painted **nothing**, in the one function the `Theme` overload
-   * promises a tone outright and whose callers destructure it (a component's
-   * `const { background, border, foreground } = statusTone(theme, tone)` threw
-   * `Cannot read properties of undefined (reading 'background')`). `info` is the
-   * default family — the tone the boundary resolver substitutes — so the seam
-   * and the boundary agree instead of one painting and the other refusing.
-   */
   it("reads a tone this release does not ship as the default tone", () => {
-    // The cast is the storage boundary: a saved record's tone is unknown input.
     const stored = JSON.parse('"danger"') as StatusTone;
 
     toneThemes.forEach(([label, theme]) => {
@@ -425,18 +336,16 @@ describe("statusTone", () => {
         statusTone(theme, "info"),
       );
     });
-    // The cast is what a consumer's own record needs, so the guard is the route
-    // that says which value it substituted.
+
     expect(isStatusTone(stored)).toBe(false);
     expect(isStatusTone("destructive")).toBe(true);
-    // A name the index does carry still paints its own family.
+
     tones.forEach((tone) => {
       expect(statusTone(lightTheme, tone).background).toBe(
         lightTheme.colors[`${tone}Soft`],
       );
     });
-    // A theme that lost the *roles* is the gate's report, not a name to replace:
-    // its answer stays the absence every seam gives it.
+
     expect(statusTone({ colors: {} }, stored)).toBeUndefined();
   });
 });
@@ -453,15 +362,6 @@ describe("status tone example", () => {
   });
 });
 
-/**
- * Guards the defect the `filledHover` / `filledPressed` helpers were written
- * for: components painted a filled button's hover as `alpha(primary, 0.5)`.
- * A half-alpha fill is translucent, so the button showed whatever surface was
- * behind it — the same action read as two colours on a card and on a dialog —
- * and it could not be checked for label contrast. The derived fill is opaque,
- * moves per channel, and belongs to the theme it came from.
- */
-
 const filledActions: readonly FilledAction[] = [
   "primary",
   "secondary",
@@ -470,7 +370,6 @@ const filledActions: readonly FilledAction[] = [
 
 const filledRoles: readonly FilledRole[] = [...filledActions, "accent"];
 
-/** The label role each filled face paints over its own fill. */
 const filledOn: Readonly<Record<FilledRole, keyof ThemeColors>> = {
   primary: "primaryForeground",
   secondary: "secondaryForeground",
@@ -485,7 +384,6 @@ const fillThemes = [
   ["high-contrast dark", highContrastDarkTheme],
 ] as const;
 
-/** Every shipped, high-contrast, platform and authored style. */
 const shippedStyles = [
   ...Object.values(themes),
   ...Object.values(highContrastThemes),
@@ -497,11 +395,9 @@ const shippedStyles = [
   ),
 ] as const;
 
-/** One `#RRGGBB` channel: 1 red, 3 green, 5 blue. */
 const channelAt = (color: string, at: number): number =>
   Number.parseInt(color.slice(at, at + 2), 16);
 
-/** How far each channel of `fill` is from `target`, summed. */
 const channelDistance = (fill: string, target: string): number =>
   [1, 3, 5].reduce(
     (total, at) =>
@@ -525,16 +421,13 @@ describe("filled action fills", () => {
   });
 
   it("reads a theme that lost the colour group as no fill, not a throw", () => {
-    // A stored theme can predate the whole group. The derivation answers
-    // `undefined` — the rule `filledFeedback` already followed — so a component
-    // keeps the resting fill its recipe paints instead of losing the window.
     expect(filledHover({}, "primary")).toBeUndefined();
     expect(filledPressed({}, "primary")).toBeUndefined();
-    // One role missing is the same absence: there is no fill to move.
+
     expect(
       filledHover({ colors: { primary: "#5F4BDB" } }, "primary"),
     ).toBeUndefined();
-    // A complete theme keeps the derivation it always had.
+
     filledRoles.forEach((role) => {
       expect(filledHover(lightTheme, role)).toBe(
         filledFeedback(lightTheme, role, "hover"),
@@ -543,7 +436,7 @@ describe("filled action fills", () => {
         filledFeedback(lightTheme, role, "pressed"),
       );
     });
-    // The pages a consumer reads before trusting a stored theme say so.
+
     const page = (path: string): string =>
       readFileSync(new URL(path, import.meta.url), "utf8").replace(/\s+/g, " ");
     expect(page("../../../docs/tokens.md")).toContain(
@@ -632,9 +525,6 @@ describe("action state example", () => {
   });
 
   it("paints its disabled state with the neutral pair, not a faded fill", () => {
-    // The fade is a page mechanism: on a card it lands under the disabled floor
-    // (`disabled.test.ts`). The example therefore teaches the pair, which keeps
-    // its label readable and does not depend on what is painted behind it.
     const states = filledActionStyles(lightTheme, "primary");
     expect(states.disabled).toEqual({
       backgroundColor: lightTheme.colors.disabled,
@@ -646,31 +536,6 @@ describe("action state example", () => {
   });
 });
 
-/**
- * Guards the widened filled-role contract: a toggle's on-state paints the
- * `accent` role, and both packages lifted that role's alpha for hover and press
- * (`0.9` / `0.8`) instead of deriving an opaque fill. That is the same defect
- * the action fills were written for — the surface behind the control shows
- * through, so the same toggle reads as two colours on a card and on a dialog —
- * and the accent label has less headroom than any action: at the fixed 18% press
- * it lands at 4.42:1 in macOS dark (under 4.5) and 6.90/6.94:1 in the two
- * high-contrast themes (under 7), so the step has to stop where the label's
- * floor starts.
- */
-/**
- * Guards the edge the one bordered action paints on its **derived** pointer
- * fills.
- *
- * `packages/components`' `Button` adds `border border-strong` to the primitives'
- * fill-only `secondary` recipe, and that variant's hover and press are
- * `filledHover`/`filledPressed` — not the `hover`/`active` role washes the
- * boundary pairs name. The edge was measured on every strip except the two it is
- * actually drawn on, and at the palette before this contract it was under the
- * 3:1 boundary floor in twelve of the sixteen styles that shipped at the time
- * hovered and fifteen pressed (Luna dark 2.16:1), with every report empty
- * because a derived fill is not a
- * role a pair can name.
- */
 describe("the edge a filled action keeps", () => {
   const painter = readFileSync(
     new URL("../../components/src/internal/button.tsx", import.meta.url),
@@ -678,8 +543,6 @@ describe("the edge a filled action keeps", () => {
   );
 
   it("reads the one variant that paints an edge, and the default it is", () => {
-    // The arm has been a class string and a recipe object; the claim is the
-    // `secondary` action carrying the edge, not the form the file spells it in.
     expect(painter).toMatch(
       /secondary:\s*(?:"[^"]*border border-strong[^"]*"|\{[^}]*border border-strong[^}]*\})/,
     );
@@ -720,8 +583,7 @@ describe("the edge a filled action keeps", () => {
 
     expect(tightest.name).toBe("Dark · Windows");
     expect(tightest.ratio?.toFixed(2)).toBe("3.00");
-    // The catalogue prints the number this suite measures, so a palette edit
-    // moves the sentence instead of leaving a stale claim.
+
     expect(
       readFileSync(
         new URL("../../../docs/tokens.md", import.meta.url),
@@ -731,8 +593,6 @@ describe("the edge a filled action keeps", () => {
   });
 
   it("reports the palette this contract moved", () => {
-    // The shipped light edge before the derivation was measured: chosen for the
-    // resting fill (3.74:1) and under the floor the moment the fill moved.
     const before = extendTheme(lightTheme, {
       colors: { borderStrong: "#6A7483" },
     });
@@ -748,22 +608,11 @@ describe("the edge a filled action keeps", () => {
         filledPressed(before, "secondary"),
       )?.toFixed(2),
     ).toBe("2.62");
-    // The shipped value is the smallest step that clears both; the sweep above
-    // is what fails when a palette edit forgets the pointer state.
+
     expect(lightTheme.colors.borderStrong).toBe("#616A79");
   });
 
   it("prints the sixteen-style figures as the set they were measured on", () => {
-    // A third authored look grew the sweep to eighteen, and today the contracts
-    // above clear it in every one — so the pre-fix counts are history. A reader
-    // who meets the bare denominator takes it as today's set, and the palette
-    // that is already repaired reads as still broken.
-    const source = readFileSync(
-      new URL("./contrast.ts", import.meta.url),
-      "utf8",
-    )
-      .replace(/\/\/\s*/g, " ")
-      .replace(/\s+/g, " ");
     const catalogue = readFileSync(
       new URL("../../../docs/tokens.md", import.meta.url),
       "utf8",
@@ -778,9 +627,6 @@ describe("the edge a filled action keeps", () => {
     ).replace(/\s+/g, " ");
 
     expect(shippedStyles.length, "the sweep this history sits beside").toBe(18);
-    expect(source).toContain(
-      "thirteen of the sixteen styles that shipped at the time missed it",
-    );
     expect(catalogue).toContain(
       "**twelve** of the sixteen styles that shipped at the time hovered",
     );
@@ -792,13 +638,12 @@ describe("the edge a filled action keeps", () => {
     );
     expect(readme).toContain("over the 16 styles that shipped at the time");
 
-    // The unqualified forms are the drift this case exists for.
     const retired = [
       "of the sixteen shipped styles",
       "twelve of the sixteen shipped",
       "over the 16 styles (",
     ];
-    [source, catalogue, design, readme].forEach((text) => {
+    [catalogue, design, readme].forEach((text) => {
       retired.forEach((phrase) => expect(text).not.toContain(phrase));
     });
   });
@@ -845,7 +690,7 @@ describe("filled role fills", () => {
         contrastRatio(theme.colors.accentForeground, pressed),
         label,
       ).toBeGreaterThanOrEqual(floor);
-      // The clamp stops the step short; it does not flatten the press.
+
       expect(pressed, label).not.toBe(filledHover(theme, "accent"));
     });
   });
@@ -876,9 +721,6 @@ describe("filled role fills", () => {
   });
 
   it("keeps the nominal step when the resting pair already misses", () => {
-    // Nothing can be derived that reads when the role it derives from does not,
-    // and the gate already reports the theme. Dropping the step to zero would
-    // remove the pointer cue as well, so the fill still moves.
     const broken = extendTheme(lightTheme, {
       colors: { accent: lightTheme.colors.accentForeground },
     });

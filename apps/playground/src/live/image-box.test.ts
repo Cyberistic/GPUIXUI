@@ -1,16 +1,3 @@
-/**
- * Holds the geometry the `image-box` probe reads a window with, and the claims
- * its README section prints.
- *
- * The one number that decides the probe is the bitmap's own ratio: the fixture's
- * data URL is an 8×8 square, so the loaded image asks for a height equal to a
- * definite width, while the style's `aspectRatio: 2` asks for half of it. A
- * window is the only place to see which wins, and the cases below are what the
- * probe asserts it saw.
- *
- * `node:fs` is deliberate, as in `registry.test.ts`: this checks the
- * repository's own probe and prose, not a runtime path.
- */
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
@@ -35,7 +22,6 @@ const scenarios = readFileSync(
   "utf8",
 );
 
-/** The `imageBoxSteps` effect, bounded by the first declaration after it. */
 const steps = (() => {
   const start = scenarios.indexOf("const imageBoxSteps");
   if (start === -1) return "";
@@ -54,8 +40,7 @@ describe("the image-box fixture", () => {
   it("uses the square bitmap's ratio for the width a style asks for", () => {
     expect(heightAtBitmapRatio(IMAGE_WIDTH)).toBe(120);
     expect(IMAGE_INTRINSIC_SIZE).toBe(8);
-    // The style asks for twice the bitmap's ratio, so the two answers differ by
-    // exactly the height the probe must be able to tell apart.
+
     expect(IMAGE_WIDTH / IMAGE_RATIO).toBe(60);
   });
 
@@ -88,7 +73,6 @@ describe("the image-box probe's record", () => {
   });
 
   it("prints the number of checks the probe asserts", () => {
-    // Two reads per case plus the three cross-checks and the intrinsic edge.
     const printed = Number(
       /(\d+) checks, `--only image-box`/.exec(readme)?.[1] ?? Number.NaN,
     );
@@ -123,8 +107,7 @@ describe("the image-box case table is what the probe walks", () => {
     expect(steps).toContain("Effect.forEach");
     expect(steps).toContain("IMAGE_BOX_CASES");
     expect(steps).toContain("settleUntil");
-    // A bitmap arrives after the first layout, so a probe that read the mount
-    // frame would measure an unsized image.
+
     expect(steps).toContain("found.width > 0 && found.height > 0");
     expect(steps).toContain("IMAGE_BOX_IDS.ratio");
     expect(steps).toContain("IMAGE_BOX_IDS.both");

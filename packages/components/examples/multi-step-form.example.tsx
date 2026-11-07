@@ -1,12 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * MultiStepForm example: a three-step workspace wizard with a gate per step.
- *
- * The draft belongs to the example (as it belongs to any caller): each step's
- * gate reads it before the step may move, and the last step's submit reports the
- * record the caller would hand to `Form` for the schema decode.
- */
-
 import { Input } from "@gpuixui/primitives";
 import * as Option from "effect/Option";
 import { useState } from "react";

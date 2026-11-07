@@ -1,13 +1,3 @@
-/**
- * Evaluate a parsed Casio expression.
- *
- * Expected failures travel in the Effect error channel as `CalculatorFailure`.
- * Randomness for `Ran#`/`RanInt#` comes from Effect's `Random`, so a test can
- * provide a seeded implementation instead of mocking a global. `Pol` and `Rec`
- * write their X/Y results through the context, which the session copies back to
- * the variables — exactly the manual's documented side effect.
- */
-
 import { Effect, Match } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -56,13 +46,11 @@ import {
   type VectorValue,
 } from "./value.js";
 
-/** Values a function writes back beyond its result. */
 export interface SideEffects {
   x?: number;
   y?: number;
 }
 
-/** The live values one expression sees. */
 export interface EvaluationContext {
   readonly angle: AngleUnit;
   readonly variables: Readonly<Record<string, number>>;
@@ -139,10 +127,6 @@ const fromValue = (
   ctx: EvaluationContext,
 ): Effect.Effect<CalcValue, CalculatorFailure> =>
   isFailure(value) ? Effect.fail(value) : displayable(value, ctx);
-
-/* ------------------------------------------------------------------ */
-/* Matrices and vectors                                                */
-/* ------------------------------------------------------------------ */
 
 const matrix = (rows: ReadonlyArray<ReadonlyArray<number>>): MatrixValue => ({
   _tag: "matrix",
@@ -428,10 +412,6 @@ const vectorBinary = (
       }),
   });
 
-/* ------------------------------------------------------------------ */
-/* Scalar binary operations                                            */
-/* ------------------------------------------------------------------ */
-
 const factorialOf = (n: number): Option.Option<number> =>
   Number.isInteger(n) && n >= 0 && n <= 69
     ? Option.some(
@@ -575,10 +555,6 @@ const applyBinary = (
     onSome: (result) => result,
   });
 };
-
-/* ------------------------------------------------------------------ */
-/* Calls                                                               */
-/* ------------------------------------------------------------------ */
 
 const CALLS_WITHOUT_ARGS = new Set(["Ran#"]);
 
@@ -728,10 +704,6 @@ const callMath = (
 const factorialValue = (value: CalcValue): Option.Option<number> =>
   Option.flatMap(numberIn(value), factorialOf);
 
-/* ------------------------------------------------------------------ */
-/* Integration (15-point Gauss–Kronrod, the manual's method)           */
-/* ------------------------------------------------------------------ */
-
 const KRONROD_NODES = [
   0.991455371120813, 0.949107912342759, 0.864864423359769, 0.741531185599394,
   0.586087235467691, 0.405845151377397, 0.207784955007898,
@@ -815,10 +787,6 @@ const integrate = (
     const right = yield* integrate(fn, middle, b, tolerance / 2, depth + 1);
     return left + right;
   });
-
-/* ------------------------------------------------------------------ */
-/* The evaluator                                                       */
-/* ------------------------------------------------------------------ */
 
 const parseInBase = (text: string, base: BaseName): Option.Option<number> => {
   const radix =
@@ -1278,7 +1246,6 @@ export const evaluate = (
       }),
   });
 
-/** Format a value for a debug line, used by the inspector. */
 export const describeValue = (value: CalcValue): string => {
   if (value._tag === "matrix") {
     return Arr.join(

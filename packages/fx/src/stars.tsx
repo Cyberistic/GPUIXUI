@@ -1,24 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Stars: a decorative field of twinkling lights.
- *
- * A star holds its place and changes brightness — the runtime has no `transform`
- * (upstream issue #102), and `opacity` is the one paint value it animates
- * natively. The layout is a pure function of the measured box and one seed
- * (`stars/logic.ts`), so the same seed paints the same sky on every mount.
- *
- * The runtime tweens a target once, so a twinkle is a **ping-pong**: a star
- * brightens to its own peak, and when that tween reports `onMotionComplete` it
- * dims back to its own floor. Each star runs its own time and waits its own share
- * before it starts, so the sky never blinks in unison. `@gpuixui/motion` owns the
- * timing policy through `internal/presence.tsx`, and `MotionProvider
- * preference="reduced"` paints every star at its floor instead of deleting them.
- *
- * The field is decoration: it publishes no accessibility node and takes no
- * pointer input, so the content it sits behind owns the name and the presses. It
- * also measures itself, so the caller must bound it.
- */
-
 import type { EventPayload, MotionProps, Props } from "@gpuix/react";
 import {
   mergeStyles,
@@ -59,37 +39,30 @@ import {
 } from "./stars/logic.js";
 import { makeStarsStore, type StarsStore } from "./stars/store.js";
 
-/** What a field draws at one frame. */
 export interface StarsState {
-  /** The stars on screen; `0` before the box has been measured. */
   readonly count: number;
   readonly reducedMotion: boolean;
   readonly width: number;
   readonly height: number;
 }
 
-/** {@link Stars} props. */
 export interface StarsProps extends Omit<Props, "children" | "style"> {
-  /** The stars to paint. Default `48`; `0` paints none and `200` is the cap. */
   readonly count?: number;
-  /** The layout seed. Default `1`; the same seed paints the same sky. */
+
   readonly seed?: number;
-  /** The smallest star, in pixels. Default `1`. */
+
   readonly minSize?: number;
-  /** The largest star, in pixels. Default `3`. */
+
   readonly maxSize?: number;
-  /** The star colour. Default the theme's `foreground` role. */
+
   readonly color?: string;
-  /**
-   * The base time for one twinkle, in milliseconds. Default `2_400`; every star
-   * runs `0.7…1.3` of it and waits up to `0.6` of that first.
-   */
+
   readonly twinkleMs?: number;
-  /** The entrance level. Default `"slow"` (320 ms). */
+
   readonly level?: MotionLevel;
-  /** A Tailwind class string for the box, merged last. */
+
   readonly className?: string;
-  /** A style for the box, or a function of the field. */
+
   readonly style?: StateStyle<StarsState>;
 }
 
@@ -101,14 +74,6 @@ interface StarProps {
   readonly store: StarsStore;
 }
 
-/**
- * One star: born at its dim floor, twinkling to its own peak.
- *
- * A plain `div` with a `motion` prop rather than `motion.div`: the component owns
- * the turnaround, so the generation guard `motion.div` wraps around
- * `onMotionComplete` is not wanted here. The turnaround is the runtime's report,
- * held in the field's store as this star's slice.
- */
 const Star = ({ spec, ink, radius, still, store }: StarProps) => {
   const direction = useLocalSlice(store.local, (state) =>
     directionOf(state.directions, spec.key),
@@ -141,20 +106,13 @@ const Star = ({ spec, ink, radius, still, store }: StarProps) => {
         borderRadius: radius,
         backgroundColor: ink,
         opacity: spec.dim,
-        // A star is decoration too: a press lands on what is behind the field.
+
         pointerEvents: "none",
       }}
     />
   );
 };
 
-/**
- * A bounded box of twinkling stars.
- *
- * Give it a height — directly or through a sized flex parent — because the field
- * positions itself from its own measured box and paints nothing before the first
- * layout.
- */
 export const Stars = ({
   count,
   seed,
@@ -191,8 +149,7 @@ export const Stars = ({
   const ink = color ?? theme.colors.foreground;
   const still = preference === "reduced";
   const store = useLocalStore(makeStarsStore);
-  // The field follows the box alone: a star's turnaround is that star's slice,
-  // so a completion repaints one star instead of re-laying the whole sky.
+
   const box = useLocalSlice(store.local, (current) => current.box);
 
   const noteBox = (event: EventPayload): void => {
@@ -235,7 +192,7 @@ export const Stars = ({
         mergeStyles(recipeStyle(cn(className), theme), {
           position: "relative",
           overflow: "hidden",
-          // Decoration: the content in front of the field keeps every press.
+
           pointerEvents: "none",
         }),
         resolveStyle(style, state),
@@ -255,7 +212,6 @@ export const Stars = ({
   );
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 600). */
 export const starsMeta = {
   name: "Stars",
   tier: 5,

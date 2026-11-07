@@ -1,11 +1,3 @@
-/**
- * Keymap resolution with scope precedence.
- *
- * The bug these guard: a resolver that scans bindings instead of the scope
- * stack, so a dialog's binding for a chord would not shadow the global one, or a
- * popped scope would not restore it.
- */
-
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import { parseHotkey } from "@tanstack/hotkeys";

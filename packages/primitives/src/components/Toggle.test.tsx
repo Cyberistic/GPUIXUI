@@ -1,13 +1,3 @@
-/**
- * `Toggle` — the element tree the runtime receives.
- *
- * The bug this suite guards is the a11y contract: GPUix has no `aria-pressed`,
- * so a toggle must announce its state through `aria-valuetext` and must not
- * write the attribute the runtime ignores. The rest is the shared activation
- * contract — Enter on key down, Space on key up, a held key ignored — and the
- * pressed paint coming from the accent role rather than a literal.
- */
-
 import { describe, expect, it, vi } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -47,9 +37,6 @@ const focused: FocusState = {
 
 describe("Toggle", () => {
   it("paints a variant name the table does not carry as the default face", () => {
-    // The bug guarded: `variant` is a stored preference, so a name a release
-    // renamed reached `TOGGLE_PAINT[name]` and threw on its first slot — a
-    // saved toolbar toggle emptied the window instead of painting the default.
     const stored = renderToggle(
       { variant: "segmented" as ToggleVariant, label: "Bold" },
       testTheme,
@@ -85,11 +72,6 @@ describe("Toggle", () => {
   });
 
   it("forwards a tooltip trigger's pointer pair and description", () => {
-    // Bug guarded: a mode in a toolbar is described by a tip, and GPUix's
-    // `TooltipTrigger asChild` merges its handlers into the child element while
-    // the runtime delivers a hover only to the element that registered the
-    // listener — so a toggle without the pair opened on focus but never on
-    // hover, and the tip's description stopped at the component.
     const entered = vi.fn();
     const left = vi.fn();
     const element = renderToggle(
@@ -116,10 +98,6 @@ describe("Toggle", () => {
   });
 
   it("paints a pressed toggle's feedback as an opaque, derived fill", () => {
-    // The bug: the hover and press lifted the accent's alpha (`0.9` / `0.8`),
-    // so the surface behind the control showed through and the label could not
-    // be measured on the fill at all. A pressed toggle is a filled face; it
-    // moves to the theme's derived accent fill, which the label reads on.
     Arr.forEach([lightTheme, darkTheme] as const, (theme) => {
       const element = renderToggle(
         { pressed: true, label: "Bold" },
@@ -137,7 +115,6 @@ describe("Toggle", () => {
       Arr.forEach(
         [filledHover(theme, "accent"), filledPressed(theme, "accent")],
         (fill) => {
-          // Opaque: a translucent value has no ratio at all.
           expect(contrastRatio(fill, theme.colors.background)).toBeDefined();
           expect(
             contrastRatio(theme.colors.accentForeground, fill) ?? 0,
@@ -148,10 +125,6 @@ describe("Toggle", () => {
   });
 
   it("wears the measured neutral pair while disabled and pressed", () => {
-    // A disabled pressed toggle is a filled face. The 50% fade composites its
-    // label into whatever is behind the control, while the neutral pair
-    // `contrastPairs` measures is the paint the design system names for a
-    // filled control off the page.
     const theme = lightTheme;
     const element = renderToggle(
       { pressed: true, disabled: true, label: "Bold" },
@@ -221,8 +194,7 @@ describe("Toggle", () => {
       idle,
       vi.fn(),
     );
-    // A bordered control keeps its boundary role while the fill moves; the
-    // decorative `border` role is for dividers, not a control's shape.
+
     expect(expectSome(hostStyleString(element, "borderColor"))).toBe(
       testTheme.colors.borderStrong,
     );
@@ -274,18 +246,13 @@ describe("Toggle", () => {
       onPressedChange,
     );
     expect(hostProp(element, "tabIndex")).toStrictEqual(Option.none());
-    // No press handler is installed while disabled; the keys stay observable
-    // but their activation is refused.
+
     expect(hostHandler(element, "onClick")).toStrictEqual(Option.none());
     expectSome(hostHandler(element, "onKeyDown"))(keyEvent("enter"));
     expect(onPressedChange).toHaveBeenCalledTimes(0);
   });
 
   it("shows a spinner, announces it and refuses activation while busy", () => {
-    // The bug this guards: a toolbar action awaiting a request was pressable,
-    // so a second press could start the work twice, and nothing said it was
-    // busy. `loading` blocks activation without taking the tab stop away, like
-    // a `Button`'s.
     const onPressedChange = vi.fn();
     const element = renderToggle(
       { loading: true, label: "Sync", description: "Re-read the branch" },
@@ -311,8 +278,6 @@ describe("Toggle", () => {
   });
 
   it("says the busy state in the caller's words, in both channels", () => {
-    // Bug guarded: a busy toggle announced the English "Loading" in its
-    // description and its spinner's name, with no way to localise either.
     const element = renderToggle(
       { loading: true, label: "Sync", loadingLabel: "Wird geladen" },
       testTheme,
@@ -334,9 +299,6 @@ describe("Toggle", () => {
   });
 
   it("gives a pressed toggle's spinner the accent's on-colour", () => {
-    // A pressed toggle paints the accent role; the default brand spinner on it
-    // would be the same 1.00:1-class defect the filled button had. A disabled
-    // pressed toggle wears the neutral pair, so its dots move with it.
     const accentOf = (pressed: boolean, disabled = false): unknown =>
       expectSome(
         elementProp(
@@ -394,9 +356,6 @@ describe("Toggle", () => {
   });
 
   it("declares the keyboard ring at rest, and never a focus-painted shadow", () => {
-    // The bug: the ring was merged only while `focused`, so a click looked
-    // exactly like a Tab. The outline is declared once and the runtime paints it
-    // after keyboard input (`focusVisible`).
     const rest = renderToggle({}, testTheme, state(false), idle, vi.fn());
     const style = expectSome(hostStyleRecord(rest));
     expect(style["focusVisible"]).toBeDefined();
@@ -434,9 +393,6 @@ describe("Toggle", () => {
 
 describe("a toggle's address and help", () => {
   it("hands its element the caller's ref, id, layout and help", () => {
-    // Bug guarded: a toolbar toggle was reachable only by `testId`, and the help
-    // a visible `Label` paints was announced by nothing. A tooltip arrives
-    // through the same channel, so the field-style help is the explicit one.
     const ref = vi.fn();
     const layout = vi.fn();
     const element = renderToggle(

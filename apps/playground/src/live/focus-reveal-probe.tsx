@@ -1,21 +1,3 @@
-/**
- * The `focus-reveal-lifecycle` probe: what a scroller does when the keyboard
- * brings focus to a control past its edge.
- *
- * The runtime moves focus without moving the glass (`focus_next` calls
- * `Window::focus_next` and nothing else), and a form taller than its pane is the
- * everyday shape that meets it: a `Tab` lands on a control the reader cannot see.
- * `keyboard-scroll-lifecycle` proved a focused **scroller** answers keys and
- * `tab-overflow` proved a selected tab stays clipped until the app scrolls it —
- * neither asked what happens to the row a traversal focused.
- *
- * Two panes of one geometry answer it together: a **form** whose every row is a
- * tab stop (the gap), and a **roving list** whose arrow keys reveal the row they
- * move onto through the renderer's `scrollIntoView` (the shipped alternative,
- * exactly the shape `Select`, `List` and `Tabs` carry). The last row of each pane
- * paints a colour nothing else uses, so "the reader cannot see it" is a pixel
- * count and not an inference from a box.
- */
 import { Duration, Effect } from "effect";
 import * as Option from "effect/Option";
 import { useGpuix, useWindowSize } from "@gpuix/react";
@@ -50,19 +32,14 @@ import {
   rovingRowId,
 } from "./focus-reveal.js";
 
-/** A focus or scroll move needs a frame to commit. */
 const SETTLE = Duration.millis(40);
 
-/** The frame the clipped control is read out of. */
 const HIDDEN_CAPTURE = "focus-reveal-hidden";
 
-/** The frame the revealed row is read out of. */
 const REVEALED_CAPTURE = "focus-reveal-revealed";
 
-/** How many traversal presses a two-stop pane may need before it is a miss. */
 const TRAVERSAL_LIMIT = 14;
 
-/** The id the renderer reports for the focused element, or `none`. */
 const focusedIdOf = (
   ctx: Smoke.AsyncSmokeContext,
 ): Effect.Effect<string, Smoke.SmokeHostError> =>
@@ -70,18 +47,11 @@ const focusedIdOf = (
     Option.getOrElse(Option.fromNullishOr(id), () => "none"),
   );
 
-/** The focused id after a frame, so a move is not read before it commits. */
 const settledFocused = (
   ctx: Smoke.AsyncSmokeContext,
 ): Effect.Effect<string, Smoke.SmokeHostError> =>
   Effect.flatMap(Effect.sleep(SETTLE), () => focusedIdOf(ctx));
 
-/**
- * Presses the window's traversal until `id` holds the focus, or `limit` runs out.
- *
- * Bounded on purpose: a traversal that skipped the control would otherwise loop,
- * and the check that reads the answer fails on the id it really reached.
- */
 const traverseUntil = (
   ctx: Smoke.AsyncSmokeContext,
   id: string,
@@ -96,7 +66,6 @@ const traverseUntil = (
         return at === id ? at : yield* traverseUntil(ctx, id, limit - 1);
       });
 
-/** Presses one key `times` times, waiting for each to commit. */
 const pressKey = (
   ctx: Smoke.AsyncSmokeContext,
   key: string,
@@ -110,7 +79,6 @@ const pressKey = (
         ),
       );
 
-/** The offset the renderer holds for a scroller. */
 const offsetOf = (
   ctx: Smoke.AsyncSmokeContext,
   id: string,
@@ -125,7 +93,6 @@ const offsetOf = (
     );
   });
 
-/** A painted box, read as a check so a missing id fails by name. */
 const boxOf = (
   ctx: Smoke.AsyncSmokeContext,
   id: string,
@@ -145,13 +112,6 @@ const boxOf = (
     );
   });
 
-/**
- * One row of the roving list.
- *
- * Every row mounts — the list is not windowed — so the reveal addresses a row
- * that exists and the runtime never has to build it first. Only the cursor row is
- * a tab stop, which is the roving contract the library's own lists ship.
- */
 const RovingRow = ({
   index,
   cursor,
@@ -190,15 +150,6 @@ const RovingRow = ({
   );
 };
 
-/**
- * The roving half: one tab stop, arrows that move the cursor, and the reveal
- * every move owes the reader.
- *
- * The reveal is the renderer's `scrollIntoView` on the row the cursor landed on —
- * its "scroll this element's nearest scroller until it is visible" — called from
- * a layout effect so both elements have painted ids. It is the route the
- * library's roving controls take, reduced to its one call.
- */
 const RovingList = ({
   cursor,
   onMove,
@@ -341,7 +292,6 @@ export const FocusRevealProbe = (): ReactNode => {
   );
 };
 
-/** Counts the marker inside one pane of a capture, as a check that names it. */
 const markIn = (
   ctx: Smoke.AsyncSmokeContext,
   frame: Pixels.Pixels,
@@ -359,7 +309,6 @@ export const focusRevealSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     yield* ctx.host.waitFor(FOCUS_REVEAL_IDS.probe);
     yield* Effect.sleep(SETTLE);
 
-    // 1. The page opens with both panes at their first row.
     yield* ctx.host.focusElement(FOCUS_REVEAL_IDS.before);
     yield* ctx.expectEqual(
       "the control before the panes takes the focus",
@@ -372,7 +321,6 @@ export const focusRevealSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       0,
     );
 
-    // 2. The traversal reaches the control below the fold; the pane stays put.
     yield* ctx.expectEqual(
       "a native traversal reaches the control below the fold",
       yield* traverseUntil(ctx, formRowId(FOCUS_REVEAL_LAST), TRAVERSAL_LIMIT),
@@ -391,7 +339,6 @@ export const focusRevealSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 3. A code focus is not a reveal either, in either direction.
     yield* ctx.host.focusElement(formRowId(0));
     yield* Effect.sleep(SETTLE);
     yield* ctx.expectEqual(
@@ -407,7 +354,6 @@ export const focusRevealSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       0,
     );
 
-    // 4. The paint: the focused control is in no pixel of its pane.
     yield* ctx.host.capture(HIDDEN_CAPTURE);
     const hidden = yield* ctx.host.pixels(HIDDEN_CAPTURE);
     const window = yield* ctx.host.windowSize();
@@ -441,7 +387,6 @@ export const focusRevealSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       0,
     );
 
-    // 5. The roving list: one stop per list, arrows move and reveal the row.
     yield* ctx.expectEqual(
       "the roving list's cursor row takes the focus",
       yield* traverseUntil(ctx, rovingRowId(0), TRAVERSAL_LIMIT),
@@ -458,7 +403,6 @@ export const focusRevealSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       0,
     );
 
-    // Three rows down is the first row the pane cannot show at offset 0.
     yield* pressKey(ctx, "down", FOCUS_REVEAL_BELOW);
     yield* ctx.expectEqual(
       "the arrows move the cursor and the readout follows",
@@ -488,7 +432,6 @@ export const focusRevealSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // 6. The end: the rest of the rows, and a reveal that clamps.
     yield* pressKey(ctx, "down", FOCUS_REVEAL_LAST - FOCUS_REVEAL_BELOW);
     yield* ctx.expectEqual(
       "the remaining arrows reach the last row",
@@ -513,7 +456,6 @@ export const focusRevealSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // A key past the end moves nothing at all, so the reveal is idempotent.
     yield* pressKey(ctx, "down", 1);
     yield* ctx.expectEqual(
       "an arrow past the end keeps the cursor",
@@ -526,7 +468,6 @@ export const focusRevealSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       clamped.y,
     );
 
-    // 7. One frame, two panes: the roving row paints and the form's does not.
     yield* ctx.host.capture(REVEALED_CAPTURE);
     const shown = yield* ctx.host.pixels(REVEALED_CAPTURE);
     const shownScale = yield* ctx.expectSome(

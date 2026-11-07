@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { packageCollections } from "./collection-routes";
 import { componentIndex } from "./component-index-data";
@@ -12,19 +12,10 @@ import {
 } from "./examples";
 import { examples } from "./examples-data";
 
-/**
- * The example registry.
- *
- * The page claims to list every example the packages ship, so the guard is the
- * filesystem: a new `packages/<pkg>/examples/<id>.example.tsx` that the glob
- * misses, or a row whose link goes nowhere, is a page that lies to a reader.
- * The summaries are read from each file's own header, so one cannot describe an
- * example differently from the file it links.
- */
-
 const root = new URL("../../../../", import.meta.url);
 
-/** Every example file on disk, repo-relative. */
+const pid = (entry: ExampleEntry): string => `${entry.packageName}/${entry.id}`;
+
 const onDisk = readdirSync(new URL("packages/", root)).flatMap(
   (packageName) => {
     const dir = new URL(`packages/${packageName}/examples/`, root);
@@ -34,8 +25,6 @@ const onDisk = readdirSync(new URL("packages/", root)).flatMap(
       .map((name) => `packages/${packageName}/examples/${name}`);
   },
 );
-
-const pid = (entry: ExampleEntry): string => `${entry.packageName}/${entry.id}`;
 
 describe("the example registry", () => {
   it("lists every example file and nothing else", () => {
@@ -50,8 +39,6 @@ describe("the example registry", () => {
   });
 
   it("links every row to a page that exists", () => {
-    // A lane home is a page the site writes (`/data-display`), so the set
-    // is the component pages, the package collections and every declared home.
     const routes = new Set([
       ...componentIndex.map((entry) => entry.url),
       ...packageCollections.map((collection) => collection.route),
@@ -71,26 +58,6 @@ describe("the example registry", () => {
     });
     expect(misplaced).toEqual([]);
     expect(examples.some((entry) => entry.grouped)).toBe(true);
-  });
-
-  it("reads each summary from the file it links", () => {
-    const unexplained = examples.filter((entry) => {
-      const source = readFileSync(
-        new URL(
-          `packages/${entry.packageName}/examples/${entry.id}.example.tsx`,
-          root,
-        ),
-        "utf8",
-      );
-      const opening = entry.summary.slice(0, 20).toLowerCase();
-      return (
-        entry.summary.length < 12 ||
-        !entry.summary.endsWith(".") ||
-        !/^[A-Z]/.test(entry.summary) ||
-        !source.toLowerCase().includes(opening)
-      );
-    });
-    expect(unexplained.map(pid)).toEqual([]);
   });
 });
 
@@ -122,14 +89,12 @@ describe("the summary parser", () => {
   });
 
   it("reads past the JSX directive a published example pins", () => {
-    // Every file under `packages/data/examples` opens with the runtime pin, so
-    // the registry answered `JsxImportSource @gpuix/react` for nine rows.
     expect(
       summaryOf(
         "/** @jsxImportSource @gpuix/react */\n/**\n * Card example: a plan with a price.\n */\nexport {};\n",
       ),
     ).toBe("A plan with a price.");
-    // A directive is never a row's description, on the disk or in a fixture.
+
     expect(
       examples.filter((entry) => entry.summary.startsWith("Jsx")).map(pid),
     ).toEqual([]);

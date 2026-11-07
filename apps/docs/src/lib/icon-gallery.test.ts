@@ -8,16 +8,6 @@ import {
   reservedPaint,
 } from "./icon-gallery";
 
-/**
- * The icon gallery's model.
- *
- * The gallery is only honest if it draws the package's own geometry: a glyph
- * redrawn by hand looks right and ships the wrong shape. These cases hold the
- * entries to `@gpuixui/icons`, both ways — an icon added to the set without a
- * tile fails, and a tile whose markup is not the shipped string fails — and to
- * the one edit the browser needs, the paint.
- */
-
 describe("the gallery's entries", () => {
   it("carries every icon the set publishes, once each", () => {
     expect(galleryIcons.map(({ name }) => name)).toEqual([...ICON_NAMES]);
@@ -36,8 +26,6 @@ describe("the gallery's entries", () => {
   });
 
   it("changes the paint and nothing else", () => {
-    // Restoring the reserved stroke has to give back the shipped string byte for
-    // byte: a transform that also moved a `d` attribute would still render.
     const moved = galleryIcons.filter(
       ({ name, markup }) =>
         markup.replace('stroke="currentColor"', reservedPaint) !== icons[name],
@@ -48,8 +36,6 @@ describe("the gallery's entries", () => {
   });
 
   it("reserves exactly one paint per icon, so no glyph stays black", () => {
-    // `replace` swaps the first match. An icon whose geometry carried its own
-    // `stroke="#000"` would keep it and paint black on a dark page.
     const doubled = ICON_NAMES.filter(
       (name) => icons[name].split(reservedPaint).length - 1 !== 1,
     );
@@ -61,16 +47,6 @@ describe("the gallery's entries", () => {
   });
 
   it("reads the set from the package's public entry, not its internals", () => {
-    // The gallery is a consumer: it imports `@gpuixui/icons`, the entry a product
-    // imports, so a renamed export breaks the site at type-check instead of a
-    // hand-kept path reading a module the package no longer publishes. The
-    // published `.tsx` files pin the GPUix JSX runtime, which is what lets the
-    // root (`Icon` included) type-check in this React program.
-    //
-    // The check reads the **name inside the export list**, not the list's exact
-    // text: the index adds a sibling to a module's `export { … }` whenever the
-    // package grows, and a string match for the previous list failed the gallery
-    // while both names were still published.
     const gallery = readFileSync(
       new URL("./icon-gallery.ts", import.meta.url),
       "utf8",

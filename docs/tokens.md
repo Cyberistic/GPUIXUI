@@ -57,12 +57,22 @@ import {
   lightTheme,
   platformNames,
   platformStyles,
+  parseShadcnStyles,
   platformTheme,
+  shadcnPlatformTheme,
   platformTypes,
   registerFonts,
   retroNames,
+  roleVariables,
   retroStyles,
   retroTheme,
+  shadcnColour,
+  shadcnCss,
+  shadcnNeutral,
+  shadcnNeutralTheme,
+  shadcnOverrides,
+  shadcnStylesheet,
+  shadcnTheme,
   statusTone,
   statusTones,
   statusEdgeAlpha,
@@ -85,6 +95,8 @@ import {
   type PlatformName,
   type PlatformStyle,
   type RetroName,
+  type ShadcnStyles,
+  type ShadcnVars,
   type StatusTone,
   type Theme,
   type ThemeAudit,
@@ -99,6 +111,45 @@ import { ThemeProvider, useTheme } from "@gpuixui/tokens/react";
 
 The core entry has no React dependency. `react` is an optional peer of the
 `./react` entry only.
+
+## shadcn themes
+
+A shadcn theme is a `styles.css`: `:root` holds the light variables and `.dark`
+the dark ones. `shadcnTheme` reads that file and returns the theme the native
+components paint from.
+
+```ts
+import { shadcnTheme } from "@gpuixui/tokens";
+
+const css = readFileSync("app/globals.css", "utf8");
+const theme = shadcnTheme(css, "dark");
+```
+
+The roles shadcn names are taken — including `--chart-1` … `--chart-5` as the
+data scale and `--radius` as `radius.md` — and the rest of each family is
+derived from them: an input's text is the foreground, a hover wash is the muted
+surface, the selection wash is the primary at 25%. Roles with no shadcn
+equivalent (`success`, `warning`, `info` and their soft surfaces) keep the
+shipped theme of the same mode, so a palette is complete rather than half
+painted.
+
+shadcn v3 writes bare HSL channels (`222.2 84% 4.9%`) for a Tailwind config to
+wrap; the channels are wrapped here, and a value already written as `hsl()`,
+`oklch()`, a hex or a named colour is kept as it is. `parseShadcnStyles` returns
+the two variable sets when the caller wants them without a theme.
+
+The other direction writes a theme out in shadcn's own variables, for a web
+surface beside the native window:
+
+```ts
+import { darkTheme, lightTheme, shadcnCss, shadcnStylesheet } from "@gpuixui/tokens";
+
+const css = shadcnCss(darkTheme);
+const both = shadcnStylesheet(lightTheme, darkTheme);
+```
+
+`shadcnCss` writes one `:root` block; `shadcnStylesheet` writes `:root` and
+`.dark`. Round-tripping is exact for every role the two directions share.
 
 ## Colour roles
 
@@ -832,11 +883,32 @@ const style = textStyle(theme, role);
 
 ### Platform styles
 
+Each platform palette is authored in shadcn's variables (`background`,
+`card`, `primary`, `primary-foreground`, …) with an `extras` block for the roles
+shadcn has no name for (`hover`, `active`, `selected`, `borderStrong`,
+`selection`). `shadcnOverrides(vars, { derive: false })` maps them at load, so a
+platform is a shadcn palette plus its own extras; the values below are unchanged
+by that authoring.
+
 `platformStyles` is the one place a platform is decided, and
 `platformTheme(base, platform)` turns it into a real theme: that platform's
 families, corner radii, control density and chrome colours, over the base theme's
 mode and elevation. The docs platform toggle and a native build use the same
 table, so a preview cannot show a look the library does not ship.
+
+Pass `{ keepPalette: true }` to apply the platform's type, radius and density
+without its colours. A theme imported from a shadcn stylesheet keeps its palette
+that way:
+
+```ts
+import { shadcnPlatformTheme } from "@gpuixui/tokens";
+
+const theme = shadcnPlatformTheme(css, "win32", "dark");
+```
+
+`shadcnPlatformTheme` is the same call with `keepPalette` already set.
+
+`shadcnNeutral` is shadcn's own black-and-white palette, and `shadcnNeutralTheme(mode)` is that palette as a theme. The docs site's `default` platform resolves to it; its contrast misses are reported by `auditTheme` as findings, not hidden.
 
 | Platform | `sans` | `mono` | `radius.md` | density |
 | -------- | ------ | ------ | ----------- | ------- |
@@ -5528,7 +5600,7 @@ cannot go untested. Evidence:
 
 ## Themes from shadcn's builders
 
-`shadcnTheme(css, base, mode?)` reads the CSS a theme builder exports: the `:root`
+`shadcnBuilderTheme(css, base, mode?)` reads the CSS a theme builder exports: the `:root`
 or `.dark` block, in `oklch()`, `hsl()`, bare `h s% l%` or hex. It returns
 `{ theme, problems }`, and a variable it cannot read keeps the base's colour and
 is named in `problems`. `cssColorToHex(value)` converts one colour.

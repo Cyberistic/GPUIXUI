@@ -1,14 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Breadcrumb: the trail to the current page, with an optional collapsed middle.
- *
- * The trail is declarative — `BreadcrumbItem` and `BreadcrumbLink` are the parts
- * a consumer composes — while the collapse rule is the pure, table-tested
- * `breadcrumb/logic.ts`. `BreadcrumbList` reads its direct children to keep the
- * parts declarative *and* collapse correctly: authored separators are attached to
- * the item that follows them, so hiding an item hides its separator too.
- */
-
 import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { Icon } from "@gpuixui/icons";
@@ -42,7 +32,6 @@ import {
 import { recipeStyle } from "./internal/recipe.js";
 import { keyboardRing, useTheme } from "./internal/theme.js";
 
-/** The rules a breadcrumb part follows; throws outside a root. */
 interface BreadcrumbContextValue {
   readonly maxItems: number | undefined;
   readonly separator: ReactNode;
@@ -60,18 +49,15 @@ const useBreadcrumbContext = (): BreadcrumbContextValue => {
   return value;
 };
 
-/** {@link Breadcrumb} props. */
 export interface BreadcrumbProps extends Omit<Props, "children"> {
-  /** Rendered entries to keep; fewer than 3 is clamped to 3. */
   readonly maxItems?: number;
-  /** The separator between entries. Default `/`. */
+
   readonly separator?: ReactNode;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
   readonly children?: PartChildren;
 }
 
-/** The trail's root: a labelled navigation landmark and the collapse budget. */
 export const Breadcrumb = ({
   maxItems,
   separator,
@@ -101,13 +87,11 @@ export const Breadcrumb = ({
   );
 };
 
-/** One parsed trail entry: the child and the separator authored before it. */
 interface Entry {
   readonly element: ReactNode;
   readonly separator: ReactNode;
 }
 
-/** Pair each item with the separator that precedes it; a trailing one is dropped. */
 const entries = (
   children: ReactNode,
   fallback: ReactNode,
@@ -127,7 +111,6 @@ const entries = (
   return collected;
 };
 
-/** The icon standing in for the hidden middle. Not focusable, and named. */
 const Ellipsis = () => {
   const theme = useTheme();
   return (
@@ -142,14 +125,11 @@ const Ellipsis = () => {
   );
 };
 
-/** {@link BreadcrumbList} props. */
 export interface BreadcrumbListProps extends Omit<Props, "children"> {
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
   readonly children?: PartChildren;
 }
 
-/** The horizontal row of crumbs. Collapses its middle when `maxItems` is set. */
 export const BreadcrumbList = ({
   className,
   style,
@@ -192,14 +172,11 @@ export const BreadcrumbList = ({
   );
 };
 
-/** One entry in the trail. */
 export interface BreadcrumbItemProps extends Omit<Props, "children"> {
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
   readonly children?: PartChildren;
 }
 
-/** One entry in the trail. */
 export const BreadcrumbItem = ({
   className,
   children,
@@ -222,17 +199,14 @@ export const BreadcrumbItem = ({
   );
 };
 
-/** {@link BreadcrumbLink} props. */
 export interface BreadcrumbLinkProps extends Props {
-  /** Called on click or Enter/Space. */
   readonly onSelect?: () => void;
-  /** Render as the current page instead of an interactive link. */
+
   readonly current?: boolean;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
 }
 
-/** A link back up the trail, or — with `current` — plain text. */
 export const BreadcrumbLink = ({
   onSelect,
   current = false,
@@ -274,13 +248,10 @@ export const BreadcrumbLink = ({
   );
 };
 
-/** {@link BreadcrumbPage} props. */
 export interface BreadcrumbPageProps extends Props {
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
 }
 
-/** The current page: text, with no interaction and no tab stop. */
 export const BreadcrumbPage = ({
   className,
   style,
@@ -290,8 +261,6 @@ export const BreadcrumbPage = ({
   return (
     <text
       {...rest}
-      // No `aria-current` in 0.11.0; `aria-selected` is the substitution
-      // Stepper, Timeline and Pagination already publish.
       aria-selected
       style={mergeStyles(
         recipeStyle(cn(BREADCRUMB_PAGE, className), theme),
@@ -301,13 +270,10 @@ export const BreadcrumbPage = ({
   );
 };
 
-/** {@link BreadcrumbSeparator} props. */
 export interface BreadcrumbSeparatorProps extends Props {
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
   readonly className?: string;
 }
 
-/** The glyph between entries. Not focusable and not announced as content. */
 export const BreadcrumbSeparator = ({
   className,
   style,
@@ -328,7 +294,6 @@ export const BreadcrumbSeparator = ({
   );
 };
 
-/** Every part of Breadcrumb, so a misplaced sibling is named. */
 const breadcrumbParts: ReadonlyArray<PartComponent> = [
   Breadcrumb,
   BreadcrumbList,
@@ -359,7 +324,6 @@ const breadcrumbItem: PartsContract = {
   hint: "Put BreadcrumbLink or BreadcrumbPage directly inside BreadcrumbItem.",
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const breadcrumbMeta = {
   name: "Breadcrumbs",
   tier: 2,

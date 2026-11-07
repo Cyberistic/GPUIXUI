@@ -1,21 +1,3 @@
-/**
- * Guards the wash a find bar paints.
- *
- * GPUix marks a search's matches with a **wash behind the text**, and a host
- * given no colour paints the runtime theme's `accent` at **30%** for every match
- * and **65%** for the active one, with a **2px** corner
- * (`packages/native/src/text/search.rs` at the pinned `@gpuix/native@0.11.0`).
- * A library application passes no window theme, so that accent is the runtime's
- * built-in violet — the one text surface still painted from a palette this
- * package does not own. Measured over the eighteen shipped, high-contrast,
- * platform and authored styles, the 65% active wash left body text under the
- * 7:1 floor in **all of them** (2.72:1 on Dark · Omarchy's `muted` strip) and the
- * resting 30% wash was under it in five dark ones (Dark · Linux 6.14:1 on its
- * popover), so a reader's own query could hide the result they searched for.
- * `findHighlight` derives the pair the theme can carry and
- * `highlightFailures` reports an accent that cannot.
- */
-
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { alpha, alphaOf, blend } from "./color.js";
@@ -57,20 +39,17 @@ const designSystem = read("../../../docs/design-system.md");
 const readme = read("../README.md");
 const inventory = read("../../../.agents/slop/COMPONENTS.md");
 
-/** One row of the inventory table, whitespace flattened. */
 const inventoryRow = (title: string): string =>
   (
     inventory.split("\n").find((line) => line.startsWith(`| ${title} |`)) ?? ""
   ).replace(/\s+/g, " ");
 
-/** One `## ` section of the catalogue, whitespace flattened. */
 const section = (heading: string): string => {
   const start = catalogue.indexOf(heading);
   const end = catalogue.indexOf("\n## ", start + 1);
   return catalogue.slice(start, end).replace(/\s+/g, " ");
 };
 
-/** Every shipped, high-contrast, platform and authored style, named. */
 const everyStyle: ReadonlyArray<readonly [string, Theme]> = [
   [lightTheme.name, lightTheme],
   [darkTheme.name, darkTheme],
@@ -98,14 +77,11 @@ const everyStyle: ReadonlyArray<readonly [string, Theme]> = [
   ),
 ];
 
-/** The share a derived wash carries, read back from its alpha channel. */
 const shareOf = (wash: string): number => alphaOf(wash);
 
-/** The colour a reader sees where a wash meets a strip. */
 const over = (theme: Theme, surface: HighlightSurface, wash: string): string =>
   blend(theme.colors[surface], wash, alphaOf(wash));
 
-/** What a host paints when nobody names a colour: the runtime's own default. */
 const runtimeDefault = (
   theme: Theme,
   surface: HighlightSurface,
@@ -113,7 +89,6 @@ const runtimeDefault = (
 ): string =>
   blend(theme.colors[surface], theme.colors.primary, highlightShares[state]);
 
-/** A role a store did not save is absent, not `undefined`-keyed. */
 const withoutColour = (theme: Theme, role: keyof Theme["colors"]) => {
   const colors = { ...theme.colors };
   delete colors[role];
@@ -131,8 +106,7 @@ const ratioOf = (
 describe("the pair a theme can carry", () => {
   it("starts from the runtime's own strengths, not a second palette", () => {
     expect(highlightShares).toEqual({ match: 0.3, active: 0.65 });
-    // The pair is the theme's accent family: a brand's hue reaches a find bar
-    // the way it reaches every other mark.
+
     const wash = findHighlight(lightTheme);
 
     expect(wash.color).toBe(alpha(lightTheme.colors.primary, 0.3));
@@ -178,8 +152,6 @@ describe("the pair a theme can carry", () => {
       });
     });
 
-    // The derivation holds by construction; this is the proof, not the report,
-    // and the report is empty for the same reason.
     expect(under).toEqual([]);
     expect(
       everyStyle.filter(([, theme]) => highlightFailures(theme).length > 0),
@@ -187,8 +159,6 @@ describe("the pair a theme can carry", () => {
   });
 
   it("steps the resting match down where the runtime's 30% is under the body floor", () => {
-    // The five dark styles the default share left under 7:1, read from the
-    // runtime's own pair. The worst is Dark · Linux's popover.
     const under = everyStyle
       .map(([name, theme]) => ({
         name,
@@ -217,7 +187,7 @@ describe("the pair a theme can carry", () => {
       { name: "Dark · Windows 7 (Aero)", share: 0.26, worst: "6.55" },
       { name: "Dark · Omarchy", share: 0.13, worst: "5.16" },
     ]);
-    // Every other style keeps the runtime's 30%: the step is the exception.
+
     expect(
       everyStyle
         .filter(
@@ -231,26 +201,9 @@ describe("the pair a theme can carry", () => {
         .map(([name]) => name)
         .filter((name) => !under.some(({ name: stepped }) => stepped === name)),
     );
-
-    // Two prose claims read from the same list: the set the defaults were
-    // measured over, and the share of it each default left under the floor.
-    const seam = read("./highlight.ts").replace(/\s+/g, " ");
-
-    expect(seam).toContain(
-      `Measured over the ${everyStyle.length} shipped, high-contrast, platform`,
-    );
-    expect(seam).toContain(
-      `under the 7:1 body floor in **all ${everyStyle.length}**`,
-    );
-    expect(seam).toContain(
-      `resting 30% wash was under it in ${under.length} dark ones`,
-    );
   });
 
   it("measures the runtime's active share under the body floor in every style", () => {
-    // The JSDoc's second claim: the 65% default is unreadable everywhere, not
-    // only in the styles the derived pair steps. The worst cell is printed on
-    // four documents, so it moves with the palette.
     const cells = everyStyle.flatMap(([name, theme]) =>
       highlightSurfaces.map((surface) => ({
         name,
@@ -275,7 +228,6 @@ describe("the pair a theme can carry", () => {
     const label = `${worst.name}'s \`${worst.surface}\` strip`;
     const printed = `${worst.ratio.toFixed(2)}:1`;
     const surfaces = [
-      read("./highlight.ts"),
       catalogue,
       readme,
       read("../../../.agents/slop/COMPONENTS.md"),
@@ -305,16 +257,11 @@ describe("the pair a theme can carry", () => {
     );
 
     expect(apart.every(({ ratio }) => ratio >= decorativeFloor)).toBe(true);
-    // Printed on the catalogue: macOS dark's pair is the closest, because its
-    // lighter brand face leaves the derived active share the least headroom.
+
     expect(tightest.name).toBe("Dark · macOS");
     expect(tightest.surface).toBe("popover");
     expect(tightest.ratio.toFixed(3)).toBe("1.077");
 
-    // The catalogue and the inventory both print the pair the suite measures.
-    // The inventory carried the previous palette's 1.150 (high-contrast dark on
-    // `muted`) after macOS dark moved the tightest cell, so both surfaces are
-    // held to the derivation rather than one of them to a retyped figure.
     const printed = `${tightest.ratio.toFixed(3)}:1`;
     const surfaces: ReadonlyArray<readonly [string, string]> = [
       ["docs/tokens.md", section("## Find highlights")],
@@ -340,8 +287,6 @@ describe("an accent the surfaces cannot carry", () => {
     const failures = highlightFailures(invisibleHighlightBrand);
     const invisible = failures.filter(({ kind }) => kind === "visibility");
 
-    // Both states are the strip itself on the page it shares (1.00:1), and
-    // every other strip is a step away at most — none of them can show a match.
     expect(invisible.map(({ state, surface }) => [state, surface])).toEqual(
       highlightSurfaces.flatMap((surface) =>
         (["match", "active"] as const).map((state) => [state, surface]),
@@ -352,8 +297,7 @@ describe("an accent the surfaces cannot carry", () => {
         ({ ratio, floor }) => ratio !== undefined && ratio < floor,
       ),
     ).toBe(true);
-    // The active match cannot stand apart either, because there is only one
-    // colour left to paint.
+
     expect(
       failures
         .filter(({ kind }) => kind === "distinct")
@@ -366,8 +310,7 @@ describe("an accent the surfaces cannot carry", () => {
 
   it("reports a body pair with no headroom for a wash", () => {
     const floors = contrastFloorsFor(lowHeadroomBrand);
-    // The pair itself passes the contrast contract at 7.00:1 — the wash is the
-    // only thing that cannot fit behind it.
+
     expect(
       contrastRatio(
         lowHeadroomBrand.colors.foreground,
@@ -376,8 +319,6 @@ describe("an accent the surfaces cannot carry", () => {
     ).toBe("7.00");
     const lines = reportHighlights(lowHeadroomBrand);
 
-    // The strongest wash that is still visible drops the text to 4.48:1, and
-    // no stronger one can be told apart from it, so every job is reported.
     expect(lines).toContain("match legibility on background: 4.48 (needs 7)");
     expect(lines).toContain(
       `active legibility on background: 4.48 (needs ${floors.secondary})`,
@@ -394,8 +335,6 @@ describe("an accent the surfaces cannot carry", () => {
       colors: withoutColour(lightTheme, "primary").colors,
     });
 
-    // A missing role is the absence it is: every placement is unmeasurable,
-    // and the floors the report was holding it to are still named.
     expect(
       high.every(
         ({ ratio, wash }) => ratio === undefined && wash === undefined,
@@ -419,25 +358,12 @@ describe("an accent the surfaces cannot carry", () => {
         ({ ratio }) => ratio === undefined,
       ),
     ).toBe(true);
-    // A theme with the accent but no page is just as absent: the strip it
-    // would be painted on is the missing half.
+
     const noPage = highlightFailures({ colors: { primary: "#5F4BDB" } });
     expect(noPage.every(({ wash }) => wash === undefined)).toBe(true);
   });
 
-  /**
-   * The source is what a store handed back, not a `Theme`.
-   *
-   * The report already resolved a stated variant through `themeContrastOf`, but
-   * its parameter typed the field `ThemeContrast` and the corner `Partial<Radius>`
-   * — neither admits the `"HIGH"` a store writes or the `null` JSON keeps — so a
-   * decoded theme could be measured only through a cast. `FindHighlightSource`
-   * is the storage port; deleting it and restoring the strict fields fails
-   * `check-types` on the two declarations below (TS2322).
-   */
   it("reads a stored variant and a nulled scale without a cast", () => {
-    // The strict floors are what a stored `"HIGH"` resolves to: a theme with no
-    // brand still reports the floors every placement was measured against.
     const high: FindHighlightSource = {
       colors: withoutColour(lightTheme, "primary").colors,
       contrast: "HIGH",
@@ -448,8 +374,7 @@ describe("an accent the surfaces cannot carry", () => {
         .map(({ state, floor }) => `${state}:${floor}`),
     );
     expect(floors).toEqual(new Set(["active:7", "match:7"]));
-    // A theme that still carries its brand derives a pair, and a nulled radius
-    // group is the absence it is: no corner, no wash.
+
     expect(
       findHighlight({
         colors: lightTheme.colors,
@@ -467,14 +392,8 @@ describe("the pair a stored theme cannot derive", () => {
   const absence = "lost the accent, the ink, a strip or the corner";
 
   it("answers no pair for a theme that lost a role it derives from, not a throw", () => {
-    // A stored theme can predate a group. The derivation answers `undefined`
-    // rather than throwing mid-render — the rule `selectionOn` and `statusTone`
-    // follow — so a host keeps its own wash and the gate names the absence,
-    // instead of a search losing the window on its first paint.
     expect(findHighlight({})).toBeUndefined();
-    // Every role the derivation reads is the absence on its own: the accent it
-    // washes with, the ink the wash must keep readable, each strip it is
-    // measured on, and the corner step the wash takes.
+
     const lost = (
       ["primary", "foreground", ...highlightSurfaces] as const
     ).filter((role) => {
@@ -485,7 +404,6 @@ describe("the pair a stored theme cannot derive", () => {
     expect(lost).toEqual([]);
     expect(findHighlight({ ...lightTheme, radius: undefined })).toBeUndefined();
 
-    // A theme that carries them all still answers the pair it always did.
     const unanswered = everyStyle
       .filter(([, theme]) => findHighlight(theme) === undefined)
       .map(([name]) => name);
@@ -496,7 +414,6 @@ describe("the pair a stored theme cannot derive", () => {
       alpha(lightTheme.colors.primary, highlightShares.match),
     );
 
-    // The pages a consumer reads before trusting a stored theme say so.
     const unansweredPages = [catalogue, readme, designSystem].filter(
       (page) => !page.includes(absence),
     ).length;
@@ -515,7 +432,6 @@ describe("the call site a consumer copies", () => {
   });
 
   it("measures the wash on the strip the host paints it over", () => {
-    // The page the playground's search probes paint over a card.
     expect(matchSeparation(darkTheme, "card")?.toFixed(2)).toBe("1.88");
     expect(activeSeparation(darkTheme, "card")?.toFixed(2)).toBe("3.02");
   });
@@ -545,9 +461,6 @@ describe("what the pages teach", () => {
   });
 
   it("prints the numbers the suite measures", () => {
-    // The runtime's own active share on the worst style, and the closest the
-    // derived pair gets to being indistinguishable. The first is derived, so a
-    // style that joins the sweep cannot leave the page printing an old cell.
     const worst = everyStyle
       .flatMap(([name, theme]) =>
         highlightSurfaces.map((surface) => ({
@@ -568,9 +481,6 @@ describe("what the pages teach", () => {
   });
 
   it("prints the case count this file runs", () => {
-    // A row is the fourth surface a reader meets the contract on, and it named
-    // sixteen cases after the suite had grown: the list of what a file holds is
-    // read from the file, not remembered.
     const cases = read("./highlight.test.ts").match(/\bit\(/g)?.length ?? 0;
 
     expect(cases).toBeGreaterThan(10);
@@ -580,11 +490,6 @@ describe("what the pages teach", () => {
   });
 
   it("names every style whose resting share the derivation steps", () => {
-    // The pages printed four steps — Linux, Luna, Windows, Aero — after the
-    // authored Omarchy look joined the sweep and stepped to 13%, so a reader
-    // counting the exceptions read one fewer than the derivation makes. The
-    // list is derived here from the same `findHighlight` the suite measures, so
-    // a style that starts stepping cannot leave the pages behind.
     const stepped = everyStyle
       .map(([name, theme]) => ({
         name: name.split(" · ").at(-1) ?? name,
@@ -607,12 +512,6 @@ describe("what the pages teach", () => {
   });
 
   it("tracks the adoption the component and the playground carry", () => {
-    // Both token pages said `HighlightText`'s default wash was the `selection`
-    // role and sent a reader to an interlock row to pass `findHighlight(theme)`
-    // from a search surface, while the shipped component had already taken the
-    // derived pair (`src/highlight-text/wash.ts`) and both playground search
-    // scenarios spread it. A reader following the page wired a colour the
-    // component supplies and waited on an adoption that had landed.
     const wash = read("../../components/src/highlight-text/wash.ts");
     const search = [
       "../../../apps/playground/src/scenarios/search-highlights.tsx",
@@ -623,10 +522,6 @@ describe("what the pages teach", () => {
       /export const FIND_CHECKS = (\d+)/.exec(probe)?.[1] ?? Number.NaN,
     );
 
-    // The painters: the component defaults to the derived pair and only a
-    // caller's own colour replaces it. The seam takes the source it derives
-    // from — a theme or the colour group a store handed back — so the guard
-    // holds the call rather than the parameter's name.
     expect(wash).toMatch(/findHighlight\(\s*\w+\s*\)/);
     expect(wash).toContain("input.color ?? derived.color");
     expect(wash).toContain("input.activeColor ?? derived.activeColor");
@@ -636,9 +531,6 @@ describe("what the pages teach", () => {
         .filter((spread) => !spread),
     ).toEqual([]);
 
-    // The pages carry the adoption and the measurement, and neither retracted
-    // claim may return: the component is not on the `selection` role, and the
-    // passing of `findHighlight` is not an open interlock.
     expect(page).toContain(
       "The shipped `HighlightText` takes the derived pair",
     );

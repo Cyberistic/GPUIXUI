@@ -1,14 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Layout example: an inspector sidebar.
- *
- * A real application frame rather than a gallery — a header, a scrolling
- * property list separated from the chrome, and a footer pushed to the edge by a
- * `Spacer`. It is the composition that proves the layout primitives work
- * together: `Box` owns the surface, `Stack` the axes, `Grid` the label/value
- * pairs, `ScrollArea` the bounded list and `Separator` the regions.
- */
-
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import type { EventPayload } from "@gpuix/react";
@@ -23,7 +13,6 @@ import {
   Text,
 } from "../src/index.js";
 
-/** One property row: a name and its value. */
 const properties: ReadonlyArray<{
   readonly name: string;
   readonly value: string;
@@ -39,12 +28,7 @@ const properties: ReadonlyArray<{
   { name: "Shadow", value: "Elevation / Overlay" },
 ];
 
-/** A property inspector: a fixed header, a scrolling body and a footer. */
 export const LayoutExample = (): ReactElement => {
-  // The drop target measures itself: `onLayout` reports the box the runtime
-  // painted, so the caption states the size the primitive actually got instead
-  // of a number the example guessed. The state is this example's own — a
-  // measurement nobody else reads.
   const [drop, setDrop] = useState<
     Option.Option<{ readonly width: number; readonly height: number }>
   >(Option.none());

@@ -1,14 +1,3 @@
-/**
- * Form behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: a submit that calls the consumer with an invalid value;
- * messages that are not shown, or shown one blob instead of one per issue; a
- * pending form that submits again; a raw value reaching `onSubmit` instead of the
- * decoded one; a summary that ignores the destructive role; and a form that
- * could never submit again after a failed submit left a message on a field with
- * no mounted `FieldApi`.
- */
-
 import { describe, expect, it, vi } from "vitest";
 import { Effect } from "effect";
 import * as Schema from "effect/Schema";
@@ -40,7 +29,6 @@ class Signup extends Schema.Class<Signup>("Signup")({
   name: Schema.NonEmptyString,
 }) {}
 
-/** A form whose only visible state is a text line and a submit button. */
 const Harness = ({
   value,
   pending = false,
@@ -77,7 +65,6 @@ const Harness = ({
   </Form>
 );
 
-/** The styled text element a message is painted as. */
 const styledMessage = (root: ComponentTestRoot, message: string) => {
   const leaf = root.renderer.findByText(message);
   if (leaf?.parentId == null) return undefined;
@@ -87,7 +74,6 @@ const styledMessage = (root: ComponentTestRoot, message: string) => {
 const valid = { email: "ada@example.com", name: "Ada" };
 const invalid = { email: "nope", name: "" };
 
-/** The messages the validator produces for `invalid`, in order. */
 const expectedMessages = Effect.runSync(validateAll(Signup)(invalid));
 
 describe("Form", () => {
@@ -213,8 +199,7 @@ describe("Form", () => {
     await waitFor(() =>
       expect(nodesWithRole(form.renderer, "alert")).toHaveLength(1),
     );
-    // The failed run settles before the value is corrected; a second press sent
-    // while it is still in flight would be the caller's `pending` to refuse.
+
     await waitFor(() =>
       expect(form.renderer.getAllText()).toContain(
         "attempts=1 submitting=false",

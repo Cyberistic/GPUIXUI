@@ -3,25 +3,6 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { demos } from "./demos";
 
-/**
- * The room each drawing gives its floating surface.
- *
- * A preview card is a stage, not a fixed box: a panel anchored to a trigger is
- * taller than the control and hangs out of the flow, so a stage sized to the
- * control clips it. Six drawings got this wrong in different ways — the
- * combobox list and the date calendar were cut mid-row, the context menu's
- * submenu painted outside the frame, the dropdown panel opened over its card,
- * the command palette left a clipped row's letters against its border, and the
- * date preset calendar was drawn entirely below the card. Each case below
- * models the box the drawing declares (its stage, the trigger's bottom edge and
- * the reserve under it) and holds the panel inside it; the browser run in the
- * task's report checks the same rule against real layout.
- *
- * The panel sizes are the drawings' own measured boxes: the shipped combobox
- * caps the popup at 280px, a two-month calendar is 324px tall, a menu surface is
- * 208px wide. A regression here is one of those numbers outgrowing the reserve.
- */
-
 const css = readFileSync(
   new URL("../../styles/demos.css", import.meta.url),
   "utf8",
@@ -46,7 +27,6 @@ const demoSource = readFileSync(
   "utf8",
 );
 
-/** The declarations of every block whose selector list names `selector`. */
 const block = (sheet: string, selector: string): string =>
   [...sheet.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
     .filter(([, names]) =>
@@ -55,13 +35,11 @@ const block = (sheet: string, selector: string): string =>
     .map(([, , body]) => body ?? "")
     .join("\n");
 
-/** A pixel declaration, or `NaN` when the drawing does not declare it. */
 const px = (body: string, property: string): number => {
   const value = new RegExp(`${property}:\\s*(-?\\d+)px`).exec(body)?.[1];
   return value === undefined ? Number.NaN : Number(value);
 };
 
-/** A bare number declaration (the components' style objects carry no `px`). */
 const number = (body: string, property: string): number => {
   const value = new RegExp(`${property}:\\s*(-?\\d+)`).exec(body)?.[1];
   return value === undefined ? Number.NaN : Number(value);
@@ -74,7 +52,6 @@ const render = (name: string): string => {
   return renderToStaticMarkup(<Drawing />);
 };
 
-/** A box in the stage's coordinates. */
 interface Box {
   readonly x: number;
   readonly y: number;
@@ -95,7 +72,6 @@ const inside = (panel: Box, frame: Box): boolean =>
   panel.x >= frame.x &&
   panel.x + panel.width <= frame.x + frame.width;
 
-/** The trigger's bottom inside the stage, past its padding and label. */
 const TRIGGER_BOTTOM = 111;
 
 const combobox = render("combobox-workflow");
@@ -110,7 +86,6 @@ describe("the combobox drawing", () => {
     const popup = block(css, ".gx-combobox-popup");
     const height = number(component("combobox"), "maxHeight");
 
-    // The shipped popup's own cap is what the drawing has to fit.
     expect(height).toBe(280);
     expect(px(popup, "max-height")).toBe(height);
 
@@ -119,16 +94,12 @@ describe("the combobox drawing", () => {
     const frame = box(0, 0, 480, TRIGGER_BOTTOM + reserve);
 
     expect(inside(panel, frame)).toBe(true);
-    // The trigger is still the listbox's control.
+
     expect(combobox).toContain('aria-haspopup="listbox"');
     expect(combobox).toContain('class="gx-combobox-trigger"');
   });
 
   it("seats the search row and keeps the list off it", () => {
-    // The bug this guards: the search row was a shrinking flex item, so a long
-    // list squeezed it under the popup's edge and the first option sat on the
-    // field. The row is fixed-height, inset by the popup's own padding, and the
-    // gap below belongs to the row rather than to the list's first option.
     const popup = block(css, ".gx-combobox-popup");
     const row = block(css, ".gx-combobox-search-row");
     expect(px(popup, "padding")).toBe(4);
@@ -141,11 +112,6 @@ describe("the combobox drawing", () => {
 
 describe("the command palette drawing", () => {
   it("paints the highlight as the wash alone, with no left rule", () => {
-    // The bug this guards: a highlighted row read as a wash with a second
-    // accent edge beside it. The row wore a 2px emphasis bar on its left edge —
-    // the reason the palette needed an exemption from it. The bar is gone from
-    // every row now, so the exemption is gone too and the rule is the stronger
-    // one: no menu row paints a left edge, in the palette or anywhere else.
     expect(block(css, ".gx-menu-row")).not.toContain("border-left");
     expect(css).not.toContain(".gx-palette .gx-menu-row");
     expect(block(css, '.gx-menu-row[data-highlighted="true"]')).not.toContain(
@@ -173,8 +139,6 @@ describe("the date-picker drawing", () => {
     const frame = box(0, 0, 480, TRIGGER_BOTTOM + reserve);
     expect(inside(panel, frame)).toBe(true);
 
-    // The status line is a sibling of the anchor, not part of it: inside the
-    // frame it pushed the calendar a readout's height further down.
     expect(datePicker).toContain('</div><p class="gx-date-readout"');
     expect(datePicker).toContain('class="gx-date-trigger"');
     expect(datePicker).toContain('aria-expanded="false"');
@@ -183,9 +147,6 @@ describe("the date-picker drawing", () => {
 
 describe("the context-menu drawing", () => {
   it("gives the menu a scene with a floor, and the trigger still opens it", () => {
-    // The preview panel's `min-height: 100%` resolved against a panel that hugs
-    // its demo, so it collapsed every demo root that declared its own floor —
-    // the context scene drew 206px instead of its 320. The rule is gone.
     expect(block(app, ".gx-component-panel .gx-demo")).toBe("");
     expect(block(css, ".gx-context-scene")).toContain("min-height: 320px");
 
@@ -200,9 +161,6 @@ describe("the context-menu drawing", () => {
 
 describe("the dropdown-menu drawing", () => {
   it("opens the panel below the card, with the stage room to hold it", () => {
-    // The trigger used to sit inside the card, vertically centred, so a panel
-    // 4px below it covered the card's bottom edge and rounded corner. It is a
-    // row under the card now.
     expect(dropdown).toContain('</div></div><div class="gx-menu-actions">');
     expect(dropdown.indexOf('class="gx-menu-file"')).toBeLessThan(
       dropdown.indexOf('class="gx-menu-anchor"'),
@@ -210,7 +168,7 @@ describe("the dropdown-menu drawing", () => {
 
     const stage = block(css, ".gx-demo-menu");
     const floor = px(stage, "min-height");
-    // 24px padding, the card, a 10px gap, the actions row and its 4px gap.
+
     const abovePanel = 24 + 88 + 10 + 28 + 4;
     const reserve = floor - abovePanel;
 
@@ -228,8 +186,6 @@ describe("the dropdown-menu drawing", () => {
 
 describe("the command-menu drawing", () => {
   it("blurs without a scroll container in between, and cuts no row's letters", () => {
-    // A backdrop-filter inside a scrollport composites its backdrop against the
-    // clip; the stage stops being a scroll container for this drawing.
     expect(
       block(css, ".gx-demo:has(> .gx-demo-command):not(.gx-grid-preview)"),
     ).toContain("overflow: visible");
@@ -239,8 +195,7 @@ describe("the command-menu drawing", () => {
     expect(block(css, ".gx-overlay-veil")).toContain(
       "color-mix(in srgb, var(--background) 55%, transparent)",
     );
-    // The scroll list fades its cut edge instead of leaving glyph tops on the
-    // palette's border — the bright speck the drawing showed as a blur artifact.
+
     expect(block(css, ".gx-palette-list")).toContain("mask-image");
 
     const panel = box(60, 60, 360, 265);

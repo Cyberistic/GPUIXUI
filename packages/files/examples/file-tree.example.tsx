@@ -1,20 +1,7 @@
-/**
- * A project file tree: open a folder, walk the rows from the keyboard, and
- * choose a file.
- *
- * This is the whole composition a consumer copies. `FileTree` paints the rows;
- * `FileTreeFolder` and `FileTreeFile` declare them, in paint order. A press on
- * a folder toggles its subtree, and a press on a file reports its path once.
- *
- * The readout paints the selected path, so a behaviour suite can read the
- * selection without reaching into the component.
- */
-
 import { useState } from "react";
 import { FileTree, FileTreeFile, FileTreeFolder } from "../src/index.js";
 import { textStyle, useTheme } from "../src/theme.js";
 
-/** The tree and the readout that proves what it selected. */
 export const FileTreeExample = () => {
   const theme = useTheme();
   const [selected, setSelected] = useState<string | undefined>("src/index.ts");

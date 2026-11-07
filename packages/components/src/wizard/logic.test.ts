@@ -1,12 +1,3 @@
-/**
- * The wizard's step arithmetic and its gate.
- *
- * The bug guarded: a stored or computed step index must never paint a step that
- * does not exist, and a gate must be consulted on the step the reader is on —
- * a step that refuses to be left keeps the workflow where it was and reports its
- * own message.
- */
-
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import {
@@ -67,15 +58,11 @@ describe("gateMessage", () => {
   });
 
   it("reads a gate a stored definition did not carry as no gate", () => {
-    // The bug guarded: a step merged from a saved definition hands the wizard
-    // the `null` JSON writes for a field the record never carried. The old read
-    // tested `undefined` only and called it, so the step's own Next press threw
-    // `gate is not a function` instead of moving the workflow on.
     expect(Option.isNone(gateMessage({ gate: null }))).toBe(true);
-    // A field a release renamed, read from the same record.
+
     expect(Option.isNone(gateMessage({ gate: "always" }))).toBe(true);
     expect(Option.isNone(gateMessage(null))).toBe(true);
-    // A real gate is still consulted.
+
     expect(
       Option.getOrNull(gateMessage({ gate: () => Option.some("Still") })),
     ).toBe("Still");
@@ -84,9 +71,6 @@ describe("gateMessage", () => {
 
 describe("refusalText", () => {
   it("reads a refusal that says nothing as the shipped sentence", () => {
-    // The bug guarded: a gate answering Some("") — an i18n row missing its key —
-    // kept the reader put and painted an empty alert, so a press did nothing and
-    // nothing said why.
     expect(refusalText("")).toBe(REFUSAL_FALLBACK);
     expect(refusalText("   ")).toBe(REFUSAL_FALLBACK);
     expect(refusalText("\t\n")).toBe(REFUSAL_FALLBACK);
@@ -111,9 +95,6 @@ describe("stepsOf", () => {
   const step = (id: string, title: string) => ({ id, title, content: null });
 
   it("reads a list a store wrote, and no steps for anything else", () => {
-    // The bug guarded: a workflow restored from storage writes `null` for a list
-    // it never carried, and the component read `steps.length` off it before the
-    // first step painted.
     const saved = [step("name", "Name"), step("review", "Review")];
     expect(stepsOf(saved)).toEqual(saved);
     expect(stepsOf(null)).toEqual([]);
@@ -121,8 +102,6 @@ describe("stepsOf", () => {
   });
 
   it("drops an entry that names no step, keeping the ones beside it", () => {
-    // A deleted record leaves `null` inside the list, and an entry whose id is
-    // not text has no identity for the indicator's key or the refusal's step.
     const kept = [step("name", "Name"), step("review", "Review")];
     const stored = [null, step("name", "Name"), "", step("", "Blank"), kept[1]];
     expect(stepsOf(stored as unknown as typeof kept)).toEqual(kept);

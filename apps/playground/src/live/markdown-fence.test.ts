@@ -1,18 +1,3 @@
-/**
- * Holds the `markdown-fence` fixtures and its record to the paint a window
- * carries.
- *
- * The bug this guards: `@gpuixui/tokens` derives the fence's two washes and
- * reads the syntax palette on that composite, but nothing had painted a fence —
- * and the derivation assumed the fill **behind** the host is the theme's own
- * `background`. The probe measured the other half: a fence composites over
- * whatever fill its host sits on, so a document wearing a platform theme on the
- * shell's page paints the shell page's fence, not the platform theme's (the
- * first run read `#242426/6` where the block painted the base page's
- * `#191C22/174776`). The view therefore paints each block on its own theme's
- * page, and this file holds that wiring, both washes, both keywords and the
- * printed evidence.
- */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
@@ -62,16 +47,14 @@ describe("the fence composite", () => {
       const strip = fenceStrip(theme);
       expect(Option.isSome(body)).toBe(true);
       expect(Option.isSome(strip)).toBe(true);
-      // The value is the seam's derivation, not a fixture literal: a palette
-      // change must move the expected ink with it.
+
       expect(body).toEqual(
         Option.fromNullishOr(nativeFenceFill(theme.colors.background)),
       );
       expect(strip).toEqual(
         Option.fromNullishOr(nativeFenceHeaderFill(theme.colors.background)),
       );
-      // A fence is a surface: it is not the page it sits on, which is why a
-      // keyword that clears the page can miss on the block.
+
       expect(Option.getOrElse(body, () => theme.colors.background)).not.toBe(
         theme.colors.background,
       );
@@ -90,8 +73,7 @@ describe("the fence composite", () => {
         () => theme.colors.background,
       );
       expect(strip).not.toBe(body);
-      // The rule the runtime draws carries the strip; the fill only has to be
-      // a step above its body.
+
       const ratio = Option.fromNullishOr(contrastRatio(strip, body));
       expect(Option.isSome(ratio)).toBe(true);
       expect(
@@ -118,8 +100,7 @@ describe("the keyword on the fence", () => {
         contrastRatio(fenceKeyword(theme), theme.colors.background),
       ).toBeGreaterThanOrEqual(floor);
     });
-    // `#9E9EC6` clears the base dark page at 7.17:1 and misses the fence at
-    // 6.63:1: a report that read the page would pass the brand the fence fails.
+
     const onThePageOnly = extendTheme(fenceBaseTheme, {
       syntax: { ...syntaxColors(fenceBaseTheme), keyword: "#9E9EC6" },
     });
@@ -133,8 +114,7 @@ describe("the keyword on the fence", () => {
     const base = fenceKeyword(fenceBaseTheme);
     const platform = fenceKeyword(fencePlatformTheme);
     expect(base).not.toBe(platform);
-    // The control paints the runtime's palette, so the probe's negative reads
-    // can tell a handover from a fallback.
+
     expect(Arr.dedupe([base, platform])).toHaveLength(2);
   });
 });
@@ -157,8 +137,6 @@ describe("the source every fence paints", () => {
 
 describe("the fence probe's record", () => {
   it("paints each fence on the page it composites over", () => {
-    // The measured rule: the fence lays its ink over the fill *behind* the
-    // host, so the wrapper's fill is what the fill assertion can name.
     expect(scenarios).toContain("backgroundColor: page");
     expect(scenarios).toContain("page={fenceBaseTheme.colors.background}");
     expect(scenarios).toContain("page={fencePlatformTheme.colors.background}");
@@ -187,8 +165,6 @@ describe("the fence probe's record", () => {
   });
 
   it("prints the fills and keywords the window measured", () => {
-    // The numbers are the run's, not the seam's: a changed palette has to
-    // re-measure before the page can keep claiming them.
     expect(readmeFlat).toContain("`#191C22`");
     expect(readmeFlat).toContain("`#1E2126`");
     expect(readmeFlat).toContain("`#A7A9FF`");

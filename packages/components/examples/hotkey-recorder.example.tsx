@@ -1,15 +1,7 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Hotkey recorder example: bind the command-palette chord.
- *
- * The bound value is an accelerator string, the same grammar the shortcut
- * display reads, so the two views are always consistent.
- */
-
 import { useState } from "react";
 import { HotkeyRecorder } from "../src/hotkey-recorder.js";
 
-/** One binding, shown as the accelerator string the app would store. */
 export const HotkeyRecorderExample = () => {
   const [hotkey, setHotkey] = useState<string | null>("mod+k");
 

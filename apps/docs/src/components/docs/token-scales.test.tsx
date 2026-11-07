@@ -11,20 +11,9 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { TokenScalesBody } from "./token-scales";
 
-/**
- * The geometry specimens.
- *
- * The page claims to show the spacing, radius, border, icon and density scales,
- * so the guard is that every step the theme has is rendered with its own value —
- * a step added to `@gpuixui/tokens` and left out here would be a public token no
- * docs page shows. The elevation order is the package's `elevationLevels`; the
- * specimen and the source guard keep it that way.
- */
-
 const render = (theme: Theme): string =>
   renderToStaticMarkup(<TokenScalesBody theme={theme} />);
 
-/** Each rendered row, keyed by its `data-token`, cut at the next row. */
 const rows = (markup: string): ReadonlyMap<string, string> =>
   new Map(
     markup
@@ -127,7 +116,7 @@ describe("the token scales", () => {
 
     expect(drawn.get("radius.lg")).toContain(`${linux.radius.lg}px`);
     expect(drawn.get(`density.${linux.density.name}`)).toContain("· active");
-    // Linux is the spacious preset, so this cannot pass against the base theme.
+
     expect(linux.density.controlHeight.md).not.toBe(
       theme.density.controlHeight.md,
     );

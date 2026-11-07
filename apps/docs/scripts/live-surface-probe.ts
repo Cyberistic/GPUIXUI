@@ -1,28 +1,3 @@
-/**
- * Prove that a real GPUix surface paints in a headless browser.
- *
- * Plan `440-live-gpuix-web-surface` rested on one unknown: `@gpuix/native` ships
- * a wasm browser build, and nobody had seen it paint. This was the measurement.
- * For each fill in `probeColours` it serves a cross-origin-isolated page, boots
- * the published glue against the published wasm, applies one mutation batch,
- * waits for the page to report itself, captures the frame and reads a pixel back
- * out of the PNG. It passes only when
- *
- * 1. the renderer started and appended its `<canvas>`,
- * 2. the retained tree carries the text the batch set, and
- * 3. the sampled pixel **is the fill the batch set** — a blank frame captures
- *    perfectly well, so its existence proves nothing.
- *
- * `/live` is the route built on this proof; `live-route-probe.ts` holds *that*
- * page to the same rule. This file keeps the synthetic page, because it is the
- * measurement that separated "the runtime paints" from "the docs page paints".
- *
- * Run: `nub apps/docs/scripts/live-surface-probe.ts`
- * Frames: `.artifacts/live/docs-live-surface-*.png` (verification-only).
- *
- * Measured on macOS 15.8.1 x86_64, headless Google Chrome 155.0.8059.80 over
- * SwiftShader. See `docs/preview-strategy.md` §The paint is measured.
- */
 import { createServer } from "node:http";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
@@ -39,10 +14,8 @@ import {
   probePoint,
 } from "./live-frame.ts";
 
-/** Where the repository root sits from this file. */
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 
-/** The installed copy of the browser build the probe drives. */
 export const nativeDir = (root: string): string =>
   join(root, "apps/docs/node_modules/@gpuix/native");
 
@@ -52,7 +25,6 @@ const types: Readonly<Record<string, string>> = {
   ".wasm": "application/wasm",
 };
 
-/** Serve the probe page and the wasm it loads, isolated and same-origin. */
 const serve = async (
   native: string,
   colour: string,
@@ -101,7 +73,6 @@ const serve = async (
   };
 };
 
-/** Run the probe. Returns the process exit code. */
 export const main = async (argv: ReadonlyArray<string>): Promise<number> => {
   const outIndex = argv.indexOf("--out");
   const out = resolve(
@@ -146,8 +117,6 @@ export const main = async (argv: ReadonlyArray<string>): Promise<number> => {
           await new Promise((wait) => setTimeout(wait, 100));
         }
 
-        // The report is written a frame after the batch; give the compositor
-        // the same frame to paint before capturing it.
         await new Promise((wait) => setTimeout(wait, 500));
         const png = await session.page.capture();
         await writeFile(screenshot, png);

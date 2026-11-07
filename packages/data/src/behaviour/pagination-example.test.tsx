@@ -1,13 +1,3 @@
-/**
- * The shipped pagination screen, mounted in the real renderer.
- *
- * An example no suite mounts is the screen a reader copies without knowing
- * whether it runs: the registry test proves the file is registered, and this
- * proves the screen paints and that its own arrows move the page. The filter
- * case is the rule a reader can lose without noticing — narrowing a set from a
- * later page returns to the first page of the narrowed set.
- */
-
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Str from "effect/String";
@@ -31,7 +21,6 @@ afterEach(() => {
   root = undefined;
 });
 
-/** The screen's readout, found by the words it opens with. */
 const readout = (testRoot: DataTestRoot): string =>
   Option.getOrElse(
     Arr.findFirst(testRoot.renderer.getAllText(), Str.startsWith("Page ")),

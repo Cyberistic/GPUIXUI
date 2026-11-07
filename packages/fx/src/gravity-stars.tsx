@@ -1,27 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * GravityStars: a decorative field of stars falling toward a seeded well.
- *
- * The runtime has no `transform` (upstream issue #102) and no paths, so a star
- * cannot orbit: its fall is two straight legs of inset geometry. One seeded well
- * sits inside the box, every star is born on the box's own edge along its own
- * evenly spaced angle, and it falls inward — an **approach** that brightens to
- * its own peak, then a **plunge** that fades out at the well. When the plunge
- * completes the element is re-keyed onto the edge as a fresh star, so the field
- * keeps falling; both ends of the journey are invisible, so the restart has no
- * frame a reader can see.
- *
- * The acceleration is the runtime's `easeIn` curve, not a simulated force: the
- * nearer a star is to the well the shorter its fall, so the field never collapses
- * in unison. `@gpuixui/motion` owns the entrance through
- * `internal/presence.tsx`, and `MotionProvider preference="reduced"` paints every
- * star held on its approach frame instead of deleting the field.
- *
- * The field is decoration: it publishes no accessibility node (a div per star,
- * never text) and takes no pointer input, so the content it sits behind owns the
- * name and the presses. It measures itself, so the caller must bound it.
- */
-
 import type { EventPayload, MotionProps, Props } from "@gpuix/react";
 import {
   mergeStyles,
@@ -65,37 +42,30 @@ import {
 } from "./gravity-stars/logic.js";
 import { makeGravityStore, type GravityStore } from "./gravity-stars/store.js";
 
-/** What a field draws at one frame. */
 export interface GravityStarsState {
-  /** The stars on screen; `0` before the box has been measured. */
   readonly count: number;
   readonly reducedMotion: boolean;
   readonly width: number;
   readonly height: number;
 }
 
-/** {@link GravityStars} props. */
 export interface GravityStarsProps extends Omit<Props, "children" | "style"> {
-  /** The stars to paint. Default `36`; `0` paints none and `160` is the cap. */
   readonly count?: number;
-  /** The layout seed. Default `1`; the same seed paints the same fall. */
+
   readonly seed?: number;
-  /** The smallest star, in pixels. Default `1`. */
+
   readonly minSize?: number;
-  /** The largest star, in pixels. Default `3`. */
+
   readonly maxSize?: number;
-  /** The star colour. Default the theme's `primary` role. */
+
   readonly color?: string;
-  /**
-   * The base time for one fall, in milliseconds. Default `3_000`; a star nearer
-   * the well lands sooner.
-   */
+
   readonly fallMs?: number;
-  /** The entrance level. Default `"slow"` (320 ms). */
+
   readonly level?: MotionLevel;
-  /** A Tailwind class string for the box, merged last. */
+
   readonly className?: string;
-  /** A style for the box, or a function of the field. */
+
   readonly style?: StateStyle<GravityStarsState>;
 }
 
@@ -107,13 +77,6 @@ interface StarProps {
   readonly store: GravityStore;
 }
 
-/**
- * One star: brightening toward the well, fading into it, then reborn on the edge.
- *
- * The element is keyed by the lap so a landed star mounts fresh; the phase lives
- * in the field's store as this star's slice, so the two targets are handed over
- * without a timer.
- */
 const Star = ({ spec, ink, radius, still, store }: StarProps) => {
   const life: GravityLife = useLocalSlice(store.local, (state) =>
     gravityLifeOf(state.lives, spec.key),
@@ -122,14 +85,12 @@ const Star = ({ spec, ink, radius, still, store }: StarProps) => {
   const rest = gravityRest(spec);
   const phase = life.landing ? phases.plunge : phases.approach;
   const motion: MotionProps = {
-    // A plunge retargets from where the approach left it; only a new lap starts
-    // on the edge.
     initial: life.landing ? false : { left: spec.x, top: spec.y, opacity: 0 },
     animate: { left: phase.left, top: phase.top, opacity: phase.opacity },
     transition: {
       duration: phase.durationMs / 1000,
       ...(life.landing ? {} : { delay: phases.approach.delayMs / 1000 }),
-      // The runtime's ease is the acceleration: a fall speeds up inward.
+
       ease: "easeIn",
     },
   };
@@ -153,20 +114,13 @@ const Star = ({ spec, ink, radius, still, store }: StarProps) => {
         borderRadius: radius,
         backgroundColor: ink,
         opacity: still ? rest.opacity : 0,
-        // Decoration: a press lands on what is behind the field.
+
         pointerEvents: "none",
       }}
     />
   );
 };
 
-/**
- * A bounded box of stars falling into a seeded well.
- *
- * Give it a height — directly or through a sized flex parent — because the field
- * positions itself from its own measured box and paints nothing before the first
- * layout.
- */
 export const GravityStars = ({
   count,
   seed,
@@ -203,8 +157,7 @@ export const GravityStars = ({
   const ink = color ?? theme.colors.primary;
   const still = preference === "reduced";
   const store = useLocalStore(makeGravityStore);
-  // The field follows the box alone: a star's leg is that star's slice, so one
-  // completion does not re-lay the whole field.
+
   const box = useLocalSlice(store.local, (current) => current.box);
 
   const noteBox = (event: EventPayload): void => {
@@ -244,7 +197,7 @@ export const GravityStars = ({
         mergeStyles(recipeStyle(cn(className), theme), {
           position: "relative",
           overflow: "hidden",
-          // Decoration: the content in front of the field keeps every press.
+
           pointerEvents: "none",
         }),
         resolveStyle(style, state),
@@ -264,7 +217,6 @@ export const GravityStars = ({
   );
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 600). */
 export const gravityStarsMeta = {
   name: "Gravity stars",
   tier: 5,

@@ -738,7 +738,6 @@ export const CandleChart = ({
   );
 };
 
-/** A stage label's average character width at its role's size, in pixels. */
 const FUNNEL_CHAR_WIDTH = 7;
 
 export interface FunnelChartProps extends ChartProps {
@@ -784,7 +783,6 @@ export const FunnelChart = ({
           {Arr.map(labels, (label, index) => {
             const text = `${label} ${stages[index] ?? ""}`;
             const bar = ((stages[index] ?? 0) / (stages[0] ?? 1)) * box.width;
-            // A label that does not fit its bar stands beside it, on the surface.
             const inside = bar >= text.length * FUNNEL_CHAR_WIDTH + 16;
             return (
               <text
@@ -1325,7 +1323,6 @@ const Ring = ({
   readonly innerRadius: number;
   readonly padAngle: number;
   readonly colors: ReadonlyArray<string> | undefined;
-  /** How much of the circle the slices have opened to, 0 to 1. */
   readonly sweep: number;
   readonly centerLabel: string | undefined;
   readonly showLabels?: boolean;
@@ -1570,8 +1567,6 @@ export const PieChart = ({
     animate,
     animationDuration,
   );
-  // The ring sweeps open from the top, as Recharts' does; a stacked one has no
-  // sweep to share and grows each band.
   const reveal = useMountReveal(animate, animationDuration);
   const shown = Arr.map(rows, (one, index) => ({
     ...one,
@@ -1635,13 +1630,11 @@ export interface RadarChartProps extends ChartProps {
   readonly radius?: number;
   readonly gridAt?: ReadonlyArray<number>;
   readonly dotIcons?: ReadonlyArray<IconName>;
-  /** A stroke around the shape; the fill alone reads by default, as shadcn's does. */
   readonly outline?: boolean;
   readonly axisLabelFormat?: (label: string, index: number) => string;
   readonly pointTooltip?: boolean;
 }
 
-/** How far an axis label stands off the web's outer ring, in pixels. */
 const RADAR_LABEL_GAP = 14;
 
 export const RadarChart = ({

@@ -1,15 +1,3 @@
-/**
- * The wash a find surface hands the runtime.
- *
- * The bugs these guard: a search marking its matches with the `selection` role,
- * which is a reading aid rather than a find wash and was never measured for the
- * active share; a caller's colour losing to the theme's; a corner the runtime
- * defaults to 2px because no theme step reached it; an active index applied
- * to a mark the sweep has not painted, which paints the wrong match; and a theme
- * a store truncated, which threw out of `sharesFor` on the search's first paint
- * instead of leaving the host its own wash.
- */
-
 import { findHighlight, highlightSurfaces, themes } from "@gpuixui/tokens";
 import { describe, expect, it } from "vitest";
 import { activeMarkOf, washFor } from "./wash.js";
@@ -68,9 +56,6 @@ describe("washFor", () => {
   });
 
   it("answers no wash for a theme a store truncated, not a throw", () => {
-    // A theme restored from storage can predate a group. The derivation reads
-    // six roles and one corner step, so each absence answers `undefined` and
-    // the host keeps its own wash rather than the search throwing mid-render.
     expect(washFor({}, {}, 1)).toBeUndefined();
     expect(
       washFor({ ...themes.light, radius: undefined }, {}, 1),

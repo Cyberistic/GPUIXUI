@@ -11,23 +11,6 @@ import {
   type SyncSettings,
 } from "./switch-preview";
 
-/**
- * Browser previews for the Switch page.
- *
- * The shipped switch draws a pill one icon-step tall inside a 24px press band,
- * so the preview takes both from the theme bridge (`--icon-size-*`,
- * `--target-size`). The band owns the role, the tab stop and the ring; the
- * pill and the knob take no pointer input, exactly as `decorative()` strips it
- * from the native track and thumb. The slide is the component's 160 ms
- * `easeInOut` on the knob's `left` inset — the timing table's `standard` curve
- * for a movement between two resting states — and `reducedMotion` paints the
- * landing.
- *
- * The preview is a browser rendering: the native switch announces its state
- * through `aria-valuetext` because the runtime has no `aria-checked`, which the
- * page says.
- */
-
 interface SwitchControlProps {
   readonly label: string;
   readonly checked: boolean;
@@ -40,13 +23,6 @@ interface SwitchControlProps {
   readonly onToggle?: (next: boolean) => void;
 }
 
-/**
- * One switch in its press band.
- *
- * A press anywhere in the band toggles once, and the keyboard edges are the
- * component's: Enter on key **down**, Space on key **up**, no repeat. A
- * disabled switch leaves the tab order and installs no press path.
- */
 const SwitchControl = ({
   label,
   checked,
@@ -74,7 +50,6 @@ const SwitchControl = ({
       data-state={checked ? "checked" : "unchecked"}
       onClick={toggle}
       onKeyDown={(event) => {
-        // Space must not scroll while the switch waits for the release.
         if (event.key === " ") event.preventDefault();
         if (activates(event.key, "down", event.repeat)) {
           event.preventDefault();
@@ -109,7 +84,6 @@ const SwitchControl = ({
   );
 };
 
-/** A sync-settings panel: a master, a dependent and a motion preference. */
 const SyncPanel = () => {
   const [settings, setSettings] = useState<SyncSettings>(initialSync);
 

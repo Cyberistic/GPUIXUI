@@ -1,32 +1,6 @@
-/**
- * The groups a paint reads.
- *
- * The bug these guard: the parts read `theme.spacing.xs`,
- * `theme.borderWidth.thin` and the density's `rowHeight` straight off the
- * group. A theme a store hands back can lack the group — JSON writes `null` for
- * a group it never carried, a hand-edited literal drops the key — so the first
- * layout that asked for a gap or an edge threw
- * `TypeError: Cannot read properties of undefined (reading 'xs')` and took the
- * surface down. A paint seam runs mid-render and cannot throw, so every part
- * reads the primitives' published reader (`spaceValue`, `borderWidthOf`,
- * `radiusValue`, `iconStepValue`, `rowHeightOf`), which answers the library's
- * number for the group the theme lost.
- *
- * The **colour** group is the same class one pass later: 24 reads over nine
- * painters indexed `theme.colors.*`, so a theme that lost the group threw
- * `Cannot read properties of undefined (reading 'card')` from the first row.
- * Those parts read `themeColors`, which answers `undefined` for a role the theme
- * does not carry, so a fill, a rule or an ink that cannot be named is not
- * painted.
- *
- * Examples are excluded: a demo composes like an application and owns the theme
- * it paints; the library's parts are what a consumer cannot fix.
- */
-
 import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-/** A group a part must not index directly. */
 const groups = [
   "spacing",
   "radius",
@@ -36,7 +10,6 @@ const groups = [
   "colors",
 ] as const;
 
-/** Every published reader that answers a group the theme lost. */
 const readers = [
   "spaceValue",
   "borderWidthOf",
@@ -48,11 +21,9 @@ const readers = [
 
 const pattern = new RegExp(`theme\\.(${groups.join("|")})\\b`, "g");
 
-/** The raw group reads in one source, as `group` names. */
 const rawReads = (text: string): ReadonlyArray<string> =>
   Array.from(text.matchAll(pattern), (match) => match[0]);
 
-/** Every library source, with its path below `src/`. */
 const sources = (root = "./"): ReadonlyArray<readonly [string, string]> => {
   const walk = (
     url: URL,
@@ -81,15 +52,11 @@ describe("the groups a paint reads", () => {
     const raw = sources().flatMap(([path, text]) =>
       rawReads(text).map((read) => `${path}: ${read}`),
     );
-    // A raw read names the file it sits in, so the fix is a lookup rather than
-    // a search; the readers answer the theme's number when it carries one.
+
     expect(raw).toEqual([]);
   });
 
   it("names the readers the package paints through", () => {
-    // The guard's premise: the tree really does paint through the published
-    // readers, so "no raw reads" cannot pass by a package that reads no metric
-    // at all.
     const all = sources()
       .map(([, text]) => text)
       .join("\n");
@@ -103,8 +70,7 @@ describe("the groups a paint reads", () => {
         "themeColors",
       ]),
     );
-    // And the scan sees the shapes it is meant to reject, and nothing else:
-    // a metered value handed in as an argument is a reader's own call.
+
     expect(rawReads("gap: theme.spacing.xs,")).toEqual(["theme.spacing"]);
     expect(rawReads("borderBottomWidth: theme.borderWidth.thin,")).toEqual([
       "theme.borderWidth",
@@ -120,9 +86,6 @@ describe("the groups a paint reads", () => {
   });
 
   it("scans the package rather than a list someone remembered", () => {
-    // A directory the walk misses would hide every file in it, and the first
-    // case would pass on nothing. The count is derived from the tree; the floor
-    // only has to be below the smallest real answer.
     expect(sources().length).toBeGreaterThan(40);
     expect(sources().some(([path]) => path === "table/table.tsx")).toBe(true);
     expect(sources().some(([path]) => path === "surfaces/stat-card.tsx")).toBe(

@@ -1,46 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * `Button` — the primary action.
- *
- * The pinned `@gpuix/react` 0.11.0 ships a headless `Button`/`buttonProps`, but
- * this component keeps its own keyboard contract (`core/keyboard.ts` decides,
- * and the decision is wired here exactly the way the platform behaves: Enter on
- * key down, Space on key up, a held key ignored), because the recipe, `loading`,
- * the `StateStyle<ButtonState>` parts contract and the runtime probes all sit on
- * this one implementation. Adopting the headless primitive was **evaluated and
- * declined** — it would regress the Loading state and description, the `focused`
- * style state, the removed tab stop while disabled and the held-key guard; the
- * comparison is on `docs/button.mdx`, and the runtime does publish one.
- *
- * Focus is a keyboard-only outline: the button declares `keyboardRing`
- * (tokens' `focusVisible`) at rest and the runtime paints it after Tab, never
- * after a mouse press (plan 053's probe). The `focused` flag is still tracked
- * because it is public `ButtonState` — a `style` callback may branch on it —
- * and it is React-local render state with no other reader, so `useState` is the
- * right tool; an Atom would make one button's highlight global state.
- *
- * The resting appearance is a Tailwind recipe (`recipe/buttonClass`), compiled
- * through `@gpuixui/tw`; the caller's `className` is joined last so it wins
- * conflicts exactly as `cn` resolves them.
- *
- * Host handlers arrive through `InteractionProps` and are composed with the
- * button's own, never handed the element: `onClick` observes a press the button
- * accepts, and a busy or disabled button takes no press at all.
- *
- * The key pair composes the other way round: the activation runs **before** the
- * caller's `onKeyDown`/`onKeyUp`. A trigger opens and records the row its
- * surface must focus in that handler, so an activation that followed it cleared
- * the record (plan 160's Phase 4 delta). Every other part keeps
- * `composeEvent`'s caller-first rule; only the action leads a key.
- *
- * The rest of the runtime's host props (`ActionHostProps`) pass straight
- * through, because a trigger has to be addressable: a `ref` anchors the surface
- * it opens, `aria-expanded`/`aria-selected` announce it, and the pointer pair
- * opens a hover surface. The props this component owns are written **after**
- * the spread, so no host prop can replace its role, tab stop, name or
- * activation.
- */
-
 import {
   createContext,
   useContext,
@@ -89,93 +47,45 @@ import { Spinner } from "./Spinner.js";
 import { useMessages } from "./MessagesProvider.js";
 import { useTheme } from "./ThemeProvider.js";
 
-/**
- * Marks the actions of a toolbar. AppKit drops every control's hover except a
- * toolbar button's, which shows its bezel under the pointer (plan 724), so the
- * shell's toolbars provide this and `Button` reads it.
- */
 export const ToolbarScope = createContext(false);
 
 export interface ButtonProps
   extends InteractionProps, TooltipTriggerProps, ActionHostProps {
-  /** Defaults to `primary`. */
   readonly variant?: ButtonVariant;
-  /** Defaults to `md`. */
+
   readonly size?: ControlSize;
-  /** Equal width and height, for an icon-only button. */
+
   readonly square?: boolean;
   readonly fullWidth?: boolean;
   readonly disabled?: boolean;
-  /**
-   * Busy: shows a spinner and blocks activation, but stays focusable.
-   */
+
   readonly loading?: boolean;
-  /**
-   * The words a busy button announces — its `aria-description` and the
-   * spinner's name. Defaults to the provider's `loading.busy` (`Loading`); a
-   * blank label announces nothing, for an interface that says the state
-   * somewhere else. This runtime has no `aria-busy`, so this description is the
-   * busy channel.
-   */
+
   readonly loadingLabel?: string;
-  /**
-   * Hold the busy spinner's lit dot. Defaults to the motion provider's
-   * preference (`MotionProvider`); it reaches the spinner and nothing else,
-   * because a button paints no other motion.
-   */
+
   readonly reducedMotion?: boolean;
   readonly leading?: ReactNode;
   readonly trailing?: ReactNode;
-  /** Accessible name. Required when the button has only an icon. */
+
   readonly label?: string;
-  /**
-   * Called for a click or an activating key, with the event that caused it.
-   *
-   * A pointer activation hands over the runtime's `click` payload, whose `x`/`y`
-   * is the press point (a ripple measures it); a keyboard activation hands over
-   * the `keyDown`/`keyUp` payload the button decided on. `KeyEvent` extends
-   * `EventPayload`, so one handler reads both and `eventType` says which.
-   * Not called while busy or disabled.
-   */
+
   readonly onActivate?: (event: EventPayload) => void;
-  /**
-   * Extra style, resolved against the button's live state and merged last.
-   *
-   * A function form is how a consumer styles by state: `style={(state) =>
-   * ({ opacity: state.focused ? 1 : 0.9 })}`. `loading` is not a state — a busy
-   * button reports `disabled`, because it refuses activation.
-   */
+
   readonly style?: StateStyle<ButtonState>;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
   readonly children?: ReactNode;
   readonly testId?: string;
-  /**
-   * The action's Tab stop. Defaults to `0`, or `-1` while `disabled`.
-   *
-   * A caller that owns the surface an action sits in names `-1` while that
-   * surface leaves: a dismissed overlay keeps its box painted for its exit
-   * tween, and the runtime decides the Tab order element by element, so a
-   * control still painted there would otherwise be a stop a reader can walk
-   * into after the surface is gone. `-1` is addressable from code and out of the
-   * Tab order — the runtime builds a `-1` element's focus handle with
-   * `tab_stop(false)` — so the same stop serves a trigger's focus target.
-   *
-   * An explicit stop wins in both directions: `tabIndex={-1}` on an enabled
-   * action, and `tabIndex={0}` on a disabled one. The default is the pair the
-   * `disabled` rule documents, not a second policy on top of the caller's.
-   */
+
   readonly tabIndex?: number;
 }
 
-/** Whether the button currently holds focus, and how it learns that it does. */
 export interface ButtonFocus {
   readonly focused: boolean;
   readonly onFocus?: () => void;
   readonly onBlur?: () => void;
 }
 
-/** What a `Button` tells a `style` callback. */
 export interface ButtonState {
   readonly disabled: boolean;
   readonly focused: boolean;
@@ -186,14 +96,13 @@ const isBusy = (props: {
   readonly loading?: boolean;
 }): boolean => props.disabled === true || props.loading === true;
 
-/** The element `Button` renders. Pure in its arguments. */
 export const renderButton = (
   props: ButtonProps,
   theme: PrimitiveTheme,
   focus: ButtonFocus,
   attached = false,
   messages: PrimitiveMessages = defaultMessages,
-  /** The action sits in a toolbar (`ToolbarScope`). */
+
   inToolbar = false,
 ): ReactElement => {
   const {
@@ -222,15 +131,12 @@ export const renderButton = (
     onMouseEnter,
     onMouseLeave,
     "aria-description": description,
-    // The runtime's own host props, forwarded untouched: a trigger's `ref`,
-    // `aria-expanded`/`aria-selected`, pointer handlers and layout observers.
+
     ...host
   } = props;
   const size = controlSize(requestedSize);
   const busy = isBusy({ disabled, loading });
-  // The busy words are the caller's: a localised interface must not announce an
-  // English state word. A blank label silences the announcement; a blank table
-  // row is a missing translation and keeps the shipped word (`busyWord`).
+
   const loadingWord = loadingLabel ?? busyWord(messages.loading);
   const activate = (event: EventPayload): void => {
     if (busy) return;
@@ -264,8 +170,6 @@ export const renderButton = (
           })
         : resolved.style;
   const own = mergeStyle(
-    // A filled action's label is the control, so it keeps full opacity while
-    // another control has the keyboard focus (`paintsFilledSurface`).
     paintsFilledSurface(variant) ? mergeStyle(base, keepContent) : base,
     controlRing(theme, { disabled }),
   );
@@ -273,8 +177,6 @@ export const renderButton = (
   const style = mergeStyle(
     shape,
     resolveStyle(callerStyle, {
-      // A busy button refuses every activation, so that is what its callback is
-      // told: `loading` is not a second state a caller has to handle twice.
       disabled: busy,
       focused: focus.focused,
     }),
@@ -290,27 +192,13 @@ export const renderButton = (
           ? accessibleName(loadingWord)
           : accessibleName(description)
       }
-      tabIndex={
-        // A busy button stays focusable so a keyboard reader is not dropped
-        // mid-action. A disabled one paints `-1`: out of the Tab order, because
-        // it declares no ring and refuses every key, but still addressable from
-        // code — a trigger's focus target and a caller that focuses a control
-        // after an error both need that stop, and the runtime builds a `-1`
-        // element's focus handle with `tab_stop(false)`. The two props together
-        // are the common `disabled={pending} loading={pending}` pair.
-        //
-        // A caller's stop wins: a surface that is leaving names `-1` while its
-        // box is still painted for the exit tween.
-        tabIndex ?? (disabled === true ? -1 : 0)
-      }
+      tabIndex={tabIndex ?? (disabled === true ? -1 : 0)}
       testId={testId}
       onClick={composePress(busy, onClick, activate)}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       onFocus={composeEvent<EventPayload>(onFocus, focus.onFocus)}
       onBlur={composeEvent<EventPayload>(onBlur, focus.onBlur)}
-      // The activation leads a key (see the header): a caller's handler records
-      // the row an opened surface must focus, so it must run after the action.
       onKeyDown={composeEvent<KeyEvent>(onKey("down"), onKeyDown)}
       onKeyUp={composeEvent<KeyEvent>(onKey("up"), onKeyUp)}
       style={style}
@@ -331,11 +219,10 @@ export const renderButton = (
   );
 };
 
-/** An action that can be clicked or activated with Enter or Space. */
 export const Button = (props: ButtonProps): ReactElement => {
   const theme = useTheme();
   const [focused, setFocused] = useState(false);
-  // The provider states the preference once; the prop is the per-action answer.
+
   const reducedMotion = reducedMotionOf(
     props.reducedMotion,
     useMotionPreference(),

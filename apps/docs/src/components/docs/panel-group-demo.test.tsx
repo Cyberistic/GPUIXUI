@@ -25,18 +25,6 @@ import {
   shareLabel,
 } from "./panel-group-demo";
 
-/**
- * The panel group's preview.
- *
- * `packages/dock/docs/panel-group.mdx` mounts a labelled browser approximation.
- * `component-preview.test.ts` holds the registry to the pages and
- * `preview-demo-render.test.tsx` mounts every demo in both palettes; what those
- * cannot see is whether the drawing still runs the package's own reducers.
- * These cases read the markup and call the preview's helpers against the
- * arithmetic `@gpuixui/dock` ships: a pane's share, a drag, a key and a
- * collapse are `PanelGroup`'s, not a second rule written for the browser.
- */
-
 const root = new URL("../../../../../", import.meta.url);
 
 const read = (path: string): string =>
@@ -45,7 +33,6 @@ const read = (path: string): string =>
 const markup = (node: Parameters<typeof renderToStaticMarkup>[0]): string =>
   renderToStaticMarkup(node);
 
-/** A layout whose fractions do not sum to one, so normalising is visible. */
 const uneven = (): PanelLayout =>
   new PanelLayout({
     orientation: "horizontal",
@@ -69,8 +56,6 @@ describe("the PanelGroup preview", () => {
   it("paints one pane per panel and one divider per adjacent pair", () => {
     const start = groupStart();
 
-    // A preview that painted a fixed two-column box would agree with the
-    // picture and not with a group that takes N panels.
     expect(html.match(/data-panel="/g)).toHaveLength(start.panels.length);
     expect(html.match(/role="separator"/g)).toHaveLength(
       start.panels.length - 1,
@@ -90,7 +75,7 @@ describe("the PanelGroup preview", () => {
     expect(unevenHtml).toContain("flex-grow:0.5");
     expect(unevenHtml).toContain("flex-grow:0.3");
     expect(shareLabel(layout)).toBe("sidebar 20% · editor 50% · inspector 30%");
-    // The page's own readout is the normalised shape, not the raw fractions.
+
     expect(unevenHtml).not.toContain("flex-grow:0.4");
     expect(markup(<PanelGroupDemo />)).toContain("sidebar 22%");
   });
@@ -104,18 +89,15 @@ describe("the PanelGroup preview", () => {
     expect(available).toBe(GROUP_WIDTH - 2 * DIVIDER_WIDTH);
     expect(next.panels[0]?.size).toBeCloseTo(0.22 + step, 10);
     expect(next.panels[1]?.size).toBeCloseTo(0.5 - step, 10);
-    // The divider trades space between its own pair and leaves the rest alone.
+
     expect(next.panels[2]?.size).toBe(0.28);
 
-    // The same call the shipped group makes for a key: the preview adds no
-    // rule of its own, only the pixel-to-fraction conversion.
     expect(next.panels.map((panel) => panel.size)).toEqual(
       resizePanelsByKey(normalizePanels(start.panels), 0, "right", step).map(
         (panel) => panel.size,
       ),
     );
 
-    // Home and End name the pair's bounds, as the component's do.
     const home = keyLayout(start, 0, "home");
     const end = keyLayout(start, 0, "end");
     expect(home.panels[0]?.size).toBe(0);
@@ -134,8 +116,6 @@ describe("the PanelGroup preview", () => {
     expect(dragged.panels[1]?.size).toBeCloseTo(0.25, 10);
     expect(dragged.panels[2]?.size).toBe(0.28);
 
-    // The move is clamped inside the pair, and a press that began elsewhere
-    // still reports the list it found rather than the layout's next render.
     const past = dragLayout(start, 0, start.panels, 100_000);
     const back = dragLayout(start, 0, start.panels, -100_000);
     expect(past.panels[0]?.size).toBeCloseTo(0.72, 10);
@@ -143,7 +123,6 @@ describe("the PanelGroup preview", () => {
     expect(back.panels[0]?.size).toBe(0);
     expect(back.panels[1]?.size).toBeCloseTo(0.72, 10);
 
-    // The helper is the package's reducer, not a parallel one.
     expect(dragged.panels.map((panel) => panel.size)).toEqual(
       resizePanels(normalizePanels(start.panels), 0, 0.25).map(
         (panel) => panel.size,
@@ -162,11 +141,10 @@ describe("the PanelGroup preview", () => {
     expect(collapsedHtml).toContain('data-collapsed="true"');
     expect(collapsedHtml).toContain('aria-expanded="false"');
     expect(collapsedHtml).toContain("▸");
-    // A collapsed pane's content leaves the tree, so the neighbours fill it.
+
     expect(collapsedHtml).not.toContain("panel-group.tsx");
     expect(collapsedHtml).toContain('data-panel="editor"');
 
-    // A panel that is not collapsible, and an id that names none, are no-ops.
     expect(togglePanelCollapsed(start, "editor")).toBe(start);
     expect(togglePanelCollapsed(start, "missing")).toBe(start);
   });
@@ -185,8 +163,6 @@ describe("the PanelGroup preview", () => {
       undefined,
     ]);
 
-    // Every key the drawing answers is a key the package names, so the two
-    // lists cannot drift.
     const mapped = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].flatMap(
       (name) => {
         const key = browserDividerKey(name);
@@ -199,8 +175,6 @@ describe("the PanelGroup preview", () => {
   it("runs the package's rules instead of restating them", () => {
     const demo = read("apps/docs/src/components/docs/panel-group-demo.tsx");
 
-    // The preview imports the reducer and the step; a literal 16 or a local
-    // clamp would be a second rule that drifts from the component.
     expect(demo).toContain('from "@gpuixui/dock/logic"');
     expect(demo).toContain("DIVIDER_STEP");
     expect(demo).toContain("resizePanelsByKey");
@@ -208,8 +182,6 @@ describe("the PanelGroup preview", () => {
     expect(demo).not.toContain("const DIVIDER_STEP");
     expect(demo).not.toMatch(/Math\.min\(Math\.max/);
 
-    // The split preview's own guard reads the package source through a regex;
-    // this one imports the constant, so the widths cannot disagree.
     expect(read("packages/dock/src/logic.ts")).toContain(
       `export const DIVIDER_WIDTH = ${DIVIDER_WIDTH};`,
     );
@@ -235,14 +207,7 @@ describe("the PanelGroup preview", () => {
     const page = read("packages/dock/docs/panel-group.mdx");
 
     expect(page).toContain('<ComponentPreview name="panel-group-demo" />');
-    // The page still opens with the prop contract the drawing stands for.
+
     expect(page).toContain("## API");
-    expect(page).toContain("## Limitations");
-    // The policy's approximation claim is the page's to print.
-    expect(page).toContain("620");
-    expect(page).toContain("onLayout");
-    // The drawn header is a real button where the shipped one is the primitive.
-    expect(page).toContain("real `<button>`");
-    expect(page).toContain("primitives' `Button`");
   });
 });

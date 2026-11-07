@@ -1,20 +1,3 @@
-/**
- * The Space **press** is swallowed; Enter is not.
- *
- * Our controls activate on Space *release*, because that is what a platform
- * button does, but until 0.11.0 the runtime exposed no way to cancel a key's
- * default action. `@gpuix/react` now types the handler's event as `KeyEvent`
- * with `preventDefault()`, so a Space press must be swallowed before the
- * platform scrolls or types — otherwise the control reads like a broken one in
- * a scroll container.
- *
- * Each case below is the wiring, not the decision: `core/keyboard.test.ts`
- * proves `swallowKeyDefault`, and these prove the controls that share `Button`'s
- * handler wiring call it. `activation.test.tsx` covers the same rule over the
- * full part list (it adds `RadioGroup` and `Rating`, whose handlers sit on a
- * group root), so a component that forgets fails in one matrix or the other.
- */
-
 import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";

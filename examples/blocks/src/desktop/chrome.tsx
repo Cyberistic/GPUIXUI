@@ -1,11 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * A window in its era's chrome. Luna: a glossy blue title bar with rounded top
- * corners, white-ringed caption buttons and the red close, a blue frame. Aero:
- * a translucent frame with a sheen (the runtime has no per-element blur, so the
- * glass is a translucent fill over the wallpaper), caption buttons hanging from
- * the top edge, the red close widest. Gloss is stacked two-stop layers.
- */
 import type { StyleDesc } from "@gpuix/react";
 import { Icon, type IconName } from "@gpuixui/icons";
 import * as Arr from "effect/Array";
@@ -13,9 +6,8 @@ import type { ReactNode } from "react";
 import type { DesktopLook } from "./data.js";
 import { gradient } from "./wallpaper.js";
 
-/** Luna's title type: Trebuchet MS bold, as the era drew it. */
 export const LUNA_TITLE = "Trebuchet MS";
-/** Luna's UI type. */
+
 export const LUNA_UI = "Tahoma";
 
 const row: StyleDesc = {
@@ -264,8 +256,6 @@ const AeroWindow = ({
   </div>
 );
 
-/** A window placed at (`x`, `y`) on the desktop. A press on its painted
- * chrome raises it: a press stops at the first element that paints a fill. */
 export const EraWindow = (props: EraWindowProps) => (
   <div
     testId={props.testId}

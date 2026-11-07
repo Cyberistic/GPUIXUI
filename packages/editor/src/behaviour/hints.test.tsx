@@ -1,15 +1,3 @@
-/**
- * The editor's painted field hints, in the real GPUix renderer.
- *
- * The bug these guard: the runtime shapes a `<textarea>`'s placeholder in a
- * fixed `#8F8F8F` (`custom_elements/input.rs` at the pinned
- * `@gpuix/native@0.11.0`), which measures 2.84:1 on a white field — so the
- * markdown source and the code editor painted a hint no theme could reach. Both
- * now hand the host no placeholder and paint the hint through
- * `@gpuixui/primitives/hint`, the same seam the primitives' fields use, and
- * announce the words on the help channel the host loses with its `aria-placeholder`.
- */
-
 import type { ReactNode } from "react";
 import { createTestRoot } from "@gpuix/react/testing";
 import { darkTheme, disabledOpacity, lightTheme } from "@gpuixui/tokens";
@@ -43,14 +31,12 @@ afterEach(() => {
   current?.unmount();
 });
 
-/** The colour the hint paints, or a failure naming the missing id. */
 const hintColour = (root: Root, hintId: string): unknown => {
   const hint = root.renderer.findByTestId(hintId);
   if (hint === undefined) expect.fail(`no hint painted as ${hintId}`);
   return hint.style.color;
 };
 
-/** Every help sentence the last painted frame publishes. */
 const descriptions = (root: Root): ReadonlyArray<string> => {
   const nodes = root.renderer.getA11yTree().nodes ?? {};
   return Object.values(nodes).flatMap((node) =>
@@ -58,7 +44,6 @@ const descriptions = (root: Root): ReadonlyArray<string> => {
   );
 };
 
-/** A markdown editor with a hint and no text yet. */
 const Markdown = (props: { readonly disabled?: boolean }) => (
   <MarkdownEditor
     defaultValue=""
@@ -68,7 +53,6 @@ const Markdown = (props: { readonly disabled?: boolean }) => (
   />
 );
 
-/** A code editor with a hint and no text yet. */
 const Code = (props: { readonly disabled?: boolean }) => (
   <CodeEditor
     defaultValue=""

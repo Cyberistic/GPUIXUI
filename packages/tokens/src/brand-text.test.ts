@@ -1,18 +1,3 @@
-/**
- * Guards brand-coloured text: a link or a text action is written in the theme's
- * `primary`, and `primary` is designed as a **fill**.
- *
- * The bug this holds: nothing measured the brand as text. The contrast table
- * measures `primaryForeground` on `primary` (its own on-colour) and the mark
- * contract measures `primary` at 3:1 as a bar or a dot, so a link painted in the
- * fill role passed every suite while it was unreadable — the base light theme's
- * brand is **4.30:1** on the `active` wash a pressed link tints behind itself,
- * against the 4.5:1 text floor, and macOS dark lands at **3.10:1** there (3.81:1
- * on its popover). `brandText` derives the colour from the brand instead of
- * storing a second palette, and this file holds it to the floor a reader needs
- * on every surface a link can sit on.
- */
-
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { brandText, brandTextOn, brandTextSurfaces } from "./brand-text.js";
@@ -61,16 +46,9 @@ const retroThemes = retroNames.flatMap(
 
 const everyTheme = [...shippedThemes, ...platformThemes, ...retroThemes];
 
-/**
- * The repository source the row's wash is read from, once, when the suite
- * loads. `node:fs` is deliberate here for the same reason as in
- * `field-boundary.test.ts`: this holds the token contract to the two consumer
- * packages' painters, and `@gpuixui/tokens` keeps no dependency on either.
- */
 const source = (path: string): string =>
   readFileSync(new URL(path, import.meta.url), "utf8");
 
-/** The surface a brand-coloured run is least readable on. */
 const worstRatio = (theme: (typeof everyTheme)[number][1], colour: string) =>
   brandTextSurfaces.reduce<number | undefined>((worst, surface) => {
     const ratio = contrastRatio(colour, theme.colors[surface]);
@@ -79,7 +57,6 @@ const worstRatio = (theme: (typeof everyTheme)[number][1], colour: string) =>
       : Math.min(worst, ratio);
   }, Number.POSITIVE_INFINITY);
 
-/** One `#RRGGBB` channel: 1 red, 3 green, 5 blue. */
 const channelAt = (colour: string, at: number): number =>
   Number.parseInt(colour.slice(at, at + 2), 16);
 
@@ -98,9 +75,6 @@ describe("the surfaces a brand-coloured run can sit on", () => {
   });
 
   it("measures the fill role below the text floor on the pressed wash", () => {
-    // The premise of the whole file: a link painted in `primary` is unreadable
-    // in the theme the library itself ships, so the derivation is not a
-    // preference.
     const pressed = contrastRatio(
       lightTheme.colors.primary,
       lightTheme.colors.active,
@@ -116,29 +90,21 @@ describe("the surfaces a brand-coloured run can sit on", () => {
 });
 
 describe("the washes a row paints under brand text", () => {
-  // The row is the surface a link action is read on: a `Box` fills `accent`
-  // while the pointer is over it and `selected` once it is chosen, the list row
-  // behind its `trailing` slot paints both, and the run inside keeps the
-  // derived brand colour.
   const surfaces = source("../../primitives/src/core/style.ts");
   const recipes = source("../../primitives/src/recipe/index.ts");
   const row = source("../../components/src/list.tsx");
 
   it("reads the two painters that put brand text on a row", () => {
-    // The surfaces are the box's own tones: a `Text tone="primary"` inside
-    // `surface="accent"` or `surface="selected"` is a supported composition.
     expect(surfaces).toContain('"accent",\n  "selected",');
-    // ... and the tone is the derived colour, not the fill role.
+
     expect(recipes).toContain('primary: "text-brand"');
     expect(recipes).toContain('link: "text-brand ');
-    // The row that documents its trailing slot as the place for an action
-    // paints both washes under it.
+
     expect(row).toContain("hover: { backgroundColor: theme.colors.accent }");
     expect(row).toContain("backgroundColor: theme.colors.selected");
   });
 
   it("finds the fill role under the floor on the washes a row paints", () => {
-    // The premise: these are shipped styles, not a hypothetical brand.
     const darwinDark = platformTheme(themes.dark, "darwin");
     expect(
       contrastRatio(darwinDark.colors.primary, darwinDark.colors.accent),
@@ -192,9 +158,6 @@ describe("the washes a row paints under brand text", () => {
   });
 
   it("moves the one shipped brand that landed under the floor on a row", () => {
-    // Coverage is not the only reason: the Luna look's dark brand clears the six
-    // page-and-wash surfaces, and its *derived* colour landed at 4.50:1 on the
-    // row it selects — under the 4.5:1 floor — so this style steps once more.
     const luna = retroTheme(themes.dark, "luna");
     const floor = contrastFloorsFor(luna).secondary;
     expect(contrastRatio("#7CB1FF", luna.colors.selected) ?? 0).toBeLessThan(
@@ -229,16 +192,12 @@ describe("brand text", () => {
   });
 
   it("keeps a brand that already reads, and moves the one that does not", () => {
-    // The base dark theme's brand clears the floor as text, so a link there is
-    // the brand itself; the base light theme's does not, so it moves.
     expect(brandText(darkTheme)).toBe(darkTheme.colors.primary);
     expect(brandText(lightTheme)).not.toBe(lightTheme.colors.primary);
     expect(brandText(lightTheme)).toBe("#5B48D0");
   });
 
   it("follows the theme's contrast variant rather than one fixed floor", () => {
-    // 6.94:1 passes the default 4.5 but misses the 7:1 a high-contrast theme
-    // asks for, so the same derivation steps once more there.
     const raw = contrastRatio(
       highContrastDarkTheme.colors.primary,
       highContrastDarkTheme.colors.active,
@@ -263,9 +222,7 @@ describe("brand text", () => {
       }
       const floor = contrastFloorsFor(theme).secondary;
       const worst = worstRatio(theme, text) ?? 0;
-      // The 2% grid stops as soon as it clears: the result sits just above the
-      // floor, not at the theme's foreground (which would be several points
-      // further), so a link keeps its brand colour.
+
       expect(worst, label).toBeGreaterThanOrEqual(floor);
       expect(worst, label).toBeLessThan(floor + 0.2);
     });
@@ -290,9 +247,6 @@ describe("brand text", () => {
   });
 
   it("stops at the theme's own foreground when that is the best it has", () => {
-    // A brand whose foreground itself misses the floor cannot be rescued by a
-    // derivation; the helper returns the theme's most readable role and does not
-    // invent a colour outside the palette.
     const dim = extendTheme(lightTheme, { colors: { foreground: "#9AA3B2" } });
     expect(brandText(dim)).toBe(dim.colors.foreground);
   });
@@ -303,8 +257,7 @@ describe("brand text", () => {
     expect(states.hover.backgroundColor).toBe(lightTheme.colors.hover);
     expect(states.pressed.backgroundColor).toBe(lightTheme.colors.active);
     expect(states.row.backgroundColor).toBe(lightTheme.colors.selected);
-    // The text stays the same derived colour in all four states; what moves is
-    // the wash behind it.
+
     const over = {
       resting: lightTheme.colors.background,
       hover: lightTheme.colors.hover,
@@ -340,10 +293,6 @@ describe("brand text", () => {
 });
 
 describe("brand text on a message's own tint", () => {
-  /**
-   * The fills an `Alert` paints: `ALERT_TONES` maps each tone to its `xSoft`
-   * role. A message's description is a container, so an action can live there.
-   */
   const tints = [
     "infoSoft",
     "successSoft",
@@ -351,7 +300,6 @@ describe("brand text on a message's own tint", () => {
     "destructiveSoft",
   ] as const;
 
-  /** The shared colour against each tint, over every shipped style. */
   const placements = everyTheme.flatMap(([label, theme]) => {
     const floor = contrastFloorsFor(theme).secondary;
     const shared = brandText(theme);
@@ -367,9 +315,8 @@ describe("brand text on a message's own tint", () => {
 
   it("reads the painters that put a brand run on a message", () => {
     const recipes = source("../../tw/src/recipes.ts");
-    const alert = source("../../components/src/alert.tsx");
     const registry = source("../../primitives/src/recipe/registry.ts");
-    // The four fills are the alert's tones, one per message family.
+
     expect(recipes).toContain(
       'info: "bg-infoSoft text-infoSoftForeground border-info/30"',
     );
@@ -377,24 +324,18 @@ describe("brand text on a message's own tint", () => {
       'warning: "bg-warningSoft text-warningSoftForeground border-warning/30"',
     );
     expect(recipes).toContain("export const ALERT_DESCRIPTION");
-    // The description is a container, and its documentation says an action may
-    // sit in it — on the tone's tint, not on the page.
-    expect(alert).toContain("It is a container, so it may hold an action");
-    // That action's `link` variant paints `text-brand`, the shared colour — so
-    // the measured colour below is the one a link in an alert actually paints.
+
     expect(registry).toContain(
       '"text-brand": (theme) => ({ color: brandText(theme) })',
     );
-    // And the tints are outside the shared set: the derivation is for the page
-    // and the washes, so it cannot answer for a message's fill.
+
     const sharedSurfaces: readonly string[] = brandTextSurfaces;
     tints.forEach((tint) => expect(sharedSurfaces).not.toContain(tint));
   });
 
   it("measures the shared colour under the text floor on a message tint", () => {
     const under = placements.filter(({ ratio, floor }) => ratio < floor);
-    // The gap is not a hypothetical brand: it is the colour the library hands
-    // every link, read on a fill the library paints behind a message.
+
     expect(under.length).toBeGreaterThan(0);
     expect(placements.length).toBe(72);
 
@@ -435,9 +376,6 @@ describe("brand text on a message's own tint", () => {
   });
 
   it("keeps the brand where the tint carries it, and steps where it does not", () => {
-    // The base themes show both halves: the dark brand reads on `infoSoft` and
-    // does not on `warningSoft`, and the light brand is the reverse on
-    // `successSoft` and `infoSoft`.
     expect(brandTextOn(darkTheme, "infoSoft")).toBe(darkTheme.colors.primary);
     expect(brandTextOn(lightTheme, "successSoft")).toBe(
       lightTheme.colors.primary,
@@ -448,8 +386,7 @@ describe("brand text on a message's own tint", () => {
     expect(brandTextOn(lightTheme, "infoSoft")).not.toBe(
       lightTheme.colors.primary,
     );
-    // One surface does not answer for the others: the shared colour and the
-    // tint answer differ, which is why both functions exist.
+
     expect(brandTextOn(lightTheme, "infoSoft")).not.toBe(brandText(lightTheme));
   });
 
@@ -520,58 +457,26 @@ describe("brand text on a message's own tint", () => {
     );
     expect(page).toContain("brandTextOn(theme, surface)");
     expect(page).toContain("statusTone(theme, tone).foreground");
-    // The design system teaches the same rule with the same measured count, so
-    // a page that drops it fails here rather than in a reader's composition.
+
     expect(designSystem).toContain(
       `under the floor in ${under.length} of the ${placements.length} tint placements`,
     );
     expect(designSystem).toContain("brandTextOn(theme, surface)");
-    // The catalogue prints the row-wash set too, so a style that joins it
-    // cannot leave that sentence teaching the previous count.
+
     expect(page).toContain(
       `Measured across the ${everyTheme.length} shipped styles`,
     );
-    // The package README prints the same pair: the denominator is the sweep's
-    // length, which outgrew the sixteen styles the sentence was written for.
+
     expect(readme).toContain(
       `in ${under.length} of the ${placements.length} tint placements`,
     );
   });
-
-  it("prints the derived count in the seam's own documentation", () => {
-    // The JSDoc a consumer reads in their editor is a fourth surface, and it
-    // kept the pre-Omarchy figures after the table and the three pages moved.
-    const seam = source("./brand-text.ts").replace(/\s+/g, " ");
-    const under = placements.filter(({ ratio, floor }) => ratio < floor);
-
-    expect(seam).toContain(
-      `**${under.length} of the ${placements.length}** tint placements across the ${everyTheme.length} styles`,
-    );
-    expect(seam).toContain(
-      `under the text floor on ${under.length} of the ${placements.length} tint`,
-    );
-    expect(seam).toContain(`the ${everyTheme.length} shipped styles`);
-  });
 });
 
-/**
- * Guards the surface-name boundary of {@link brandTextOn}.
- *
- * The bug this holds: the surface was read straight out of the colour group, so
- * a stored name this release does not ship answered `undefined` for the pair and
- * `contrastRatio` could not measure it — the derivation's test accepted its first
- * candidate and the seam returned the **raw fill role**, the exact colour this
- * file opens with (4.30:1 on the `active` wash in the base light theme).
- * `selectionOn` answered absence for the same input, so the two seams disagreed
- * about what an unshipped role name is. An unknown surface answers the
- * anywhere-safe brand now, which is the one claim that can still be made.
- */
 describe("a surface name this release does not ship", () => {
-  /** A stored surface name, the way a saved preview or a record carries one. */
   const stored = (value: string): keyof typeof lightTheme.colors =>
     value as keyof typeof lightTheme.colors;
 
-  /** The four surfaces a consumer learns the rule from. */
   const documents = (): Readonly<Record<string, string>> => ({
     "docs/tokens.md": source("../../../docs/tokens.md").replace(/\s+/g, " "),
     "docs/design-system.md": source("../../../docs/design-system.md").replace(
@@ -587,7 +492,6 @@ describe("a surface name this release does not ship", () => {
   it("answers the anywhere-safe brand, not the unmeasured fill", () => {
     const unknown = stored("cardHover");
 
-    // The premise: the raw role is under the floor on a surface a link sits on.
     expect(
       contrastRatio(lightTheme.colors.primary, lightTheme.colors.active),
     ).toBeCloseTo(4.3, 1);

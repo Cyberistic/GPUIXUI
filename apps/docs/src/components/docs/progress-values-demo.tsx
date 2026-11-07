@@ -1,13 +1,3 @@
-/**
- * Browser preview for the Progress component page.
- *
- * The shipped bar is a GPUix host tree, so the preview draws the same shapes
- * from the theme bridge and says so. The one rule it can teach is the shape of
- * the API: a value stated against a maximum, and an indeterminate bar with no
- * measurement at all.
- */
-
-/** One bar, its share and the words beside it. */
 const Bar = ({
   value,
   max,

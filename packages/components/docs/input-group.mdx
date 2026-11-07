@@ -61,18 +61,3 @@ InputGroup
 | `InputGroupText` | `children` | `ReactNode` | — |
 | `InputGroupInput` | field props | `value`, `defaultValue`, `onValueChange`, `onChange`, `onSubmit`, `placeholder`, `readOnly`, `disabled`, `autoFocus`, `invalid`, `size`, `fullWidth`, `label`, `tabIndex`, `description`, `onClick`, `onKeyDown`, `onKeyUp`, `onFocus`, `onBlur`, `ref`, `aria-id`, `onLayout`, `className`, `style`, `testId` — the primitives' input contract | — |
 | `InputGroupTextarea` | field props | the same as `InputGroupInput` without `onSubmit`, plus `minRows` and `maxRows` | — |
-
-## Notes
-- The row's ring follows **any** focus, not keyboard focus: the runtime reports
-  that a field is focused, not how it got there, and an ancestor box cannot wear
-  the focused field's `focusVisible` outline.
-- The field inside paints no edge, fill or ring of its own — the group owns the
-  chrome. A group inside a `Field` therefore reads the group's ring only.
-- Parts are laid out by alignment, wherever they are written (0.11.0 has no
-  `order`); a part wrapped in a fragment is placed with the field.
-
-## Related
-
-- **Field** — the label, control and message block; a group can be its control.
-- **Search input** — a field with its own leading mark and clear action.
-- **Textarea** — the plain multi-line field a group dresses.

@@ -10,15 +10,6 @@ import {
   toggleRail,
 } from "./sidebar-rail";
 
-/**
- * The rail-collapse rule every block shares.
- *
- * The bug this guards: a rail that collapses without stating its state leaves a
- * reader with an icon strip and a toggle that announces nothing, and a rail that
- * changes width with no transition jumps the content pane. The rules are one
- * module and one sheet, so a block cannot invent its own width, label or timing.
- */
-
 const noop = () => {};
 
 const toggle = (collapsed: boolean): string =>
@@ -29,7 +20,6 @@ const css = readFileSync(
   "utf8",
 );
 
-/** One rule's body, from its selector to the closing brace. */
 const block = (selector: string): string => {
   const start = css.indexOf(selector);
   const open = start === -1 ? -1 : css.indexOf("{", start);
@@ -68,13 +58,13 @@ describe("the shared rail rule", () => {
         `.${rail}[data-collapsed="true"] .gx-rail-label`,
       );
     }
-    // One rule moves every rail, and only its width and padding.
+
     expect(css).toContain(`width ${RAIL_TRANSITION_MS}ms ease`);
     expect(css).toContain(`padding ${RAIL_TRANSITION_MS}ms ease`);
-    // The labels fade to nothing and give their width back.
+
     expect(css).toContain("opacity: 0");
     expect(css).toContain("max-width: 0");
-    // A reader who asked for reduced motion gets the two states, not the trip.
+
     expect(css).toContain("prefers-reduced-motion: reduce");
   });
 });

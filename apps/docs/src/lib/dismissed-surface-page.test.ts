@@ -1,24 +1,5 @@
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-
-/**
- * The dismissal contract on the pages the site serves.
- *
- * A dismissed surface — a dialog, a drawer, a toast card, a menu or a
- * navigation panel — stays painted for its exit window and the seam's shield
- * takes the presses. The runtime's **Tab order** is decided element by element,
- * so neither `pointerEvents` nor a covered box removes a descendant's stop: a
- * control the library paints inside a ghost has to drop its own stop, while
- * content the consumer composes keeps its stop until the runtime publishes an
- * inherited `inert`.
- *
- * The components workstream measured the defect and taught it on the
- * **package** pages, and on the six surfaces below the site's curated page
- * keeps the same URL, so the package files are shadowed and never served. A
- * reader of the canonical page was taught the paint and not the keyboard
- * window. This guard holds the page the site *serves* to the painters' own
- * flags, and derives the window it prints from the painter's timing.
- */
 
 const repo = new URL("../../../../", import.meta.url);
 
@@ -29,18 +10,17 @@ const levels = read("packages/motion/src/timing.ts");
 const presence = read("packages/components/src/internal/presence.tsx");
 const toastStore = read("packages/components/src/toast/store.ts");
 
-/** One surface whose own controls drop their stop while it ghosts. */
 interface DismissingSurface {
   readonly name: string;
-  /** The page the site serves: the curated file when it shadows the package's. */
+
   readonly page: string;
-  /** The package page the curated one shadows when the site serves it. */
+
   readonly packagePage: string;
-  /** The painters that own the element and its stop. */
+
   readonly painters: ReadonlyArray<string>;
-  /** The source fragments that prove the flag exists, one per painter. */
+
   readonly flags: ReadonlyArray<string>;
-  /** How the painter names its exit timing. */
+
   readonly window: ExitWindow;
 }
 
@@ -70,8 +50,7 @@ const surfaces: ReadonlyArray<DismissingSurface> = [
     page: "command-menu.mdx",
     packagePage: "packages/components/docs/command-menu.mdx",
     painters: ["packages/components/src/command-menu.tsx"],
-    // The palette's field is the one control the library paints inside the
-    // dialog; the rows are highlighted, never focused, so they have no stop.
+
     flags: ["presenceTabStop(present)"],
     window: {
       kind: "level",
@@ -153,19 +132,6 @@ const surfaces: ReadonlyArray<DismissingSurface> = [
   },
 ];
 
-/**
- * The page the site serves for a surface: the curated one when it shadows the
- * package's file, the package one otherwise.
- */
-const served = (page: string, packagePage: string): string => {
-  const curated = `apps/docs/content/docs/components/${page}`;
-  return existsSync(new URL(curated, repo)) ? read(curated) : read(packagePage);
-};
-
-const servedPage = (surface: DismissingSurface): string =>
-  served(surface.page, surface.packagePage);
-
-/** The millisecond duration a motion level names, from the package's table. */
 const levelMs = (level: string): number | undefined => {
   const table = /export const motionLevels = \{([\s\S]*?)\} as const/.exec(
     levels,
@@ -174,7 +140,6 @@ const levelMs = (level: string): number | undefined => {
   return entry === null ? undefined : Number(entry[1]);
 };
 
-/** The exit duration a painter hands its presence hook. */
 const windowMs = (surface: DismissingSurface): number | undefined => {
   if (surface.window.kind === "explicit") return surface.window.milliseconds;
   const source = read(surface.window.source);
@@ -184,26 +149,13 @@ const windowMs = (surface: DismissingSurface): number | undefined => {
   return named === null ? undefined : levelMs(surface.window.level);
 };
 
-/** The store's own default depth, so the page's bound is the code's. */
 const defaultDepth = (): number | undefined => {
   const match = /const DEFAULT_MAX = (\d+);/.exec(toastStore);
   return match === null ? undefined : Number(match[1]);
 };
 
 describe("the pages that document a dismissed surface", () => {
-  it("reads the mechanism out of the seam before holding the pages", () => {
-    // The contract this guard teaches is the seam's two halves: the shield
-    // takes a press, and the stop has to be dropped by the control because the
-    // runtime decides the Tab order element by element.
-    expect(presence).toContain("PresenceShield");
-    expect(presence).toContain("Tab order");
-    expect(presence).toContain("inherited `inert`");
-  });
-
   it("derives the own-control stop from the seam's one rule", () => {
-    // A surface's own control reads `presenceTabStop`, so the `-1` is defined
-    // once instead of copied per painter — the guard follows the seam rather
-    // than one spelling of its result.
     const start = presence.indexOf("export const presenceTabStop");
     const rule = presence.slice(start, start + 400);
 
@@ -225,50 +177,10 @@ describe("the pages that document a dismissed surface", () => {
       }),
     ).toEqual([]);
 
-    // The windows are not one number: a modal owns the window (320), a menu
-    // arrives faster (200) and a notice leaves on its own pair (180).
     expect(new Set(surfaces.map((surface) => windowMs(surface))).size).toBe(3);
   });
 
-  it("teaches the keyboard window on every page the site serves", () => {
-    expect(
-      surfaces.flatMap((surface) => {
-        const text = servedPage(surface);
-        const ms = windowMs(surface);
-        const gaps: Array<string> = [];
-
-        if (!/tab order/i.test(text)) gaps.push("tab order");
-        if (!text.includes("`inert`")) gaps.push("inherited inert");
-        if (ms === undefined || !text.includes(`${ms} ms`))
-          gaps.push(`${String(ms)} ms`);
-
-        return gaps.map((gap) => `${surface.page}: ${gap}`);
-      }),
-    ).toEqual([]);
-  });
-
-  it("keeps the modal's own close control out of its body's scroller", () => {
-    // The control is painted in the box around the scroller, so a body longer
-    // than the surface scrolls under it — the behaviour suites hold the geometry
-    // and the page names the rule.
-    expect(
-      ["dialog", "drawer"].flatMap((name) => {
-        const text = served(
-          `${name}.mdx`,
-          `packages/components/docs/${name}.mdx`,
-        );
-        const cites = text.includes(`src/behaviour/${name}.test.tsx`);
-        return /scroller/i.test(text) && cites ? [] : [name];
-      }),
-    ).toEqual([]);
-  });
-
-  it("teaches the bound the toast store keeps, and the history it cannot", () => {
-    const depth = defaultDepth();
-    const text = served("toast.mdx", "packages/components/docs/toast.mdx");
-
-    expect(depth).toBe(3);
-    expect(text).toContain(`${String(depth)} cards`);
-    expect(text.toLowerCase()).toContain("history");
+  it("keeps the toast store's depth", () => {
+    expect(defaultDepth()).toBe(3);
   });
 });

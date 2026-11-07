@@ -1,13 +1,3 @@
-/**
- * The value maths — the only part of a slider that can be proven without a
- * rendering runtime, and the part every value control shares.
- *
- * Each case guards a defect a slider can actually ship: a value that snaps to
- * binary-float noise, an unknown key treated as "stay", a pointer outside the
- * track reading as a real position, or a range slider whose ends cross and
- * report a [start, end] pair in the wrong order.
- */
-
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import {
@@ -55,14 +45,6 @@ describe("normalizeRange", () => {
 
 describe("storedRange", () => {
   it("reads a bound that is not a number as the range's documented default", () => {
-    // The bug guarded: a slider's and a meter's bounds are saved with the form
-    // that draws them, and `??` keeps the documented default only for
-    // `null`/`undefined`. A bound a store wrote as text — a hand-edited export,
-    // a settings row that saved its field as a string — reached
-    // `normalizeRange`, which answers a bound that is not a number with
-    // `min + 1`: a control documented as 0..100 painted a 0..1 range, so every
-    // value past one pinned its thumb to the end of the track. A `step` written
-    // as text quietly turned a quantised control continuous.
     expect(
       storedRange({ min: "0", max: "255", step: "5" }, RANGE),
     ).toStrictEqual(RANGE);
@@ -77,8 +59,7 @@ describe("storedRange", () => {
       max: 20,
       step: 5,
     });
-    // A bound the record never carried is the default, not zero: the two ends
-    // take their own defaults, so a saved `min` alone keeps the documented max.
+
     expect(storedRange({ min: 10 }, RANGE)).toStrictEqual({
       min: 10,
       max: 100,
@@ -92,7 +73,7 @@ describe("storedRange", () => {
       max: 100,
       step: 0,
     });
-    // `NaN` is a number the store wrote; what it means is the arithmetic's.
+
     expect(
       storedRange({ min: Number.NaN, max: 0, step: 1 }, RANGE),
     ).toStrictEqual({ min: 0, max: 0, step: 1 });
@@ -126,9 +107,6 @@ describe("clampValue", () => {
   });
 
   it("keeps the maximum reachable when the step does not divide the span", () => {
-    // The bug guarded: with min 0, max 10 and step 3 the snap made the maximum
-    // unreachable — the thumb stopped at 9 and the end of the track was a place
-    // the control could not be taken to.
     const range = { min: 0, max: 10, step: 3 };
     expect(clampValue(10, range)).toBe(10);
     expect(clampValue(9.5, range)).toBe(9);
@@ -170,11 +148,6 @@ describe("stepping", () => {
   });
 
   it("steps off an off-grid maximum onto the stop below it", () => {
-    // The bug guarded: with min 0, max 10 and step 3 the maximum is a stop but
-    // not a grid point. A move *down* from it measured the step from the
-    // off-grid value — 10 - 3 = 7 snapped back to 6 — so the stop at 9 could be
-    // reached with ArrowUp and never with ArrowDown. One step off a stop is the
-    // neighbouring stop, not two.
     const range = { min: 0, max: 10, step: 3 };
     expect(stepValue(10, range, -1)).toBe(9);
     expect(stepValue(9, range, -1)).toBe(6);
@@ -203,8 +176,6 @@ describe("decideValueKey", () => {
   });
 
   it("steps off an off-grid maximum in both directions", () => {
-    // Same defect as `stepValue`'s case, through the key contract: End then
-    // ArrowDown must land on the neighbouring stop, not skip it.
     const range = { min: 0, max: 10, step: 3 };
     expect(decideValueKey(10, range, "down")).toStrictEqual(Option.some(9));
     expect(decideValueKey(9, range, "up")).toStrictEqual(Option.some(10));
@@ -241,9 +212,6 @@ describe("pointerValue", () => {
 });
 
 describe("verticalPointerValue", () => {
-  // A vertical value runs **up**: the top of the track is the maximum. A
-  // mapping that reused the horizontal arithmetic would turn the bar upside
-  // down while every thumb position still looked plausible at the ends.
   const BOX = { y: 100, height: 200 } as const;
 
   it("maps the inset span from the bottom, so the top is the maximum", () => {
@@ -286,8 +254,6 @@ describe("range spans", () => {
   });
 
   it("picks the end a value has passed, even when both thumbs coincide", () => {
-    // The bug guarded: with both ends at 0 a click at 90 was a tie, so it
-    // grabbed the start — which cannot move right — and nothing happened.
     expect(nearestEnd(90, { start: 0, end: 0 })).toBe("end");
     expect(nearestEnd(-5, { start: 0, end: 0 })).toBe("start");
   });
@@ -323,9 +289,6 @@ describe("range spans", () => {
 
 describe("spanFrom", () => {
   it("draws a span on either side of the point a drag was pressed on", () => {
-    // The bug guarded: both ends on one value is one point, so the press picked
-    // the start and a drag to the right was the one move the start may not make
-    // — the pair could only ever be pulled leftwards.
     expect(spanFrom(50, 80, RANGE)).toStrictEqual({ start: 50, end: 80 });
     expect(spanFrom(50, 20, RANGE)).toStrictEqual({ start: 20, end: 50 });
   });

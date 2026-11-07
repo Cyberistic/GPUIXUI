@@ -1,15 +1,3 @@
-/**
- * The MessageScroller rules.
- *
- * The bug these guard: content arriving while the reader is scrolled up yanks
- * them to the bottom. The state machine must leave them alone and count what
- * arrived, and it must not count while they are pinned. Every assertion below
- * fails if the pin guard or the threshold comparison is removed. The last bug
- * they guard is the opposite: a measurement the scroller cannot read (`NaN`)
- * fails every comparison, so a reader resting at the bottom was read as away
- * from it and the follow stopped.
- */
-
 import { describe, expect, it } from "vitest";
 import {
   addItems,
@@ -103,8 +91,6 @@ describe("addItems", () => {
   });
 
   it("ignores a count it cannot read", () => {
-    // The affordance paints `unread` as "N new messages", so an unreadable
-    // arrival would paint the word `NaN` where a count belongs.
     expect(addItems(unpinned, Number.NaN)).toBe(unpinned);
   });
 });

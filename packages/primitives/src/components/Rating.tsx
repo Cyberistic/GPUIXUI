@@ -1,25 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * `Rating` — a score in stars, or none.
- *
- * A rating is shaped like a radio group: one tab stop, arrows move the
- * selection and native focus with it, and Space selects the star holding focus
- * on the **release** (Enter on the press), the way a platform radio does. It is
- * **not** a radio group in one respect: the arrows clamp at the ends instead of
- * wrapping, and Delete clears it back to zero (`core/rating.ts` owns both rules).
- *
- * The paint uses two icons of the same geometry — an outline star and a filled
- * one — tinted with the brand and muted roles, because GPUix's `<svg>` is
- * monochrome and cannot be filled by a style. A **half** star is the same two
- * icons in a clipped box: the runtime has no transform, but a box with
- * `overflow: hidden` clips what it holds (`docs/gpuix-capabilities.md`), so the
- * filled glyph is painted whole and cut at the star's midpoint.
- *
- * The resting appearance is a Tailwind recipe (`recipe/ratingStarClass` and
- * `recipe/ratingGroupClass`), compiled through `@gpuixui/tw`; the caller's
- * `className` is joined last so it wins conflicts exactly as `cn` resolves them.
- */
-
 import { useRef, useState, type ReactElement } from "react";
 import { useGpuix } from "@gpuix/react";
 import type { EventPayload, KeyEvent, PublicInstance } from "@gpuix/react";
@@ -81,105 +60,66 @@ export interface RatingProps
     InteractionProps,
     FieldHostProps,
     HelpProps {
-  /** Controlled rating, `0..max` (0 is unrated). */
   readonly value?: number;
   readonly defaultValue?: number;
-  /**
-   * How many stars to paint; defaults to five. A count that cannot be laid out
-   * — `NaN`, an infinity, zero or a negative number — paints one star, the same
-   * answer the value clamp, the keys and the tab stop read (`starCount`). A
-   * stored `null` (JSON's absence for a count a record never carried) is the
-   * default five, not the one-star floor.
-   */
+
   readonly max?: number;
-  /**
-   * Score in halves as well as whole stars. The left half of a star is the
-   * half below it, so a press can say `3.5`; the arrows step by half and Home
-   * lands on the half star. Off by default: a rating is a whole number of
-   * stars unless the caller says a finer score is wanted.
-   */
+
   readonly allowHalf?: boolean;
-  /** Defaults to `md`. */
+
   readonly size?: ControlSize;
   readonly disabled?: boolean;
-  /** Shows the value but takes no input and no tab stop. */
+
   readonly readOnly?: boolean;
-  /** The group's name; each star is named from the provider's `starName`. */
+
   readonly label?: string;
-  /** A failed validation: the chosen stars paint the destructive role. */
+
   readonly invalid?: boolean;
-  /** Extra style, resolved against the rating's live state and merged last. */
+
   readonly style?: StateStyle<RatingState>;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
   readonly testId?: string;
 }
 
-/** What a `Rating` tells a `style` callback. */
 export interface RatingState {
   readonly disabled: boolean;
   readonly readOnly: boolean;
-  /** True while any star holds native focus. */
+
   readonly focused: boolean;
   readonly invalid: boolean;
 }
 
-/** Which star holds focus, and how the group learns that it moved. */
 export interface RatingFocus {
   readonly focusedIndex: Option.Option<number>;
   readonly onFocus: (index: number) => void;
   readonly onBlur: (index: number) => void;
 }
 
-/**
- * Where the pointer is, so a rating can preview the score it would choose.
- *
- * A hovered half star previews the half, so the paint answers the pointer
- * exactly as a press would. The preview is **paint only**: the value, the
- * announced state and the tab stop keep reading the rating, because a preview
- * is a hint about the next press, not a change of the answer.
- */
 export interface RatingHover {
-  /** The score a press would choose, or `None` while the pointer is elsewhere. */
   readonly hovered: Option.Option<number>;
   readonly onHover: (score: number) => void;
-  /** The pointer left the group: the paint returns to the value. */
+
   readonly onHoverEnd: () => void;
 }
 
 export interface RatingHandlers {
   readonly onSelect: (value: number) => void;
-  /** Select, then move native focus to the star the change landed on. */
+
   readonly onMove: (value: number) => void;
   readonly registerItem: (
     index: number,
   ) => (instance: PublicInstance | null) => void;
-  /**
-   * The score a press or a move on `index` at this event aims at.
-   *
-   * The component owns it because only it can measure the star the event landed
-   * on; the pure renderer falls back to the star's whole score.
-   */
+
   readonly scoreAt?: (index: number, event: EventPayload) => number;
 }
 
-/**
- * A usable star count for the paint.
- *
- * `max` is caller arithmetic (a measured total, a stored preference), so it
- * goes through the same rule the value, the keys and the tab stop read
- * (`starCount`): a count that cannot be laid out is one star rather than an
- * `Arr.range` bound — `new Array(Infinity)` throws. **No `max` is the
- * documented five**, and a store writes the field it never carried as `null`,
- * so both absences take the default rather than the one-star floor.
- */
 export const ratingMax = (max: unknown): number =>
   Option.match(Option.fromNullishOr(max), {
     onNone: () => 5,
     onSome: (count) => starCount(count),
   });
 
-/** A pointer that is nowhere: the idle state a render helper starts from. */
 const NO_POINTER: RatingHover = {
   hovered: Option.none(),
   onHover: () => {},
@@ -199,24 +139,19 @@ export const renderRating = (
   const half = props.allowHalf === true;
   const value = clampRating(state.current, max, half);
   const tabStop = ratingTabStop(value, max, half);
-  // A star's name is the provider's sentence over its position. A table with a
-  // missing row answers nothing, so the shipped sentence names it rather than an
-  // empty `aria-label` on a radio (see `spokenSentence`).
+
   const starName = (index: number): string =>
     spokenSentence(
       messages.starName(index, max),
       defaultMessages.starName(index, max),
     );
-  // A star the rating no longer draws cannot hold focus: `max` is caller
-  // arithmetic, so a list that shrank would otherwise leave the group painting
-  // itself focused over stars nobody focused and send the next key to the
-  // clamped tail.
+
   const focusedIndex = Option.filter(
     focus.focusedIndex,
     (index) => index >= 1 && index <= max,
   );
   const interactive = props.disabled !== true && props.readOnly !== true;
-  /** The score the paint reaches: the pointer's while it is inside, else the value. */
+
   const lit = interactive
     ? clampRating(
         Option.getOrElse(hover.hovered, () => value),
@@ -224,7 +159,7 @@ export const renderRating = (
         half,
       )
     : value;
-  /** The star an activating key chooses: the one holding focus, else the tab stop. */
+
   const focusedStar = clampRating(
     Option.getOrElse(focusedIndex, () => tabStop),
     max,
@@ -246,11 +181,8 @@ export const renderRating = (
       controlRing(theme, { invalid: props.invalid }),
     );
   }
-  /** One glyph, in the role its fill carries. */
+
   const glyph = (filled: boolean): ReactElement | null => {
-    // A stored theme that lost the colour group has no mark colour to paint; a
-    // black glyph would be invisible on a dark surface, so the mark is absent
-    // rather than wrong.
     const color = ratingStarColor(filled, theme, props.invalid);
     return color === undefined ? null : (
       <Icon
@@ -273,7 +205,6 @@ export const renderRating = (
         role="radio"
         aria-label={starName(index)}
         aria-id={index === tabStop ? props["aria-id"] : undefined}
-        // The state stays the rating's: a previewed star is filled, not chosen.
         aria-valuetext={starWord(starState(index, value), messages.star)}
         tabIndex={interactive ? (index === tabStop ? 0 : -1) : undefined}
         onLayout={index === tabStop ? props.onLayout : undefined}
@@ -347,7 +278,6 @@ export const renderRating = (
   );
 };
 
-/** A score in stars, or none. */
 export const Rating = (props: RatingProps): ReactElement => {
   const theme = useTheme();
   const messages = useMessages();
@@ -358,15 +288,14 @@ export const Rating = (props: RatingProps): ReactElement => {
   const [focusedIndex, setFocusedIndex] = useState<Option.Option<number>>(
     Option.none(),
   );
-  // Paint-only: the preview is discarded when the pointer leaves, so it never
-  // reaches the value, the name or the tab stop.
+
   const [hovered, setHovered] = useState<Option.Option<number>>(Option.none());
   const state = useControlState(
     props.value,
     clampRating(props.defaultValue ?? 0, max, half),
     valueChange(props),
   );
-  /** The star a press or a move landed on, in window pixels. */
+
   const boxOf = (index: number): Option.Option<StarBox> =>
     Option.flatMap(Option.fromNullishOr(itemIds.current.get(index)), (id) =>
       Option.fromNullishOr(renderer?.getElementBounds?.(id)),

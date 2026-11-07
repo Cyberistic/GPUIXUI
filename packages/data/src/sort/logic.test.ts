@@ -1,18 +1,3 @@
-/**
- * The sort press cycle, as data.
- *
- * The bugs these guard: a second press that sorts the same direction again; a
- * press on another column inheriting the first column's direction; a Shift
- * press that replaces a multi-column order instead of adding its tie-break (or
- * that appends a field already in the order instead of flipping it); and an
- * accessible name that does not say the state (0.11.0 has no `aria-sort`, so
- * the name is the channel).
- *
- * The **order** is no longer computed here — `constructGrid` registers
- * `sortFn_basic` and `grid-core.test.ts` holds the row model to numeric and
- * code-unit order, and to the tie-break a second entry applies.
- */
-
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import {
@@ -134,10 +119,6 @@ describe("the announced state", () => {
   });
 
   it("reads a blank label as the field the column sorts by", () => {
-    // A label is content: an i18n table missing its row answers `""`, and a
-    // stored column configuration can restore a header with no words. The name
-    // used to open with a comma — `", sortable"` — so a reader heard the state
-    // and not the column. The field is the identity the header sorts by.
     expect(columnName("", "name")).toBe("name");
     expect(columnName("   ", "size")).toBe("size");
     expect(columnName("  Status  ", "status")).toBe("Status");

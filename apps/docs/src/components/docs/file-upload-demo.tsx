@@ -15,25 +15,12 @@ import * as Option from "effect/Option";
 import { Match } from "effect";
 import { useEffect, useState } from "react";
 
-/**
- * Browser preview for the FileUpload page.
- *
- * The native queue is a pure state machine and the transfer is the caller's, so
- * the preview plays the caller: it seeds the queue with the three states a
- * reader needs to see (`uploading`, `done`, `error`), advances the transfer
- * through the package's own `reportProgress`/`complete`, retries through
- * `start` and drops through `remove`. Nothing here invents a lifecycle the
- * package does not have.
- */
-
-/** The files the preview queues, with the states it opens on. */
 export const UPLOAD_FILES: ReadonlyArray<UploadFile> = [
   { id: "screenshot", name: "screenshot.png" },
   { id: "report", name: "report.pdf" },
   { id: "notes", name: "release-notes.md" },
 ];
 
-/** A step of the simulated transfer: one tick asks for this much more. */
 export const UPLOAD_STEP = 0.2;
 
 const tokenOf = (state: UploadQueue, id: string): Option.Option<number> =>
@@ -46,7 +33,6 @@ const at = (
   progress: number,
 ): UploadQueue => reportProgress(state, id, token, progress);
 
-/** The three states the page opens on, built through the queue's own API. */
 export const initialQueue = (): UploadQueue => {
   const seeded = enqueue(emptyQueue, UPLOAD_FILES);
   const uploading = start(seeded, "screenshot");
@@ -66,7 +52,6 @@ export const initialQueue = (): UploadQueue => {
   });
 };
 
-/** One transfer tick: every uploading file advances, and a full one completes. */
 export const advanceUploads = (
   state: UploadQueue,
   step: number = UPLOAD_STEP,
@@ -83,7 +68,6 @@ export const advanceUploads = (
   });
 };
 
-/** The next file a "queue another" press adds, so the preview stays alive. */
 const BATCH: UploadFile = { id: "batch", name: "batch-2026-10-24.zip" };
 
 export const EXTRA_FILES: ReadonlyArray<UploadFile> = [

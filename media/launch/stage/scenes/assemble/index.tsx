@@ -1,9 +1,3 @@
-/**
- * The film's assemble shot (plan 066, v4.3): the stats block's own cards fall
- * in from above and land on bare paper — no blueprint, no outlines — while the
- * camera makes one slow drone move over the build; the whole real frame then
- * settles over the cards and holds.
- */
 import { Fly, Stage } from "../../kit";
 import type { Act, Rect } from "../../kit";
 import boxes from "../../../takes/blueprint/boxes.json";

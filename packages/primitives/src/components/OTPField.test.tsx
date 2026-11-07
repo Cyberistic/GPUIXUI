@@ -1,16 +1,3 @@
-/**
- * `OTPField` — the element tree the runtime receives.
- *
- * The bug this suite guards at the tree level: a code field must be `length`
- * named single-character inputs over one value, must keep its handlers per cell
- * (GPUix dispatches to the element that owns the handler), must not paint a ring
- * on six cells at once, and must remove every tab stop when disabled. The default
- * cell list is a React array, so each cell must carry its own key or React warns
- * in every window that mounts the field. The distribution and key contract live
- * in `core/otp.ts`; the native editing, focus movement and paste-shaped insert
- * are the runtime suite's.
- */
-
 import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
 import * as Arr from "effect/Array";
@@ -70,7 +57,6 @@ const render = (
     handlers(over),
   );
 
-/** The inputs, one per cell. A context provider draws nothing. */
 const cellsOf = (element: ReactElement): ReadonlyArray<ReactElement> => {
   const body =
     elementChildren(element)[0] ?? expect.fail("the field drew no body");
@@ -80,7 +66,6 @@ const cellsOf = (element: ReactElement): ReadonlyArray<ReactElement> => {
 const cell = (element: ReactElement, index: number): ReactElement =>
   cellsOf(element)[index] ?? expect.fail(`the field has no cell ${index + 1}`);
 
-/** The React key of every cell, `none` where the tree gave none. */
 const cellKeys = (
   element: ReactElement,
 ): ReadonlyArray<Option.Option<string>> =>
@@ -88,9 +73,6 @@ const cellKeys = (
 
 describe("OTPField", () => {
   it("keys every default cell as an entry of the list it draws", () => {
-    // Bug guarded: the default cells are the children React reconciles as an
-    // array, and an unkeyed entry makes React warn on every window that mounts
-    // the shipped field ("Each child in a list should have a unique key").
     expect(cellKeys(render({ length: 4 }, "12"))).toStrictEqual([
       Option.some("cell-0"),
       Option.some("cell-1"),
@@ -117,12 +99,6 @@ describe("OTPField", () => {
   });
 
   it("paints a stored code that is not text as empty, editable cells", () => {
-    // Bug guarded: a code is content a form record carries, and a verification
-    // code is numeric often enough that the record keeps it as one. Read raw,
-    // `normalizeOtp` called `Str.replace` on the stored value and threw
-    // `self.replace is not a function` out of the field's first paint, taking
-    // the tree with it. Only text is a code, so the stored shape paints the
-    // empty field an omitted value means.
     const element = render(
       { length: 3, label: "Verification code" },
       123456 as unknown as string,
@@ -132,27 +108,21 @@ describe("OTPField", () => {
     Arr.forEach(cells, (input) => {
       expect(expectSome(hostProp(input, "value"))).toBe("");
     });
-    // The tab stop is the cell an empty code starts on.
+
     expect(expectSome(hostProp(cell(element, 0), "tabIndex"))).toBe(0);
   });
 
   it("draws the documented six cells for a stored length that is not a number", () => {
-    // Bug guarded: a cell count is a setting saved beside the form, and a
-    // record can keep it as text. Read through `otpLength` alone, a stored
-    // `"4"` painted **one** cell, so the field asked for a four-digit code and
-    // painted a one-character box. Only a real number is a count, so the
-    // stored shape paints the documented six.
     const element = render(
       { length: "4" as unknown as number, label: "Verification code" },
       "",
     );
     expect(cellsOf(element)).toHaveLength(6);
-    // The control: a real count is still the field it names.
+
     expect(cellsOf(render({ length: 4 }, ""))).toHaveLength(4);
   });
 
   it("keeps one cell in the tab order: the one the code has reached", () => {
-    // The bug: every cell was tabIndex=0, so Tab walked through all six.
     const tabStops = (value: string, length = 4) =>
       [0, 1, 2, 3].map((index) =>
         expectSome(
@@ -189,8 +159,6 @@ describe("OTPField", () => {
   });
 
   it("reports Enter from the cell that has the caret, through onSubmit", () => {
-    // A code is entered to be sent: the runtime turns Enter into a submit only
-    // when the field installs a listener, so every cell carries the caller's.
     const onSubmit = vi.fn();
     const element = render({ length: 4, onSubmit }, "12");
     cellsOf(element).forEach((input) => {
@@ -224,8 +192,6 @@ describe("OTPField", () => {
   });
 
   it("declares the keyboard ring on every cell, and lets the runtime pick one", () => {
-    // The runtime paints `focusVisible` only on the cell holding the caret, so
-    // every cell declares the same outline and no cell paints a shadow ring.
     const element = render({ length: 3 }, "12");
     cellsOf(element).forEach((input) => {
       const style = expectSome(hostStyleRecord(input));
@@ -269,11 +235,6 @@ describe("OTPField", () => {
   });
 
   it("keeps a reachable tab stop when a focused cell leaves the field", () => {
-    // Bug guarded: `length` is a prop, so a field that shrinks under a focused
-    // cell (6 -> 4) kept the old index in `focusedIndex`. The stop was written
-    // only on that index, which no longer exists, so every drawn cell painted
-    // `tabIndex: -1` and the group had no tab stop at all — unreachable by Tab.
-    // The group also stopped reporting a focus it no longer had.
     const seen: Array<FieldState> = [];
     const staleFocus: OTPFieldFocus = {
       ...idle,
@@ -380,10 +341,6 @@ describe("OTPField parts", () => {
 
 describe("an OTP field's address and help", () => {
   it("carries the help on every cell and the address on the first", () => {
-    // Bug guarded: a form could not focus the code field it failed on, and the
-    // help a `Label` paints reached nobody. Every cell is independently
-    // focusable, so each announces the help; the first cell is the address a
-    // caller focuses or knows by `aria-id`.
     const ref = vi.fn();
     const layout = vi.fn();
     const element = render(

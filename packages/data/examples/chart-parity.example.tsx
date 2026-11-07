@@ -1,13 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * One native chart per reference example.
- *
- * `parity.ts` names every example shadcn's charts app plays and the option that
- * answers it; this file renders that answer as a real GPUix tree, so the map is
- * executable rather than a table. A behaviour suite mounts the gallery once and
- * asserts a named chart for every row.
- */
-
 import type { ReactElement } from "react";
 import { Match } from "effect";
 import * as Arr from "effect/Array";
@@ -531,7 +522,6 @@ const radial = (row: ParityEntry): ReactElement =>
     )),
   );
 
-/** The native chart one parity row names. */
 export const chartForParity = (row: ParityEntry): ReactElement =>
   Match.value(row.native).pipe(
     Match.when("AreaChart", () => area(row)),
@@ -578,7 +568,6 @@ export const chartForParity = (row: ParityEntry): ReactElement =>
     )),
   );
 
-/** Every reference example as a native chart, in the map's order. */
 export const PARITY_CHARTS: ReadonlyArray<{
   readonly id: string;
   readonly view: ReactElement;
@@ -587,7 +576,6 @@ export const PARITY_CHARTS: ReadonlyArray<{
   view: chartForParity(row),
 }));
 
-/** All of them at once, for a renderer or a gallery. */
 export const ParityGallery = () => (
   <div
     testId="chart-parity-gallery"

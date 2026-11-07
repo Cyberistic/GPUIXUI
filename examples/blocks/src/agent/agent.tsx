@@ -1,9 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Agent — an AI coding assistant window (plan 729): sessions in the source
- * list, the transcript and a composer in the content, and the files the
- * session touched in the inspector.
- */
 import { Avatar } from "@gpuixui/components/avatar";
 import { Badge } from "@gpuixui/components/badge";
 import { Button, Input, Stack, Text } from "@gpuixui/primitives";
@@ -20,7 +15,7 @@ export const Agent = ({ platform }: { readonly platform?: PlatformName }) => {
   const [session, setSession] = useState<string>("s1");
   const [turns, setTurns] = useState(transcript);
   const [draft, setDraft] = useState("");
-  // The newest reply streams in word by word; `null` is no stream running.
+
   const [streamed, setStreamed] = useState<number | null>(null);
   const last = turns.at(-1);
   const streaming =

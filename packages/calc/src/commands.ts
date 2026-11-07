@@ -1,12 +1,3 @@
-/**
- * The actions a command palette row can run.
- *
- * A row is data, not a closure: the model's keyboard, the model's palette and
- * the app's UI all describe the same action, and the session is the one place
- * that applies it. This keeps the catalogue testable and keeps React out of the
- * engine.
- */
-
 import type { InputToken } from "./input/token.js";
 import type { CalcValue } from "./value.js";
 import type { EquationKind } from "./modes/eqn.js";
@@ -78,7 +69,6 @@ export type CommandAction =
   | { readonly _tag: "engineering"; readonly direction: -1 | 0 | 1 }
   | { readonly _tag: "notify"; readonly message: string };
 
-/** A row the app can search and run. */
 export interface CalculatorCommand {
   readonly id: string;
   readonly label: string;
@@ -88,7 +78,6 @@ export interface CalculatorCommand {
   readonly action: CommandAction;
 }
 
-/** A mode menu row, in the manual's order. */
 export interface ModeSpec {
   readonly mode: Mode;
   readonly label: string;

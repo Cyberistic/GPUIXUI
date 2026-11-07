@@ -99,7 +99,6 @@ const SceneChart = ({
   readonly series?: ReadonlyArray<ChartSeries>;
   readonly labels?: ReadonlyArray<string>;
   readonly size: number;
-  /** The box's height when it is not square; `size` is then its width. */
   readonly height?: number;
   readonly label: string;
   readonly description: string;
@@ -144,8 +143,6 @@ const SceneChart = ({
     ...link,
     value: linkTween[index] ?? link.value,
   }));
-  // A sankey cannot use zero link values: its compiler rejects them and
-  // normalises ribbons to the layout, so `reveal` scales ribbon width instead.
   const shownSeries = Arr.map(series ?? [], (one, index) => ({
     ...one,
     values: Arr.map(one.values, (value, at) =>
@@ -205,7 +202,6 @@ const SceneChart = ({
       visibleDepth,
     ],
   );
-  // The image is absolute over its box; the box is what holds its place in the
   // layout, or a centred parent would start the image at its own midpoint.
   return (
     <div style={{ position: "relative", width: box.width, height: box.height }}>

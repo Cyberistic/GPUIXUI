@@ -6,14 +6,6 @@ import {
   TabsTrigger,
 } from "fumadocs-ui/components/tabs";
 
-/**
- * The install block shared by every component page: the shadcn registry
- * command, the item's direct address, and the package import the page uses.
- *
- * The registry names items `<package>-<page>`, so the command is derived from
- * the page's package and component. `ToastProvider` is the one page whose
- * import differs from its slug; the registry still calls that item `toast`.
- */
 const itemAliases: Readonly<Record<string, string>> = {
   ToastProvider: "toast",
 };

@@ -1,12 +1,3 @@
-/**
- * Toggle behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: the pressed state was not announced at all (0.11.0
- * carries no `aria-pressed`, so `aria-valuetext` is the only channel), an
- * icon-only toggle published no name, a controlled toggle repainted itself, and
- * the pressed face painted a literal instead of the active platform's accent.
- */
-
 import { platformTheme } from "@gpuixui/tokens";
 import { Icon } from "@gpuixui/icons";
 import { describe, expect, it, vi } from "vitest";
@@ -16,7 +7,6 @@ import { lightTheme, type Theme } from "../internal/theme.js";
 import { renderComponent } from "../internal/test-root.js";
 import { Toggle } from "../toggle.js";
 
-/** What the toggle tells assistive technology. */
 const announced = (root: ReturnType<typeof renderComponent>): unknown =>
   root.renderer.findByTestId("t")?.customProps?.["aria-valuetext"];
 
@@ -35,7 +25,7 @@ describe("Toggle", () => {
       "aria-valuetext": "not pressed",
       tabIndex: 0,
     });
-    // The runtime ignores it, so the component must not pretend it published one.
+
     expect(props?.["aria-pressed"]).toBeUndefined();
 
     toggle.unmount();
@@ -130,7 +120,7 @@ describe("Toggle", () => {
       backgroundColor: windows.colors.accent,
       color: windows.colors.accentForeground,
     });
-    // The premise: the two styles do not paint the same pressed face.
+
     expect(macOS.colors.accent).not.toBe(windows.colors.accent);
   });
 });

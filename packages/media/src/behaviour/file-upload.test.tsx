@@ -1,12 +1,3 @@
-/**
- * `FileUpload`'s queue wiring, driven through the real GPUix renderer.
- *
- * The bug these guard: a transfer that threw before it returned its promise
- * took the queue down — the throw escaped the effect that starts a file and
- * unmounted the tree — instead of failing the file it was handed, which is the
- * state `error` and its `Retry` action exist for.
- */
-
 import { createTestRoot } from "@gpuix/react/testing";
 import { lightTheme } from "@gpuixui/tokens";
 import { ThemeProvider } from "@gpuixui/tokens/react";
@@ -46,7 +37,6 @@ afterEach(() => {
   current?.unmount();
 });
 
-/** Poll until `ready`, so a report the queue settles in a microtask is seen. */
 const waitUntil = async (
   ready: () => boolean,
   attempts = 40,
@@ -72,10 +62,6 @@ describe("FileUpload", () => {
   });
 
   it("paints the empty queue for a stored file list that is not a list", async () => {
-    // The bug this guards: the effect that seeds the queue read `Arr.some` and
-    // `Arr.reduce` over the caller's list, so a saved queue's `null` — the field
-    // a store writes where it carried nothing — threw out of the effect and
-    // unmounted the surface instead of painting the empty state.
     // @ts-expect-error — a list a store wrote as absent.
     const page = render(async () => undefined, null);
     await waitUntil(() => page.renderer.findByText("No files") !== undefined);

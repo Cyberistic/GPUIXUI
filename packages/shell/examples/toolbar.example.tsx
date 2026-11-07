@@ -1,8 +1,3 @@
-/**
- * Toolbar example: grouped actions with a `max` that overflows the tail into
- * the ellipsis menu.
- */
-
 import { Toolbar } from "../src/toolbar/toolbar.js";
 import type { ToolbarAction } from "../src/toolbar/toolbar.js";
 
@@ -16,7 +11,6 @@ const ACTIONS: ReadonlyArray<ToolbarAction> = [
   { id: "code", label: "Code", icon: "code", group: "insert" },
 ];
 
-/** The document toolbar: three groups, the last overflowing behind the ellipsis. */
 export const ToolbarExample = () => (
   <Toolbar label="Document" max={5} actions={ACTIONS} />
 );

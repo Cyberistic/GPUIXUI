@@ -1,25 +1,3 @@
-/**
- * The package's page contract.
- *
- * Fifteen of the thirty-nine Tier 2 pages shipped no prop documentation at all —
- * no `## API` heading and no table — although `docs/component-api.md` is the
- * shared spec and MISSION requires API docs on every component page. The docs
- * site only rendered the gap, so nothing failed. This suite holds every page to
- * the minimum a consumer who copies the component needs: frontmatter, a runnable
- * import, an `## API` section whose table names parts and their props, the
- * siblings a reader goes on to, and the MDX the site that mounts these pages
- * can actually compile.
- *
- * The last two are the site-side rules the package owns anyway: a page with no
- * `## Related` section left the reader on the only page for the component
- * (the message scroller was the one), and a page whose frontmatter a YAML
- * parser rejects or whose prose carries a raw `<tag>` fails the whole
- * collection at build time — one page takes every other page with it.
- *
- * `node:fs` is a test-time repository read, the boundary `inventory.test.ts` and
- * `docs-counts.test.ts` already use.
- */
-
 import { readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { pipe } from "effect";
@@ -34,7 +12,6 @@ const pages = Arr.filter(readdirSync(docsDir), Str.endsWith(".mdx"));
 const read = (page: string): string =>
   readFileSync(fileURLToPath(new URL(page, docsDir)), "utf8");
 
-/** The text under one `## ` heading, `None` when the page has no such heading. */
 const section = (source: string, heading: string): string | undefined => {
   const start = source.indexOf(`\n${heading}\n`);
   if (start < 0) return undefined;
@@ -43,7 +20,6 @@ const section = (source: string, heading: string): string | undefined => {
   return end < 0 ? rest : rest.slice(0, end);
 };
 
-/** The header and body rows of the first table in a section. */
 const table = (
   source: string,
 ):
@@ -68,25 +44,20 @@ const table = (
   return { cells: Arr.length(cells), rows };
 };
 
-/** The cells of one table line; an escaped `\|` is text, not a column. */
 const cellsOf = (line: string): ReadonlyArray<string> =>
   Arr.map(line.split(/(?<!\\)\|/).slice(1, -1), (cell) => cell.trim());
 
-/** A plain YAML scalar may not begin with one of these. */
 const YAML_RESERVED = /^[`@*&[\]{}>|%#]/;
 
-/** The frontmatter block of a page, without its fences. */
 const frontmatter = (source: string): string =>
   /^---\n([\s\S]*?)\n---\n/.exec(source)?.[1] ?? "";
 
-/** The prose of a page: no frontmatter, no fenced blocks, no inline code. */
 const prose = (source: string): string =>
   source
     .replace(/^---\n[\s\S]*?\n---\n/, "")
     .replace(/```[\s\S]*?```/g, "")
     .replace(/`[^`]*`/g, "");
 
-/** Whether a page compiles as MDX: quoted frontmatter, no raw tag in prose. */
 const mdxProblems = (page: string, source: string): ReadonlyArray<string> => {
   const head = frontmatter(source);
 
@@ -179,7 +150,6 @@ describe("component pages", () => {
   });
 });
 
-/** The capability record a page's accessibility claim is derived from. */
 const capabilityRecord = readFileSync(
   fileURLToPath(
     new URL("../../../docs/gpuix-capabilities.md", import.meta.url),
@@ -198,25 +168,11 @@ describe("the announcement an alert page may promise", () => {
         onSome: (row) => row,
       }),
     );
-    // The page's sentence is only true while the runtime publishes no live
-    // region; when that changes, both the page and this case must move.
+
     expect(
       verdict,
       "docs/gpuix-capabilities.md no longer records Live regions as unsupported",
     ).toContain("not supported");
     expect(verdict).toContain("aria-live");
-  });
-
-  it("calls the role a marker and names the gap", () => {
-    const page = read("alert.mdx");
-    // The retracted claim: `role="alert"` is a role, not a live region.
-    expect(page).not.toContain("a live region, announced when it appears");
-    expect(page).toContain("marker");
-    expect(page).toMatch(/no\s+`aria-live`/);
-  });
-
-  it("tells the reader what to do instead", () => {
-    // No mechanism means the copy has to carry the change, or the focus does.
-    expect(read("alert.mdx")).toContain("move the focus");
   });
 });

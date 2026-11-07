@@ -6,18 +6,6 @@ import {
   propertyPanelDemoSource,
 } from "./property-panel-demo";
 
-/**
- * The Property panels preview, as it renders, and the sample under its Code tab.
- *
- * The page's whole subject is that one object is read by four surfaces without
- * a second copy of it: the stage, the editable row, the key-value table and the
- * metric. A drawing that printed the area from a constant, dropped the field,
- * drew a blank `Tag` cell or left `Reset size` without its handler would still
- * build. These cases hold the markup to the model's numbers, the two size
- * actions to the handlers that run the model, and the sample to the imports a
- * reader copies.
- */
-
 const markup = renderToStaticMarkup(<PropertyPanelDemo />);
 
 const read = (path: string): string =>
@@ -25,10 +13,6 @@ const read = (path: string): string =>
 
 const css = read("../../styles/demos.css");
 
-/**
- * The label column the window probe measured, so the drawing scans its rows
- * down one column rather than a width chosen to fit the panel.
- */
 const fixtureLabelWidth = (): number => {
   const fixture = read("../../../../../apps/playground/src/live/inspector.ts");
   const value = /export const INSPECTOR_LABEL_WIDTH = (\d+);/.exec(
@@ -38,7 +22,6 @@ const fixtureLabelWidth = (): number => {
   return Number(value);
 };
 
-/** The declarations of the first `selector { … }` block in the style sheet. */
 const block = (selector: string): string => {
   const start = css.indexOf(`${selector} {`);
   return start === -1 ? "" : css.slice(start, css.indexOf("}", start));
@@ -73,17 +56,14 @@ describe("the property panel preview", () => {
   });
 
   it("draws its box at the object's own size, in the theme's fill", () => {
-    // The stage is a picture of the object, not a scaled diagram: `Wide` has to
-    // be visible as the box growing, and the fill is the library's `primary`.
     expect(block(".gx-inspector-box")).toContain("background: var(--primary)");
-    // The panel's rows are `KeyValue`'s fixed track: every label is the one
-    // width the page names, so the values begin at the same x.
+
     const widths = [
       ...markup.matchAll(/class="gx-dkv-label" style="width:(\d+)px"/g),
     ].map((match) => Number(match[1]));
     expect(widths.length).toBeGreaterThan(0);
     expect(new Set(widths)).toEqual(new Set([fixtureLabelWidth()]));
-    // An editable row's field is the primitives' `size="sm"` Input.
+
     expect(block(".gx-dfield-sm")).toContain(
       "height: var(--control-height-sm)",
     );
@@ -105,8 +85,6 @@ describe("the property panel preview", () => {
   });
 
   it("wires both size actions to the model", () => {
-    // Guarded report: `Reset size` looked inert after `Wide`. The rule is the
-    // model's (the test above), so this pins the two handlers that run it.
     const source = read("./property-panel-demo.tsx");
 
     expect(source).toContain("setObject(widen(object))");

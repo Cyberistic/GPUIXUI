@@ -14,17 +14,6 @@ import {
   toggleDarkMode,
 } from "./settings-dialog";
 
-/**
- * The settings dialog block.
- *
- * The markup guards hold the modal to the parts a reader is told to look for:
- * the two panes, every nav row, the three theme controls and their initial
- * state. The pure helpers are the controls' rules — the switch flips only the
- * switch, the slider clamps to the label's range, and a layout choice changes
- * only the layout — and the style guard keeps every state on paint, so the
- * panel cannot move under the pointer.
- */
-
 const markup = renderToStaticMarkup(<SettingsDialogRender />);
 
 const navLabels = [
@@ -51,9 +40,6 @@ describe("settings dialog markup", () => {
   });
 
   it("collapses the section nav to an icon strip", () => {
-    // The bug guarded: the dialog's nav pane had no way to give its 260px
-    // back. The shared toggle carries the state, and the labels are the ones
-    // the sheet fades when the pane is collapsed.
     expect(markup).toContain('data-collapsed="false"');
     expect(markup).toContain('aria-label="Collapse sidebar"');
     expect(markup).toContain('aria-expanded="true"');
@@ -150,7 +136,6 @@ describe("the theme controls", () => {
   });
 });
 
-/** One authored rule block from `blocks.css`, from its selector to its brace. */
 const cssRule = (selector: string): string => {
   const css = readFileSync(
     fileURLToPath(new URL("../../styles/blocks.css", import.meta.url)),

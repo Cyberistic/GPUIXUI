@@ -1,13 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Selection example: notification preferences.
- *
- * The selection controls in the roles they actually differ in — a checkbox
- * group with an indeterminate parent, a checkbox with a custom mark, a radio
- * group for cadence, and a switch for an immediate pause. Each is controlled by
- * the caller, so the example demonstrates the API a real settings screen uses.
- */
-
 import { useState, type ReactElement } from "react";
 import * as Arr from "effect/Array";
 import { Icon } from "@gpuixui/icons";
@@ -25,7 +16,6 @@ import {
   type GroupOption,
 } from "../src/index.js";
 
-/** A labelled row: the control and the sentence that explains it. */
 const Row = ({
   title,
   description,
@@ -46,7 +36,6 @@ const Row = ({
   </Stack>
 );
 
-/** The channels the group offers, as one list the parent can select whole. */
 const CHANNELS: ReadonlyArray<GroupOption> = [
   {
     value: "email",
@@ -60,7 +49,6 @@ const CHANNELS: ReadonlyArray<GroupOption> = [
   },
 ];
 
-/** Notification preferences: checkbox groups, a radio group and a switch. */
 export const SelectionExample = (): ReactElement => {
   const theme = useTheme();
   const [channels, setChannels] = useState<ReadonlyArray<string>>(["email"]);

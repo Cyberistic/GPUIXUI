@@ -1,18 +1,12 @@
-/**
- * The player's pure part: an episode's waveform from its seed, the clock, and
- * the two presses the block listens for (a row, the transport).
- */
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import type { Episode } from "./data.js";
 
-/** A stable pseudo-random in `[0, 1)` for one slot of one episode. */
 const noise = (seed: number, index: number): number => {
   const x = Math.sin(seed * 12.9898 + index * 78.233) * 43758.5453;
   return x - Math.floor(x);
 };
 
-/** `bars` heights in px, the shape of the episode's waveform. */
 export const waveform = (seed: number, bars: number): ReadonlyArray<number> =>
   Arr.map(Arr.range(0, bars - 1), (i) => 6 + Math.round(noise(seed, i) * 30));
 

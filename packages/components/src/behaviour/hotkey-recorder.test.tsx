@@ -1,11 +1,3 @@
-/**
- * HotkeyRecorder behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: a captured chord with the wrong modifiers, Escape that
- * commits, a clear control that also starts recording, blur that leaves the
- * recorder listening, and a disabled recorder that can be activated.
- */
-
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
 import { useState } from "react";
@@ -18,7 +10,6 @@ import {
 import { darkTheme, lightTheme } from "../internal/theme.js";
 import { renderComponent } from "../internal/test-root.js";
 
-/** A caller-owned chord. */
 const Harness = ({
   initial = null,
   disabled = false,
@@ -163,9 +154,6 @@ describe("HotkeyRecorder", () => {
   });
 
   it("stops listening when the caller disables it mid-recording", () => {
-    // The bug this guards: disabling the recorder while it was listening left
-    // the "Press keys…" paint in place — a control showing it waits for a chord
-    // its own guard now refuses, with no key able to leave the state.
     const onChange = vi.fn();
     const recorder = renderComponent(<Harness onChange={onChange} />);
 
@@ -175,8 +163,6 @@ describe("HotkeyRecorder", () => {
     recorder.rerender(<Harness disabled onChange={onChange} />);
     expect(recorder.renderer.getAllText()).not.toContain("Press keys…");
 
-    // The focused element still receives a key, and the disabled recorder
-    // neither records it nor leaves a listening paint behind.
     recorder.renderer.simulateKeystrokes("ctrl-k");
     expect(onChange).not.toHaveBeenCalled();
     expect(recorder.renderer.getAllText()).not.toContain("Press keys…");
@@ -215,10 +201,6 @@ describe("HotkeyRecorder", () => {
     light.unmount();
   });
 
-  // The bug this guards: the page and the meta promised that a recorded key
-  // never ran the app's own binding, while `preventDefault` removes only the
-  // element's default action — an app-level handler still hears the chord, so
-  // it needs a signal to gate its bindings while the recorder listens.
   it("reports the armed state as it changes", async () => {
     const onRecordingChange = vi.fn();
     const recorder = renderComponent(
@@ -262,9 +244,6 @@ describe("HotkeyRecorder", () => {
     }
   });
 
-  // The measured answer the docs now teach: the key a recorder captures still
-  // reaches a handler above it, so the app's gate is what keeps a binding from
-  // firing.
   it("lets an application-level handler hear a recorded chord", () => {
     const onAppKey = vi.fn();
     const recorder = renderComponent(

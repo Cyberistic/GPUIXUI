@@ -1,17 +1,6 @@
 import { appName, componentDocsRoute, docsRoute } from "../lib/shared";
 import { mainContentId } from "./skip-link";
 
-/**
- * The site's 404.
- *
- * A mistyped or moved address used to fall through to the router's default
- * error, which is outside the docs chrome: no brand, no navigation and no way
- * back other than editing the URL. A reader who follows a stale link still gets
- * the pages that find things — the introduction, setup, the component index —
- * and the page renders inside the Fumadocs provider, so the site's light and
- * dark palettes apply to it like every other page.
- */
-
 interface Destination {
   readonly href: string;
   readonly label: string;
@@ -46,7 +35,6 @@ const destinations: ReadonlyArray<Destination> = [
   },
 ];
 
-/** The page a missing address renders. */
 export function NotFound() {
   return (
     <main

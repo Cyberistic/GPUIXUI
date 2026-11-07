@@ -15,23 +15,11 @@ import {
   trendRole,
 } from "./stat-card-demo";
 
-/**
- * The Statistic / metric cards preview.
- *
- * `packages/data/docs/stat-card.mdx` is the package's Markdown, so the site
- * mounts the drawing from `package-preview.ts` and the page carries no
- * `<ComponentPreview>`. The registry's guard sees the demo and the page mount;
- * what it cannot see is whether the drawing still paints the card's contract —
- * a reading derived from the box, and a trend in the status tone's readable
- * role, the roles `trendTone` reads in the shipped component.
- */
-
 const root = new URL("../../../../../", import.meta.url);
 
 const read = (path: string): string =>
   readFileSync(new URL(path, root), "utf8");
 
-/** `successSoftForeground` → `success-soft-foreground`: the preview's variable. */
 const kebab = (name: string): string =>
   name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
 
@@ -44,17 +32,11 @@ describe("the Statistic card preview", () => {
   it("reads a trend from the two readings", () => {
     expect(trendBetween(12, 40)).toEqual({ direction: "up", text: "+233%" });
     expect(trendBetween(40, 12)).toEqual({ direction: "down", text: "-70%" });
-    // An unchanged reading is the third direction rather than `+0%`.
+
     expect(trendBetween(40, 40)).toEqual({ direction: "flat", text: "0%" });
   });
 
   it("paints each trend in the role the shipped trendTone reads", () => {
-    // The premise is the package's own derivation: the docs table must name the
-    // same three roles, or the drawing teaches a colour the card never paints.
-    // The flat arm is held to the role rather than to the expression that reads
-    // it: the package reads a stored theme's roles through `themeColors(theme)`,
-    // and naming `theme.colors.mutedForeground` here would fail a card that is
-    // more careful than the one this pass measured.
     const card = read("packages/data/src/surfaces/stat-card.tsx");
     expect(card).toContain('statusTone(theme, "success").foreground');
     expect(card).toContain('statusTone(theme, "destructive").foreground');
@@ -62,7 +44,7 @@ describe("the Statistic card preview", () => {
       card.indexOf("export const trendTone"),
       card.indexOf("export const StatCard"),
     );
-    // The flat arm is the muted role, and no solid fill reaches a trend's words.
+
     expect(trendTone).toMatch(
       /(?:theme\.colors|themeColors\(theme\))\.mutedForeground/,
     );
@@ -74,7 +56,6 @@ describe("the Statistic card preview", () => {
     expect(trendRole("down")).toBe("destructiveSoftForeground");
     expect(trendRole("flat")).toBe("mutedForeground");
 
-    // The tokens answer those roles for both shipped palettes.
     [themes.light, themes.dark].forEach((theme) => {
       expect(trendInk(theme, "up")).toBe(theme.colors.successSoftForeground);
       expect(trendInk(theme, "down")).toBe(
@@ -83,8 +64,6 @@ describe("the Statistic card preview", () => {
       expect(trendInk(theme, "flat")).toBe(theme.colors.mutedForeground);
     });
 
-    // The style sheet paints each role through the preview's variable bridge,
-    // so the platform switch repaints a trend with the card.
     const css = read("apps/docs/src/styles/demos.css");
     expect(css).toContain(`color: var(--${kebab(trendRole("up"))});`);
     expect(css).toContain(`color: var(--${kebab(trendRole("down"))});`);
@@ -121,14 +100,12 @@ describe("the Statistic card preview", () => {
     );
     expect(row?.demo).toBe("stat-card-demo");
 
-    // The Code tab is the native card, not the browser drawing.
     expect(statCardDemoSource).toContain(
       'import { StatCard } from "@gpuixui/data"',
     );
     expect(statCardDemoSource).toContain("<StatCard");
     expect(statCardDemoSource).toContain("value={width * height}");
 
-    // The package's page is the package's, and it still teaches the trend.
     const page = read("packages/data/docs/stat-card.mdx");
     expect(page).not.toContain("<ComponentPreview");
     expect(page).toContain("trend");

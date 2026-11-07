@@ -1,17 +1,3 @@
-/**
- * Browser previews for the MultiStepForm page.
- *
- * The shipped `MultiStepForm` is a wizard shell over `Stepper`: the caller owns
- * the draft, each step's gate runs before the workflow moves, and only the
- * current step's content is mounted. The preview cannot mount the library (it
- * renders through GPUix), so it mirrors the contract with HTML and says so.
- *
- * The rules live in `multi-step-form-preview.ts` so a test can fail on them;
- * this file only renders them. `MultiStepFormBody` is pure in its props so the
- * static-render test can inspect one step at a time, and the Code tab always
- * shows the native usage.
- */
-
 import { useState } from "react";
 import {
   advance,
@@ -30,7 +16,6 @@ import {
 } from "./multi-step-form-preview";
 import { statuses } from "./stepper-preview";
 
-/** The props the body draws from; every handler has a no-op default. */
 export interface MultiStepFormBodyProps {
   readonly state: WizardState;
   readonly draft: WizardDraft;
@@ -40,7 +25,6 @@ export interface MultiStepFormBodyProps {
   readonly onSubmit?: () => void;
 }
 
-/** One field with its label and its supporting line. */
 const PreviewField = ({
   id,
   label,
@@ -71,7 +55,6 @@ const PreviewField = ({
   </div>
 );
 
-/** The step list: the same derived statuses the shipped `Stepper` paints. */
 const StepList = ({ step }: { readonly step: number }) => (
   <ol className="gx-stepper-list" data-orientation="horizontal">
     {statuses(step, WIZARD_STEPS.length).map((status, index) => {
@@ -90,7 +73,6 @@ const StepList = ({ step }: { readonly step: number }) => (
   </ol>
 );
 
-/** The one step on screen: only the current step's content is mounted. */
 const StepBody = ({
   state,
   draft,
@@ -146,7 +128,6 @@ const StepBody = ({
   );
 };
 
-/** The wizard, pure in its arguments so a test can render one state. */
 export const MultiStepFormBody = ({
   state,
   draft,
@@ -224,7 +205,6 @@ export const MultiStepFormBody = ({
   );
 };
 
-/** Create a workspace: a refused step, a forward move and one Submit. */
 export const MultiStepFormWorkflow = () => {
   const [state, setState] = useState<WizardState>(initialWizard);
   const [draft, setDraft] = useState<WizardDraft>(EMPTY_WIZARD_DRAFT);

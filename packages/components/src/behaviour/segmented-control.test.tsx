@@ -1,12 +1,3 @@
-/**
- * SegmentedControl in the real GPUix renderer (plan 725).
- *
- * Bugs guarded: an arrow that moves focus without changing the view (a tab
- * list's rule, not a Mac segmented control's), segments that size to their
- * labels instead of sharing the track, and an arrow that lands on a disabled
- * segment.
- */
-
 import { Option } from "effect";
 import { useState } from "react";
 import { afterEach, describe, expect, it } from "vitest";
@@ -39,7 +30,6 @@ afterEach(() => {
   chosen = [];
 });
 
-/** The views the control chose, latest last. */
 let chosen: Array<string> = [];
 
 const View = () => {

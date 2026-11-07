@@ -1,10 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Settings — an Appearance pane: a sidebar of sections, the look, dark mode and
- * sound, and a save bar. The block is controlled: the host owns the look and the
- * mode and restyles the tree with them, so choosing "Windows" really repaints
- * every control in the Windows 11 look.
- */
 import { Avatar } from "@gpuixui/components/avatar";
 import { Card } from "@gpuixui/components/card";
 import { Icon } from "@gpuixui/icons";
@@ -39,7 +33,6 @@ export interface SettingsProps {
   readonly onDarkChange: (dark: boolean) => void;
 }
 
-/** The sidebar's and the volume track's width, from the spacing scale. */
 const railWidth = (theme: Theme): number => theme.spacing["5xl"] * 3.5;
 
 const Row = ({
@@ -126,7 +119,6 @@ const Sidebar = () => {
   );
 };
 
-/** The Appearance pane, as a window's whole content. */
 export const Settings = ({
   look,
   onLookChange,
@@ -251,7 +243,6 @@ export const Settings = ({
   );
 };
 
-/** The pane as an app: it owns its look and mode, and restyles itself with them. */
 export const SettingsApp = ({
   initialLook = "darwin",
 }: {

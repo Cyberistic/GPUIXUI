@@ -74,14 +74,3 @@ The pointer follows Base UI's menu rules, with one timer per surface:
 - a disabled submenu trigger opens nothing;
 - the waits are `Effect` timers in `internal/local-state.ts`, cancelled with the
   surface that armed them, never `setTimeout`.
-
-## Notes
-- No `onContextMenu`; a right click arrives as `onAuxClick`.
-- The surface is not portalled; it is painted at window coordinates.
-- One level of submenus is tested; a deeper level follows the same hover and `Escape` rules but is not measured.
-- The surface is an `anchored` layer, out of the layout flow: opening it moves nothing behind it.
-- **A stored `tone` the union does not carry paints `"default"`**: a menu built
-  from a saved action list may hold another vocabulary's word for the same idea
-  (`"danger"`) or the `null` a store writes for a field it never set, and the
-  emphasis is decoration — the action still runs — where a name outside the two
-  would otherwise take the whole menu down.

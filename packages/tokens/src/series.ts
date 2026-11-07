@@ -1,29 +1,3 @@
-/**
- * The categorical scale for data marks — chart series, legend swatches, heat
- * map regions — where the colour carries identity rather than status.
- *
- * A semantic role answers "what is this?" (`destructive`, `success`), so reusing
- * one for a chart would make a revenue bar read as a warning. Letting each chart
- * pick its own hex is the scattered literal the design system forbids. Data
- * marks therefore get one fixed categorical scale, sized to the five categories
- * shadcn/ui's charts also ship, and held to the three contracts such a scale
- * needs: every colour is perceivable against the surfaces a plot is drawn on
- * (WCAG's 3:1 non-text floor), no two colours are the same colour to the eye
- * (an OKLab distance below which two swatches read as one), and no two still
- * collapse for a reader with a colour-vision deficiency.
- *
- * The default is one blue, stepped in lightness, the way shadcn's chart tokens
- * are: spaced so each step still clears the three contracts below.
- *
- * The scale is designed per mode and contrast variant because a categorical
- * hue that separates on a pale canvas does not separate on a dark one. A theme
- * may carry its own `series`; {@link seriesColors} otherwise resolves the
- * shipped table for the theme's mode and variant, and a look that repaints the
- * surfaces a plot is drawn on declares its own in the `PlatformStyle` shape
- * (`applyStyle`), so a look is not stuck with a scale designed for another
- * page.
- */
-
 import {
   namesColour,
   themeColors,
@@ -34,34 +8,10 @@ import { contrastFloorsFor, contrastRatio } from "./contrast.js";
 import { opaqueRgb } from "./measure.js";
 import { themeContrastOf, themeModeOf } from "./mode.js";
 
-/**
- * One categorical scale: five colours, in the order a chart assigns them. A
- * tuple rather than an array, so a theme cannot carry four or six and leave the
- * legend short; a chart with more categories folds the tail into "Other".
- */
 export type SeriesColors = readonly [string, string, string, string, string];
 
-/**
- * A scale as a store hands it back.
- *
- * A saved scale is not the five-position tuple the paint path promises: a row
- * written by a release that shipped fewer categories holds a prefix of it, JSON
- * writes `null` for a swatch that was empty when the theme was saved, and a
- * hand-edited theme can name one hue and leave the rest. This is the storage
- * port for every seam that reads a scale a consumer's decoder produced — the
- * merge ({@link ThemeOverridesSource.series}), the paint
- * ({@link seriesColors}) and the look a style declares — so the value reaches
- * them without the cast `AGENTS.md` §2 forbids, the rule `StoredSyntax` follows
- * for the code palette.
- *
- * A theme still carries a complete table: a position the store named as a colour
- * is its own, every position it did not name answers the table the theme
- * inherits, and {@link seriesFailures} reads the table as the store wrote it so
- * the gate names the position that was lost.
- */
 export type StoredSeries = ReadonlyArray<unknown>;
 
-/** The series scale for the default light theme. */
 export const lightSeries: SeriesColors = [
   "#387BF4",
   "#2563EB",
@@ -70,7 +20,6 @@ export const lightSeries: SeriesColors = [
   "#172554",
 ];
 
-/** The series scale for the default dark theme. */
 export const darkSeries: SeriesColors = [
   "#70A7FA",
   "#4F8EF8",
@@ -79,7 +28,6 @@ export const darkSeries: SeriesColors = [
   "#DBEAFE",
 ];
 
-/** The series scale for the high-contrast light theme. */
 export const highContrastLightSeries: SeriesColors = [
   "#4C39B5",
   "#2559D6",
@@ -88,7 +36,6 @@ export const highContrastLightSeries: SeriesColors = [
   "#CC3439",
 ];
 
-/** The series scale for the high-contrast dark theme. */
 export const highContrastDarkSeries: SeriesColors = [
   "#C7CBFF",
   "#6E9CFF",
@@ -97,28 +44,8 @@ export const highContrastDarkSeries: SeriesColors = [
   "#FFC6C6",
 ];
 
-/**
- * One surface a plot is drawn on: any role a chart mark can be painted behind.
- *
- * {@link seriesSurfaces} names the four the contract measures unless a caller
- * says otherwise, and a plot that sits on another strip — a `secondary` panel,
- * a status bar of its own role — names it, because a surface nobody measures is
- * a swatch nobody has checked.
- */
 export type SeriesSurface = keyof ThemeColors;
 
-/**
- * The surfaces a plot is drawn on by default, so every series colour is measured
- * where a chart actually paints it: the page, a card, a popover and the `muted`
- * strip a toolbar or status bar paints.
- *
- * The quiet strip is a default rather than a caller's choice because the
- * library's own plots land there: a sparkline in a toolbar, a status bar's
- * activity chart, a quiet tile. Measured, that placement is the one a palette
- * can lose — Luna's beige toolbar swallowed the shared light amber at 2.75:1 —
- * so an authored look declares the scale its own strips need. Any other role a
- * chart is drawn on is named through {@link SeriesContract.surfaces}.
- */
 export const seriesSurfaces = [
   "background",
   "card",
@@ -126,47 +53,20 @@ export const seriesSurfaces = [
   "muted",
 ] as const;
 
-/**
- * The OKLab distance two series colours must reach to read as two categories.
- *
- * Contrast ratio cannot answer this: a blue and a violet of the same lightness
- * have a ratio near 1 yet are plainly different colours, while two tints of one
- * hue can pass a ratio and read as the same series. OKLab distance tracks
- * perceived difference, and 0.06 is roughly three just-noticeable steps — below
- * it a legend swatch is indistinguishable from its neighbour at chart size.
- * The high-contrast palettes sit closest to it (0.069 and 0.075), because a
- * palette squeezed to AAA luminance has less hue range to spend.
- */
 export const seriesDistinctnessFloor = 0.06;
 
-/**
- * The colour-vision deficiencies a categorical scale is measured against, in
- * documentation order: protanopia (no red-sensitive cones), deuteranopia (no
- * green-sensitive cones) and tritanopia (no blue-sensitive cones).
- */
 export const colorVisionDeficiencies = [
   "protanopia",
   "deuteranopia",
   "tritanopia",
 ] as const;
 
-/** One colour-vision deficiency a scale is measured against. */
 export type ColorVisionDeficiency = (typeof colorVisionDeficiencies)[number];
 
-/**
- * The OKLab distance two series colours must keep once a colour-vision
- * deficiency is simulated: 0.05, about two just-noticeable steps. Lower than
- * {@link seriesDistinctnessFloor} because a simulated scale has less hue range
- * to spend; the claim is narrower too — no two categories collapse into one.
- */
 export const seriesDeficiencyFloor = 0.05;
 
 type MatrixRow = readonly [number, number, number];
 
-/**
- * Machado, Oliveira and Fernandes (2009), severity 1.0, in linear sRGB. Every
- * row sums to 1, so an achromatic colour survives a simulation unchanged.
- */
 const deficiencyMatrices: Readonly<
   Record<ColorVisionDeficiency, readonly [MatrixRow, MatrixRow, MatrixRow]>
 > = {
@@ -187,32 +87,16 @@ const deficiencyMatrices: Readonly<
   ],
 };
 
-/**
- * The positions a categorical scale names, in the order a chart assigns them.
- *
- * The contract walks these five, not the length of the table a theme carries: a
- * scale is a fixed vocabulary (`series 1` … `series 5`, a legend of five at
- * most), so a table with four colours is a table whose fifth position paints
- * nothing — which a chart indexing by position cannot tell from a failure.
- */
 const seriesPositions = [0, 1, 2, 3, 4] as const;
 
-/** A theme's mode, contrast variant and optional authored series. */
 export interface SeriesSource extends ColourSource {
-  /** The theme's mode. A stored name is read through `themeModeOf`. */
   readonly mode?: unknown;
-  /** The contrast variant. A stored name is read through `themeContrastOf`. */
+
   readonly contrast?: unknown;
-  /**
-   * The scale the theme authors, when it carries one. Read from the storage
-   * shape — a store writes `null` for a table it never carried and a short row
-   * for a theme saved by a release that shipped fewer categories — so a decoded
-   * theme reaches this seam without a cast.
-   */
+
   readonly series?: StoredSeries | null;
 }
 
-/** The table a theme with no scale of its own resolves, by mode and variant. */
 const shippedSeries = (theme: SeriesSource): SeriesColors => {
   const mode = themeModeOf(theme);
   if (themeContrastOf(theme) === "high") {
@@ -221,30 +105,9 @@ const shippedSeries = (theme: SeriesSource): SeriesColors => {
   return mode === "dark" ? darkSeries : lightSeries;
 };
 
-/** Whether a stored table names a colour for every position a chart indexes. */
 const isCompleteSeries = (scale: StoredSeries): scale is SeriesColors =>
   scale.length === seriesPositions.length && scale.every(namesColour);
 
-/**
- * A stored scale read over the table it inherits from.
- *
- * A position the store named as a colour is its own; a position it did not name
- * — one a release that shipped fewer categories never had, one JSON wrote as
- * `null`, one a field cleared to `""` — answers the fallback's colour at that
- * position rather than being handed to a chart, whose `colors[3]` would then be
- * `undefined` and paint no mark at all. That is the rule `syntaxPalette` follows
- * for a code palette and every colour role follows for a cleared field: the paint
- * answers a value the theme can show, while {@link seriesFailures} names the
- * position the store lost so the gate still refuses the theme.
- *
- * @example
- * ```ts
- * import { lightSeries, seriesPalette } from "@gpuixui/tokens";
- *
- * // A scale that names its first hue and inherits the rest:
- * seriesPalette(["#6A45F0"], lightSeries); // [#6A45F0, lightSeries[1], …]
- * ```
- */
 export function seriesPalette(
   stored: StoredSeries,
   fallback: SeriesColors,
@@ -259,102 +122,60 @@ export function seriesPalette(
   return [at(0), at(1), at(2), at(3), at(4)];
 }
 
-/**
- * The categorical scale a theme paints its data marks in.
- *
- * A theme that carries `series` owns the positions it names — the array replaces
- * the shipped one, like an elevation level — and a position it does not name
- * answers the table for its mode and contrast variant, so a scale saved by a
- * release that shipped fewer categories still paints a mark in every position
- * instead of leaving the tail blank. Every other theme resolves the table for its
- * mode and contrast variant.
- *
- * **A table a store wrote as `null` is the absence it is**: JSON has no
- * `undefined`, so a saved theme comes back with `null` where it carried no
- * table, and handing that to a chart is a painter indexing `null`. The value is
- * the theme's own when it holds one, and the shipped table for its mode and
- * variant otherwise — the state every shipped theme is in.
- *
- * @example
- * ```ts
- * import { seriesColors, themes } from "@gpuixui/tokens";
- *
- * const bars = seriesColors(themes.dark); // five colours, series 1 to 5
- * ```
- */
 export function seriesColors(theme: SeriesSource): SeriesColors {
   const table = shippedSeries(theme);
   return theme.series == null ? table : seriesPalette(theme.series, table);
 }
 
-/** One series colour that is not perceivable on a surface it can be drawn on. */
 export interface SeriesSurfaceFailure {
-  /** Its position in the scale, zero-based. */
   readonly index: number;
-  /**
-   * The colour that failed, or `undefined` when the scale does not carry that
-   * position — a theme restored from storage can hold a table short of the five
-   * a chart indexes, and the position then paints no colour at all.
-   */
+
   readonly color: string | undefined;
-  /** The surface it was measured against. */
+
   readonly surface: SeriesSurface;
-  /** The measured ratio, or `undefined` when the colour is not opaque hex. */
+
   readonly ratio: number | undefined;
-  /** The floor it had to reach. */
+
   readonly floor: number;
 }
 
-/** Two series colours a reader cannot tell apart. */
 export interface SeriesDistinctnessFailure {
-  /** The earlier position in the scale, zero-based. */
   readonly index: number;
-  /** The later position. */
+
   readonly other: number;
-  /** The measured OKLab distance, or `undefined` when a colour cannot be read. */
+
   readonly distance: number | undefined;
-  /** The floor it had to reach. */
+
   readonly floor: number;
 }
 
-/** Two series colours a reader with a colour-vision deficiency cannot tell apart. */
 export interface SeriesVisionFailure {
-  /** The deficiency the pair was simulated with. */
   readonly deficiency: ColorVisionDeficiency;
-  /** The earlier position in the scale, zero-based. */
+
   readonly index: number;
-  /** The later position. */
+
   readonly other: number;
-  /** The simulated OKLab distance, or `undefined` when a colour cannot be read. */
+
   readonly distance: number | undefined;
-  /** The floor it had to reach. */
+
   readonly floor: number;
 }
 
-/** What a theme's series scale fails, if anything. */
 export interface SeriesReport {
-  /** Series colours too close to a surface a plot is drawn on. */
   readonly surfaces: readonly SeriesSurfaceFailure[];
-  /** Pairs of series colours too close to each other. */
+
   readonly distinctness: readonly SeriesDistinctnessFailure[];
-  /** Pairs too close after each colour-vision deficiency is simulated. */
+
   readonly deficiencies: readonly SeriesVisionFailure[];
 }
 
-/** What a caller may tighten about a scale, and the surfaces it is drawn on. */
 export interface SeriesContract {
-  /** Contrast against a plot surface. Defaults to the variant's boundary floor. */
   readonly surface?: number;
-  /**
-   * The surfaces a plot is drawn on. Defaults to {@link seriesSurfaces}, the
-   * four content surfaces the library paints a chart on; a caller whose plot
-   * sits on another role — a `secondary` panel — names it here, so its own
-   * surface is measured rather than assumed.
-   */
+
   readonly surfaces?: readonly SeriesSurface[];
-  /** OKLab distance between two series. Defaults to {@link seriesDistinctnessFloor}. */
+
   readonly distinctness?: number;
-  /** OKLab distance after a deficiency simulation. Defaults to {@link seriesDeficiencyFloor}. */
+
   readonly deficiency?: number;
 }
 
@@ -366,7 +187,6 @@ const encode = (channel: number): number =>
 
 const clamp = (channel: number): number => Math.min(1, Math.max(0, channel));
 
-/** Linear-light sRGB channels of an opaque hex colour, in any painted length. */
 const linearRgb = (
   color: string | undefined,
 ): readonly [number, number, number] | undefined => {
@@ -380,7 +200,6 @@ const linearRgb = (
       ];
 };
 
-/** An `#RRGGBB` colour from linear-light sRGB channels, clamped to the gamut. */
 const hexFromLinear = (channels: readonly [number, number, number]): string =>
   `#${channels
     .map((channel) =>
@@ -391,7 +210,6 @@ const hexFromLinear = (channels: readonly [number, number, number]): string =>
     .join("")
     .toUpperCase()}`;
 
-/** OKLab coordinates of an opaque `#RRGGBB` colour, or `undefined` otherwise. */
 const oklab = (
   color: string | undefined,
 ): readonly [number, number, number] | undefined => {
@@ -416,10 +234,6 @@ const oklab = (
   ];
 };
 
-/**
- * The perceived distance between two colours — Euclidean distance in OKLab,
- * where 0 is identical and 1 is black against white.
- */
 const colorDistance = (
   first: string | undefined,
   second: string | undefined,
@@ -432,24 +246,6 @@ const colorDistance = (
   return Math.hypot(left[0] - right[0], left[1] - right[1], left[2] - right[2]);
 };
 
-/**
- * The colour a reader with `deficiency` sees, or `undefined` when `color` is not
- * an opaque `#RRGGBB` value.
- *
- * The simulation is a model, not a diagnosis: it applies the severity-1.0
- * matrices of Machado, Oliveira and Fernandes (2009) to linear sRGB, i.e.
- * dichromatic protanopia, deuteranopia and tritanopia. Anomalous trichromacy,
- * acquired deficiency and display calibration are outside it. It answers "do
- * these two swatches still differ for that reader", not "what exactly does this
- * reader see".
- *
- * @example
- * ```ts
- * import { simulateColorVision } from "@gpuixui/tokens";
- *
- * simulateColorVision("#C02B45", "deuteranopia"); // that red, as a deuteranope sees it
- * ```
- */
 export function simulateColorVision(
   color: string | undefined,
   deficiency: ColorVisionDeficiency,
@@ -468,54 +264,11 @@ export function simulateColorVision(
   ]);
 }
 
-/**
- * A theme with the fields a series audit reads.
- *
- * The scale is the storage shape: a stored theme can hold a table shorter than
- * the five positions a chart indexes, or one with a `null` where a colour was
- * absent when it was saved, so the audit reads it positionally and measures what
- * each position carries rather than what the type promised.
- */
 export type SeriesAuditSource = Omit<SeriesSource, "series"> &
   ColourSource & {
-    /** The scale as the theme carries it, or as a store handed it back. */
     readonly series?: StoredSeries | null;
   };
 
-/**
- * Every way a theme's categorical scale fails its three contracts.
- *
- * A plot surface is measured at the theme's own variant: 3:1 for a default
- * theme and 4.5:1 for a high-contrast one. A translucent or malformed series
- * colour is reported, not skipped — a swatch nobody can verify is not a pass.
- * The last contract simulates each colour for protanopia, deuteranopia and
- * tritanopia and measures the same OKLab distance again, because a pair that
- * separates for a full-colour reader can still collapse into one swatch for a
- * reader who cannot tell its two hues apart. Every option is a floor, so a
- * caller can hold an authored scale to a stricter contract than the variant
- * asks for; the variant still decides the surface default. The surfaces are the
- * four the library paints a plot on unless the caller names its own, so a chart
- * drawn on a quiet strip is measured on the strip it is drawn on.
- *
- * **Every position of the scale is measured, not every entry the table
- * happens to hold.** A theme stored by an older release, or one hand-written in
- * a JSON config, can carry fewer than five colours — and a chart assigns series
- * 2 to its second category by position, so a short table paints an absent
- * colour with no report at all. Such a position is measured as unmeasurable on
- * every surface and in every pair, the same answer an unparseable colour gets,
- * so `passed` is false as soon as the scale names a colour it does not carry.
- *
- * @example
- * ```ts
- * import { seriesFailures, themes } from "@gpuixui/tokens";
- *
- * const report = seriesFailures(themes.light);
- * report.surfaces.length === 0; // every swatch is perceivable on a plot
- * report.deficiencies.length === 0; // and no two collapse for a colour-blind reader
- * // A chart on another role names the surface it paints:
- * seriesFailures(themes.light, { surfaces: ["muted"] }).surfaces;
- * ```
- */
 export function seriesFailures(
   theme: SeriesAuditSource,
   contract: SeriesContract = {},
@@ -532,12 +285,7 @@ export function seriesFailures(
       contrast: theme.contrast,
       colors: theme.colors,
     });
-  /**
-   * The colour a position names, read as the value a store hands back: a short
-   * table has no entry there, a holed one has `null` and a cleared one is blank,
-   * and none of them is a colour the report can carry, so all are the absence the
-   * gate names.
-   */
+
   const at = (position: number): string | undefined => {
     const color = series[position];
     return namesColour(color) ? color : undefined;

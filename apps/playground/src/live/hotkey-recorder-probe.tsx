@@ -1,24 +1,3 @@
-/**
- * The `hotkey-recorder-lifecycle` probe: the shipped `HotkeyRecorder` driven by
- * a real window.
- *
- * The recorder's page states the contract that a recorded key is **swallowed**,
- * so the application's own binding does not fire. Its suite reads the
- * renderer's tree, where `preventDefault` is a declaration; only a window says
- * what the runtime does with the key afterwards, because the app-level handler
- * is installed on the window root and runs after the focused element. This
- * probe answers that, and the rest of the recorder's window contract with it:
- * a press arms it, a modifier on its own is not a chord, the captured chord is
- * stored in its canonical form and painted as platform glyphs, Escape cancels,
- * the clear control reports `null` without arming, Space is a chord rather than
- * an activation, and a disabled recorder is refused on both routes and skipped
- * by the tab walk.
- *
- * Every check is a `ctx.expect*` at the step that makes it — the helpers only
- * read — so the count the README prints is the number of assertion sites.
- *
- * Captures: `hotkey-armed` and `hotkey-bound`.
- */
 import { Duration, Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -47,13 +26,10 @@ import {
   windowSaw,
 } from "./hotkey-recorder.js";
 
-/** An input and the state it produces need a frame to commit. */
 const SETTLE = Duration.millis(60);
 
-/** The width the enabled recorder is laid out at. */
 const RECORDER_WIDTH = 360;
 
-/** The plain control the tab walk must land on after the disabled twin. */
 const PlainControl = (): ReactNode => {
   const theme = useTheme();
   return (
@@ -174,7 +150,6 @@ export const hotkeyRecorderSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     const focusNext = () =>
       Effect.flatMap(ctx.host.focusNext(), () => Effect.sleep(SETTLE));
 
-    // 1. At rest: the placeholder, no chord, nothing reported.
     yield* ctx.expectEqual(
       "the recorder starts on its placeholder",
       yield* recorderText(),
@@ -186,7 +161,6 @@ export const hotkeyRecorderSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       hotkeyReadout(null, 0),
     );
 
-    // 2. A press arms it. The paint is the state: "Press keys…".
     yield* click(HOTKEY_IDS.recorder);
     yield* ctx.expectEqual(
       "a press arms the recorder",
@@ -195,8 +169,6 @@ export const hotkeyRecorderSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture(HOTKEY_CAPTURES.armed);
 
-    // 3. A modifier on its own is not a chord, so the recorder keeps listening
-    //    and reports nothing.
     yield* down(HOTKEY_KEYS.modifier);
     yield* ctx.expectEqual(
       "a modifier on its own leaves the recorder listening",
@@ -209,7 +181,6 @@ export const hotkeyRecorderSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       hotkeyReadout(null, 0),
     );
 
-    // 4. The chord: stored in its canonical form, then painted as glyphs.
     yield* down(HOTKEY_KEYS.chord);
     const chord = capturedChord(currentPlatform);
     yield* ctx.expectEqual(
@@ -224,7 +195,6 @@ export const hotkeyRecorderSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.capture(HOTKEY_CAPTURES.bound);
 
-    // 5. The runtime sends the release too, and it must not re-arm or report.
     yield* up(HOTKEY_KEYS.chordKey);
     yield* ctx.expectEqual(
       "the release of the captured key leaves one report",
@@ -232,15 +202,12 @@ export const hotkeyRecorderSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       hotkeyReadout(chord, 1),
     );
 
-    // 6. The app-level channel: the page promises the recorded key is
-    //    swallowed, so whether the window handler hears it is the measurement.
     yield* ctx.expectEqual(
       "the application's window handler still hears the swallowed key",
       windowSaw(yield* windowLog(), HOTKEY_KEYS.chordKey),
       true,
     );
 
-    // 7. Clearing is a control, and it must not arm the recorder on the way.
     yield* click(hotkeyClearId(HOTKEY_IDS.recorder));
     yield* ctx.expectEqual(
       "the clear control reports no chord",
@@ -253,7 +220,6 @@ export const hotkeyRecorderSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       HOTKEY_PLACEHOLDER,
     );
 
-    // 8. Escape cancels rather than being recorded.
     yield* click(HOTKEY_IDS.recorder);
     yield* ctx.expectEqual(
       "a press arms the recorder after a clear",
@@ -272,8 +238,6 @@ export const hotkeyRecorderSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       HOTKEY_PLACEHOLDER,
     );
 
-    // 9. Space is a named key while recording, not the other half of an
-    //    activation: it is recorded once and its release adds nothing.
     yield* click(HOTKEY_IDS.recorder);
     yield* down(HOTKEY_KEYS.space);
     yield* ctx.expectEqual(
@@ -293,8 +257,6 @@ export const hotkeyRecorderSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       hotkeyReadout(SPACE_CHORD, 3),
     );
 
-    // 10. The tab walk: the recorder, then its clear control, then past the
-    //     disabled twin to the plain control.
     yield* focus(HOTKEY_IDS.recorder);
     yield* ctx.expectEqual(
       "the code focus lands on the recorder",
@@ -314,8 +276,6 @@ export const hotkeyRecorderSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       HOTKEY_IDS.plain,
     );
 
-    // 11. A disabled recorder refuses both routes: the press arms nothing, and
-    //     a focused one refuses the activating key too.
     yield* click(HOTKEY_IDS.off);
     yield* ctx.expectEqual(
       "a press on a disabled recorder records nothing",

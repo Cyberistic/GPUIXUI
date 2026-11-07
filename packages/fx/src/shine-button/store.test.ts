@@ -1,19 +1,9 @@
-/**
- * The sheen store, under `TestClock`.
- *
- * The bugs these guard: a band that never starts on a hover entry; a sweep that
- * outlives its window; a re-entry that reclaims the crossing already on screen
- * instead of starting a fresh one (the halves are keyed by `run`); and an inert
- * control that shines, including one disabled under a band already crossing.
- */
-
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as Option from "effect/Option";
 import * as TestClock from "effect/testing/TestClock";
 import { makeSheenStore } from "./store.js";
 
-/** A store with a measured box, which is where a sweep can paint. */
 const measured = Effect.gen(function* () {
   const store = yield* makeSheenStore;
   yield* store.measure(Option.some({ x: 0, y: 0, width: 200, height: 40 }));
@@ -51,7 +41,6 @@ describe("SheenStore", () => {
       yield* store.enter(false, 500);
       yield* TestClock.adjust("250 millis");
 
-      // The band already crossing must not be ended by the first window.
       yield* store.enter(false, 500);
       expect(store.local.read().run).toBe(2);
 
@@ -82,8 +71,6 @@ describe("SheenStore", () => {
       yield* store.enter(false, 500);
       yield* TestClock.adjust("400 millis");
 
-      // The newer, longer level restarts the window instead of keeping the end
-      // the level before it named.
       yield* store.retime(700);
       yield* TestClock.adjust("400 millis");
       expect(store.local.read().sweeping).toBe(true);

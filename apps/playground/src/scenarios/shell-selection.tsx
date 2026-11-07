@@ -1,35 +1,3 @@
-/**
- * `shell-selection` — the entry a press reaches is the scenario the app opens.
- *
- * `shell-navigation` proves every registry entry is reachable (the list
- * scrolls). It presses none: the app's `selected` state, the header that reads
- * it and the stage that mounts `scenario.view()` had no check between them, so
- * a press could paint its highlight over a stage that never changed and the
- * whole suite would stay green — the playground broken for a human, the evidence
- * suite intact. This is the reverse guard, and it is measured in the renderer:
- *
- *   - the app opens on the registry's first entry: the header names it, its row
- *     paints the accent, and an entry no one has pressed paints the page;
- *   - the chosen scenario's own view is not mounted — its marker has no box;
- *   - a press on that row moves the header to its title and mounts its view,
- *     which is **live**, not a picture: a press into the field it owns types a
- *     value through to that scenario's own readout;
- *   - the selection moves to the pressed row and the row the app opened on
- *     returns to the page;
- *   - the palette switch repaints the shell — the root's fill and the selected
- *     row's accent both become the light palette's own roles — so the switch is
- *     a `ThemeProvider` re-render and not a repaint of the swatch alone.
- *
- * The keyboard half is the sidebar's roving contract: the open row is the
- * list's **only** tab stop, an arrow steps the cursor with a clamp, opens the
- * entry it lands on and carries the native focus with it, and a move to either
- * end reveals the row it opened. A sidebar of one stop per row cost a keyboard
- * reader a press per scenario to reach the stage, and no key moved between rows.
- *
- * The row has to be **revealed** before the press: the renderer keeps a scroll
- * offset per `testId`, so a list another scenario left scrolled can hold the row
- * outside the viewport (see `shell-nav.ts`).
- */
 import { Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -48,13 +16,12 @@ import {
 } from "./shell-nav.js";
 import type { ScenarioBody } from "../types.js";
 
-/** The registry entry a press opens, and the view its own scenario paints. */
 export const SELECTION_TARGET = "input-edit";
-/** A `testId` only the target's own view declares. */
+
 export const TARGET_MARKER = "input-field";
-/** The readout the target's view writes what it was typed into. */
+
 export const TARGET_READOUT = "input-readout";
-/** The palette the switch is pressed to, from the shell's own palette ids. */
+
 export const TARGET_PALETTE: PaletteId = "light";
 
 const paletteId = (palette: string): string => `theme-mode-${palette}`;
@@ -124,10 +91,6 @@ export const shellSelectionScenario: ScenarioBody = {
         true,
       );
 
-      // The accessibility tree: the runtime builds a node's **name** from
-      // `aria-label` only, and a row that paints its title in a child `<text>`
-      // reaches the tree as a nameless button. The shell is the surface the docs
-      // send a reader to, so every row and palette button publishes its words.
       const tree = yield* ctx.expectSome(
         "the shell paints an accessibility tree",
         Option.fromNullishOr(ctx.host.a11yTree()),
@@ -239,12 +202,6 @@ export const shellSelectionScenario: ScenarioBody = {
         palettes.light.colors.accent,
       );
 
-      // The keyboard route: the sidebar is **one roving stop** — the row the app
-      // has open — so a reader who never touches the pointer reaches it from the
-      // palette and leaves the list in one more press. The arrows step the
-      // cursor with a clamp and carry the native focus and the scroller with it,
-      // the contract `focus-reveal-lifecycle` measured for the library's lists.
-      // The palette press above left the focus on its own button.
       yield* ctx.expectEqual(
         "the palette press left the focus on that button",
         ctx.host.focused() === paletteId(TARGET_PALETTE),
@@ -337,8 +294,6 @@ export const shellSelectionScenario: ScenarioBody = {
         target.title,
       );
 
-      // The list is taller than its box, so a move to either end owes the reader
-      // the reveal the runtime does not do for free (`focus-reveal-lifecycle`).
       const listBox = yield* ctx.expectSome(
         "the sidebar paints its scroller",
         Option.fromNullishOr(ctx.host.bounds(SHELL_LIST)),
@@ -413,8 +368,6 @@ export const shellSelectionScenario: ScenarioBody = {
         true,
       );
 
-      // The palette's own keyboard route: the same walk backwards lands on the
-      // first palette button.
       yield* ctx.expectEqual(
         "the walk back reaches the palette",
         yield* focusTo(ctx, paletteId("dark"), 10, true),
@@ -439,9 +392,6 @@ export const shellSelectionScenario: ScenarioBody = {
         palettes.dark.colors.accent,
       );
 
-      // Space is the shell's other activating key, and the runtime spells it
-      // `space` — the name the library's own controls read, not the DOM's `" "`.
-      // Enter alone would leave a rule that answers only half the pair green.
       ctx.host.focusNext();
       ctx.host.advance(16);
       yield* ctx.expectEqual(

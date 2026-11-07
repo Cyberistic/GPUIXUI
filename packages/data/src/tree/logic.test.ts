@@ -1,20 +1,3 @@
-/**
- * The tree model: what paints, what a key does, and what a typed prefix means.
- *
- * The bugs these guard are the ones a tree view ships with:
- *
- * - a nested branch painting because its parent is open, when its own entry is
- *   closed (expansion is per node, not inherited);
- * - a caller's cycle hanging the flatten, or a duplicated key painting two rows
- *   that answer to one cursor;
- * - Right opening a branch but never stepping into it, so a keyboard reader can
- *   never reach a child;
- * - Left stepping to a parent while the branch is still open, which loses the
- *   reader's place;
- * - a type-ahead that finds the row it is already on, so a second letter never
- *   advances.
- */
-
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as HashSet from "effect/HashSet";
@@ -79,8 +62,7 @@ describe("the flattened tree", () => {
   it("opens one node without opening its children", () => {
     const rows = flattenTree(tree, spec, open("src"));
     expect(keys(rows)).toEqual(["src", "components", "index.ts", "readme.md"]);
-    // `components` is a branch, but it is closed: its own entry decides, not
-    // its parent's.
+
     const components = rows[1];
     expect(components?.depth).toBe(1);
     expect(components?.hasChildren).toBe(true);
@@ -95,19 +77,12 @@ describe("the flattened tree", () => {
       spec,
       open("a", "loop"),
     );
-    // A key is one row: a repeated sibling and a node under itself both stop.
+
     expect(keys(rows)).toEqual(["a", "b", "loop"]);
     expect(Arr.filter(rows, (row) => row.key === "a")).toHaveLength(1);
   });
 
   it("reads a node's children list as a list, not as the value it was stored with", () => {
-    // Bug guarded: `childrenOf` is a caller's accessor over its own nodes, and
-    // a saved tree is ordinary data — JSON writes `null` for a field a record
-    // never carried, and a hand-built node often omits it, so a leaf with no
-    // children list is the shape a stored hierarchy arrives in. The flatten
-    // handed that value to `Arr.isReadonlyArrayNonEmpty`, which threw
-    // `TypeError: Cannot read properties of null (reading 'length')` on the
-    // first leaf, so a tree of files painted nothing at all.
     interface Stored {
       readonly name: string;
       readonly children?: ReadonlyArray<Stored> | null;
@@ -136,12 +111,12 @@ describe("the flattened tree", () => {
       false,
       false,
     ]);
-    // Every reader that walks the hierarchy reads the same list the same way.
+
     expect(branchKeys(roots, stored)).toEqual(["src"]);
     expect(expandedPath(roots, stored, "index.ts")).toEqual(
       Option.some(["src", "index.ts"]),
     );
-    // A tree whose roots slot is absent paints no rows rather than throwing.
+
     expect(flattenTree(null, stored, open("src"))).toEqual([]);
   });
 
@@ -176,7 +151,7 @@ describe("the flattened tree", () => {
     );
     const revealed = expandTo(collapseAll(), tree, spec, "row.tsx");
     expect(keys(flattenTree(tree, spec, revealed))).toContain("row.tsx");
-    // A key the tree does not hold leaves the caller's set alone.
+
     const none = expandTo(revealed, tree, spec, "missing.ts");
     expect(HashSet.size(none)).toBe(HashSet.size(revealed));
   });
@@ -205,8 +180,7 @@ describe("the tree cursor", () => {
       expanded: open("src", "components"),
       active: Option.some("components"),
     };
-    // `components` has a child (`button.tsx`) that is closed away: Right opens
-    // it, and a second Right steps to the child that now paints.
+
     const opened = treeCursorMove(
       rows,
       { ...onSrc, active: Option.some("src") },
@@ -227,11 +201,11 @@ describe("the tree cursor", () => {
       expanded: open("src", "components"),
       active: Option.some("button.tsx"),
     };
-    // A leaf has nothing to close, so Left steps to its parent…
+
     const parent = treeCursorMove(rows, onChild, "left");
     expect(parent.active).toEqual(Option.some("components"));
     expect(isExpanded(parent.expanded, "components")).toBe(true);
-    // …and the branch itself closes before a second Left leaves it.
+
     const collapsed = treeCursorMove(rows, parent, "left");
     expect(isExpanded(collapsed.expanded, "components")).toBe(false);
     expect(treeCursorMove(rows, collapsed, "left").active).toEqual(
@@ -244,11 +218,9 @@ describe("the tree cursor", () => {
       expanded: open("src", "components"),
       active: Option.some("readme.md"),
     };
-    // `readme.md` is the second root: clearing the cursor would move the tab
-    // stop to the first painted row (`cursorRow`'s fallback), so a reader on a
-    // root who pressed Left would lose the row they were standing on.
+
     expect(treeCursorMove(rows, onRoot, "left")).toEqual(onRoot);
-    // A closed root branch has nothing to close and no parent either.
+
     const onClosedBranch = {
       expanded: open("components"),
       active: Option.some("src"),
@@ -277,7 +249,6 @@ describe("the tree cursor", () => {
 });
 
 describe("the typed prefix", () => {
-  /** A row whose key is not its label, so the two cannot stand in for each other. */
   const row = (key: string, label: string): TreeRow<string> => ({
     node: label,
     key,
@@ -299,7 +270,7 @@ describe("the typed prefix", () => {
     expect(typeAheadRow(rows, Option.none(), "s", labelOf)).toEqual(
       Option.some("k2"),
     );
-    // No label starts with `k`, though every key does.
+
     expect(typeAheadRow(rows, Option.none(), "k", labelOf)).toEqual(
       Option.none(),
     );
@@ -309,7 +280,7 @@ describe("the typed prefix", () => {
     expect(typeAheadRow(rows, Option.some("k1"), "r", labelOf)).toEqual(
       Option.some("k3"),
     );
-    // After the only match, the prefix wraps to the same row.
+
     expect(typeAheadRow(rows, Option.some("k3"), "s", labelOf)).toEqual(
       Option.some("k2"),
     );
@@ -331,9 +302,6 @@ describe("the typed prefix", () => {
   });
 
   it("searches a blank label by the key the row is painted and named by", () => {
-    // A caller's accessor answers blank for a node whose name never arrived.
-    // The row is painted and named by its key, so the same prefix has to reach
-    // it; a node with a real label still matches the label, not the key.
     const blank = [row("alpha", ""), row("beta", "   ")];
     expect(typeAheadRow(blank, Option.none(), "a", labelOf)).toEqual(
       Option.some("alpha"),
@@ -372,8 +340,7 @@ describe("the rows a folding branch still paints", () => {
     expect(keys(Arr.filter(painted, (row) => !row.leaving))).toEqual(
       keys(after),
     );
-    // The three rows of the closed branch sit where the branch was, between
-    // its folder and the next row — not appended to the bottom of the tree.
+
     expect(keys(painted)).toEqual([
       "src",
       "components",
@@ -420,7 +387,6 @@ describe("the name a row is painted by", () => {
 
 describe("an expansion set a store restored", () => {
   it("reads a list or a set of text keys", () => {
-    // A workspace saves its open folders as a list; an app may pass a `Set`.
     const saved = Arr.fromIterable(expandedSet(["src", "docs"]));
     expect(saved).toHaveLength(2);
     expect(saved).toEqual(expect.arrayContaining(["src", "docs"]));
@@ -428,9 +394,6 @@ describe("an expansion set a store restored", () => {
   });
 
   it("is no expansion when the store wrote something that is not iterable", () => {
-    // JSON has no `Set`, and a truncated or hand-edited record can hand back
-    // anything here. `HashSet.fromIterable` threw on these during the first
-    // render, so a restored tree never opened.
     expect(HashSet.size(expandedSet(null))).toBe(0);
     expect(HashSet.size(expandedSet(42))).toBe(0);
     expect(HashSet.size(expandedSet({ src: true }))).toBe(0);

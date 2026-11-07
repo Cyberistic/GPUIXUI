@@ -1,22 +1,3 @@
-/**
- * The `@gpuixui/primitives/button` route.
- *
- * The bug this suite guards: before the subpath existed, the only way to reach
- * `Button` from another package was the root barrel, which re-exports every
- * primitive. Plan 160 measured that route at **52 modules / 416 KiB** against a
- * subpath's 5 / 49, so `@gpuixui/components` kept a second button
- * implementation rather than load the whole Tier 1 package to paint one
- * control. A manifest entry that later points at the barrel, or an entry that
- * re-exports one more component, brings that cost back — and nothing about the
- * import looks different at the call site.
- *
- * The second bug: a layer painted over an action (a busy loader, a chevron, an
- * effect's wash) had to guess the action's label role, and a role belonging to
- * another fill is invisible — `secondaryForeground` on a `primary` fill measures
- * 1.42:1 in Windows dark. `actionOnColor` publishes the table's own answer, so
- * the guess has one home.
- */
-
 import { existsSync, readFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -54,7 +35,6 @@ const manifest = (): typeof Manifest.Type =>
     readFileSync(manifestFile, "utf8"),
   );
 
-/** A relative specifier, the only kind that reaches another module in this package. */
 const RELATIVE_IMPORT = /(?:from|import)\s+"(\.[^"]+)"/g;
 
 const resolveModule = (from: string, specifier: string): string => {
@@ -73,7 +53,6 @@ const resolveModule = (from: string, specifier: string): string => {
   );
 };
 
-/** Every module the entry's own imports reach, the entry included. */
 const importClosure = (entry: string): ReadonlySet<string> => {
   const visit = (
     file: string,
@@ -109,8 +88,6 @@ const modulesIn = (
 
 describe("the action subpath", () => {
   it("publishes the action without the package barrel", () => {
-    // The names are the route: a manifest entry that fell back to `src/index.ts`
-    // would make this list every primitive the package ships.
     expect(Arr.sort(Object.keys(buttonEntry), Order.String)).toEqual([
       "Button",
       "IconButton",
@@ -122,8 +99,6 @@ describe("the action subpath", () => {
   });
 
   it("answers every variant with the role its label paints", () => {
-    // The role map is read from the table the recipe paints from, so a variant
-    // added here cannot answer `undefined` or a role belonging to another fill.
     expect(
       Arr.every(
         BUTTON_VARIANTS,
@@ -132,7 +107,7 @@ describe("the action subpath", () => {
           actionOnColor(testTheme, variant),
       ),
     ).toBe(true);
-    // The four roles plan 160's callers name, held by value.
+
     expect(actionOnColor(testTheme, "primary")).toBe(
       testTheme.colors.primaryForeground,
     );
@@ -143,8 +118,7 @@ describe("the action subpath", () => {
       testTheme.colors.secondaryForeground,
     );
     expect(actionOnColor(testTheme, "ghost")).toBe(testTheme.colors.foreground);
-    // A filled action's label role is not its fill: the premise the helper
-    // exists for.
+
     expect(actionOnColor(testTheme, "primary")).not.toBe(
       testTheme.colors.primary,
     );
@@ -167,13 +141,9 @@ describe("the action subpath", () => {
   it("reaches no other component than the action's own", () => {
     const closure = importClosure(entryFile);
     expect(closure.has(entryFile)).toBe(true);
-    // `src/index.ts` is the barrel: reaching it is the cost this route exists
-    // to avoid, whatever the manifest says.
+
     expect(closure.has(join(packageRoot, "src", "index.ts"))).toBe(false);
-    // A new name here is a new module every consumer of the route loads, so it
-    // has to be a deliberate change rather than a convenience re-export.
-    // `MessagesProvider` rides the theme wrapper (`ThemeProvider` hands it the
-    // words an interface announces), and it is a context plus one merge.
+
     expect(modulesIn(componentsRoot, closure)).toEqual([
       "Button.tsx",
       "IconButton.tsx",

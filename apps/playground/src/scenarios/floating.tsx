@@ -1,23 +1,3 @@
-/**
- * `floating-placement` — how `<anchored>` places a panel.
- *
- * `@gpuix/react/floating`'s `FloatingLayer` is the only positioning engine the
- * library has: it renders a native `<anchored side align gap offset fit="snap"
- * snapMargin>` and does no React-side measurement. Popover, DropdownMenu,
- * ContextMenu and CommandMenu all sit on it, so the geometry has to be measured
- * once, here, instead of assumed in four components.
- *
- * The layer renders **inside** its anchor: the native anchored element measures
- * against its parent, not a trigger rect (upstream README, "Overlay menus").
- *
- * Measured on this host (plan `140` §4, plan `156` §8): `side`, `sideOffset`,
- * `align="start"`/`"end"` and the window-edge snap are exact. `align="center"`
- * is **not** centred — it aligns the panel's end to the anchor's centre line,
- * i.e. it is short by half the panel's own size on the cross axis
- * (`anchored.rs` wraps the layer in a full-height zero-width flex box *and*
- * positions it from the anchor point). The scenario pins that behaviour so a
- * fix upstream fails the check instead of silently changing every menu.
- */
 import { useState } from "react";
 import { Effect } from "effect";
 import * as Option from "effect/Option";

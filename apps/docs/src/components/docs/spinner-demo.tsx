@@ -1,12 +1,3 @@
-/**
- * Browser preview for the Spinner page.
- *
- * The native mark is a ring of ticks whose lit arc steps around the circle,
- * because the runtime cannot rotate. The preview paints the same geometry in
- * the browser and steps it on the same cadence, so a reader sees the shipped
- * anatomy rather than a CSS spinner the native component could never paint.
- */
-
 import { useEffect, useState } from "react";
 
 const TICKS = 12;
@@ -33,7 +24,6 @@ interface RingProps {
   readonly label?: string;
 }
 
-/** One ring in the browser: static ticks, a stepped lit arc. */
 const Ring = ({
   side = 24,
   accent = "primary",
@@ -42,8 +32,6 @@ const Ring = ({
   const [step, setStep] = useState(0);
 
   useEffect(() => {
-    // The native mark honours `MotionProvider`; the browser drawing honours the
-    // reader's own preference query, since the runtime exposes none.
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const id = setInterval(
       () => setStep((current) => (current + 1) % TICKS),
@@ -83,7 +71,6 @@ const Ring = ({
   );
 };
 
-/** The three sizes, then the three accents. */
 export const SpinnerDemo = () => (
   <div className="gx-demo gx-demo-column gx-spin-scene">
     <p className="gx-demo-label">Sizes</p>
@@ -114,7 +101,6 @@ const spinnerDemoSource = `import { Spinner, Stack, Text } from "@gpuixui/primit
 
 export { spinnerDemoSource };
 
-/** The sizes, as the component page's own code tab. */
 const spinnerSizesSource = `import { Spinner } from "@gpuixui/components/spinner";
 
 <Spinner size="sm" label="Loading" />;
@@ -126,7 +112,6 @@ const spinnerSizesSource = `import { Spinner } from "@gpuixui/components/spinner
 
 export { spinnerSizesSource };
 
-/** The action state a reader meets most often: an action holding the mark. */
 export const SpinnerInButtons = () => (
   <div className="gx-demo gx-demo-column gx-spin-scene">
     <p className="gx-demo-label">In an action</p>

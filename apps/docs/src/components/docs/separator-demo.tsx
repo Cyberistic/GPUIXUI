@@ -1,12 +1,3 @@
-/**
- * Browser preview for the Separator page.
- *
- * `Separator` is a theme-coloured rule, not a control, so the preview is a
- * labelled diagram: a dashed outline around the rule's region with a caption
- * naming its orientation and optional caption. The Code tab shows the native
- * usage.
- */
-
 export const SeparatorDemo = () => (
   <div className="gx-demo gx-demo-column gx-layout">
     <div className="gx-layout-row">

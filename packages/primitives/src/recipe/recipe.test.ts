@@ -1,24 +1,3 @@
-/**
- * The recipe → `StyleDesc` equivalence guard.
- *
- * The migration moved the resting appearance of the primitives from
- * `core/style.ts`'s / `core/layout.ts`'s imperative resolvers to Tailwind class
- * strings compiled through `@gpuixui/tw`. This suite proves the two expressions
- * agree: for every variant, size and modifier, the compiled recipe equals what
- * the pre-migration resolver produced.
- *
- * Exact equality is achievable because the primitives' recipe uses theme-scale
- * utilities (`h-md`, `gap-sm`, `type-label`) instead of shadcn's fixed metrics
- * (`h-9`, `gap-2`, `text-sm`): control height and padding come from the active
- * density, gap from the spacing scale, type from the typography scale, exactly
- * as `controlStyle` did. `toEqual` ignores the oracle's `undefined`-valued keys
- * (`backgroundColor: undefined` on a borderless variant), which the recipe
- * simply omits — no border, no fill.
- *
- * A regression in either side fails here: change a recipe string or a resolver
- * and the two drift.
- */
-
 import { describe, expect, it } from "vitest";
 import type { StyleDesc } from "@gpuix/react";
 import {
@@ -98,7 +77,6 @@ import { recipeTw } from "./registry.js";
 
 const SIZES: ReadonlyArray<ControlSize> = ["sm", "md", "lg"];
 
-/** The field's resting chrome, as `fieldChrome` resolved it before the migration. */
 const fieldOracle = (theme: PrimitiveTheme, size: ControlSize): StyleDesc =>
   mergeStyle(
     controlStyle({ variant: fieldVariant, size }, theme),
@@ -144,9 +122,6 @@ describe("Button recipe", () => {
   });
 
   it("paints a disabled action the way the resolver does", () => {
-    // The disabled bucket is a second paint the recipe owns, and it has to agree
-    // with `controlStyle` exactly as the resting style does: a filled action
-    // wears the measured neutral pair, an action with no fill fades.
     Arr.forEach(BUTTON_VARIANTS, (variant) => {
       const compiled = recipeTw.classesToStyle(
         buttonClass(variant, "md"),
@@ -183,10 +158,6 @@ describe("Button recipe", () => {
   });
 
   it("derives a link's text colour on the shipped themes", () => {
-    // `primary` is a fill: written as text it measures 4.30:1 on the base light
-    // `active` wash. The recipe and the variant table must agree on the derived
-    // colour — a drift the test theme cannot show, because its washes are
-    // translucent and `brandText` leaves an unmeasurable brand alone.
     Arr.forEach([lightTheme, darkTheme] as const, (theme) => {
       const compiled = recipeTw.classesToStyle(
         buttonClass("link", "md"),
@@ -210,12 +181,6 @@ describe("Input recipe", () => {
     });
   });
 
-  /**
-   * A failed validation is an edge, not a fill: `destructive` is designed to
-   * carry `destructiveForeground`, so painting it behind the value left the
-   * text at 2.45:1 in the dark theme. The regression this guards is the solid
-   * destructive box the recipe used to merge in.
-   */
   it("takes the destructive edge and keeps the field's own fill", () => {
     const resolved = recipeTw.classesToStyle(
       fieldClass({ size: "md", invalid: true }),
@@ -241,7 +206,7 @@ describe("Input recipe", () => {
       expect(
         contrastRatio(theme.colors.inputForeground, fill) ?? 0,
       ).toBeGreaterThanOrEqual(contrastFloors.body);
-      // The premise: the fill the recipe used to paint cannot carry the value.
+
       expect(
         contrastRatio(theme.colors.inputForeground, theme.colors.destructive) ??
           Infinity,
@@ -298,11 +263,6 @@ describe("Text recipe", () => {
   });
 
   it("matches on a shipped theme, where a brand tone is derived", () => {
-    // The bug guarded: the fixture above leaves `brandText` equal to the brand,
-    // because its washes are translucent and the derivation leaves an
-    // unmeasurable colour alone. On a shipped theme `text-brand` moves the base
-    // light brand while the core resolver kept the raw `primary` fill, so the
-    // two paint paths disagreed exactly where a reader sees it.
     Arr.forEach([lightTheme, darkTheme] as const, (theme) => {
       Arr.forEach(roles, (role) => {
         Arr.forEach(
@@ -345,11 +305,6 @@ describe("Text recipe", () => {
   });
 
   it("paints the alignment in the runtime's own grammar", () => {
-    // The bug guarded: the API's `end` reached the host as `end`, and the
-    // pinned renderer parses `left`, `center` and `right` (reading `start` as
-    // left) but not `end` — handed `end` it paints the default, so a
-    // right-aligned run stayed left. The equivalence case above could not see
-    // it, because both painters said the same wrong word.
     const painted = (align: TextAlign) =>
       recipeTw.classesToStyle(
         textClass({ role: "body", tone: "default", align }),
@@ -370,9 +325,7 @@ describe("Text recipe", () => {
   });
 
   it("paints no alignment for a stored name the release does not carry", () => {
-    // An alignment is a stored choice as often as a literal, so a renamed or
-    // dropped name is the runtime's default rather than a class nothing reads.
-    const stored = "END" as TextAlign; // the storage boundary
+    const stored = "END" as TextAlign;
     const compiled = recipeTw.classesToStyle(
       textClass({ role: "body", tone: "default", align: stored }),
       testTheme,
@@ -382,11 +335,6 @@ describe("Text recipe", () => {
   });
 
   it("resolves a clamp's box from the role its class names", () => {
-    // A clamp is a definite height at the role's leading, not `lineClamp`: the
-    // runtime declares that field and paints every line (the `text-truncation`
-    // probe measured a five-line paragraph under `clamp={2}`). The role is in
-    // the class name, so a wrong parse would cut the paragraph at another
-    // role's leading while every single-line case still passed.
     Arr.forEach(roles, (role) => {
       const style = recipeTw.classesToStyle(
         textClass({ role, tone: "default", clamp: 2 }),
@@ -433,11 +381,6 @@ describe("Stack recipe", () => {
     ).toBe(99);
   });
 
-  // Bug guarded: a direction is stored with the layout that draws it, and the
-  // two paint paths read it differently — the class recipe drew a column for
-  // anything that was not `row`, while `stackStyle` handed the runtime the
-  // stored string, which its flex grammar does not carry and quietly laid out as
-  // a row. One reader answers the column the shipped painter already drew.
   it("agrees with stackStyle on a stored direction this release does not carry", () => {
     const stored: ReadonlyArray<unknown> = [
       "vertical",
@@ -448,7 +391,6 @@ describe("Stack recipe", () => {
       null,
     ];
     Arr.forEach(stored, (value) => {
-      // The cast is the storage boundary: a saved direction is one string.
       const spec: StackSpec = { direction: value as StackDirection };
       const painted = recipeTw.classesToStyle(
         stackClass(spec),
@@ -469,7 +411,7 @@ describe("Grid recipe", () => {
       { columns: 12, rows: 2, gap: "lg" },
       { columns: 2, rows: 6 },
       { columns: 4, rows: 3, gap: "sm", grow: true },
-      // clamps and floors exactly as the resolver did
+
       { columns: 0 },
       { columns: 2.9 },
       { columns: 1, rows: 0 },
@@ -493,10 +435,6 @@ describe("Grid recipe", () => {
   });
 
   it("reads a count the runtime cannot draw as one track", () => {
-    // The page promises a non-finite count reads as one track, and `gridStyle`
-    // keeps that promise. The painter must too: `grid-cols-NaN` is not a
-    // utility the compiler resolves, so the recipe silently painted no track
-    // count at all while the resolver said one.
     const cases: ReadonlyArray<GridSpec> = [
       { columns: Number.NaN },
       { columns: Number.POSITIVE_INFINITY },
@@ -536,8 +474,7 @@ describe("Box recipe", () => {
       { tone: "card", paddingY: "md" },
       { tone: "card", border: true, borderStyle: "dashed" },
       { tone: "card", aspectRatio: 16 / 9, fullWidth: true },
-      // An elevation level is a stored choice, and a name this release does not
-      // carry is the default lift for both paint paths.
+
       { tone: "card", elevation: "raised" as ElevationLevel },
     ];
     Arr.forEach(cases, (spec) => {
@@ -548,12 +485,6 @@ describe("Box recipe", () => {
   });
 
   it("lifts a box for a level name this release does not carry", () => {
-    // `elevationShadow` — the seam the core resolver paints through and the rule
-    // `@gpuixui/tokens` states — reads a stored name as `md`, so a panel a
-    // workspace saved at a level this release renamed stays raised. The recipe
-    // indexed the level raw, so the shipped painter dropped the class and
-    // painted **flat** while the resolver painted the lift. `overlay` is the one
-    // reserved level and still paints nothing, because the theme ships it empty.
     const shadow = (elevation: ElevationLevel) =>
       recipeTw.classesToStyle(boxClass({ tone: "card", elevation }), testTheme)
         .style.boxShadow;
@@ -623,13 +554,6 @@ describe("Separator recipe", () => {
   });
 
   it("draws a stored orientation this release does not carry as a horizontal rule", () => {
-    // The bug guarded: an orientation is a saved workspace's value, and the
-    // recipe compared the raw name — so a stale one painted the **vertical**
-    // hairline while the component's caption branch kept the caption, a caption
-    // with no rule running under it. Both paint seams now resolve the name
-    // against the horizontal rule a region divider defaults to, so the oracle
-    // this suite exists for still holds for a name the union no longer names.
-    // The cast is the storage boundary: a saved orientation is a string.
     const stored = "Horizontal" as RuleSpec["orientation"];
     const painted = recipeTw.classesToStyle(
       separatorClass(stored),
@@ -650,10 +574,6 @@ describe("ScrollArea recipe", () => {
     });
   });
 
-  // Bug guarded: the class builder read the axis raw, so a stored name matched
-  // neither branch and fell through to both scrollbars while `scrollStyle` (the
-  // exported resolver) painted the same, and the key contract painted nothing
-  // at all. Both paint paths read the documented `vertical` now.
   it("paints the documented axis for a stored name the union does not carry", () => {
     expect(
       recipeTw.classesToStyle(scrollClass("sideways"), testTheme).style,
@@ -874,8 +794,7 @@ describe("Tooltip recipe", () => {
         { tone: "popover", radius: "sm", border: true, elevation: "overlay" },
         testTheme,
       ),
-      // The tip's text is the role its own surface carries, not whatever the
-      // anchored layer happened to inherit.
+
       color: testTheme.colors.popoverForeground,
       paddingLeft: testTheme.spacing.sm,
       paddingRight: testTheme.spacing.sm,
@@ -939,18 +858,6 @@ describe("the recipe stays one expression, not a stub", () => {
 });
 
 describe("a stored corner name", () => {
-  /*
-   * Bug guarded: a corner is a stored choice as often as a literal — a saved
-   * panel's radius, a restored placeholder's shape — so a name this release
-   * renamed or dropped reached `rounded-<name>`, which the compiler records as
-   * an **unsupported class** nobody reads and paints no corner for. A `Box` or
-   * a scroll frame then went square (its documented default, at least), while
-   * a `Skeleton` lost the `sm` corner its page documents. The name is resolved
-   * through `radiusStep` at the recipe, so each painter answers what it
-   * documents and the compiler has nothing to report.
-   */
-  // The cast is the storage boundary: a saved corner name a later release
-  // dropped arrives as a string the union no longer names.
   const shipped = "xl2" as RadiusStep;
 
   it("paints the corner each painter documents, and no unsupported class", () => {

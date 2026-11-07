@@ -1,45 +1,3 @@
-/**
- * The scale contract: a named scale is an order, and a theme that carries one
- * must keep it.
- *
- * Every scale in a theme names a *ladder* — spacing from `2xs` to `5xl`, radii
- * from `none` to `full`, control sizes from `sm` to `lg`, type from `caption` to
- * `display`, elevation from `sm` to `lg`. A component selects a step by name:
- * `size="sm"` asks for the small control, `radius="xl"` for the large surface,
- * `textStyle(theme, "h3")` for the heading under an `h2`, `elevationShadow(theme,
- * "lg")` for the surface furthest from the page. When the numbers behind those
- * names stop increasing, the name lies — a `size="sm"` control paints taller
- * than `size="lg"`, a dialog is squarer than the card beneath it, a heading is
- * smaller than its body text, a dialog casts a tighter shadow than a menu — and
- * nothing in the renderer complains, because each value is still a perfectly
- * valid number. Radius is the one ladder where two names may share a corner:
- * Fluent 2 gives every control 4px and every surface 8px, so `sm`/`md` and
- * `lg`/`xl` are aliases on purpose; a smaller rung is still a lie.
- *
- * Elevation is the one ladder whose rung is not a single token: a level is a
- * geometry plus a share of the `shadow` role, so its depth is the distance the
- * shadow reaches below the box it lifts — `offsetY + blurRadius + spreadRadius`
- * of the shadow `elevationShadow` paints. The colour is the role's and the
- * horizontal offset is not depth, so neither is read; a level a brand deepens by
- * opacity alone is a heavier shadow, not a higher surface.
- *
- * The shipped scales are held to this order by `scale.test.ts` and
- * `typography.test.ts`, and every shipped theme's elevation by this file's own
- * sweep; this is the same rule for a theme a brand supplied, in the shape the
- * other token contracts use. `invalidNumbers` answers whether one number can be
- * laid out; this answers whether two adjacent steps still describe different
- * sizes.
- *
- * A value that is not finite is skipped rather than reported twice: it cannot be
- * laid out at all, and `invalidNumbers` already names it.
- *
- * `invalidScales` is one of `auditTheme`'s reports: a theme whose ladder lies
- * fails the gate, so a brand cannot ship one by running the other reports. It
- * was a public function *beside* the gate while the docs site's theme readout
- * worded every report the gate returned — a gate that shipped a theme with an
- * inverted radius ladder was a gate with a hole in it.
- */
-
 import {
   type BoxShadow,
   type Elevation,
@@ -60,7 +18,6 @@ import {
 import type { Stored } from "./theme.js";
 import type { TextRole, Typography } from "./typography.js";
 
-/** The scales a theme carries, in the order the catalogue lists them. */
 export type ScaleGroup =
   | "spacing"
   | "radius"
@@ -70,44 +27,20 @@ export type ScaleGroup =
   | "density"
   | "elevation";
 
-/**
- * One step that does not exceed the step before it in its scale's documented
- * order, so the two names no longer describe two sizes.
- */
 export interface InvalidScale {
-  /** The scale the step belongs to. */
   readonly group: ScaleGroup;
-  /** The step that breaks the order: `xl`, `controlHeight.md`, `h2.fontSize`. */
+
   readonly path: string;
-  /**
-   * The value the theme carries for it. For an `elevation` step this is the
-   * level's **reach** — the distance its painted shadow extends below the box,
-   * `offsetY + blurRadius + spreadRadius` — because a level's depth is a
-   * geometry rather than one token.
-   */
+
   readonly value: number;
-  /** The preceding step, which it must exceed. */
+
   readonly previous: {
-    /** That step's path in the same group. */
     readonly path: string;
-    /** Its value. */
+
     readonly value: number;
   };
 }
 
-/**
- * The fields the scale audit reads: every ordered group of a theme.
- *
- * Each group is the **storage shape** (`Stored`) — a step a store wrote as `"8"`
- * or `null`, a group as `null` — because that is the input the report exists to
- * measure, and a group is optional because a theme that lost one is the gate's
- * refusal by name (`requireGroups`) rather than a `TypeError` out of the walk.
- * The type roles are the same shape one level down: a role a store left out is
- * skipped rather than reported — a theme restored from storage can predate a
- * role the library added, and the gate refuses that absence by name
- * (`requireSteps`), because a component selects a role by name and cannot paint
- * around one.
- */
 export type ScaleSource = {
   readonly spacing?: Stored<Spacing>;
   readonly radius?: Stored<Radius>;
@@ -115,17 +48,10 @@ export type ScaleSource = {
   readonly iconSize?: Stored<IconSize>;
   readonly density?: Stored<Density> | DensityName;
   readonly typography?: Stored<Typography>;
-  /**
-   * Every elevation level the theme carries. A level it omits is skipped rather
-   * than reported: a theme restored from storage can predate a level the
-   * library added, and the missing level is `invalidShadowColors`' business. An
-   * absent group is the same rule one level up — a store that predates the
-   * scale has no rung to compare, and the shadow report names every level.
-   */
+
   readonly elevation?: Stored<Elevation>;
 };
 
-/** Spacing steps from tightest to loosest. */
 const spacingKeys = [
   "2xs",
   "xs",
@@ -139,20 +65,12 @@ const spacingKeys = [
   "5xl",
 ] as const;
 
-/** Radii from sharpest to roundest. */
 const radiusKeys = ["none", "sm", "md", "lg", "xl", "full"] as const;
 
-/** Border weights from a divider to an emphasis line. */
 const borderKeys = ["thin", "strong"] as const;
 
-/** Icon steps from inline to navigation. */
 const iconKeys = ["xs", "sm", "md", "lg", "xl"] as const;
 
-/**
- * The type hierarchy, smallest to largest. `bodyStrong` shares `body`'s size and
- * differs by weight, and the two mono roles are a separate family rather than
- * rungs of this ladder, so neither joins it.
- */
 const typeKeys = [
   "caption",
   "label",
@@ -163,28 +81,13 @@ const typeKeys = [
   "display",
 ] as const satisfies readonly TextRole[];
 
-/**
- * The type roles that are deliberately not rungs of the size ladder, with the
- * reason each one is left out. A role added to the type scale has to be sorted
- * into `typeKeys` or named here, so no role can arrive unmeasured.
- */
 const notRungs = {
-  /** Shares `body`'s size and differs by weight; `invalidNumbers` holds the pair. */
   bodyStrong: "emphasis",
-  /** A separate family rather than a size between the UI steps. */
+
   code: "mono",
   codeBlock: "mono",
 } as const satisfies Partial<Record<TextRole, string>>;
 
-/**
- * A step the ladder does not list, as a build error.
- *
- * A scale is data and its ladder is the order the contract compares, so a step
- * added to a scale is one list away from shipping unmeasured: the shipped theme
- * would carry a size `invalidScales` never compares, and a brand could invert
- * the new rung in silence. The assignment below fails the package's type check
- * with the missing step named, so the ladder and the scale move together.
- */
 type EveryStepListed<Step extends string, Listed extends Step> =
   Exclude<Step, Listed> extends never
     ? true
@@ -207,7 +110,6 @@ const typeLadder: EveryStepListed<
   (typeof typeKeys)[number] | keyof typeof notRungs
 > = true;
 
-// Keep the guards live under `noUnusedLocals`; the values are never produced.
 void spacingLadder;
 void radiusLadder;
 void borderLadder;
@@ -216,58 +118,26 @@ void typeLadder;
 
 type Step = readonly [path: string, value: number];
 
-/** Pair each named step with the value a theme carries for it. */
 const keyed = <Key extends string>(
   keys: readonly Key[],
   read: (key: Key) => number,
 ): readonly Step[] => keys.map((key) => [key, read(key)] as const);
 
-/** Pair each control size with the value a metric carries for it. */
 const sized = (
   prefix: string,
   read: (size: ControlSize) => number,
 ): readonly Step[] =>
   controlSizes.map((size) => [`${prefix}.${size}`, read(size)] as const);
 
-/**
- * A stored step's value as the number the ladder compares, or `NaN` for one the
- * store did not write as a number.
- *
- * `NaN` is the value `ordered` already skips — it cannot be laid out, so it is
- * `invalidNumbers`' report rather than a rung — which is why a scale a store lost
- * or wrote as `"compact"` reads as no rung at all instead of throwing the
- * runtime's `TypeError` out of the walk.
- */
 const stepNumber = (value: unknown): number =>
   typeof value === "number" ? value : Number.NaN;
 
-/** The value a stored scale carries for a step, read only through a record. */
 const stepValue = (scale: unknown, key: string): number =>
   stepNumber(isStepRecord(scale) ? scale[key] : undefined);
 
-/**
- * The distance a level's shadow reaches below the box it lifts. The blur spreads
- * in every direction and the spread grows the box the blur starts from, so the
- * softest edge sits `offsetY + blurRadius + spreadRadius` below the surface.
- */
 const reach = ({ offsetY, blurRadius, spreadRadius }: BoxShadow): number =>
   offsetY + blurRadius + spreadRadius;
 
-/**
- * Every level that paints a shadow, paired with its reach, in the order a
- * surface is raised through them.
- *
- * A level the theme omits and the reserved empty `overlay` both paint nothing, so
- * neither is a rung and neither is compared. The level is read through
- * {@link elevationShadow} — the one seam that says what a level paints — so a
- * level a store wrote as something other than a list, or one whose entry it
- * dropped (`null`), is not a rung either: it paints nothing, so it has no depth
- * to compare. A geometry that cannot be laid out is skipped for the same reason
- * `ordered` skips one: `invalidNumbers` owns it, and dropping it here keeps the
- * rungs above it compared against the last level that paints. A level carrying
- * more than one shadow is read at the entry `elevationShadow` paints, which is
- * the only one the level renders.
- */
 const elevationSteps = (
   elevation: Stored<Elevation> | undefined,
 ): readonly Step[] =>
@@ -280,16 +150,6 @@ const elevationSteps = (
     return Number.isFinite(value) ? [[level, value] as const] : [];
   });
 
-/**
- * Report every step that does not exceed the one before it. Two adjacent values
- * that cannot be laid out are skipped — reporting them here would duplicate
- * `invalidNumbers` and say nothing about the order.
- *
- * `allowEqual` is for a scale whose adjacent names are allowed to share a
- * corner: Fluent 2 rounds every control at 4px and every surface at 8px, so a
- * platform's `sm`/`md` and `lg`/`xl` are equal on purpose. A smaller step is
- * still a lie; an equal one is a named alias.
- */
 const ordered = (
   group: ScaleGroup,
   steps: readonly Step[],
@@ -316,44 +176,6 @@ const ordered = (
         ];
   });
 
-/**
- * Every pair of adjacent steps in a theme that does not describe two sizes.
- *
- * A scale is a ladder, and each rung has to be above the one below it: spacing
- * from `2xs` to `5xl`, radii from `none` to `full` (equal adjacent radii are
- * allowed — two names may share a corner), `thin` under `strong`, icons from
- * `xs` to `xl`, control heights and horizontal padding from `sm` to `lg`, type
- * sizes from `caption` to `display`, and each elevation level reaching further
- * below its surface than the level under it. A brand that computes a scale from
- * a factor, forwards stored values, or edits one rung can invert or repeat a
- * pair while every number stays layable — and the component that selects a rung
- * by name then paints the wrong size in silence.
- *
- * An empty array means every named step in the theme is at least as large as the
- * one before it. A value that is not finite is left to `invalidNumbers`, so a
- * broken radius is reported once, by the contract that owns it. A **group** the
- * theme lost is not measured: the ladder has no rungs to compare, so the report
- * makes the gate's refusal and names the group rather than reading
- * `Object.entries(undefined)` — the one absence a report cannot describe, while
- * a single absent step is skipped and refused by name (`missingTokens`) for the
- * reason the role comment below gives. An elevation
- * level is compared by the reach of the shadow it paints (`offsetY + blurRadius
- * + spreadRadius`), because a level is a geometry rather than one token; a level
- * a theme does not carry, and the reserved empty `overlay`, paint nothing and are
- * not rungs.
- *
- * @example
- * ```ts
- * import { extendTheme, invalidScales, lightTheme } from "@gpuixui/tokens";
- *
- * invalidScales(lightTheme); // []
- * invalidScales(
- *   extendTheme(lightTheme, { radius: { xl: 6 } }),
- * );
- * // [{ group: "radius", path: "xl", value: 6,
- * //    previous: { path: "lg", value: 8 } }]
- * ```
- */
 export function invalidScales(theme: ScaleSource): readonly InvalidScale[] {
   requireGroups(theme);
   const density: unknown = theme.density;
@@ -380,8 +202,7 @@ export function invalidScales(theme: ScaleSource): readonly InvalidScale[] {
     ),
     ...ordered(
       "typography",
-      // A role the theme does not carry is not a rung: comparing across the gap
-      // would report the steps either side of a name nothing can select.
+
       typeKeys.flatMap((role) => {
         const style: unknown = isStepRecord(types) ? types[role] : undefined;
         return isStepRecord(style)

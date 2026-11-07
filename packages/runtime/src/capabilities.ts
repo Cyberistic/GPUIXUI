@@ -1,29 +1,13 @@
-/**
- * The pinned runtime's capability matrix.
- *
- * One literal-typed entry per capability the runtime provides or does not. A
- * `supported: false` entry carries the honest `reason` and `workaround`; a
- * `supported: true` entry needs neither. The literal values let
- * `capabilities.transform.supported` narrow to `false`, not `boolean`.
- *
- * The compile-time guards in `guards.ts` fail the build the moment the runtime
- * adds a key this matrix claims is absent, so a `false` row cannot go stale
- * silently.
- */
-
-/** A capability the pinned runtime provides. */
 export interface SupportedCapability {
   readonly supported: true;
 }
 
-/** A capability the pinned runtime does not provide. */
 export interface UnsupportedCapability {
   readonly supported: false;
   readonly reason: string;
   readonly workaround: string;
 }
 
-/** The discriminated capability entry. */
 export type Capability = SupportedCapability | UnsupportedCapability;
 
 export const capabilities = {
@@ -88,7 +72,6 @@ export const capabilities = {
 
 export type CapabilityKey = keyof typeof capabilities;
 
-/** The capabilities the runtime does NOT provide. */
 export const unsupportedFeatures = [
   "transform",
   "gridSpan",
@@ -100,5 +83,4 @@ export const unsupportedFeatures = [
   "systemAppearance",
 ] as const satisfies ReadonlyArray<CapabilityKey>;
 
-/** A capability the runtime does not provide. */
 export type UnsupportedFeature = (typeof unsupportedFeatures)[number];

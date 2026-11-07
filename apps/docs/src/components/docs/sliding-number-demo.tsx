@@ -1,10 +1,3 @@
-/**
- * Browser preview for the Sliding number page.
- *
- * The native counter rolls digits into place; the preview clips one line of
- * tabular digits and rolls the current value up on each deploy.
- */
-
 import { useState } from "react";
 
 export function SlidingNumberDemo() {

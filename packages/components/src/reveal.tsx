@@ -1,19 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Reveal: content that fades and travels into place when it is shown.
- *
- * The house entrance, extracted so a page section, a list and a notice all
- * arrive the same way the overlays do: an opacity run plus a few pixels of
- * travel, because the runtime has no `transform` (upstream issue #102) and no
- * filter, so a scale or a blur has no honest mapping. `@gpuixui/motion` owns the
- * timing and the reduced-motion policy; `internal/presence.tsx` owns the frames
- * and the mount window.
- *
- * Two uses, one contract: without `open` the reveal runs on mount and stays (a
- * section arriving), and with `open` it enters and leaves and unmounts after the
- * exit (a notice, a disclosure's contents).
- */
-
 import type { Props } from "@gpuix/react";
 import {
   mergeStyles,
@@ -37,44 +22,30 @@ import { recipeStyle } from "./internal/recipe.js";
 import { useTheme } from "./internal/theme.js";
 import { revealFrames, type RevealFrom } from "./reveal/frames.js";
 
-/** What a reveal draws at one frame. */
 export interface RevealState {
-  /** Whether the content is meant to be shown. */
   readonly open: boolean;
   readonly from: RevealFrom;
   readonly reducedMotion: boolean;
 }
 
-/** {@link Reveal} props. */
 export interface RevealProps extends Omit<Props, "children" | "style"> {
   readonly children?: ReactNode;
-  /**
-   * Whether the content is shown. Omit it for a mount-time reveal; pass it to
-   * enter and leave on a state change (the subtree unmounts after the exit).
-   */
+
   readonly open?: boolean;
-  /** The edge the content arrives from. Default `"below"`. */
+
   readonly from?: RevealFrom;
-  /** Pixels travelled. Default `8`; a value that cannot run falls back to it. */
+
   readonly distance?: number;
-  /** The motion level. Default `"normal"` (200 ms). */
+
   readonly level?: MotionLevel;
-  /** Milliseconds before the entry starts, for a stagger. Default `0`. */
+
   readonly delayMs?: number;
-  /** A Tailwind class string, joined after the resting style so it wins. */
+
   readonly className?: string;
-  /** A style, or a function of the reveal. */
+
   readonly style?: StateStyle<RevealState>;
 }
 
-/**
- * A box whose content fades and travels in.
- *
- * The travel is a relative `top` or `left`, so it moves the content without
- * reflowing what sits beside it. Under `MotionProvider preference="reduced"`
- * the duration is zero and the content paints at rest, but it still mounts and
- * unmounts on the same contract.
- */
 export const Reveal = ({
   children,
   open,
@@ -114,8 +85,6 @@ export const Reveal = ({
           recipeStyle(cn(className), theme),
         ),
         mergeStyles(
-          // A leaving subtree is still painted for its exit tween but takes no
-          // presses: the press the close was for belongs to what it covered.
           presenceStyle(presence.present, "wrapper"),
           resolveStyle(style, state),
         ),
@@ -127,7 +96,6 @@ export const Reveal = ({
   );
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 600). */
 export const revealMeta = {
   name: "Reveal",
   tier: 5,

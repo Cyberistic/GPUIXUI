@@ -1,37 +1,22 @@
-/**
- * The arithmetic behind every value control.
- *
- * GPUix has no slider host element (see `docs/gpuix-capabilities.md`), so a slider is a `div`
- * whose position has to be decided here: how a value clamps and snaps, how it
- * maps to a fraction of the track, and how a pointer position or a key press
- * moves it. A slider, a range slider and a meter are the same model, which is
- * why they share one module — and the module is pure, so it is provable
- * without a rendering runtime.
- */
-
 import * as Option from "effect/Option";
 import { storedNumber } from "./stored.js";
 
-/** A closed interval with a quantisation step. `step: 0` means continuous. */
 export interface ValueRange {
   readonly min: number;
   readonly max: number;
   readonly step: number;
 }
 
-/** A painted box on the window, as the renderer reports it. */
 export interface TrackBox {
   readonly x: number;
   readonly width: number;
 }
 
-/** The same box on the other axis, for a vertical track. */
 export interface VerticalTrackBox {
   readonly y: number;
   readonly height: number;
 }
 
-/** The two ends of a range slider. */
 export interface ValueSpan {
   readonly start: number;
   readonly end: number;
@@ -40,13 +25,6 @@ export interface ValueSpan {
 const finiteOr = (value: number, fallback: number): number =>
   Number.isFinite(value) ? value : fallback;
 
-/**
- * A range with finite, ordered bounds and a non-negative step.
- *
- * Total on purpose: a control must not throw because a caller passed `NaN`.
- * A bound that is not a number falls back to the nearest sensible number, and
- * an inverted pair is swapped rather than silently ignored.
- */
 export const normalizeRange = (range: ValueRange): ValueRange => {
   const min = finiteOr(range.min, 0);
   const max = finiteOr(range.max, min + 1);
@@ -54,33 +32,12 @@ export const normalizeRange = (range: ValueRange): ValueRange => {
   return min <= max ? { min, max, step } : { min: max, max: min, step };
 };
 
-/** The bounds a value control was saved with, as a store handed them back. */
 export interface StoredRange {
   readonly min?: unknown;
   readonly max?: unknown;
   readonly step?: unknown;
 }
 
-/**
- * The range a value control paints from the bounds a store handed back.
- *
- * A slider's or a meter's bounds are saved with the form that draws it — a
- * restored settings pane, a channel control in a record, a gauge in a saved
- * dashboard — so a bound arrives as whatever the store wrote: `null` for a
- * field the record never carried, text from a hand-edited export, an object
- * from an older shape. `??` keeps a control's documented default only for
- * `null`/`undefined`, so any other unreadable bound reached
- * {@link normalizeRange}, which answers a bound that is not a number with
- * `min + 1`: a control documented as `0..100` painted a **0..1** range, so
- * every value past one pinned its thumb to the end of the track, and a stored
- * text `step` quietly turned a quantised control continuous.
- *
- * A bound that is not a number is **absence**, the rule `storedNumber`
- * follows, and an absent bound is the default the control documents — so a
- * restored slider paints the range its page states. A number a store wrote is
- * still a number, and what `NaN` or an infinity then mean is
- * {@link normalizeRange}'s decision.
- */
 export const storedRange = (
   bounds: StoredRange,
   defaults: ValueRange,
@@ -91,27 +48,9 @@ export const storedRange = (
     step: Option.getOrElse(storedNumber(bounds.step), () => defaults.step),
   });
 
-/**
- * Strip the binary-float tail a snapped step leaves behind.
- *
- * `0.1 + 0.1 + 0.1` is `0.30000000000000004`; a value control must report the
- * number a caller wrote, not the representation the machine chose.
- */
 const cleanStep = (value: number): number =>
   Number.parseFloat(value.toPrecision(15));
 
-/**
- * Clamp a value into the range and snap it to the step, measured from `min`.
- *
- * A value that is not a number reads as `min`: an unknown position must never
- * look like a deliberate one.
- *
- * **The ends are stops.** A step that does not divide the span must not make
- * the maximum unreachable: with `min: 0, max: 10, step: 3` the steps are
- * 0, 3, 6, 9 — and 10 is still a place the thumb can reach, because a
- * control whose maximum cannot be selected is a control with a lie in its
- * range. The same holds for the minimum, which the snap already keeps.
- */
 export const clampValue = (value: number, range: ValueRange): number => {
   const { min, max, step } = normalizeRange(range);
   if (!Number.isFinite(value)) return min;
@@ -122,7 +61,6 @@ export const clampValue = (value: number, range: ValueRange): number => {
   return Math.min(max, Math.max(min, cleanStep(snapped)));
 };
 
-/** Where a value sits on its track: 0 at `min`, 1 at `max`. */
 export const valueFraction = (value: number, range: ValueRange): number => {
   const { min, max } = normalizeRange(range);
   const span = max - min;
@@ -130,7 +68,6 @@ export const valueFraction = (value: number, range: ValueRange): number => {
   return (clampValue(value, range) - min) / span;
 };
 
-/** The value at a fraction of the track, clamped and snapped. */
 export const fractionValue = (fraction: number, range: ValueRange): number => {
   const { min, max } = normalizeRange(range);
   const bounded = Number.isFinite(fraction)
@@ -139,12 +76,6 @@ export const fractionValue = (fraction: number, range: ValueRange): number => {
   return clampValue(min + bounded * (max - min), range);
 };
 
-/**
- * One step of movement.
- *
- * A continuous range moves in hundredths of its span, so an arrow key is always
- * a visible move instead of a zero-width one.
- */
 export const valueStep = (range: ValueRange): number => {
   const { min, max, step } = normalizeRange(range);
   if (step > 0) return step;
@@ -152,15 +83,6 @@ export const valueStep = (range: ValueRange): number => {
   return span > 0 ? span / 100 : 1;
 };
 
-/**
- * `value` moved by `steps` steps (negative to decrease), clamped.
- *
- * Stops are counted, not added: the maximum is a stop even when it is not on a
- * step grid (`min: 0, max: 10, step: 3`), so adding `-step` to it would pass
- * over the neighbouring stop — 10 → 7 snaps to 6, and 9 could be reached with
- * an up move and never with a down one. Counting indices off the grid point at
- * or below the value makes the ladder 0, 3, 6, 9, 10 in both directions.
- */
 export const stepValue = (
   value: number,
   range: ValueRange,
@@ -173,8 +95,7 @@ export const stepValue = (
     return clampValue(base + steps * valueStep(normalized), normalized);
   const offset = (base - normalized.min) / normalized.step;
   const nearest = Math.round(offset);
-  // `base` is on the grid unless it sits on an off-grid maximum, and a float
-  // step leaves its offset a hair off the integer it means.
+
   const index =
     Math.abs(offset - nearest) < 1e-9
       ? nearest
@@ -194,13 +115,6 @@ const ARROW_STEPS: Readonly<Record<string, number>> = {
   up: 1,
 };
 
-/**
- * The keyboard contract of a value control.
- *
- * `None` means the key is not one of ours — a caller can tell that from "stay
- * where you are", which is what lets a slide inside a form leave an unrelated
- * key alone.
- */
 export const decideValueKey = (
   value: number,
   range: ValueRange,
@@ -221,13 +135,6 @@ export const decideValueKey = (
     : Option.some(stepValue(value, normalized, steps));
 };
 
-/**
- * The value a pointer at window x aims at.
- *
- * `inset` is half a thumb: the usable span runs from one thumb radius inside
- * each end to the other, so the thumb is centred exactly where the pointer is.
- * A pointer outside the box clamps to the nearest end.
- */
 export const pointerValue = (
   x: number,
   box: TrackBox,
@@ -239,14 +146,6 @@ export const pointerValue = (
   return fractionValue((x - box.x - inset) / span, range);
 };
 
-/**
- * The value a pointer at window y aims at on a vertical track.
- *
- * A vertical value runs **up**: the maximum is at the top of the usable span,
- * so the fraction is measured from the bottom. `inset` is half a thumb, exactly
- * as on the horizontal axis, so a thumb at either end is centred on the end
- * rather than hanging off it.
- */
 export const verticalPointerValue = (
   y: number,
   box: VerticalTrackBox,
@@ -258,7 +157,6 @@ export const verticalPointerValue = (
   return fractionValue(1 - (y - box.y - inset) / span, range);
 };
 
-/** Order and clamp a range slider's two ends. */
 export const normalizeSpan = (
   span: ValueSpan,
   range: ValueRange,
@@ -268,34 +166,12 @@ export const normalizeSpan = (
   return start <= end ? { start, end } : { start: end, end: start };
 };
 
-/**
- * Which end of a range slider a value is nearer to.
- *
- * A value outside the span always grabs the end it is beyond, even when the two
- * ends coincide: with both thumbs at 0, a click far to the right must move the
- * end it passed, not the start that cannot move any further right.
- */
 export const nearestEnd = (value: number, span: ValueSpan): "start" | "end" => {
   if (value <= span.start) return "start";
   if (value >= span.end) return "end";
   return value - span.start <= span.end - value ? "start" : "end";
 };
 
-/**
- * The span a drag from one point draws, with that point held.
- *
- * Two coincident ends are a legitimate range — a price filter opens with both
- * thumbs on the same number — and they are **one point**, so a press landing on
- * them cannot say which thumb it grabbed: every direction is a tie, and
- * {@link nearestEnd} answers "start", whose travel towards the end is exactly
- * the move it may not make (see {@link moveSpanEnd}). A pair that can only be
- * pulled one way is a range a reader cannot set, so a press on a coincident pair
- * is read as "a span around this point": the end the pointer travels towards
- * follows it and the other stays pinned, in either direction.
- *
- * Once the ends differ the usual grab applies, so this is only the ambiguous
- * gesture and never a second way to drag an ordinary thumb.
- */
 export const spanFrom = (
   point: number,
   value: number,
@@ -308,13 +184,6 @@ export const spanFrom = (
     : { start: moved, end: pinned };
 };
 
-/**
- * Move one end of a range slider without letting the ends cross.
- *
- * Crossing is the defect a two-thumb slider guards against: the thumbs would
- * swap roles and the value the caller reads back would be ordered differently
- * from the one it passed in.
- */
 export const moveSpanEnd = (
   span: ValueSpan,
   end: "start" | "end",

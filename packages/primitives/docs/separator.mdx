@@ -27,8 +27,3 @@ import { Separator, Stack, Text } from "@gpuixui/primitives";
 | `className` | `string` | — | a Tailwind class string, joined after the recipe so it wins conflicts |
 | `style` | `StyleDesc` | — | merged last |
 | `testId` | `string` | — | stable locator |
-
-## Notes
-- No dashed or dotted rule: it paints a **filled** 1px box, not a border.
-- `borderStyle: "dashed"` styles nothing; Compose a `Box` for a dashed divider.
-- No draggable splitter and no resize event.

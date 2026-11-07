@@ -1,9 +1,3 @@
-/**
- * A two-pane split: a sidebar and a document, resized from the divider or the
- * keyboard. The size is the caller's `useState`, so the re-clamp on a window or
- * sibling reflow is the app's, exactly as `dock-reflow` measured.
- */
-
 import { useState } from "react";
 import { ThemeProvider } from "@gpuixui/tokens/react";
 import { darkTheme } from "@gpuixui/tokens";
@@ -38,7 +32,6 @@ const Pane = ({ title, body }: { title: string; body: string }) => {
   );
 };
 
-/** A sidebar and a document behind one draggable divider. */
 export const SplitPaneExample = () => {
   const [size, setSize] = useState(240);
   return (

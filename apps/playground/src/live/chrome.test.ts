@@ -1,12 +1,3 @@
-/**
- * The window-chrome fixture: the flag, the option it asks `init` for, and the
- * readout the probe paints and reads back.
- *
- * The probe asserts a frame against the mode the window actually opened with, so
- * the three have to agree: a flag that decoded to the wrong mode, an option that
- * did not follow the mode, or a readout the probe could not decode would each
- * let a claim pass against the wrong window.
- */
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import {
@@ -68,8 +59,6 @@ describe("the insets readout", () => {
   });
 
   it("refuses text that is not four numbers", () => {
-    // A readout is unknown input: a wrapped or half-painted line is `None`, not
-    // a zero that would read as "no safe area".
     expect(Option.isNone(decodeEdges("28,0,0"))).toBe(true);
     expect(Option.isNone(decodeEdges(""))).toBe(true);
     expect(Option.isNone(decodeEdges("28,0,0,left"))).toBe(true);

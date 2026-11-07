@@ -1,18 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Sheet: the dialog-shaped side surface, under shadcn's names.
- *
- * A sheet and a drawer are the same surface here — a veil over the window, a
- * panel on one edge, a focus trap, Escape and an outside press — and `Drawer`
- * already owns that machinery for all four edges. `Sheet` re-exports it rather
- * than growing a second copy that would drift. What shadcn gives the drawer and
- * not the sheet is the drag gesture, which the runtime cannot paint: 0.11.0 has
- * no drag host and no `transform`, so neither surface swipes.
- *
- * The one difference a caller sees is the default: shadcn's sheet opens from
- * the right, and so does the surface it re-exports.
- */
-
 export {
   Drawer as Sheet,
   DrawerClose as SheetClose,
@@ -32,12 +18,6 @@ export type {
 
 import { drawerMeta } from "./drawer.js";
 
-/**
- * Inventory record, mirrored into `.agents/slop/COMPONENTS.md`.
- *
- * It carries the drawer's limitations — the surface is the same one — and adds
- * the fact a reader needs first: there is one implementation, not two.
- */
 export const sheetMeta = {
   name: "Sheet",
   tier: 2,

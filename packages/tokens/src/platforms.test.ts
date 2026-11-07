@@ -1,14 +1,3 @@
-/**
- * Guards the platform styles.
- *
- * The defect this closes: `platformTheme` changed only the type families and
- * the name, so the docs platform toggle re-typed the previews and nothing else
- * — a reader toggling macOS to Windows could not see a repaint, and the
- * mission's "pre-styled to look native on each platform" was only true of one
- * axis. The table is now families + radii + density + chrome roles, one theme
- * per platform, and every one of those themes is held to the contrast contract.
- */
-
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { invalidColorRoles } from "./color.js";
@@ -52,7 +41,6 @@ import {
 
 const platforms = platformNames;
 
-/** The three real platforms: `default` is the library's own identity. */
 const styled = platformNames.filter((name) => name !== "default");
 
 const themedPlatforms = styled.flatMap((platform) =>
@@ -63,6 +51,153 @@ const themedPlatforms = styled.flatMap((platform) =>
     base: themes[mode],
   })),
 );
+
+const frozenPalettes = {
+  darwin: {
+    light: {
+      background: "#F2F2F7",
+      card: "#FFFFFF",
+      popover: "#FFFFFF",
+      input: "#FFFFFF",
+      secondary: "#DEE3EA",
+      muted: "#E9E9EF",
+      skeleton: "#DCDFE7",
+      hover: "#E2E2E8",
+      active: "#DEDEE6",
+      border: "#D9D9E0",
+      borderStrong: "#67686D",
+      primary: "#0A6CD6",
+      primaryForeground: "#FFFFFF",
+      ring: "#0A6CD6",
+      accent: "#CADEF7",
+      accentForeground: "#08407A",
+      selected: "#D3E5FB",
+      selectedForeground: "#0B3D6B",
+      selection: "#0A6CD63D",
+    },
+    dark: {
+      background: "#1C1C1E",
+      card: "#26262A",
+      popover: "#2C2C30",
+      input: "#1F1F22",
+      secondary: "#3A3A3C",
+      muted: "#16161A",
+      skeleton: "#303036",
+      hover: "#35353B",
+      active: "#3A3A40",
+      border: "#3A3A40",
+      borderStrong: "#ACACB1",
+      primary: "#3B9DFF",
+      primaryForeground: "#11141A",
+      ring: "#4CA2FF",
+      accent: "#1A3D60",
+      accentForeground: "#B2D3F9",
+      selected: "#0C3864",
+      selectedForeground: "#C7E0FF",
+      placeholder: "#8A93A3",
+      selection: "#0A84FF4D",
+    },
+  },
+  linux: {
+    light: {
+      background: "#FAFAFA",
+      card: "#FFFFFF",
+      popover: "#FFFFFF",
+      input: "#FFFFFF",
+      muted: "#ECEBE9",
+      hover: "#E3E2DF",
+      active: "#DCDBD8",
+      border: "#D4D2CF",
+      borderStrong: "#6A6965",
+      primary: "#1A6DD3",
+      primaryForeground: "#FFFFFF",
+      ring: "#1A6DD3",
+      accent: "#D2E4F7",
+      accentForeground: "#12457F",
+      selected: "#CADDF3",
+      selectedForeground: "#0F3E74",
+      selection: "#3584E43D",
+    },
+    dark: {
+      background: "#242424",
+      card: "#303030",
+      popover: "#383838",
+      input: "#212121",
+      secondary: "#404040",
+      muted: "#2A2A2A",
+      skeleton: "#3E3E3E",
+      hover: "#343434",
+      active: "#3D3D3D",
+      border: "#464646",
+      borderStrong: "#B2B3B4",
+      primary: "#78AEED",
+      primaryForeground: "#11141A",
+      ring: "#78AEED",
+      accent: "#1B3E60",
+      accentForeground: "#BBD9F7",
+      selected: "#1F4363",
+      selectedForeground: "#CFE4FA",
+      placeholder: "#8A93A3",
+      selection: "#78AEED3D",
+    },
+  },
+  win32: {
+    light: {
+      background: "#F3F3F3",
+      card: "#FFFFFF",
+      popover: "#FFFFFF",
+      input: "#FFFFFF",
+      muted: "#EBEBEB",
+      hover: "#E0E0E0",
+      active: "#D6D6D6",
+      border: "#E5E5E5",
+      borderStrong: "#696A6B",
+      primary: "#0078D4",
+      primaryForeground: "#FFFFFF",
+      ring: "#0078D4",
+      accent: "#CFE6F9",
+      accentForeground: "#003E6F",
+      selected: "#C8E0F3",
+      selectedForeground: "#093A5C",
+      destructiveSoftForeground: "#5C1619",
+      selection: "#0067C03D",
+    },
+    dark: {
+      background: "#202020",
+      card: "#2C2C2C",
+      popover: "#2D2D2D",
+      input: "#1F1F1F",
+      secondary: "#3A3A3A",
+      muted: "#262626",
+      skeleton: "#323232",
+      hover: "#333333",
+      active: "#3A3A3A",
+      border: "#3D3D3D",
+      borderStrong: "#ACACAD",
+      primary: "#4CC2FF",
+      primaryForeground: "#11141A",
+      ring: "#4CC2FF",
+      accent: "#1B3A50",
+      accentForeground: "#C9E9FF",
+      selected: "#143E59",
+      selectedForeground: "#CDEBFF",
+      placeholder: "#8A93A3",
+      selection: "#60CDFF3D",
+    },
+  },
+} as const;
+
+describe("the platform palettes after the shadcn-authoring change", () => {
+  it("paints the same roles with the same values", () => {
+    for (const platform of ["darwin", "linux", "win32"] as const) {
+      for (const mode of ["light", "dark"] as const) {
+        expect(platformStyles[platform].colors[mode]).toEqual(
+          frozenPalettes[platform][mode],
+        );
+      }
+    }
+  });
+});
 
 describe("platformStyles", () => {
   it("describes every platform the library knows, and nothing else", () => {
@@ -106,16 +241,13 @@ describe("platformStyles", () => {
         platformStyles[platform].contrast,
       );
     });
-    // Every shipped palette is designed against the default floors; a base that
-    // needs more keeps its own colours, which the next suite proves.
+
     expect(
       platforms.map((platform) => platformStyles[platform].contrast),
     ).toEqual(platforms.map(() => "default"));
   });
 
   it("names no role as undefined", () => {
-    // A partial palette may omit a role, but an explicit `undefined` would
-    // overwrite the base value with nothing.
     const empty = platforms.flatMap((platform) =>
       themeModes.flatMap((mode) =>
         Object.entries(platformStyles[platform].colors[mode])
@@ -127,9 +259,6 @@ describe("platformStyles", () => {
   });
 
   it("holds Linux to Adwaita's corners, accent and surfaces", () => {
-    // GNOME's control corner is 6px and its window corner 12px
-    // (`$button_radius` and `$window_radius` in libadwaita 1.5); the 12px
-    // spacing grid and the 44px touch target are the library's own scale.
     const { radius, density, colors } = platformStyles.linux;
     expect(radius).toMatchObject({ sm: 4, md: 6, lg: 12, xl: 16 });
     expect(density).toBe("spacious");
@@ -140,8 +269,7 @@ describe("platformStyles", () => {
     });
     expect(spacing.lg).toBe(12);
     expect(targetSize.comfortable).toBe(44);
-    // Adwaita Blue 3 is the selection wash; Blue 4 is the action fill that
-    // carries white text and a full pointer step. Both are the GNOME palette.
+
     expect(colors.light.selection).toBe("#3584E43D");
     expect(colors.light.primary).toBe("#1A6DD3");
     expect(colors.light.background).toBe("#FAFAFA");
@@ -156,9 +284,6 @@ describe("platformStyles", () => {
   });
 
   it("says which platform names are operating systems", () => {
-    // `default` is the library's own identity, not a fourth operating system,
-    // and both pages called the toggle's four entries "four operating systems"
-    // — a reader planning a platform style was told the identity was an OS.
     expect(styled).toEqual(["darwin", "linux", "win32"]);
     const read = (path: string): string =>
       readFileSync(new URL(path, import.meta.url), "utf8")
@@ -195,14 +320,6 @@ describe("platformStyles", () => {
   });
 });
 
-/**
- * The Apple style's own numbers, from the Human Interface Guidelines.
- *
- * These are the rules a reader can check against Apple's pages rather than the
- * library's opinion: the corner scale, the control density, the system blue and
- * the switch's own paint. Each is pinned, so a repaint that drifts from the HIG
- * fails here instead of shipping as a look that only resembles macOS.
- */
 describe("the Apple platform style", () => {
   const darwin = platformStyles.darwin;
 
@@ -226,18 +343,11 @@ describe("the Apple platform style", () => {
   });
 
   it("paints the system blue, deepening light only where a label must read", () => {
-    // `#3B9DFF` is Apple's dark system blue one step lighter: the HIG's
-    // `#0A84FF` measured under the 3:1 a filled action's face needs on the four
-    // soft status tints it can stand in (2.32:1 on the warning tint), and this
-    // is the smallest step toward white that clears all four. It still carries
-    // its own dark label.
     expect(darwin.colors.dark.primary).toBe("#3B9DFF");
     expect(
       contrastRatio(darwin.colors.dark.primaryForeground, "#0A84FF"),
     ).toBeGreaterThanOrEqual(contrastFloors.secondary);
-    // `#007AFF` with a white label measures 4.02:1 — under the 4.5:1 the
-    // library's own contract puts under text on a coloured fill. The light fill
-    // is the measured step; the deviation is this test's premise, not a drift.
+
     expect(contrastRatio("#FFFFFF", "#007AFF")).toBeLessThan(
       contrastFloors.secondary,
     );
@@ -269,16 +379,14 @@ describe("the Apple platform style", () => {
       inset: 1,
       border: 0,
     });
-    // Apple's off track is a hair from this style's `muted` sidebar, so the
-    // shipped paint carries a rim; the rim is what a reader sees on that strip.
+
     expect(
       contrastRatio(
         darwin.switch?.light?.edge ?? "",
         darwin.colors.light.muted ?? "",
       ),
     ).toBeGreaterThanOrEqual(1.05);
-    // The resolved theme carries the mode's half, and a high-contrast base —
-    // which keeps its own palette — keeps the library's switch too.
+
     expect(platformTheme(lightTheme, "darwin").switch).toEqual(
       darwin.switch?.light,
     );
@@ -323,8 +431,6 @@ describe("the Apple platform style", () => {
     expect(platformStyles.default.switch).toBeUndefined();
   });
 
-  // Regression: the Windows off knob was white on a transparent track, so on a
-  // white card the switch read as an empty outline.
   it.each(["darwin", "linux", "win32"] as const)(
     "paints a %s switch that can be found in both modes",
     (platform) => {
@@ -336,8 +442,6 @@ describe("the Apple platform style", () => {
   );
 
   it("clears the switch when an authored look is applied over the platform", () => {
-    // Luna recolours the chrome; leaving Apple's green toggle in its window
-    // would paint a control the look does not ship.
     const luna = applyStyle(
       platformTheme(lightTheme, "darwin"),
       retroStyles.luna,
@@ -357,7 +461,7 @@ describe("platformTheme", () => {
     expect(themed.colors.primary).not.toBe(lightTheme.colors.primary);
     expect(themed.radius.md).not.toBe(lightTheme.radius.md);
     expect(themed.density.name).toBe(platformStyles.win32.density);
-    // Untouched groups stay the base theme's.
+
     expect(themed.spacing).toEqual(lightTheme.spacing);
     expect(themed.elevation).toEqual(lightTheme.elevation);
     expect(themed.borderWidth).toEqual(lightTheme.borderWidth);
@@ -366,7 +470,6 @@ describe("platformTheme", () => {
   });
 
   it("keeps every role a component reads", () => {
-    // A platform style is a partial: it may change a value, never drop a role.
     themedPlatforms.forEach(({ label, theme, base }) => {
       expect(Object.keys(theme.colors).toSorted(), label).toEqual(
         Object.keys(base.colors).toSorted(),
@@ -414,7 +517,7 @@ describe("platformTheme", () => {
     const themed = platformTheme(highContrastDarkTheme, "linux");
     expect(themed.mode).toBe("dark");
     expect(themed.contrast).toBe("high");
-    // Accessibility outranks the platform look: no platform colour applies.
+
     expect(themed.colors).toEqual(highContrastDarkTheme.colors);
     expect(themed.typography.mono).toBe("DejaVu Sans Mono");
     expect(themed.radius).toEqual(platformStyles.linux.radius);
@@ -464,21 +567,15 @@ describe("editing a platform style", () => {
   });
 
   it("keeps the edited theme readable in both modes", () => {
-    // A brand fill arrives with its own on-colour; the platform's base
-    // foreground was designed for a fill the house theme no longer paints.
     expect(invalidColorRoles(resolveHouseTheme("dark"))).toEqual([]);
     expect(contrastFailures(resolveHouseTheme("light"))).toEqual([]);
     expect(contrastFailures(resolveHouseTheme("dark"))).toEqual([]);
-    // The fill is also a mark a progress bar and a spinner dot paint, so the
-    // dark edition takes the light violet rather than one that carries white.
+
     expect(indicatorFailures(resolveHouseTheme("light"))).toEqual([]);
     expect(indicatorFailures(resolveHouseTheme("dark"))).toEqual([]);
   });
 
   it("finishes the accent family instead of leaving the platform's blue", () => {
-    // `accent`, `selected` and `selection` are surfaces derived from the accent,
-    // so a brand that owns `primary` and stops there paints its violet action in
-    // a blue popover and a blue-tinted selection.
     const light = resolveHouseTheme("light");
     const dark = resolveHouseTheme("dark");
     const platform = platformTheme(lightTheme, "win32");
@@ -489,7 +586,7 @@ describe("editing a platform style", () => {
     );
     expect(light.colors.selection).toBe("#6A45F03D");
     expect(dark.colors.selection).toBe("#8A6EFF3D");
-    // The accent surface is a surface its text is measured on.
+
     expect(
       contrastFailures(light).some(({ background }) => background === "accent"),
     ).toBe(false);
@@ -513,10 +610,6 @@ describe("editing a platform style", () => {
   });
 
   it("owns the platform's toggle instead of leaving Apple's green", () => {
-    // The switch is the one value a platform style declares that is not a role,
-    // and it is a value like any other: the documented brand replaces all three
-    // slots, and the report holds the paint it ships to the same floor Apple's
-    // own values are measured against.
     const house = resolveSwitchTheme("dark");
     const apple = platformTheme(darkTheme, "darwin");
     expect(house.switch).toEqual({
@@ -525,7 +618,7 @@ describe("editing a platform style", () => {
       knob: "#FFFFFF",
     });
     expect(house.switch).not.toEqual(apple.switch);
-    // Everything the brand did not name is still the platform's.
+
     expect(house.colors.primary).toBe(apple.colors.primary);
     expect(switchFailures(resolveSwitchTheme("light")).placements).toEqual([]);
     expect(switchFailures(house).placements).toEqual([]);
@@ -542,12 +635,6 @@ describe("currentPlatform", () => {
   });
 
   it("carries its own declaration for the one host field it reads", () => {
-    // The registry installs this file's source into a consumer, and that
-    // project's tsconfig only sets `jsxImportSource: "@gpuix/react"` — no
-    // `types: ["node"]`. Reading the global `process` through Node's ambient
-    // declaration would leave the consumer's first `tsc` failing on a file it
-    // did not write, so the module declares the one field it reads. Deleting
-    // that declaration returns the error, and this names the reason.
     const source = readFileSync(
       new URL("./platforms.ts", import.meta.url),
       "utf8",
@@ -559,26 +646,10 @@ describe("currentPlatform", () => {
   });
 });
 
-/**
- * Guards the prose the platform table's evidence lives in.
- *
- * The bug this holds: the docs, the package README and the design-system
- * inventory said the platform palette, radii and density were "pure values, not
- * yet painted in a window", and that the native gallery measured families only.
- * `theme-platform` then painted all three axes — 28 / 36 / 32px densities and a
- * platform `lg` radius — with the base radius as its negative control, so the
- * limitation was stale. A surface that returns to it, or stops naming the probe,
- * the measured control heights or that negative control, fails here.
- *
- * `node:fs` is deliberate, as in `fonts.test.ts` and `inventory.test.ts`: this
- * checks the repository's own Markdown, and the package keeps zero runtime
- * dependencies.
- */
 describe("platform documentation", () => {
   const read = (path: string): string =>
     readFileSync(new URL(path, import.meta.url), "utf8");
 
-  /** The inventory records the capability in one table row. */
   const inventoryRow = (): Record<string, string> => {
     const row = read("../../../.agents/slop/COMPONENTS.md")
       .split("\n")
@@ -593,7 +664,6 @@ describe("platform documentation", () => {
     ...inventoryRow(),
   });
 
-  /** The claim the probe replaced. */
   const retracted = [
     "not measured in this runtime",
     "not yet painted in a window",
@@ -629,9 +699,6 @@ describe("platform documentation", () => {
         ([, text]) =>
           !["28", "36", "32"].every((height) => text.includes(height)) ||
           !text.includes("expected 14, got 8") ||
-          // The HIG moved `lg` from 10 to 14; the first run's reading stays in
-          // the record, so a surface that drops it loses the measurement's
-          // history rather than tidying a stale number.
           !text.includes("expected 10, got 8"),
       )
       .map(([name]) => name);

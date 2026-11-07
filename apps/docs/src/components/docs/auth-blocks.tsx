@@ -1,16 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
 
-/**
- * The auth examples — browser reproductions and `@gpuixui/*` recipes for
- * sign-in, sign-up, password reset and one-time-code cards — and the full
- * sign-in page the Blocks lane ships.
- *
- * Each reproduction owns only the state a reader can watch: a submission walks
- * idle → loading → success or error, the code cells take focus and typing, and
- * the resend countdown ticks. The card reserves its status row, so a state
- * never moves the layout.
- */
-
 type Phase = "idle" | "loading" | "success" | "error";
 
 interface Feedback {
@@ -18,10 +7,8 @@ interface Feedback {
   readonly message: string;
 }
 
-/** How long a submission spends in the loading state before it resolves. */
 const REVEAL_MS = 700;
 
-/** The code the preview accepts, so the error state is reachable too. */
 const PREVIEW_CODE = "123456";
 
 const RESEND_SECONDS = 30;
@@ -105,7 +92,6 @@ const AuthField = ({
   );
 };
 
-/** The site mark, on its own tile: the card opens with a mark, not a favicon. */
 const AuthMark = () => (
   <span aria-hidden="true" className="gx-auth-mark">
     <span className="gx-mark gx-auth-mark-glyph" />
@@ -494,10 +480,6 @@ export const OtpRender = () => {
   );
 };
 
-/**
- * The demo credentials the sign-in page accepts, printed in its status row at
- * rest so a reader can reach the error and success states.
- */
 const PAGE_EMAIL = "ada@example.com";
 const PAGE_PASSWORD = "analytical";
 

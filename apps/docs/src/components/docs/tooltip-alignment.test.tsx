@@ -10,16 +10,6 @@ import {
   tooltipLayout,
 } from "./tooltip-alignment";
 
-/**
- * The tooltip's three alignments, held to the trigger and to the stage.
- *
- * The bug these guard: the page showed one tip with the runtime's `center`
- * and no way to ask for another relation, so a reader could not see what
- * `align="start"` does. Each case below holds the relation its name promises
- * against the trigger's own box, and the markup case holds the control above
- * the stage and outside the tip.
- */
-
 const trigger = {
   x: (TOOLTIP_FRAME_WIDTH - TOOLTIP_TRIGGER_WIDTH) / 2,
   width: TOOLTIP_TRIGGER_WIDTH,

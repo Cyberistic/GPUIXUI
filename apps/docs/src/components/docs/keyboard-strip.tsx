@@ -3,21 +3,12 @@ import {
   type KeyboardNote,
 } from "../../lib/keyboard-contracts";
 
-/**
- * The keys a component handles, printed on its page.
- *
- * `.agents/slop/MISSION.md` asks every component page for its keyboard notes; the pages are
- * Markdown the site mounts or MDX it writes, so the strip is the site's, read
- * from the model whose guard holds it to the component's own modules. It stays
- * silent on a page whose author wrote its own `## Keyboard` section and on a
- * page no contract names — never a guess in either case.
- */
 export function KeyboardStrip({
   url,
   sections,
 }: {
   readonly url: string;
-  /** The page's table of contents, so a written section wins. */
+
   readonly sections: readonly string[];
 }) {
   const contract = keyboardContractFor(url);

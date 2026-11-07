@@ -105,8 +105,3 @@ frozen pane, the data pane and the empty message all failed to paint, and
 `rows={undefined}` threw the same way. `src/behaviour/stored-rows.test.tsx`
 mounts both absences and reads the message out of the renderer, with a readable
 list as its own control.
-
-## Notes
-- No sticky pinning: the frozen column is a second scroller.
-- Both panes paint every row; this is not the virtualized composition.
-- One frozen column; several become one wider frozen pane.

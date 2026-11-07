@@ -18,7 +18,6 @@ import { KeyboardStrip } from "@/components/docs/keyboard-strip";
 import { MountedPreview } from "@/components/docs/mounted-preview";
 import { PackageSource } from "@/components/docs/package-source";
 import { mainContentId } from "@/components/skip-link";
-import { RelatedStrip } from "@/components/docs/related-strip";
 import {
   ContentMounted,
   PlatformProvider,
@@ -36,18 +35,8 @@ import { descriptionRuns } from "./page-description";
 import { docsByOrigin, sectionPages, sourceByOrigin } from "./package-docs";
 import { docs, source } from "./source";
 
-/**
- * Which collection a page's Markdown lives in.
- *
- * `site` is this app's own page; the others are the page the package ships with
- * in `packages/<pkg>/docs`. A curated site page wins its URL, so the site can go
- * deeper on the components it documents first. A collection route with neither
- * a site page nor a package index answers with the page `collection-index.ts`
- * generates, which carries no Markdown and so never reaches this frame.
- */
 type PageOrigin = "site" | PackageOrigin;
 
-/** The sidebar tree, with each package's pages filling its section. */
 const pageTree = async () =>
   source.serializePageTree(
     packageSections.reduce(
@@ -72,8 +61,6 @@ export const loadDocsPage = createServerFn({ method: "GET" })
       };
     }
 
-    // A package collection is mounted under its own route, so the remaining
-    // slugs are relative to that prefix.
     const found = collectionAt(slugs);
     if (!found) throw notFound();
     const { collection, rest } = found;
@@ -90,8 +77,6 @@ export const loadDocsPage = createServerFn({ method: "GET" })
       };
     }
 
-    // The collection's own route: the package may write no landing page, so the
-    // site generates one from the pages it mounts rather than answering 404.
     if (rest.length === 0) {
       const index = collectionIndexOf(
         collection,
@@ -118,11 +103,6 @@ export const loadDocsPage = createServerFn({ method: "GET" })
 
 type DocsPageData = Awaited<ReturnType<typeof loadDocsPage>>;
 
-/**
- * A page's summary line: its words, with the one inline link a description may
- * carry painted as the link it is. A description is frontmatter, so the text is
- * authored as Markdown; the frame is where it becomes what a reader clicks.
- */
 const Description = ({ text }: { readonly text: string }) =>
   text === "" ? null : (
     <DocsDescription>
@@ -142,13 +122,13 @@ const Description = ({ text }: { readonly text: string }) =>
     </DocsDescription>
   );
 
-/** The page frame both collections render into. */
 function PageFrame({
   title,
   description,
   toc,
   path,
   origin,
+  full = false,
   children,
 }: {
   readonly title: ReactNode;
@@ -156,10 +136,12 @@ function PageFrame({
   readonly toc: ComponentProps<typeof DocsPage>["toc"];
   readonly path: string;
   readonly origin: PageOrigin;
+
+  readonly full?: boolean;
   readonly children: ReactNode;
 }) {
   return (
-    <DocsPage id={mainContentId} tabIndex={-1} toc={toc}>
+    <DocsPage full={full} id={mainContentId} tabIndex={-1} toc={toc}>
       <div className="flex items-start justify-between gap-4">
         <DocsTitle>{title}</DocsTitle>
         <CopyPage origin={origin} path={path} />
@@ -173,7 +155,6 @@ function PageFrame({
   );
 }
 
-/** A page from this site's own collection. */
 function SiteContent({ path, url }: { path: string; url: string }) {
   const page = docs.getPage(path);
   if (!page) throw new Error(`unknown page: ${path}`);
@@ -184,6 +165,7 @@ function SiteContent({ path, url }: { path: string; url: string }) {
   return (
     <PageFrame
       description={page.description}
+      full={url.startsWith("/blocks/") && url !== "/blocks/sidebar"}
       origin="site"
       path={path}
       title={page.title}
@@ -191,17 +173,10 @@ function SiteContent({ path, url }: { path: string; url: string }) {
     >
       <MDX components={mdxComponents} />
       <KeyboardStrip sections={toc.map((entry) => entry.url)} url={url} />
-      <RelatedStrip sections={toc.map((entry) => entry.url)} url={url} />
     </PageFrame>
   );
 }
 
-/**
- * A page from a package's own collection.
- *
- * The page is the package's own, so it opens with the note that a native
- * preview is not available here and where to run the real component.
- */
 function PackageContent({
   origin,
   path,
@@ -229,12 +204,10 @@ function PackageContent({
       <MDX components={mdxComponents} />
       <KeyboardStrip sections={toc.map((entry) => entry.url)} url={url} />
       <PackageSource url={url} />
-      <RelatedStrip sections={toc.map((entry) => entry.url)} url={url} />
     </PageFrame>
   );
 }
 
-/** Renders one page of either collection inside the shared docs layout. */
 export function DocsView({ data }: { data: DocsPageData }) {
   const { pageTree: tree } = useFumadocsLoader(data);
 
@@ -257,8 +230,7 @@ export function DocsView({ data }: { data: DocsPageData }) {
               url={data.url}
             />
           )}
-          {/* Reports the content above has mounted, so the switch in the
-              sidebar can enable the choices that repaint it. */}
+          {}
           <ContentMounted />
         </Suspense>
       </DocsLayout>

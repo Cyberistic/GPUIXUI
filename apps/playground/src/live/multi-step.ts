@@ -1,23 +1,7 @@
-/**
- * The wizard `multi-step-form-lifecycle` drives.
- *
- * Tier 5's *multi-step forms* row is marked `?` in the inventory: a wizard is
- * composition over the shipped `Form`, `Stepper`, `Field` and `Checkbox`, and
- * nothing had measured the rules a caller writes around them. This fixture is
- * the caller's half — the step gate, the app-owned draft and the schema that
- * decodes the record — so the probe's checks and the README table are read off
- * one source.
- *
- * Two gates are deliberate and different: a step's own fields are checked
- * before the wizard moves, while the whole record (including the review step's
- * acceptance) is decoded by `Form` on submit. The probe measures both, so a
- * wizard whose step gate is mistaken for the form's validation fails.
- */
 import { Match } from "effect";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
-/** The ids the probe's view and steps share. */
 export const MULTI_STEP_IDS = {
   probe: "multi-step-probe",
   name: "multi-step-name",
@@ -33,33 +17,25 @@ export const MULTI_STEP_IDS = {
   readout: "multi-step-readout",
 } as const;
 
-/** The three steps, in the order the stepper paints them. */
 export const MULTI_STEP_STEPS = ["Name", "Port", "Review"] as const;
 
-/** A step's 1-based number. */
 export type MultiStepStep = 1 | 2 | 3;
 
-/** The app-owned draft: never decoded until the form submits. */
 export interface MultiStepDraft {
   readonly name: string;
   readonly port: string;
 }
 
-/** The draft a mounted wizard starts with. */
 export const emptyMultiStepDraft: MultiStepDraft = { name: "", port: "" };
 
-/** The message a workspace name earns when it is not usable. */
 export const MULTI_STEP_NAME_MESSAGE =
   "Use 3 to 24 lowercase letters, digits or hyphens";
 
-/** The message a port earns when it is outside the range. */
 export const MULTI_STEP_PORT_MESSAGE = "Enter a port from 1024 to 65535";
 
-/** The message the review step earns while the checklist is unaccepted. */
 export const MULTI_STEP_TERMS_MESSAGE =
   "Accept the checklist before creating the workspace";
 
-/** A workspace name: lowercase, 3–24 characters, no leading or trailing dash. */
 export const WorkspaceName = Schema.String.check(
   Schema.makeFilter(
     (value: string) => /^[a-z0-9][a-z0-9-]{1,22}[a-z0-9]$/.test(value),
@@ -73,7 +49,6 @@ export const WorkspaceName = Schema.String.check(
   ),
 );
 
-/** A decimal TCP port in the unprivileged range. */
 export const Port = Schema.String.check(
   Schema.makeFilter(
     (value: string) => {
@@ -89,7 +64,6 @@ export const Port = Schema.String.check(
   ),
 );
 
-/** The accepted checklist item the review step requires. */
 export const Accepted = Schema.Boolean.check(
   Schema.makeFilter((value: boolean) => value, {
     identifier: "ChecklistAcceptedCheck",
@@ -99,7 +73,6 @@ export const Accepted = Schema.Boolean.check(
   }),
 );
 
-/** The record the form decodes: the wizard's draft plus its acceptance. */
 export class WorkspaceSetup extends Schema.Class<WorkspaceSetup>(
   "WorkspaceSetup",
 )({
@@ -108,7 +81,6 @@ export class WorkspaceSetup extends Schema.Class<WorkspaceSetup>(
   accepted: Accepted,
 }) {}
 
-/** Whether a value satisfies one named schema, read through that schema. */
 const satisfies =
   (schema: Schema.Constraint) =>
   (value: string): boolean =>
@@ -117,12 +89,6 @@ const satisfies =
 const nameUsable = satisfies(WorkspaceName);
 const portUsable = satisfies(Port);
 
-/**
- * The message the current step refuses to move for, or `None` when it may.
- *
- * The review step gates nothing itself: its acceptance is part of the record
- * only the form decodes, which is the distinction the probe's last check reads.
- */
 export const stepError = (
   step: MultiStepStep,
   draft: MultiStepDraft,
@@ -142,7 +108,6 @@ export const stepError = (
     Match.exhaustive,
   );
 
-/** The next step's number; the last step stays put. */
 export const nextStep = (step: MultiStepStep): MultiStepStep =>
   Match.value(step).pipe(
     Match.when(1, () => 2 as const),
@@ -151,7 +116,6 @@ export const nextStep = (step: MultiStepStep): MultiStepStep =>
     Match.exhaustive,
   );
 
-/** The previous step's number; the first step stays put. */
 export const previousStep = (step: MultiStepStep): MultiStepStep =>
   Match.value(step).pipe(
     Match.when(1, () => 1 as const),
@@ -160,7 +124,6 @@ export const previousStep = (step: MultiStepStep): MultiStepStep =>
     Match.exhaustive,
   );
 
-/** The `key=value` line every check reads the wizard's state from. */
 export const multiStepReadout = (
   step: MultiStepStep,
   draft: MultiStepDraft,
@@ -171,7 +134,6 @@ export const multiStepReadout = (
     draft.port === "" ? "none" : draft.port
   } accepted=${accepted} submits=${submits}`;
 
-/** The values the form's `onSubmit` received, decoded or not. */
 export const appliedReadout = (
   applied: Option.Option<WorkspaceSetup>,
 ): string =>

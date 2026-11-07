@@ -1,10 +1,3 @@
-/**
- * Browser preview for the Shine button page.
- *
- * The native action crosses a soft sheen over the label while the pointer is
- * over it; the preview sweeps the same sheen on entry.
- */
-
 export function ShineButtonDemo() {
   return (
     <div className="gx-shine">

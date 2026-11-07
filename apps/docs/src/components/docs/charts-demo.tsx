@@ -29,76 +29,43 @@ import {
 } from "@gpuixui/data/chart/geometry";
 import { easeOutCubic, interpolateValues } from "@gpuixui/data/chart/animation";
 import { ChartGallery } from "./chart-gallery";
-import { smoothPath } from "./chart-smooth";
 import { seriesColors, type Theme } from "@gpuixui/tokens";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { useEffect, useState, type JSX, type ReactNode } from "react";
 import { usePlatform } from "./platform-toggle";
 
-/**
- * Browser preview for the Charts page.
- *
- * The shipped charts are GPUix trees painted as one `<svg>` mask per series, so
- * the page cannot mount them and this drawing is a labelled approximation. The
- * geometry is not approximated: `@gpuixui/data`'s `chartBox`, `chartScale`,
- * `axisTicks`, `groupedBarMarks` and `linePath` place every shape, and the
- * swatches are the theme's own `seriesColors` order, so a series' colour and
- * the bar, path and tick it paints cannot drift from the component.
- *
- * The frame mirrors `BarChart`/`LineChart`: the axis column, the plot, the
- * category slots and the legend, with one layer per series and no grid the
- * component does not paint.
- */
-
-/** The gallery's categorical palette, the theme's own order. */
 const galleryColour = (theme: Theme, index: number): string =>
   seriesColour(seriesColors(theme), index);
 
-/** The quarters both series are read across. */
 export const CHART_LABELS: ReadonlyArray<string> = ["Q1", "Q2", "Q3", "Q4"];
 
-/** The two series the page's own usage snippet draws. */
 export const CHART_SERIES: ReadonlyArray<ChartSeries> = [
   { key: "revenue", label: "Revenue", values: [32, 48, 41, 60] },
   { key: "cost", label: "Cost", values: [18, 22, 26, 24] },
 ];
 
-/** The plot's box: the sides the caller names, laid out by the package. */
 export const CHART_WIDTH = 360;
 export const CHART_HEIGHT = 160;
 
-/** The plot box the package lays out for these sides. */
 export const chartPlot: ChartBox = chartBox(CHART_WIDTH, CHART_HEIGHT, {
   width: 320,
   height: 160,
 });
 
-/** The ceiling every bar and path is read against. */
 export const chartCeiling = chartScale(CHART_SERIES, CHART_LABELS.length);
 
-/** The axis steps, from zero to the ceiling. */
 export const chartTicks = axisTicks(chartCeiling, 4);
 
-/** The palette the drawing paints: the theme's categorical order. */
 export const chartPalette = (theme: Theme): ReadonlyArray<string> =>
   seriesColors(theme);
 
-/** Every series' grouped bars, one list per series, in paint order. */
 export const chartBarGroups = (): ReadonlyArray<ReadonlyArray<ChartMark>> =>
   groupedBarMarks(CHART_SERIES, chartPlot, chartCeiling, CHART_LABELS.length);
 
-/** One series' line through its category centres. */
 export const seriesLine = (series: ChartSeries): Option.Option<string> =>
   linePath(series.values, chartPlot, chartCeiling, CHART_LABELS.length);
 
-/**
- * The smooth line and the region under it, for one series.
- *
- * The demo draws the same shape the shipped `AreaChart` does: a monotone curve
- * through the points and a fill that fades from the line to the axis, so the
- * browser picture and the component agree.
- */
 export const seriesArea = (
   series: ChartSeries,
 ): Option.Option<{ readonly line: string; readonly area: string }> => {
@@ -112,7 +79,7 @@ export const seriesArea = (
         : chartPlot.height - (value / chartCeiling) * chartPlot.height,
   }));
   if (points.length === 0) return Option.none();
-  const line = smoothPath(points);
+  const line = Option.getOrElse(curvePath(points, "smooth"), () => "");
   const first = points[0];
   const last = points[points.length - 1];
   if (first === undefined || last === undefined) return Option.none();
@@ -122,7 +89,6 @@ export const seriesArea = (
   });
 };
 
-/** How a reader chose to read the same series. */
 export type ChartMode =
   | "bars"
   | "lines"
@@ -153,7 +119,6 @@ export type ChartMode =
   | "radial"
   | "radial-rounded";
 
-/** The geometry the drawing paints, as data. */
 export interface ChartDrawing {
   readonly mode: ChartMode;
   readonly palette: ReadonlyArray<string>;
@@ -161,7 +126,6 @@ export interface ChartDrawing {
   readonly lines: ReadonlyArray<Option.Option<string>>;
 }
 
-/** Everything the drawing paints, resolved from the theme and the mode. */
 export const chartDrawing = (theme: Theme, mode: ChartMode): ChartDrawing => ({
   mode,
   palette: chartPalette(theme),
@@ -169,7 +133,6 @@ export const chartDrawing = (theme: Theme, mode: ChartMode): ChartDrawing => ({
   lines: Arr.map(CHART_SERIES, seriesLine),
 });
 
-/** The drawing with its markup; the wrapper below adds the mode control. */
 export function ChartDemoBody({
   theme,
   mode,
@@ -300,14 +263,11 @@ export function ChartDemoBody({
   );
 }
 
-/** The box a type scene is drawn in. */
 const SCENE_WIDTH = 360;
 const SCENE_HEIGHT = 180;
 
-/** One of the types the scene draws. */
 type SceneMode = Exclude<ChartMode, "bars" | "lines">;
 
-/** One small labelled drawing inside a variants scene. */
 const Mini = ({
   caption,
   children,
@@ -321,12 +281,10 @@ const Mini = ({
   </figure>
 );
 
-/** A variants scene: a row of small labelled drawings. */
 const Variants = ({ children }: { readonly children: ReactNode }) => (
   <div className="gx-dchart-variants">{children}</div>
 );
 
-/** Per-point readouts: the point under the pointer names its own datum. */
 function PointTooltipScene({ theme }: { readonly theme: Theme }) {
   const [hovered, setHovered] = useState<number | undefined>(undefined);
   const box = boxOf(SCENE_WIDTH, SCENE_HEIGHT, {
@@ -396,7 +354,6 @@ function PointTooltipScene({ theme }: { readonly theme: Theme }) {
   );
 }
 
-/** A continuous zoom: drag to pan, wheel to zoom, reset to see everything. */
 function ZoomScene({ theme }: { readonly theme: Theme }) {
   const [view, setView] = useState<readonly [number, number]>([0, 4]);
   const [drag, setDrag] = useState<
@@ -486,7 +443,6 @@ function ZoomScene({ theme }: { readonly theme: Theme }) {
   );
 }
 
-/** A brushed window: drag across the strip, and the plot shows what is inside. */
 function BrushScene({ theme }: { readonly theme: Theme }) {
   const [window, setWindow] = useState<readonly [number, number]>([0, 4]);
   const [dragStart, setDragStart] = useState<number | undefined>(undefined);
@@ -566,13 +522,11 @@ function BrushScene({ theme }: { readonly theme: Theme }) {
   );
 }
 
-/** The two data sets the animated scene moves between. */
 const ANIMATED_SETS: ReadonlyArray<ReadonlyArray<number>> = [
   [32, 48, 41, 60],
   [60, 38, 54, 44],
 ];
 
-/** A data change tweened in the browser, the way the native chart runs it. */
 function AnimatedScene({ theme }: { readonly theme: Theme }) {
   const [values, setValues] = useState(ANIMATED_SETS[0] ?? []);
   const [next, setNext] = useState(0);
@@ -586,7 +540,6 @@ function AnimatedScene({ theme }: { readonly theme: Theme }) {
       if (t >= 1) clearInterval(handle);
     }, 16);
     return () => clearInterval(handle);
-    // The run is keyed by the chosen set: `values` is the frame it started on.
   }, [next]);
   const slot = SCENE_WIDTH / Math.max(1, values.length);
   return (
@@ -630,7 +583,6 @@ function AnimatedScene({ theme }: { readonly theme: Theme }) {
   );
 }
 
-/** A hovered chart: a guide, a dot and a readout that follow the pointer. */
 function InteractiveScene({
   kind,
   theme,
@@ -732,7 +684,6 @@ function InteractiveScene({
   );
 }
 
-/** A type's scene: one labelled drawing, in the theme's own palette. */
 function ChartTypeScene({
   mode,
   theme,
@@ -877,8 +828,7 @@ function ChartTypeScene({
         viewBox="0 0 160 160"
         width={160}
       >
-        {/* The web is the series' own colour at a whisper, so the grid belongs
-            to the plot instead of sitting on it as grey scaffolding. */}
+        {}
         {[...radarGrid(4, 5, square, 100), ...radarSpokes(5, square, 100)].map(
           (d, index) => (
             <path
@@ -983,8 +933,6 @@ function ChartTypeScene({
           Option.match(point, {
             onNone: () => null,
             onSome: (at) => (
-              // A slice is a palette fill in either mode, so its label is a
-              // constant dark ink rather than the surface's.
               <text
                 fill="#0B0D12"
                 fontSize={10}
@@ -1180,8 +1128,7 @@ function ChartTypeScene({
         viewBox="0 0 160 160"
         width={160}
       >
-        {/* The web is the series' own colour at a whisper, so the grid belongs
-            to the plot instead of sitting on it as grey scaffolding. */}
+        {}
         {[...radarGrid(4, 5, square, 100), ...radarSpokes(5, square, 100)].map(
           (d, index) => (
             <path
@@ -1703,7 +1650,6 @@ function ChartTypeScene({
   );
 }
 
-/** The page's preview: one series list read as bars or as a line. */
 export function ChartDemo() {
   const { platform, look, theme } = usePlatform();
   const [mode, setMode] = useState<ChartMode>("bars");
@@ -1765,7 +1711,6 @@ export function ChartDemo() {
   );
 }
 
-/** The page's copyable native usage, shown in the preview's Code tab. */
 export const chartsDemoSource = `import {
   AreaChart,
   BarChart,

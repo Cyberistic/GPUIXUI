@@ -1,8 +1,12 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "plugins": ["typescript", "unicorn", "oxc"],
+  "jsPlugins": ["./scripts/oxlint-comments.mjs"],
   "categories": {
     "correctness": "error"
+  },
+  "rules": {
+    "comments/no-long-comments": "error"
   },
   "env": {
     "builtin": true

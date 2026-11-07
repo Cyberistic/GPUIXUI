@@ -1,26 +1,3 @@
-/**
- * Prove the docs chrome's own theme switch repaints the site and nothing else.
- *
- * The site has two palettes that must never be confused: the docs chrome reads
- * its own `:root`/`.dark` values from `app.css`, while a component preview
- * paints the library's theme and follows only the switch's palette and
- * platform axes.
- * `docs-theme.test.ts` measures the chrome's pairs and `palette-switch-probe.ts`
- * the preview axes, but the **press** is React state in next-themes: no static
- * read proves that pressing the toggle moves `<html>` from one scheme to the
- * other, nor that every preview stays exactly where the reader put it.
- *
- * This probe presses `[data-theme-toggle]` on a curated component page, reads the
- * scheme, the chrome's `--background` (held to the sheet that declares it), the
- * remembered choice and every `.gx-demo` surface's palette, platform and fill
- * (each fill held to the library's own value for the palette it reports). It then
- * presses again and requires the way back.
- *
- * Run (a dev or preview server is already up):
- * `nub apps/docs/scripts/docs-theme-probe.ts`
- * `--url <url>`, `--timeout <ms>` (hydration budget), `--chrome <path>`.
- */
-
 import {
   platformNames,
   platformTheme,
@@ -32,26 +9,17 @@ import { readFileSync } from "node:fs";
 import { findChrome, openChrome } from "./chrome-session.ts";
 import { firstReady } from "./react-ready.ts";
 
-/** The page a preview server serves, and the toggle every docs page carries. */
 export const defaultUrl = "http://localhost:4175/components/button";
 
-/** The accessible name Fumadocs gives the docs theme toggle. */
 export const toggleLabel = "Toggle Theme";
 
-/** The docs stylesheet, read once at module load. */
 const stylesheet = readFileSync(
   new URL("../src/styles/app.css", import.meta.url),
   "utf8",
 );
 
-/** A scheme the docs chrome declares. */
 export type Scheme = "light" | "dark";
 
-/**
- * The `--background` the docs palette declares for `scheme`, read from the
- * sheet itself so a palette edit reaches the probe instead of a stale hex.
- * `undefined` when the sheet declares none, which the probe reports.
- */
 export const chromeBackground = (scheme: Scheme): string | undefined => {
   const start = stylesheet.indexOf(scheme === "dark" ? ".dark {" : ":root {");
   if (start === -1) return undefined;
@@ -60,17 +28,14 @@ export const chromeBackground = (scheme: Scheme): string | undefined => {
   return value?.trim();
 };
 
-/** What one preview surface reports: the palette and platform it shows. */
 export interface Preview {
-  /** The library's palette: `light` or `dark`. */
   readonly mode: string;
-  /** The platform style the preview resolves. */
+
   readonly platform: string;
-  /** The page fill the preview painted. */
+
   readonly background: string;
 }
 
-/** What the chrome and every preview report at one instant. */
 export interface Readout {
   readonly scheme: Scheme;
   readonly chrome: string;
@@ -78,7 +43,6 @@ export interface Readout {
   readonly previews: ReadonlyArray<Preview>;
 }
 
-/** Read one surface's `mode:platform:fill`; `undefined` when it is not one. */
 export const parsePreview = (text: string): Preview | undefined => {
   const [mode, platform, background] = text.split(":");
   if (mode === undefined || platform === undefined || background === undefined)
@@ -86,7 +50,6 @@ export const parsePreview = (text: string): Preview | undefined => {
   return { mode, platform, background };
 };
 
-/** Read the probe's one-line readout; `undefined` when it is not one. */
 export const parseReadout = (text: string): Readout | undefined => {
   const [scheme, chrome, stored, previews] = text.split("|");
   if (scheme !== "light" && scheme !== "dark") return undefined;
@@ -101,21 +64,9 @@ export const parseReadout = (text: string): Readout | undefined => {
   return { scheme, chrome, stored, previews: parsed };
 };
 
-/** A platform the library names, or `undefined` for a value it does not. */
 export const platformOf = (value: string): PlatformName | undefined =>
   platformNames.find((name) => name === value);
 
-/**
- * Whether two CSS colours are the same paint.
- *
- * A production build minifies the stylesheet, so the six-digit fill this file
- * reads from the source arrives in the page as its three-digit form; comparing
- * the strings failed a correct palette the moment the probe was pointed at a
- * built server. The comparison is the paint, not the spelling: hex is
- * case-folded and a three-digit form is expanded, and a value that is not a
- * colour compares by its trimmed text so an unexpected function or keyword
- * still reports.
- */
 export const samePaint = (
   painted: string,
   declared: string | undefined,
@@ -131,13 +82,11 @@ export const samePaint = (
   return canonical(painted) === canonical(declared);
 };
 
-/** The page fill the library's own palette paints on a platform. */
 export const expectedBackground = (
   mode: ThemeMode,
   platform: PlatformName,
 ): string => platformTheme(themes[mode], platform).colors.background;
 
-/** How a set of previews reads, for a failure message. */
 export const describePreviews = (previews: ReadonlyArray<Preview>): string =>
   previews
     .map(
@@ -145,13 +94,6 @@ export const describePreviews = (previews: ReadonlyArray<Preview>): string =>
     )
     .join(",");
 
-/**
- * Whether two reads describe the same previews.
- *
- * The previews are objects, so `join(",")` on them reads `[object Object]` for
- * every entry — two different sets compare equal that way, and the check that
- * a preview stayed put would pass on any page.
- */
 export const samePreviews = (
   left: ReadonlyArray<Preview>,
   right: ReadonlyArray<Preview>,
@@ -164,7 +106,6 @@ export const samePreviews = (
       preview.background === right[index]?.background,
   );
 
-/** The chrome and every surface's state, as one line `parseReadout` reads. */
 const readPage = `(() => {
   const root = document.documentElement;
   const surfaces = [...document.querySelectorAll(".gx-demo[data-mode]")];
@@ -184,7 +125,6 @@ const readPage = `(() => {
   ].join("|");
 })()`;
 
-/** Whether the toggle carries React's own handler, so a press does something. */
 const ready = `(() => {
   if (${firstReady("[data-theme-toggle]")} === undefined) {
     return document.querySelector('[data-theme-toggle]') === null
@@ -194,7 +134,6 @@ const ready = `(() => {
   return "ready";
 })()`;
 
-/** Press the toggle the way a reader does. */
 const press = `(() => {
   const button = ${firstReady("[data-theme-toggle]")};
   if (button === undefined) return "no-toggle";
@@ -202,7 +141,6 @@ const press = `(() => {
   return "pressed";
 })()`;
 
-/** Poll `read` until `accept` holds, or the budget runs out. */
 const until = async (
   read: () => Promise<string>,
   accept: (value: string) => boolean,
@@ -217,15 +155,6 @@ const until = async (
   return accept(value) ? value : undefined;
 };
 
-/**
- * Poll `read` until two consecutive reads agree.
- *
- * The chrome's scheme flips in next-themes' own effect, while a preview that
- * followed it would re-render a frame later, so a read taken the instant the
- * scheme changed would compare the previews against a page that has not
- * finished moving. A stable pair of reads is what makes "every preview stayed
- * put" a statement about the settled page.
- */
 const settled = async (
   read: () => Promise<string>,
   timeout: number,
@@ -241,7 +170,6 @@ const settled = async (
   return undefined;
 };
 
-/** Run the project. Returns the process exit code. */
 export const main = async (argv: ReadonlyArray<string>): Promise<number> => {
   const argument = (flag: string): string | undefined => {
     const index = argv.indexOf(flag);
@@ -262,7 +190,6 @@ export const main = async (argv: ReadonlyArray<string>): Promise<number> => {
   const session = await openChrome(chrome, url, 1280, 900);
   const failures: Array<string> = [];
 
-  /** The fill the library paints for a preview, and the reason it is wrong. */
   const fillFailure = async (preview: Preview): Promise<string | undefined> => {
     const platform = platformOf(preview.platform);
     if (platform === undefined) {

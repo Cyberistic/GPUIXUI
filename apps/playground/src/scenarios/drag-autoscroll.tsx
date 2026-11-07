@@ -1,23 +1,3 @@
-/**
- * `drag-autoscroll` — scrolling a rail while a drag rests at its edge.
- *
- * Dragging a file or a row to the bottom of a workspace pane is how a tree
- * grows, and no scenario measured what the runtime does when the pointer sits
- * inside the edge band. Two identical 320×200 rails hold 24 rows of 40px:
- *
- * - the **plain** rail only records the drag, and its offset stays `0` — the
- *   runtime does not auto-scroll a scroller because a pointer rests near its
- *   edge (nor does it need to: the wheel, the scrollbar and `scrollTo` are the
- *   three ways an offset moves);
- * - the **driven** rail runs the alternative a component must implement: each
- *   `onMouseMove` whose window `y` is inside the rail's bottom band calls the
- *   renderer's `scrollTo` for one step, so the same eight-move drag scrolls it.
- *
- * The probe measures the app-driven path end to end (the rail's own painted
- * bounds, the renderer call and the offset it produces), so a docking or
- * file-tree component reads "auto-scroll is caller-driven" as a measurement
- * rather than as prose.
- */
 import { useRef, useState } from "react";
 import { Effect } from "effect";
 import * as Option from "effect/Option";
@@ -30,9 +10,9 @@ import type { ScenarioBody } from "../types.js";
 const ROWS = 24;
 const ROW_HEIGHT = 40;
 const RAIL_HEIGHT = 200;
-/** How close to the bottom edge a pointer must be to start scrolling. */
+
 const EDGE = 24;
-/** The distance one move scrolls the rail. */
+
 const STEP = 16;
 
 const Rail = ({
@@ -127,8 +107,6 @@ export const dragAutoscrollScenario: ScenarioBody = {
         0,
       );
 
-      // Row 4's centre is y = 180, inside the 24px bottom band of the 200px
-      // rail, so every synthesized move lands in it.
       ctx.host.drag("plain-row-4", 0, 10, 8);
       ctx.host.advance(50);
       const plainAfter = yield* ctx.expectSome(

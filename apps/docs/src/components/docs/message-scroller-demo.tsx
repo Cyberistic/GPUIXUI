@@ -1,15 +1,3 @@
-/**
- * Browser preview for the Message scroller page.
- *
- * The shipped scroller follows the tail while the reader is at the end and
- * leaves them alone when they are not. The preview reproduces the contract with
- * the browser's own numbers: `scrollHeight - scrollTop - clientHeight` is the
- * distance to the tail, an appended row scrolls only while the reader is at it,
- * and the floating control appears over the viewport's bottom edge only while
- * the reader is away. The transcript is a real scroll container with a fixed
- * height; the padding belongs to its content, and no row paints a box.
- */
-
 import { useLayoutEffect, useRef, useState } from "react";
 
 interface Message {
@@ -19,18 +7,15 @@ interface Message {
   readonly body: string;
 }
 
-/** A scroll container's three measurements, in the browser's own units. */
 export interface ScrollBox {
   readonly scrollHeight: number;
   readonly scrollTop: number;
   readonly clientHeight: number;
 }
 
-/** Whether the reader is close enough to the tail to keep following it. */
 export const atEnd = (box: ScrollBox, threshold = 24): boolean =>
   box.scrollHeight - box.scrollTop - box.clientHeight <= threshold;
 
-/** A container's three measurements, or a box at rest when there is none. */
 const boxOf = (element: HTMLDivElement | null): ScrollBox =>
   element === null
     ? { scrollHeight: 0, scrollTop: 0, clientHeight: 0 }
@@ -40,7 +25,6 @@ const boxOf = (element: HTMLDivElement | null): ScrollBox =>
         clientHeight: element.clientHeight,
       };
 
-/** The jump control's copy: the word when nothing arrived, else the count. */
 export const jumpLabel = (unread: number): string =>
   unread === 0
     ? "Jump to latest"
@@ -72,7 +56,6 @@ export function MessageScrollerDemo() {
     if (element !== null) element.scrollTop = element.scrollHeight;
   };
 
-  // A pinned reader follows every arrival; a released one keeps their place.
   useLayoutEffect(() => {
     if (pinned) scrollToEnd();
   }, [messages, pinned]);

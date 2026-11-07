@@ -1,17 +1,3 @@
-/**
- * Browser preview for the Pinned list page.
- *
- * The native scroll box holds each section header at the viewport top while its
- * rows scroll under it; the preview reproduces the same pinned headers.
- */
-
-/**
- * Enough rows to scroll past a header.
- *
- * A pinned header only reads as pinned when a reader can scroll a section's
- * rows under it, so the list is deliberately taller than its box: three
- * sections of three rows fit the frame and proved nothing.
- */
 const sections = [
   {
     title: "Account",

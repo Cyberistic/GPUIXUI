@@ -1,13 +1,3 @@
-/**
- * `Toggle` in the real GPUix runtime.
- *
- * `@gpuix/react` publishes no button (see `docs/gpuix-capabilities.md`), so a toggle's activation
- * is this package's contract: a hit-tested click, Enter on key down, Space on
- * key up, a held key ignored. The other thing only the runtime can show is that
- * the pressed state reaches the paint and the accessibility tree through the one
- * channel the runtime has — `aria-valuetext`, since `aria-pressed` does not exist.
- */
-
 import { expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -98,9 +88,6 @@ it("refuses activation when disabled and stays out of the tab order", async () =
 });
 
 it("refuses activation while busy and paints a spinner a reader can see", async () => {
-  // The bug this guards: a toolbar action awaiting a request could be pressed
-  // again, starting the work twice. A busy toggle keeps its tab stop (so the
-  // reader is not dropped mid-action) and refuses both activation paths.
   const runtime = await openWindow();
   runtime.render(
     <Surface>
@@ -112,8 +99,7 @@ it("refuses activation while busy and paints a spinner a reader can see", async 
   runtime.keyDown("t", "enter");
   runtime.keyUp("t", "space");
   expect(announced(runtime, "Sync")).toBe("pressed");
-  // The spinner is painted where the leading icon would be, in the pressed
-  // face's own on-colour rather than the brand fill behind it.
+
   const dots = Arr.filter(
     runtime.all(),
     (element) =>
@@ -123,9 +109,6 @@ it("refuses activation while busy and paints a spinner a reader can see", async 
 });
 
 it("paints a disabled pressed toggle in the measured neutral pair", async () => {
-  // A pressed toggle is a filled face, so the 50% fade is not the disabled
-  // contract: the neutral pair `contrastPairs` measures is (the unit suite's
-  // `wears the measured neutral pair while disabled and pressed`).
   const runtime = await openWindow();
   runtime.render(
     <Surface>

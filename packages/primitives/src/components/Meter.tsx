@@ -1,21 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * `Meter` — a value inside a range.
- *
- * Distinct from `Progress`, which reports how far a task has got (0–100 with no
- * meaning above or below). A meter reports a measurement: 62 of 100, 12 of 16.
- * It is status, not a control — never focusable, no pointer or key handlers.
- *
- * `@gpuix/native` 0.11.0 has no `aria-valuenow`/`min`/`max` (see
- * `docs/gpuix-capabilities.md`), so the value is announced through
- * `aria-valuetext`, and the honest default text is the formatted value alone.
- * The paint is `Progress`'s track and fill, because a second bar painter would
- * drift from it.
- *
- * The parts mirror `Progress`: the root is the frame, `MeterTrack` the bar,
- * `MeterIndicator` the fill, `MeterLabel`/`MeterValue` the text.
- */
-
 import {
   createContext,
   useContext,
@@ -48,41 +31,39 @@ import { useTheme } from "./ThemeProvider.js";
 
 export interface MeterProps extends ElementHostProps {
   readonly value: number;
-  /** Defaults to 0. A stored value that is not a number is that default. */
+
   readonly min?: number;
-  /** Defaults to 100. A stored value that is not a number is that default. */
+
   readonly max?: number;
-  /** Defaults to `primary`. */
+
   readonly tone?: ProgressTone;
-  /** Defaults to `md`. */
+
   readonly size?: ProgressSize;
-  /** Accessible name, e.g. "Disk usage". */
+
   readonly label?: string;
-  /** How the value is announced. Defaults to `String(value)`. */
+
   readonly formatValue?: (value: number) => string;
   readonly style?: StyleDesc;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
-  /** The parts to draw. Omit for the track and its indicator. */
+
   readonly children?: ReactNode;
   readonly testId?: string;
 }
 
-/** What every part reads from the meter that owns it. */
 export interface MeterPart {
   readonly theme: PrimitiveTheme;
-  /** The clamped measurement, in the range's own units. */
+
   readonly value: number;
-  /** The fraction of the track the fill paints. */
+
   readonly fraction: number;
   readonly tone: ProgressTone;
   readonly size: ProgressSize;
   readonly label: string | undefined;
-  /** The measurement as announced and displayed. */
+
   readonly valueText: string;
 }
 
-/** Resolve a meter's shared state once, for its root and every part. */
 export const meterPart = (
   props: MeterProps,
   theme: PrimitiveTheme,
@@ -99,12 +80,9 @@ export const meterPart = (
     fraction: valueFraction(value, range),
     tone: progressToneOf(props.tone),
     size: progressSizeOf(props.size),
-    // The label is copy, and a blank one is no copy: `visibleCopy` keeps the
-    // caller's own spacing and reports a run of spaces as absence, so the name
-    // and the caption part agree on whether there is a word at all.
+
     label: visibleCopy(props.label),
-    // A formatter answers for this measurement; an answer that says nothing
-    // falls back to the number rather than announcing an empty value.
+
     valueText: spokenText(
       Option.fromNullishOr(props.formatValue?.(value)),
       String(value),
@@ -122,7 +100,6 @@ const useMeterPart = (name: string): MeterPart => {
   return part;
 };
 
-/** The row a meter's parts stack in. */
 const frameStyle = (theme: PrimitiveTheme): StyleDesc => ({
   width: "100%",
   display: "flex",
@@ -130,17 +107,14 @@ const frameStyle = (theme: PrimitiveTheme): StyleDesc => ({
   gap: spaceValue(theme, "2xs"),
 });
 
-/** {@link MeterTrack} props. */
 export interface MeterTrackProps {
-  /** The indicators. Omit for an empty track. */
   readonly children?: ReactNode;
   readonly style?: StyleDesc;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
   readonly testId?: string;
 }
 
-/** The bar's background. */
 export const renderMeterTrack = (
   { children, className, style, testId }: MeterTrackProps,
   part: MeterPart,
@@ -159,19 +133,16 @@ export const renderMeterTrack = (
   </div>
 );
 
-/** The bar's background, inside a meter. */
 export const MeterTrack = (props: MeterTrackProps): ReactElement =>
   renderMeterTrack(props, useMeterPart("MeterTrack"));
 
-/** {@link MeterIndicator} props. */
 export interface MeterIndicatorProps {
   readonly style?: StyleDesc;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
   readonly testId?: string;
 }
 
-/** The measurement's share of the track. */
 export const renderMeterIndicator = (
   { className, style, testId }: MeterIndicatorProps,
   part: MeterPart,
@@ -193,29 +164,18 @@ export const renderMeterIndicator = (
   />
 );
 
-/** The measurement's share of the track, inside a meter. */
 export const MeterIndicator = (props: MeterIndicatorProps): ReactElement =>
   renderMeterIndicator(props, useMeterPart("MeterIndicator"));
 
-/** {@link MeterLabel} props. */
 export interface MeterLabelProps {
-  /**
-   * Visible text. Defaults to the meter's `label`; a child that says nothing —
-   * `""` or spaces, the row an i18n table never filled — falls back to it
-   * rather than painting a blank line.
-   */
   readonly children?: ReactNode;
   readonly testId?: string;
 }
 
-/** The measurement's subject, as visible text. */
 export const renderMeterLabel = (
   { children, testId }: MeterLabelProps,
   part: MeterPart,
 ): ReactElement | null => {
-  // A caption says something or it paints nothing: an empty `<text>` still pays
-  // the frame's gap, and spaces lay out a full line, so a child that arrived
-  // blank falls through to the stored label the prop documents as its default.
   const copy = captionCopy(children, part.label);
   return copy === undefined ? null : (
     <Text role="caption" tone="muted" testId={testId}>
@@ -224,16 +184,13 @@ export const renderMeterLabel = (
   );
 };
 
-/** The measurement's subject, inside a meter. */
 export const MeterLabel = (props: MeterLabelProps): ReactElement | null =>
   renderMeterLabel(props, useMeterPart("MeterLabel"));
 
-/** {@link MeterValue} props. */
 export interface MeterValueProps {
   readonly testId?: string;
 }
 
-/** The formatted measurement. */
 export const renderMeterValue = (
   { testId }: MeterValueProps,
   part: MeterPart,
@@ -243,11 +200,9 @@ export const renderMeterValue = (
   </Text>
 );
 
-/** The formatted measurement, inside a meter. */
 export const MeterValue = (props: MeterValueProps): ReactElement =>
   renderMeterValue(props, useMeterPart("MeterValue"));
 
-/** The element a meter renders. Pure in its arguments. */
 export const renderMeter = (
   props: MeterProps,
   theme: PrimitiveTheme,
@@ -278,6 +233,5 @@ export const renderMeter = (
   );
 };
 
-/** A measurement inside a range. */
 export const Meter = (props: MeterProps): ReactElement =>
   renderMeter(props, useTheme());

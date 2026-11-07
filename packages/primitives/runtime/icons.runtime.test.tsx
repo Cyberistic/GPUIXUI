@@ -1,24 +1,3 @@
-/**
- * The icon set in the real GPUix runtime.
- *
- * Lives here rather than in `packages/icons` because the runtime harness lives
- * with the components that use it: `@gpuixui/primitives` already depends on
- * `@gpuixui/icons`, and the reverse dependency would break the boundary. One
- * harness, one suite.
- *
- * `packages/icons/src/*.test.ts` proves the icon *data*; this proves the three
- * claims that only a painted frame can: that GPUix paints the raw `<svg
- * source>` markup at all, that `style.width` sizes it, and that `style.color`
- * tints it. `.agents/slop/COMPONENTS.md` carried the last two as "unverified on screen"
- * until this suite existed.
- *
- * The tint is checked at the level of **painted pixels**, not props: the frame
- * is captured twice, once per colour, and the two PNGs must differ — with a
- * same-colour pair as the control that says the difference is the colour and
- * not capture noise. Reading a style value back would only prove the prop
- * arrived.
- */
-
 import { Effect, FileSystem, Path } from "effect";
 import { NodeFileSystem, NodePath } from "@effect/platform-node";
 import { expect, it } from "vitest";
@@ -35,7 +14,6 @@ const mount = (runtime: Runtime, icon: React.ReactElement): void => {
   runtime.render(<Surface>{icon}</Surface>);
 };
 
-/** The bounds of the one icon on screen. */
 const boundsOfIcon = (runtime: Runtime) =>
   Option.getOrElse(runtime.bounds(ICON), () =>
     expect.fail("the runtime painted no icon"),
@@ -64,11 +42,6 @@ it("scales an icon from the size scale", async () => {
 });
 
 it("paints an icon whose raw size cannot be measured at the default step", async () => {
-  // The bug this guards: `size` takes the number a caller measured, so `NaN`,
-  // infinity, zero or a negative can arrive — and the runtime paints a `NaN`
-  // inset as nothing, so the icon vanished from a control that still had its
-  // box. Measured on the painted frame: every unusable count resolves to the
-  // `md` step, while a readable raw count is still the caller's number.
   const runtime = await openWindow();
   const widthAt = (size: number): number => {
     mount(
@@ -85,13 +58,6 @@ it("paints an icon whose raw size cannot be measured at the default step", async
 });
 
 it("paints an icon whose stored size name the scale no longer carries", async () => {
-  // The bug this guards: `size` is a stored preference as often as a literal, so
-  // a name the scale does not carry reaches `iconPixels`. It used to answer
-  // `undefined`, which `Icon` wrote to `style.width`/`style.height` — and the
-  // runtime paints an SVG with no side as a full-width, zero-height box
-  // (measured here: 1256 × 0 inside a 1280px window), so a toolbar row around a
-  // vanished icon stretched across the frame. An unknown name takes the `md`
-  // step, the size an icon that names none paints.
   const runtime = await openWindow();
   const stored = "huge" as IconSize;
   mount(
@@ -104,13 +70,6 @@ it("paints an icon whose stored size name the scale no longer carries", async ()
 });
 
 it("paints a mark for a stored name the set no longer carries", async () => {
-  // The bug this guards: `name` is a stored value as often as a literal, so a
-  // release that renames or drops an icon reaches `Icon` as a string the union
-  // no longer names. The registry read answered `undefined`, which the runtime
-  // painted as an **empty 24×24 box** inside a live `Image` node — an icon-only
-  // button read as its action and showed a blank square. The red/blue pair is
-  // the proof: two tints of an empty frame are byte-identical, so a difference
-  // can only come from a mark having painted.
   const runtime = await openWindow();
   const stored = "floppy" as IconName;
   const captured = await Effect.runPromise(tintedFrames(runtime, stored));
@@ -134,7 +93,6 @@ it("takes a decorative icon out of the accessibility tree and keeps a named one"
   expect(named.aria?.role).toBe("Image");
 });
 
-/** Whether two captured frames are the same image, byte for byte. */
 const sameBytes = (left: Uint8Array, right: Uint8Array): boolean =>
   left.length === right.length &&
   Arr.every(
@@ -142,14 +100,6 @@ const sameBytes = (left: Uint8Array, right: Uint8Array): boolean =>
     (index) => left[index] === right[index],
   );
 
-/**
- * Capture one icon in two colours, plus a same-colour control.
- *
- * The tint is read from painted pixels, not from props: a colour prop that
- * arrives while the renderer paints the markup's own colour would pass a style
- * read and fail a reader. The control (two captures of one frame) says a
- * difference is the colour and not capture noise.
- */
 const tintedFrames = (
   runtime: Runtime,
   name: IconName,
@@ -189,16 +139,12 @@ const tintedFrames = (
 it("tints the painted mark from the colour it was given", async () => {
   const runtime = await openWindow();
   const captured = await Effect.runPromise(tintedFrames(runtime, "check"));
-  // The control: two captures of the same frame are byte-identical, so the
-  // difference below can only come from the colour.
+
   expect(sameBytes(captured.alsoRed, captured.red)).toBe(true);
   expect(sameBytes(captured.blue, captured.red)).toBe(false);
 });
 
 it("tints a filled glyph too, which is how a chosen star reads", async () => {
-  // `star-filled` is the one icon drawn with `fill`, and `Rating` paints every
-  // chosen star with it. A tint that reached only `stroke` would paint the
-  // filled star black in every theme — a shape a stroke-icon test cannot see.
   const runtime = await openWindow();
   const captured = await Effect.runPromise(
     tintedFrames(runtime, "star-filled"),
@@ -208,11 +154,6 @@ it("tints a filled glyph too, which is how a chosen star reads", async () => {
 });
 
 it("paints every geometry form the set is built from", async () => {
-  // The other icons are new *data*, and a markup string that does not parse
-  // paints nothing — which looks exactly like a decorative SVG: the element is
-  // there, at its size, and the frame is empty. A red/blue pair can only differ
-  // if the geometry painted and the tint reached it, so this is the one read
-  // that fails on a broken path, an unclosed arc, or a `rect` the parser drops.
   const runtime = await openWindow();
   const samples: ReadonlyArray<[IconName, string]> = [
     ["pause", "two rects and nothing else"],
@@ -220,7 +161,7 @@ it("paints every geometry form the set is built from", async () => {
     ["circle", "one circle and nothing else"],
     ["file", "arcs joined to straight segments"],
   ];
-  // Sequential: each capture paints the frame the next one replaces.
+
   const unmeasured = await Effect.runPromise(
     Effect.forEach(
       samples,

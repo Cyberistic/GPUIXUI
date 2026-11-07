@@ -1,10 +1,3 @@
-/**
- * The Netherite verbs, copied from `csrc/cli/netherite.c`'s table.
- *
- * Each verb is a make-target dispatcher: the binary prints the command it runs
- * and forwards its output. The TUI only needs the name, the argument hint and
- * the one-line purpose; `needs` marks the verbs that expect a built tree.
- */
 export interface Verb {
   readonly name: string;
   readonly args: string;
@@ -63,15 +56,12 @@ export const VERBS: ReadonlyArray<Verb> = [
   },
 ];
 
-/** The verb at an index, clamped to the table. */
 export const verbAt = (index: number): Verb =>
   VERBS[Math.max(0, Math.min(index, VERBS.length - 1))] as Verb;
 
-/** The next index after a key, wrapping at both ends. */
 export const step = (index: number, delta: number): number => {
   const n = VERBS.length;
   return (((index + delta) % n) + n) % n;
 };
 
-/** The argv the binary is spawned with: the verb, and nothing the hint brackets. */
 export const argvOf = (verb: Verb): ReadonlyArray<string> => [verb.name];

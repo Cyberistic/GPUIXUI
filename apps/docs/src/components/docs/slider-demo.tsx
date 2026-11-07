@@ -1,16 +1,3 @@
-/**
- * Browser preview for the Slider page.
- *
- * A slider is one value on a closed range, so the drawing drags and steps
- * through the primitive's **own** arithmetic (`@gpuixui/primitives/core`), in
- * the one drawing the three slider pages share: a press aims at a value with
- * `pointerValue`, and an arrow, `PageUp`/`PageDown`, `Home` and `End` go
- * through `decideValueKey`. A drawing that only painted 62% of a track showed a
- * slider nobody ships.
- *
- * The Code tab shows the native usage.
- */
-
 import { useState } from "react";
 import type { ValueRange } from "@gpuixui/primitives/core";
 import { SliderDrawing } from "./slider-drawing";

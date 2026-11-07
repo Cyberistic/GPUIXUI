@@ -1,19 +1,3 @@
-/**
- * `panel-group-core` — the shipped `PanelGroup` in the offscreen renderer.
- *
- * Every other panel measurement on this repo drives a fixture: `panel-resize`
- * and `docking-nested` own their dividers, and `dock-split-lifecycle` mounts the
- * shipped `SplitPane` in a **window**. The shipped `PanelGroup` — the surface a
- * Tier 4 workspace composes — had only `logic.ts`'s unit tests, so a group that
- * ignored its `PanelLayout`, wired a collapse toggle to nothing or moved the
- * wrong neighbour on a key would leave every suite green.
- *
- * The steps read the package's own paint: the panes are sized by their
- * fractions of the space **between** the dividers, the collapse toggle is the
- * primitives' `Button` reached through the native traversal (it carries no
- * `testId`; the focus id is the proof it is the one pressed), and the focused
- * divider answers the arrows because it is a `role="separator"` tab stop.
- */
 import { useState } from "react";
 import { Effect } from "effect";
 import * as Option from "effect/Option";
@@ -31,7 +15,6 @@ import {
   stepSizes,
 } from "./panel-group-fixture.js";
 
-/** What each pane paints, so a collapsed pane can be told from an empty one. */
 const BODIES: Readonly<Record<string, string>> = {
   sidebar: "Collapse me from the header.",
   editor: "The middle pane cannot collapse.",
@@ -84,28 +67,24 @@ const PanelGroupProbe = () => {
   );
 };
 
-/** The readout line, or `""` when the probe has not painted it. */
 const readout = (ctx: Smoke.SmokeContext): string =>
   Option.getOrElse(
     Option.fromNullishOr(ctx.host.text("dock-group-readout")),
     () => "",
   );
 
-/** One pane's painted box, or a failure naming the id. */
 const paneBox = (ctx: Smoke.SmokeContext, id: string) =>
   ctx.expectSome(
     `the ${id} pane paints`,
     Option.fromNullishOr(ctx.host.bounds(`dock-group-pane-${id}`)),
   );
 
-/** One divider's painted box, or a failure naming it. */
 const dividerBox = (ctx: Smoke.SmokeContext, index: number) =>
   ctx.expectSome(
     `the divider ${index} paints`,
     Option.fromNullishOr(ctx.host.bounds(`dock-group-divider-${index}`)),
   );
 
-/** The pane the initial layout puts at `at`, asserted against its fraction. */
 const expectPaneWidth = (
   ctx: Smoke.SmokeContext,
   id: string,
@@ -139,8 +118,6 @@ export const panelGroupScenario: ScenarioBody = {
       yield* dividerBox(ctx, 0);
       yield* dividerBox(ctx, 1);
 
-      // The three shares plus the two dividers are the group's whole width, so a
-      // pane that is short or over cannot hide behind the other two.
       yield* ctx.expectNear(
         "the panes and dividers fill the group's width",
         sidebar.width + editor.width + inspector.width + 12,
@@ -148,9 +125,6 @@ export const panelGroupScenario: ScenarioBody = {
         2,
       );
 
-      // The collapse toggle is the second tab stop: the Button the package
-      // renders carries no `testId`, so the traversal is how a reader reaches
-      // it and the collapse it causes is the proof it was the one pressed.
       ctx.host.focusNext();
       ctx.host.key("enter");
       yield* ctx.expectEqual(
@@ -166,11 +140,7 @@ export const panelGroupScenario: ScenarioBody = {
       );
       const editorAfterCollapse = yield* paneBox(ctx, "editor");
       const inspectorAfterCollapse = yield* paneBox(ctx, "inspector");
-      // Measured gap: the runtime treats `flexGrow` as a share of the free
-      // space, not a weight over the items present, so the expanded panes keep
-      // 0.55/0.25 of what the header leaves instead of filling it. The 20% the
-      // collapsed pane gave up stays blank until the component normalises the
-      // remaining shares; this check is the measurement, not a blessing of it.
+
       const freed = availableWidth(PANEL_GROUP_WIDTH, 3) - collapsed.width;
       const empty = freed * (1 - (0.55 + 0.25));
       yield* ctx.expectNear(
@@ -185,7 +155,6 @@ export const panelGroupScenario: ScenarioBody = {
         false,
       );
 
-      // The same toggle expands it again, and the shares come back exactly.
       ctx.host.key("enter");
       yield* ctx.expectEqual(
         "the toggle expands the pane again",
@@ -194,8 +163,6 @@ export const panelGroupScenario: ScenarioBody = {
       );
       yield* expectPaneWidth(ctx, "sidebar", 0);
 
-      // The divider is a control: the traversal reaches it and the arrows move
-      // the split by the package's own step, traded with its one neighbour.
       ctx.host.focusNext();
       yield* ctx.expectEqual(
         "the traversal lands on the first divider",

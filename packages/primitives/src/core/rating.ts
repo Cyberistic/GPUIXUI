@@ -1,55 +1,20 @@
-/**
- * The rating contract: a score in stars, or none.
- *
- * A rating is a radio group shaped input, but its arrows clamp at the ends
- * instead of wrapping — moving right at five stars must not jump to one — and
- * an explicit clear key is what takes it back to zero. Keeping that here means
- * the component has no policy of its own.
- *
- * A score is whole stars, or **halves** when the caller asks for them. One
- * module owns both precisions: what a value snaps to, how much of a star is
- * painted, what an arrow steps by, and which star holds the tab stop.
- */
-
 import * as Option from "effect/Option";
 
-/** A star's score state, the vocabulary `aria-valuetext` announces. */
 export type StarState = "checked" | "half" | "unchecked";
 
-/** A star's painted box, as the renderer reports it. */
 export interface StarBox {
   readonly x: number;
   readonly width: number;
 }
 
-/**
- * A usable star count: a whole number, at least one.
- *
- * `max` is caller arithmetic — a measured total, a stored preference — so it
- * arrives as one number and has to become an array length. A count that cannot
- * be laid out reads as one star, the same answer the value clamp, the key
- * contract and the tab stop already give it; an infinite count would otherwise
- * reach `new Array(Infinity)` and throw `RangeError: Invalid array length`.
- * Absence is a different question, and {@link ratingMax} answers it.
- */
 export const starCount = (max: unknown): number =>
   typeof max === "number" && Number.isFinite(max)
     ? Math.max(1, Math.trunc(max))
     : 1;
 
-/**
- * Where a score lands: on a whole star, or on a half when halves are allowed.
- *
- * The two precisions answer differently to a score between places. Halves are a
- * finer scale, so the score rounds to the nearer half — a stored `4.4` reads as
- * `4.5`. Whole stars are the stars a reader has **fully earned**, so `4.4` and
- * `4.9` both read as `4`: rounding `4.9` up would paint five filled stars for a
- * score the caller never reached.
- */
 const snapRating = (value: number, half: boolean): number =>
   half ? Math.round(value * 2) / 2 : Math.trunc(value);
 
-/** Clamp a rating to `0..max`; a value that is not a number reads as unrated. */
 export const clampRating = (
   value: number,
   max: number,
@@ -59,11 +24,9 @@ export const clampRating = (
   return Math.min(starCount(max), Math.max(0, snapRating(value, half)));
 };
 
-/** How much of one star is filled: `0`, `1`, or the half between them. */
 export const starFill = (index: number, value: number): number =>
   Math.min(1, Math.max(0, value - (index - 1)));
 
-/** What one star reports: filled, half filled, or empty. */
 export const starState = (index: number, value: number): StarState => {
   const fill = starFill(index, value);
   return fill >= 1 ? "checked" : fill > 0 ? "half" : "unchecked";
@@ -76,17 +39,6 @@ const ARROW_STEPS: Readonly<Record<string, number>> = {
   down: -1,
 };
 
-/**
- * The keyboard contract.
- *
- * `None` means the key is not one of ours. Delete and Backspace clear the
- * rating (the only way to return to zero), Home and End jump to the ends, and
- * the arrows step and clamp rather than wrapping. **A rated value's lower end is
- * one place** — a whole star, or a half when halves are allowed — so an arrow
- * never clears a rating the reader only nudged: zero is explicit (a clear key,
- * or the app calling `onValueChange(0)`), because losing a rating to a stray
- * ArrowLeft is data loss, not a step.
- */
 export const decideRating = (
   value: number,
   max: number,
@@ -110,12 +62,6 @@ export const decideRating = (
   );
 };
 
-/**
- * The star that holds the group's single tab stop.
- *
- * A half score is held by the star it is part of: `3.5` lands on the fourth
- * star, because that is the star a press would complete.
- */
 export const ratingTabStop = (
   value: number,
   max: number,
@@ -125,15 +71,6 @@ export const ratingTabStop = (
   return current === 0 ? 1 : Math.min(starCount(max), Math.ceil(current));
 };
 
-/**
- * The score a pointer at `x` on one star aims at.
- *
- * The left half of a star is the half below it, the right half the star itself,
- * so a press can say `3.5` without a second control. Without halves, or without
- * a press position and a measured box, the star's whole score stands. Both
- * inputs arrive as `Option`: an event with no `x` and an element the renderer
- * cannot measure are absences, not zeros.
- */
 export const pointerRating = (
   star: number,
   x: Option.Option<number>,

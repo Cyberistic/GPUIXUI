@@ -1,11 +1,3 @@
-/**
- * Browser preview for the NumberField page.
- *
- * The field is a text box with pointer-only step targets. The preview draws the
- * chrome, the increment/decrement controls and an invalid state. The Code tab
- * shows the native usage.
- */
-
 import { useState } from "react";
 
 const clamp = (value: number): number => Math.min(99, Math.max(1, value));

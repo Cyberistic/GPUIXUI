@@ -1,16 +1,3 @@
-/**
- * The palettes diagram exposes, translated to the custom properties Pele
- * paints through.
- *
- * Mermaid.js themes are a renderer config; Pele's theme is CSS. The names and
- * the eight Mermaid variables stay the same as diagram's, so a caller can
- * move a diagram between the two without changing its theme name, but the
- * result is a set of `--pele-*` values on the wrapper. `default` reads the page
- * roles from the stylesheet, which is what lets a light/dark switch re-theme a
- * diagram that was rendered once.
- */
-
-/** The eight Mermaid theme variables a preset carries. */
 export interface DiagramThemeVariables {
   readonly primaryColor: string;
   readonly primaryTextColor: string;
@@ -22,7 +9,6 @@ export interface DiagramThemeVariables {
   readonly tertiaryColor: string;
 }
 
-/** The themes Mermaid.js ships. */
 export const builtinThemes = [
   "default",
   "dark",
@@ -33,7 +19,6 @@ export const builtinThemes = [
 
 export type MermaidBuiltinTheme = (typeof builtinThemes)[number];
 
-/** The named palettes diagram adds on top of Mermaid's five. */
 export const mermaidThemes = {
   emerald: {
     primaryColor: "#22c55e",
@@ -191,12 +176,10 @@ export type MermaidCustomTheme = keyof typeof mermaidThemes;
 
 export type DiagramTheme = MermaidBuiltinTheme | MermaidCustomTheme;
 
-/** Whether a stored or selected value names a theme this module carries. */
 export const isDiagramTheme = (value: string): value is DiagramTheme =>
   (builtinThemes as ReadonlyArray<string>).includes(value) ||
   Object.hasOwn(mermaidThemes, value);
 
-/** The Mermaid presets, by mode. */
 const BUILTIN_VARIABLES: Record<
   Exclude<MermaidBuiltinTheme, "default">,
   DiagramThemeVariables
@@ -251,7 +234,6 @@ const isBuiltinTheme = (
 const isCustomTheme = (theme: string): theme is MermaidCustomTheme =>
   Object.hasOwn(mermaidThemes, theme);
 
-/** The palette a theme name resolves to. `default` reads the page's roles. */
 export const themeVariables = (
   theme: DiagramTheme | undefined,
 ): DiagramThemeVariables | undefined => {
@@ -263,11 +245,9 @@ export const themeVariables = (
       : undefined;
 };
 
-/** The colour a theme picker shows beside the theme's name. */
 export const themeSwatch = (theme: DiagramTheme): string =>
   themeVariables(theme)?.primaryBorderColor ?? "var(--ring)";
 
-/** Mermaid's variable names, mapped to the roles Pele paints. */
 export const peleRoleOf: Record<keyof DiagramThemeVariables, string> = {
   primaryColor: "--pele-surface",
   primaryTextColor: "--pele-fg",
@@ -279,22 +259,9 @@ export const peleRoleOf: Record<keyof DiagramThemeVariables, string> = {
   tertiaryColor: "--pele-surface",
 };
 
-/**
- * A theme's Mermaid variables as Pele custom properties.
- *
- * The Mermaid names are accepted so a config copied from diagram keeps
- * working; a variable outside the eight (a Mermaid-only key) is ignored rather
- * than painted as a property Pele does not read.
- */
 const isVariableName = (name: string): name is keyof DiagramThemeVariables =>
   Object.hasOwn(peleRoleOf, name);
 
-/**
- * The order the variables are applied in: a broader colour first, the more
- * specific one last. Pele has one text role and one node-fill role, so
- * `primaryTextColor` must win over `textColor` and `primaryColor` over the
- * tertiary fallback; a reduce in object order would let the wrong one win.
- */
 const variableOrder: ReadonlyArray<keyof DiagramThemeVariables> = [
   "background",
   "tertiaryColor",

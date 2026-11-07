@@ -1,14 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Chat example: a conversation driven by the same state machine the components
- * use, with a scripted reply — no model is called.
- *
- * Send a message: it is appended, the status walks `submitting → streaming`, and
- * words arrive one at a time. Stop ends the reply early (`Escape` does the same
- * through the composer). Every third send fails on purpose so the retry path is
- * one press away.
- */
-
 import { useEffect, useRef, useState } from "react";
 import { Button } from "../src/internal/button.js";
 import {
@@ -49,19 +39,16 @@ const seed: ReadonlyArray<Row> = [
   },
 ];
 
-/** Replace the last row's body and streaming marker. */
 const editLast = (rows: ReadonlyArray<Row>, body: string, streaming: boolean) =>
   rows.map((row, index) =>
     index === rows.length - 1 ? { ...row, body, streaming } : row,
   );
 
-/** Mark the last row finished without touching what it said. */
 const finishLast = (rows: ReadonlyArray<Row>): ReadonlyArray<Row> =>
   rows.map((row, index) =>
     index === rows.length - 1 ? { ...row, streaming: false } : row,
   );
 
-/** A conversation with a scripted stream, a stop control and a failure path. */
 export const ChatExample = () => {
   const theme = useTheme();
   const [status, setStatus] = useState<ChatStatus>("idle");

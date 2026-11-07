@@ -1,7 +1,3 @@
-/**
- * The podcast player's content: one show, its episodes, and each episode's
- * waveform seed — Hunter × Hunter, as Whale Island Radio would cut it.
- */
 export interface Episode {
   readonly id: string;
   readonly title: string;

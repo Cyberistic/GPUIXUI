@@ -1,31 +1,3 @@
-/**
- * `virtual-list-windowed` — `<virtual-list>` in **itemCount** mode mounts only
- * the slice React renders.
- *
- * Every other probe uses the children form, where React and the Rust tree retain
- * all rows and GPUI skips only the build and paint. A data table with a hundred
- * thousand rows needs the other mode: `itemCount` + `estimatedItemHeight` +
- * `windowStart`, where the app renders `rows.slice(start, end)` and native
- * positions the mounted slice by index.
- *
- * Measured here, on GPUix 0.11.0, with 100 000 logical rows and a 60-row window:
- *
- *   - only the window is retained (`wrow-0` exists, `wrow-60` does not), so
- *     mount cost follows the window and not the data;
- *   - the painted window is a subset of it — the estimate positions rows that
- *     were never mounted;
- *   - `onVisibleRange` reports **absolute** indices, so the same numbers slice
- *     the data array rather than an offset into the mounted children; it also
- *     **lags the paint by one gesture** (the event still read `20..27` while the
- *     paint had reached `40..46`), so the window must exceed viewport + overdraw
- *     or the lag exposes native's empty estimate boxes;
- *   - a press on a painted row reports its absolute index;
- *   - `scrollToItem(90000)` on a window the app moved there paints `File 90000`,
- *     and the scroll offset is the estimate's arithmetic (`-90000 × 28`), which
- *     is what lets a table jump to a row it has never mounted.
- *
- * The wheel's `deltaY` is negative to scroll down (see `scroll.tsx`).
- */
 import { useRef, useState } from "react";
 import { useGpuix } from "@gpuix/react";
 import type { PublicInstance } from "@gpuix/react";
@@ -38,15 +10,14 @@ import { useTheme } from "@gpuixui/tokens/react";
 import { Pressable, Readout } from "../ui.js";
 import type { ScenarioBody } from "../types.js";
 
-/** Logical rows: far more than a window or a paint can hold. */
 const ROWS = 100_000;
-/** One row's height, used both as the drawn height and as the estimate. */
+
 const ROW_HEIGHT = 28;
-/** How many rows React mounts around the viewport. */
+
 const WINDOW = 60;
-/** The row a far reveal jumps to — never mounted before the jump. */
+
 const REVEAL = 90_000;
-/** How far before the reported range the window starts, so a lag cannot blank it. */
+
 const LEAD = 10;
 
 const clampStart = (value: number): number =>
@@ -64,8 +35,6 @@ const WindowedListProbe = () => {
   const end = Math.min(ROWS, start + WINDOW);
 
   const reveal = (): void => {
-    // The window is app state, so a jump moves it first; the queued scroll is
-    // applied after that commit's child splice.
     setStart(clampStart(REVEAL));
     const elementId = list.current?.id;
     if (elementId != null) renderer?.scrollToItem?.(elementId, REVEAL);
@@ -140,7 +109,6 @@ const WindowedListProbe = () => {
   );
 };
 
-/** Parses a numeric readout; a missing or malformed one is `-1`. */
 const readIndex = (text: Option.Option<string>): number =>
   pipe(
     text,
@@ -149,7 +117,6 @@ const readIndex = (text: Option.Option<string>): number =>
     Option.getOrElse(() => -1),
   );
 
-/** The rows the list currently paints, as the `File N` labels become `N`s. */
 const paintedRows = (lines: ReadonlyArray<string>): ReadonlyArray<number> =>
   Arr.filterMap(lines, (line) =>
     pipe(
@@ -162,7 +129,6 @@ const paintedRows = (lines: ReadonlyArray<string>): ReadonlyArray<number> =>
     ),
   );
 
-/** The window the probe reports, read from its two readouts. */
 const readWindow = (
   text: (testId: string) => Option.Option<string>,
 ): readonly [number, number] => [
@@ -178,7 +144,6 @@ export const virtualListWindowedScenario: ScenarioBody = {
         Option.fromNullishOr(ctx.host.text(testId));
       const window = (): readonly [number, number] => readWindow(text);
 
-      // 1. Mount cost follows the window, not the data.
       yield* ctx.expectContains(
         "the first row of the window is mounted",
         Option.getOrElse(text("wrow-0"), () => ""),
@@ -195,7 +160,6 @@ export const virtualListWindowedScenario: ScenarioBody = {
         true,
       );
 
-      // 2. The painted window is a strict subset of the mounted one.
       const firstPaint = paintedRows(ctx.host.paintedText());
       yield* ctx.expectEqual(
         "the first row is painted",
@@ -208,7 +172,6 @@ export const virtualListWindowedScenario: ScenarioBody = {
         false,
       );
 
-      // 3. The painted rows all belong to the window the app mounted.
       const [startAtRest, endAtRest] = window();
       yield* ctx.expectEqual(
         "the window starts at the first row",
@@ -221,7 +184,6 @@ export const virtualListWindowedScenario: ScenarioBody = {
         true,
       );
 
-      // 4. A wheel moves the list and reports absolute indices.
       ctx.host.wheel("wlist", 0, -560);
       ctx.host.advance(50);
       ctx.host.wheel("wlist", 0, -560);
@@ -278,7 +240,6 @@ export const virtualListWindowedScenario: ScenarioBody = {
         true,
       );
 
-      // 5. A painted row is addressable by its absolute index.
       const target = yield* ctx.expectSome(
         "a painted row exists after the wheel",
         Arr.head(scrolled),
@@ -291,7 +252,6 @@ export const virtualListWindowedScenario: ScenarioBody = {
         `r${target}`,
       );
 
-      // 6. A far reveal lands on a row that was never mounted.
       ctx.host.click("wlist-reveal");
       ctx.host.advance(50);
       ctx.host.advance(50);

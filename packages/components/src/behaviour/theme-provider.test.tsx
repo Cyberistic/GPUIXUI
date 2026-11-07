@@ -1,18 +1,3 @@
-/**
- * The published theme provider, in the real GPUix renderer.
- *
- * The gap this guards: the package published no provider and no theme, so a
- * consumer who installed it alone could not theme it — every component fell
- * back to the light theme. The provider is now part of the package's root
- * export, and this suite imports it from there (not from the internal seam) so
- * it proves the surface a consumer actually has: a card under it paints the
- * theme's own card role, and switching the theme repaints the mounted component
- * without a remount.
- *
- * The tree is one root element on purpose: the test renderer paints only the
- * last of several root children (measured, see `internal/test-root.tsx`).
- */
-
 import { describe, expect, it } from "vitest";
 import { Badge } from "../badge.js";
 import { Card, CardContent } from "../card.js";

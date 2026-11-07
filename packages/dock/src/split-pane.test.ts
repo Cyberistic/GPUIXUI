@@ -1,15 +1,3 @@
-/**
- * The split pane's arithmetic and the runtime rules its divider honours.
- *
- * The arithmetic is pure (`logic.ts`): a divider clamps to its caller's bounds,
- * an arrow steps a fixed pixel count, and Home/End name the bounds. The rules
- * are the ones the window probes measured — the divider is a `role="separator"`
- * keyboard control that arms pointer capture only on the `onMouseDown`/
- * `onMouseMove` pair (`pointer-capture`), and a split resizes by `flexBasis`,
- * never a `transform` (upstream issue #102). Each rule is held by a source
- * guard so a future plan cannot drop it silently the way the record did before.
- */
-
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
@@ -66,8 +54,6 @@ describe("keyboard step", () => {
 
 describe("the divider's runtime rules", () => {
   it("arms pointer capture with the mouseDown + mouseMove pair", () => {
-    // `pointer-capture` measured that the runtime captures only for an element
-    // subscribed to both; a move-only divider keeps 1 move of 8.
     expect(dividerSource).toContain("onMouseDown");
     expect(dividerSource).toContain("onMouseMove");
   });
@@ -80,8 +66,6 @@ describe("the divider's runtime rules", () => {
   });
 
   it("resizes by flexBasis and never a transform", () => {
-    // Upstream issue #102: the runtime has no transform, so a split's pane is
-    // sized by its flex basis, and the divider's feedback is an opacity fade.
     expect(splitSource).toContain("flexBasis");
     expect(splitSource).not.toMatch(/\btransform\s*:/);
   });

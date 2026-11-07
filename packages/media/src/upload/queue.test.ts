@@ -1,15 +1,3 @@
-/**
- * The upload queue: the state machine the `FileUpload` component runs on.
- *
- * The four rules this suite guards are the ones a transfer can break silently:
- * a retry must not reopen a finished or in-flight file, progress must never
- * paint backwards, a remove must cancel the removed file's token so a late
- * report cannot resurrect it, and that token must stay cancelled when the same
- * id is re-added (the counter outlives the item, so a re-upload gets a fresh
- * attempt rather than the removed transfer's number). Each rule carries a
- * negative control that the opposite behaviour would trip.
- */
-
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import {
@@ -45,10 +33,6 @@ const uploading = (id: string): UploadQueue =>
 
 describe("upload queue", () => {
   it("reads a stored file list structurally, keeping only files with an id", () => {
-    // The bug guarded: the component's effect read the caller's list directly,
-    // so a saved queue's `null` reached `Arr.some`/`Arr.reduce` and threw out of
-    // the effect that seeds the queue, taking the surface down; and an entry a
-    // record wrote without a text id queued a row no remove action could name.
     expect(filesOf(null)).toEqual([]);
     expect(filesOf({ id: "notes.txt" })).toEqual([]);
     expect(filesOf([{ id: "notes.txt" }])).toEqual([
@@ -60,9 +44,6 @@ describe("upload queue", () => {
   });
 
   it("names a file by its id when the stored name is blank", () => {
-    // The bug guarded: a file record restored with no name reached the row and
-    // its remove action, which published "Remove null" and painted a nameless
-    // row, while every other label is read through the absence rule.
     const named = enqueue(emptyQueue, [
       { id: "notes.txt", name: null as unknown as string },
       { id: "b", name: "   " },
@@ -112,7 +93,7 @@ describe("upload queue", () => {
   });
 
   it("ignores a stale token from a superseded attempt", () => {
-    const retried = start(fail(uploading("a"), "a", 1), "a"); // token 2
+    const retried = start(fail(uploading("a"), "a", 1), "a");
     expect(progressOf(reportProgress(retried, "a", 1, 0.9), "a")).toStrictEqual(
       Option.some(0),
     );
@@ -126,7 +107,7 @@ describe("upload queue", () => {
   });
 
   it("does not let a removed transfer finish the same id re-added", () => {
-    const removed = remove(uploading("a"), "a"); // attempt 1, still counting
+    const removed = remove(uploading("a"), "a");
     const readded = start(enqueue(removed, [file("a")]), "a");
 
     expect(tokenOf(readded, "a")).toStrictEqual(Option.some(2));

@@ -14,8 +14,6 @@ describe("the rows a hierarchy makes", () => {
   });
 
   it("keeps a list that names one root", () => {
-    // A list whose paths all sit under one root is already a tree, so the
-    // rows are the caller's own.
     const rows = hierarchyRows([
       { path: "root/a", value: 60 },
       { path: "root/b", value: 40 },
@@ -25,9 +23,6 @@ describe("the rows a hierarchy makes", () => {
   });
 
   it("gives a list that names no root one of its own", () => {
-    // The compiler rejects a hierarchy with no root and one with two, so the
-    // rows are given a root the caller did not write. Before the rule the
-    // list was left as it was and the compiler threw.
     const rows = hierarchyRows([
       { path: "a", value: 60 },
       { path: "b", value: 40 },
@@ -35,7 +30,7 @@ describe("the rows a hierarchy makes", () => {
 
     expect(hierarchyRoots(rows).length).toBe(1);
     expect(rows.length).toBe(3);
-    // The root holds the whole.
+
     expect(hierarchyRoots(rows)[0]?.value).toBe(100);
   });
 
@@ -50,8 +45,6 @@ describe("the rows a hierarchy makes", () => {
   });
 
   it("aggregates a parent's value from its children", () => {
-    // A parent that holds no value of its own holds its subtree's, which is
-    // what a reader means by a parent's size.
     const rows = hierarchyRows([
       { path: "root/a", value: 60 },
       { path: "root/a/aa", value: 30 },
@@ -63,8 +56,6 @@ describe("the rows a hierarchy makes", () => {
   });
 
   it("counts a value that is not a number as nothing", () => {
-    // The same rule every other chart follows: a stored `NaN` paints no mark
-    // rather than poisoning the sum it belongs to.
     const rows = hierarchyRows([
       { path: "root/a", value: Number.NaN },
       { path: "root/b", value: 40 },

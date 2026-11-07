@@ -8,18 +8,6 @@ import {
 } from "react";
 import { railToggleLabel, useRailCollapse } from "../sidebar-rail";
 
-/**
- * The browser drawing shared by the sixteen sidebar examples.
- *
- * The shipped sidebar is a GPUix tree — a width tween, an anchored sheet and a
- * modal's focus rules — so a block page cannot mount it. These are the same
- * parts and the same geometry (256px panel, 48px rail, 8px gutters, 36px rows),
- * painted in the browser and reading only the preview surface's theme roles.
- * The controls are live: a section folds, a rail collapses, an overlay opens.
- * The recipes beside each example are the `@gpuixui/*` source a reader copies.
- */
-
-/** The panel's collapse behaviour, as shadcn's `Sidebar` names it. */
 export type SbCollapse = "icon" | "offcanvas" | "none";
 
 interface SbFrame {
@@ -40,7 +28,6 @@ const SbFrameContext = createContext<SbFrame>({
 
 const useSbFrame = (): SbFrame => useContext(SbFrameContext);
 
-/** A glyph drawn at the library's own 24-unit box. */
 export type SbIconName =
   | "arrow-down"
   | "arrow-right"
@@ -273,7 +260,6 @@ const GLYPHS: Readonly<Record<SbIconName, ReactNode>> = {
   x: <path d="M18 6 6 18M6 6l12 12" />,
 };
 
-/** One block glyph, `currentColor` at `size` pixels. */
 export const SbIcon = ({
   name,
   size = 16,
@@ -298,14 +284,11 @@ export const SbIcon = ({
   </svg>
 );
 
-// ── Data ─────────────────────────────────────────────────────────────────────
-
 export interface SbNavGroup {
   readonly label: string;
   readonly items: ReadonlyArray<string>;
 }
 
-/** The docs navigation shadcn ships across sidebar-01 … 06 and 14. */
 export const DOCS_NAV: ReadonlyArray<SbNavGroup> = [
   { label: "Getting Started", items: ["Installation", "Project Structure"] },
   {
@@ -379,7 +362,6 @@ export const TEAMS: ReadonlyArray<SbTeam> = [
   { name: "Evil Corp.", plan: "Free", icon: "terminal" },
 ];
 
-/** The account dropdown shadcn ships in the footer of its workspace blocks. */
 export const USER_MENU: ReadonlyArray<
   ReadonlyArray<{ readonly label: string; readonly icon: SbIconName }>
 > = [
@@ -654,16 +636,12 @@ export const POPOVER_ACTIONS: ReadonlyArray<
   ],
 ];
 
-// ── Panel parts ──────────────────────────────────────────────────────────────
-
-/** A 32px brand mark: the primary fill and its foreground. */
 export const SbMark = ({ icon = "grid" }: { readonly icon?: SbIconName }) => (
   <span className="gx-sb-mark">
     <SbIcon name={icon} />
   </span>
 );
 
-/** The identity row that opens a panel: a mark, a name and a plan. */
 export const SbBrand = ({
   name,
   detail,
@@ -689,11 +667,6 @@ export const SbBrand = ({
   </div>
 );
 
-/**
- * The account row: avatar, name over address, and the disclosure mark. Pressing
- * it opens the footer menu shadcn ships; `rail` drops the text for 09's 48px
- * folder column and anchors the menu to its right.
- */
 export const SbAccount = ({
   user = USER,
   rail = false,
@@ -755,7 +728,6 @@ export const SbAccount = ({
   );
 };
 
-/** The panel's search field. */
 export const SbSearch = ({
   placeholder = "Search the docs...",
 }: {
@@ -771,11 +743,6 @@ export const SbSearch = ({
   </label>
 );
 
-/**
- * A 200ms height tween around content that stays mounted, the same reveal the
- * docs accordion uses: the row track grows from `0fr` to `1fr` and the inner
- * box clips the part that has not arrived.
- */
 export const SbFold = ({
   open,
   children,
@@ -788,10 +755,6 @@ export const SbFold = ({
   </div>
 );
 
-/**
- * One labelled group. `collapsible` turns the label into the disclosure the
- * shipped `Collapsible` group header is; static groups keep a plain label.
- */
 export const SbGroup = ({
   label,
   trailing,
@@ -840,25 +803,18 @@ export const SbGroup = ({
   );
 };
 
-/** The trailing chevron a collapsible row opens with. */
 export const SbChevron = ({ open = false }: { readonly open?: boolean }) => (
   <span className="gx-sb-trail gx-sb-chevron" data-open={open}>
     <SbIcon name={open ? "chevron-down" : "chevron-right"} size={13} />
   </span>
 );
 
-/** The dots a row's menu action wears. */
 export const SbDots = () => (
   <span className="gx-sb-trail">
     <SbIcon name="ellipsis" size={14} />
   </span>
 );
 
-/**
- * An overlay anchored inside a shell. The shell paints the scrim and owns the
- * Escape key, so a press outside, Escape and the close control all dismiss the
- * same state.
- */
 export const SbOverlay = ({
   id,
   label,
@@ -879,7 +835,6 @@ export const SbOverlay = ({
   ) : null;
 };
 
-/** An icon control that opens an overlay, as the page-actions dots do. */
 export const SbIconButton = ({
   icon,
   label,
@@ -907,7 +862,6 @@ export const SbIconButton = ({
   );
 };
 
-/** The header's page-actions menu: one trigger and its grouped rows. */
 export const SbActionsMenu = ({
   id,
   label,
@@ -950,11 +904,6 @@ export const SbActionsMenu = ({
   );
 };
 
-/**
- * The header's panel trigger: one button for the toggle the reader presses and
- * the state it announces. A `none` panel has no collapse, so the button says so
- * instead of pretending to move.
- */
 export const SbTrigger = ({
   icon = "panel-left",
 }: {
@@ -981,8 +930,6 @@ export const SbTrigger = ({
   );
 };
 
-/** One row: a glyph, a label, and optional trailing content. A row with a
- * press is a button, so a disclosure trigger is keyboard-reachable. */
 export const SbRow = ({
   icon,
   label,
@@ -1041,12 +988,10 @@ export const SbRow = ({
   );
 };
 
-/** A submenu list under a row. */
 export const SbSub = ({ children }: { readonly children: ReactNode }) => (
   <div className="gx-sb-sub">{children}</div>
 );
 
-/** One submenu row. */
 export const SbSubRow = ({
   label,
   active = false,
@@ -1063,11 +1008,6 @@ export const SbSubRow = ({
   </div>
 );
 
-/**
- * A row that opens its own submenu in place. The shipped tree's parent rows are
- * `CollapsibleTrigger`s; this is the same disclosure, with the family's chevron
- * or the docs tree's plus/minus marker.
- */
 export const SbDisclosure = ({
   icon,
   label,
@@ -1110,7 +1050,6 @@ export const SbDisclosure = ({
   );
 };
 
-/** A group row whose dots open its pages, as block 06's dropdown sections do. */
 export const SbMenu = ({
   label,
   items,
@@ -1146,7 +1085,6 @@ export const SbMenu = ({
   );
 };
 
-/** The switch a panel header draws. */
 export const SbSwitch = ({ on = false }: { readonly on?: boolean }) => {
   const [checked, setChecked] = useState(on);
 
@@ -1163,14 +1101,6 @@ export const SbSwitch = ({ on = false }: { readonly on?: boolean }) => {
   );
 };
 
-// ── The frame ────────────────────────────────────────────────────────────────
-
-/**
- * The panel. `size` is the 256px default, the 48px icon rail (09's first
- * column) and the 300px list column beside it. A panel inherits the shell's
- * collapse behaviour; `collapse` overrides it for a secondary column that the
- * page's trigger must leave alone.
- */
 export const SbPanel = ({
   side = "left",
   size = "default",
@@ -1222,7 +1152,6 @@ export const SbPanel = ({
   );
 };
 
-/** The inset beside the panel, and its scroll column. */
 export const SbInset = ({
   header,
   children,
@@ -1236,7 +1165,6 @@ export const SbInset = ({
   </div>
 );
 
-/** The page's top bar: the toggle, a rule and the trail. */
 export const SbInsetHeader = ({
   trail,
   trailing,
@@ -1262,7 +1190,6 @@ export const SbInsetHeader = ({
   </header>
 );
 
-/** The breadcrumb trail; the last entry is the current page. */
 export const SbCrumbs = ({
   trail,
 }: {
@@ -1287,11 +1214,6 @@ export const SbCrumbs = ({
   </nav>
 );
 
-/**
- * The frame both the panel and the inset sit in. It owns one collapse state and
- * one open overlay, so a rail, a header trigger and a group header in the same
- * example agree, and an overlay's scrim and Escape key are painted once.
- */
 export const SbShell = ({
   variant = "sidebar",
   height = "standard",
@@ -1345,8 +1267,6 @@ export const SbShell = ({
   );
 };
 
-// ── Inset content ────────────────────────────────────────────────────────────
-
 const METRICS = [
   { label: "Build time", value: "1m 42s", note: "8s faster than last week" },
   { label: "Cached routes", value: "18 / 24", note: "Revalidated on publish" },
@@ -1361,7 +1281,6 @@ const TASKS = [
   { label: "Invite the workspace", owner: "WS", done: false },
 ] as const;
 
-/** The three cards every block's page opens with. */
 export const SbTiles = () => (
   <div className="gx-sb-tiles">
     {METRICS.map((metric) => (
@@ -1374,7 +1293,6 @@ export const SbTiles = () => (
   </div>
 );
 
-/** A docs page: three summary cards over the current article. */
 export const SbDocBody = () => (
   <div className="gx-sb-body">
     <SbTiles />
@@ -1402,7 +1320,6 @@ export const SbDocBody = () => (
   </div>
 );
 
-/** A long docs page: every topic in its section, the page 02 scrolls through. */
 export const SbLongBody = () => (
   <div className="gx-sb-body">
     <div className="gx-sb-rows">
@@ -1419,7 +1336,6 @@ export const SbLongBody = () => (
   </div>
 );
 
-/** The focused workspace page: a hero over the task list. */
 export const SbFocusBody = () => (
   <div className="gx-sb-body gx-sb-body--focus">
     <div className="gx-sb-hero">
@@ -1456,7 +1372,6 @@ const EVENTS: Readonly<Record<number, string>> = {
   17: "Retro",
 };
 
-/** The month the calendar block paints. */
 export const SbMonthBody = () => (
   <div className="gx-sb-body">
     <div className="gx-sb-month">
@@ -1518,7 +1433,6 @@ const SETTING_ROWS = [
   },
 ] as const;
 
-/** The settings sections the dialog's content column holds. */
 export const SbSettingsBody = () => (
   <div className="gx-sb-body gx-sb-body--settings">
     {SETTING_ROWS.map((row) => (
@@ -1533,7 +1447,6 @@ export const SbSettingsBody = () => (
   </div>
 );
 
-/** The message list the inbox inset paints. */
 export const SbMailBody = () => (
   <div className="gx-sb-mail">
     {MAIL.map((mail) => (
@@ -1549,9 +1462,6 @@ export const SbMailBody = () => (
   </div>
 );
 
-// ── Shared panels ────────────────────────────────────────────────────────────
-
-/** The workspace panel blocks 10 and 15 open with. */
 export const SbWorkspacePanel = ({
   rail = true,
 }: {
@@ -1607,7 +1517,6 @@ export const SbWorkspacePanel = ({
   </SbPanel>
 );
 
-/** The account, calendar and New Calendar column blocks 12 and 15 share. */
 export const SbCalendarPanel = ({
   rail = false,
   side = "left",
@@ -1656,7 +1565,6 @@ export const SbCalendarPanel = ({
   </SbPanel>
 );
 
-/** The compact month the calendar panel opens on. */
 const SbMonthMini = () => (
   <div className="gx-sb-mini">
     <div className="gx-sb-mini-head">
@@ -1682,7 +1590,6 @@ const SbMonthMini = () => (
   </div>
 );
 
-/** The app panel blocks 08 and 16 open with. */
 export const SbAppPanel = () => (
   <SbPanel
     header={
@@ -1731,5 +1638,4 @@ export const SbAppPanel = () => (
   </SbPanel>
 );
 
-/** The settings trail the dialog and its page share. */
 export const SETTINGS_TRAIL = ["Settings", "Messages & media"] as const;

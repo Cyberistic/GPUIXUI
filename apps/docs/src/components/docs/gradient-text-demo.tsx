@@ -1,10 +1,3 @@
-/**
- * Browser preview for the Gradient text page.
- *
- * The native phrase is a per-glyph colour ramp; the preview paints each glyph
- * its own stop between the two roles, so the ramp reads at glyph resolution.
- */
-
 const phrase = "Native by default";
 
 const stops = Array.from({ length: phrase.length }, (_, index) =>

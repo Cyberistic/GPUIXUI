@@ -1,10 +1,3 @@
-/**
- * `@gpuixui/fx` — decorative motion, kept out of the core library (plan 726).
- *
- * Particles, fireworks, stars, shine and ripple buttons, magnetic pull and
- * kinetic text. Each is built on `@gpuixui/components/authoring`, the seams the
- * core components share, and renders through GPUix like every other part.
- */
 export * from "./bubbles.js";
 export * from "./fireworks.js";
 export * from "./gravity-stars.js";

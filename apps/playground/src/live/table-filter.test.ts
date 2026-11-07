@@ -1,17 +1,3 @@
-/**
- * Holds the premises the `table-filter-lifecycle` probe is read against.
- *
- * The bugs these catch: a filter that matches the index instead of the label (a
- * reader's query would keep the wrong rows), a selection that survives the
- * record being filtered out (an invisible selection is what a toolbar acts on),
- * an arrow step that walks the numeric order rather than the filtered one, a
- * readout that cannot tell "no filter" from "no matches", and a README check
- * count that disagrees with the probe.
- *
- * `node:fs` is deliberate, as in `registry.test.ts`: this checks the repository's
- * own Markdown, not a runtime path.
- */
-
 import { readFileSync } from "node:fs";
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
@@ -34,14 +20,6 @@ const scenarios = readFileSync(
   "utf8",
 );
 
-/**
- * Where the top-level declaration after `start` begins, which bounds a probe's
- * steps.
- *
- * A probe's steps are followed by the next probe's doc comment, its `const`, or
- * the live-probe body table — so the slice takes the first of those rather than
- * a fixed marker, which another probe appended beside it would move.
- */
 const endOfDeclaration = (start: number): number =>
   Math.min(
     ...["\nconst ", "\nexport const ", "\n/**"]
@@ -49,19 +27,11 @@ const endOfDeclaration = (start: number): number =>
       .filter((at) => at !== -1),
   );
 
-/**
- * The `tableFilterSteps` effect, bounded by the declaration that follows it.
- *
- * It has no loop that adds a check, so its `ctx.expect*` call sites plus one per
- * `paintedBox` call are the checks the window runs — which is what the README
- * prints.
- */
 const tableFilterSteps = (() => {
   const start = scenarios.indexOf("const tableFilterSteps");
   return start === -1 ? "" : scenarios.slice(start, endOfDeclaration(start));
 })();
 
-/** The count the README prints for this probe, if any. */
 const printedCheckCount = (): number =>
   Number(
     /(\d+) checks, `--only table-filter-lifecycle`/.exec(readme)?.[1] ??
@@ -75,7 +45,6 @@ describe("the filter a grid applies", () => {
   });
 
   it("matches the label literally and case-insensitively, not the index", () => {
-    // `Item 1`, 10–19, the eight odd tens and 100–119.
     const ones = filterRows("1");
     expect(ones).toHaveLength(39);
     expect(ones).toContain(1);
@@ -119,8 +88,6 @@ describe("the filter a grid applies", () => {
   });
 
   it("prints the check count the probe actually asserts", () => {
-    // Two producers: a direct `ctx.expect*` call and `paintedBox`, which asserts
-    // the element paints before handing its box back.
     const asserted =
       (tableFilterSteps.match(/ctx\.expect[A-Za-z]+\(/g)?.length ?? 0) +
       (tableFilterSteps.match(/paintedBox\(/g)?.length ?? 0);

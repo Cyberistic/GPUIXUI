@@ -1,17 +1,6 @@
 import { findRanges, replaceAll } from "@gpuixui/editor/search/logic";
 import { useState, type KeyboardEvent } from "react";
 
-/**
- * Browser preview for the Search and replace page.
- *
- * The scan and the replace-all are the package's own `search/logic`, so the
- * `n / m` readout is the number of replacements a replace-all would make and
- * the two toggles narrow it exactly as the component's do (case-sensitive by
- * default, whole-word off, and a case-insensitive scan runs the escaped literal
- * rather than a lowered copy of the text). The bar owns no document: every
- * replacement arrives through the text below, which is the caller's.
- */
-
 export const FIND_SAMPLE = `The build preview is ready.
 Open the preview before the release.
 A preview is never the authority.`;
@@ -24,7 +13,6 @@ interface Options {
   readonly wholeWord: boolean;
 }
 
-/** Swap one match, from the range the scan returned. */
 export const replaceRange = (
   value: string,
   start: number,

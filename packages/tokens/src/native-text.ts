@@ -1,75 +1,3 @@
-/**
- * The theme a GPUix native text host takes.
- *
- * `<input>`, `<textarea>` and `<code>` are drawn by the runtime's text engine
- * rather than by the style system, so the palette reaches them through a
- * `theme` prop instead of the properties `styles.ts` resolves. A host given no
- * theme layers its fields on GPUix's **built-in dark theme** (pinned
- * `@gpuix/native@0.11.0` typings, `GpuixTheme`: "layers on top of the built-in
- * dark theme (or light, via `appearance`)"), so a field in a light theme would
- * paint a placeholder and a caret chosen for a dark surface while its own fill,
- * value and selection wash come from this package. That is the gap this seam
- * closes: one call turns a `Theme` into the object the host takes.
- *
- * The roles are the ones the contrast table measures for a field: the value's
- * role is `inputForeground` on the fill, the placeholder is `placeholder` on the
- * fill at the secondary floor, and the caret is the `primary` mark on the fill at
- * the non-text floor. `nativeTextFills` names the fills the library's fields
- * paint — a plain field paints `input`, while a composite field (search, tag
- * and mention fields, the chat composer, the inline edit, the colour picker's
- * hex field) paints the page role, so the host has to be told which one its
- * values and placeholder sit on.
- *
- * Only a `<code>`, `<diff>` and `<markdown>` host paints its ink from this
- * object: at the pinned release an `<input>`/`<textarea>` paints its value from
- * the element's own `style.color` (`custom_elements/input.rs`), so `text` never
- * reaches a field and a host handed only this object paints the platform
- * default — near-black on a dark fill. Pass the role as a property too
- * ({@link nativeTextTheme} carries the example); the playground's `field-ink`
- * probe measured the difference off a captured frame.
- *
- * The palette is not the only thing a host takes from this object: a `<code>`
- * host sizes its block from the runtime theme's `metrics`, so the type scale's
- * block role (`typography.codeBlock`) reaches it the same way. The runtime's
- * own code metrics are 12.5/18 (`packages/native/src/theme.rs`'s `Metrics`),
- * which is not this library's scale. The same object carries the **spacing**
- * scale: every inset and gap a document host paints is a step, so a fence's
- * padding, a table cell's, a diff row's and the gap between two blocks move with
- * a brand's `spacing` instead of staying at the runtime's own Comet numbers.
- *
- * A `<markdown>` host is the document host: its body and headings take the
- * scale's own roles, its inline code is the page ink on a `muted` chip
- * (`codeText`/`codeWash` — the runtime's violet is a second syntax palette this
- * package does not own), its table rules take `border`, and its ordered list
- * numbers, bullet discs and block-quote rail are the accent at fixed shares of
- * it — so the seam derives that accent for the composite rather than handing
- * over the fill role ({@link nativeAccent}).
- *
- * A fenced code block inside that document is a surface of its own: the host
- * lays {@link nativeFenceInk} of a neutral ink over the fill it was handed and
- * another {@link nativeFenceHeaderInk} under the language strip, so the syntax
- * palette is read on that composite and not only on the page
- * ({@link nativeFenceFill}). The strip's fill is three points from the block it
- * labels — under the perceptibility floor — and the rule the runtime draws under
- * it is what carries the boundary; the label itself is measured on the strip.
- *
- * A `<diff>` host paints three more roles, and the runtime derives a row's wash
- * from one of them: an added line's ink is `diffAdd` with the row tinted
- * {@link nativeDiffWash} of that same colour over the fill, a removed line's is
- * `diffDel`, a hunk header sits on `diffHunkBg` and its file path is `textDim`.
- * Without them a diff in a light theme paints the runtime's built-in green and
- * red — designed for its own dark palette — and no theme role reaches it.
- *
- * One role the runtime does **not** read: an empty `<input>`/`<textarea>` shapes
- * its placeholder with a fixed `#8F8F8F` (`custom_elements/input.rs` at the
- * pinned release), so `textFaint` reaches a `<code>`'s gutter numbers and a
- * `<diff>`'s meta rows but never a field's placeholder. The `placeholder` role
- * is still the faint role this package paints itself (a number field's
- * unavailable steppers) and the one the contrast table holds on both fills; a
- * component that needs a themed placeholder in its field has to paint the text
- * instead of handing the host one.
- */
-
 import { blend, themeColors, type ColourSource } from "./color.js";
 import { opaqueRgb } from "./measure.js";
 import {
@@ -88,37 +16,15 @@ import {
 import { themeModeOf, type ThemeMode } from "./mode.js";
 import { typography } from "./typography.js";
 
-/**
- * A theme, or anything shaped like one, as the native text seams read it.
- *
- * A host is handed the theme an application currently paints, which is often a
- * value restored from storage: the colour, type, radius and spacing groups may
- * be absent or `null`, and the mode may be a name this release does not ship.
- * Each is read through a seam that answers the library's own value, or no
- * accent, so this is the shape a store hands back rather than a complete
- * `Theme` — the rule `missingTokens` follows for the same reason.
- */
 export interface NativeTextSource extends TypeSource, ColourSource {
   readonly radius?: Readonly<Partial<Radius>> | null;
   readonly spacing?: Readonly<Partial<Spacing>> | null;
   readonly mode?: unknown;
   readonly contrast?: unknown;
-  /**
-   * The syntax palette as the theme carries it — a saved table may name only
-   * some tokens, and {@link syntaxColors} completes it from the table for the
-   * theme's mode and variant, so a host is never handed a key the runtime would
-   * paint from its own palette.
-   */
+
   readonly syntax?: StoredSyntax | null;
 }
 
-/**
- * A numeric step a stored theme may have lost, or one it wrote as something the
- * renderer drops (`"12"`, `null`, `NaN`). A paint seam answers the library's own
- * step instead of throwing: the gate refuses such a theme, and a host can be
- * handed one nobody has audited yet — the rule `@gpuixui/primitives`'
- * `scaleValue` already follows.
- */
 const stepOf = <Step extends string>(
   scale: Readonly<Partial<Record<Step, number>>> | null | undefined,
   library: Readonly<Record<Step, number>>,
@@ -130,7 +36,6 @@ const stepOf = <Step extends string>(
     : library[step];
 };
 
-/** The font family a theme paints with, or the library's own face. */
 const familyOf = (theme: TypeSource, family: "sans" | "mono"): string => {
   const name: unknown = theme.typography?.[family];
   return typeof name === "string" && name.trim() !== ""
@@ -138,54 +43,16 @@ const familyOf = (theme: TypeSource, family: "sans" | "mono"): string => {
     : typography[family];
 };
 
-/**
- * The fills a field paints, which decide the surface the host's value,
- * placeholder and caret are measured on. `input` is a plain field's fill;
- * `background` is the page role a composite field paints as its own fill.
- */
 export const nativeTextFills = ["input", "background"] as const;
 
-/** One fill a field paints. */
 export type NativeTextFill = (typeof nativeTextFills)[number];
 
-/**
- * The share of a diff line's own ink the runtime lays under it as that row's
- * wash: a `<diff>` row tints itself `0.055` of `diffAdd` or `diffDel` over the
- * fill (`packages/native/src/custom_elements/diff.rs` at the pinned
- * `@gpuix/native@0.11.0`), so the two jobs share one value. The contract
- * therefore measures the ink twice — on the fill and on the wash it derives —
- * and measures the wash itself against the fill, because a row a reader cannot
- * find is not a changed line.
- */
 export const nativeDiffWash = 0.055;
 
-/**
- * The share of a neutral ink a `<markdown>` host lays under a fenced code block:
- * the runtime paints the fence `0.035` of black (on a light fill) or white (on a
- * dark one) over the document's own fill (`packages/native/src/markdown/render.rs`
- * at the pinned `@gpuix/native@0.11.0`), so the block has a surface of its own
- * rather than borrowing the page. The ink is neutral and derived from the host's
- * `bg` lightness, not from a role: no token carries it, so the fence fill is a
- * composite this seam measures rather than a value a theme names
- * ({@link nativeFenceFill}).
- */
 export const nativeFenceInk = 0.035;
 
-/**
- * The share of the same neutral ink the fence's **language strip** lays over the
- * fence body, which the runtime paints as a second wash (`0.02`) under the strip
- * and above the block's own fill.
- *
- * The two washes are three points apart, so the strip's own fill is under the
- * 1.05:1 perceptibility floor over the fence in every light style (the tightest
- * is the Windows XP look's 1.041:1). The strip is carried by its **rule** — the
- * runtime draws a `border` under the strip and around the block — the way a
- * field's resting edge carries it (§7 of the design system), so the fill is
- * recorded as measured rather than treated as a boundary.
- */
 export const nativeFenceHeaderInk = 0.02;
 
-/** The neutral ink a document's fence lays down for a fill of this lightness. */
 const fenceInk = (fill: string): string | undefined => {
   const rgb = opaqueRgb(fill);
   if (rgb === undefined) {
@@ -193,51 +60,17 @@ const fenceInk = (fill: string): string | undefined => {
   }
   const channel = (at: number): number =>
     Number.parseInt(rgb.slice(at, at + 2), 16);
-  // The runtime picks the ink from the host's `bg` in HSL (`bg.l < 0.5`, read
-  // from the theme object's `bg` field, which this seam sets to the fill). HSL
-  // lightness is the mean of the widest and narrowest channel, so a saturated
-  // fill is not mistaken for a dark one.
+
   const widest = Math.max(channel(1), channel(3), channel(5));
   const narrowest = Math.min(channel(1), channel(3), channel(5));
   return (widest + narrowest) / 2 / 255 < 0.5 ? "#FFFFFF" : "#000000";
 };
 
-/**
- * The fill a `<markdown>` host paints under a fenced code block.
- *
- * The host lays {@link nativeFenceInk} of a neutral ink over the fill it was
- * handed, so the tokens inside a fence are read on a surface this package does
- * not name: a dark style's page is lifted, and a token that cleared the page can
- * miss its floor there. Pass the same role the host was handed
- * (`theme.colors[fill]`, for a `fill` in {@link nativeTextFills}).
- *
- * A value the contract cannot measure — a perceptual colour — resolves to
- * `undefined` rather than to a guessed ink, the rule the other derived colours
- * follow.
- *
- * @example
- * ```ts
- * import { nativeFenceFill, nativeTextTheme, syntaxColors, themes } from "@gpuixui/tokens";
- *
- * const host = nativeTextTheme(themes.dark, "background");
- * // The fence is the composite a keyword is read on, not the page:
- * const fence = nativeFenceFill(themes.dark.colors.background);
- * ```
- */
 export function nativeFenceFill(fill: string): string | undefined {
   const ink = fenceInk(fill);
   return ink === undefined ? undefined : blend(fill, ink, nativeFenceInk);
 }
 
-/**
- * The fill the fence's **language strip** paints: {@link nativeFenceHeaderInk}
- * of the same neutral ink over {@link nativeFenceFill}.
- *
- * A strip that differs from its block by three points is not a boundary, and the
- * runtime does not ask it to be one — the rule under the strip and around the
- * block is. This is the surface the language label is read on, so the label's
- * floor is measured here.
- */
 export function nativeFenceHeaderFill(fill: string): string | undefined {
   const body = nativeFenceFill(fill);
   const ink = fenceInk(fill);
@@ -246,164 +79,90 @@ export function nativeFenceHeaderFill(fill: string): string | undefined {
     : blend(body, ink, nativeFenceHeaderInk);
 }
 
-/**
- * The layout numbers a native text host takes from the theme.
- *
- * A host lays its rows out from the runtime theme's metrics rather than from
- * `StyleDesc`, so the type scale reaches it through here — the code block, a
- * diff's rows and a rendered document's body and headings — and so does the
- * spacing scale, through every inset and gap a document host paints: a fence's
- * padding, a table cell's, a diff row's, the gutter's gap and the gap between
- * two blocks. The runtime's own numbers are Comet's (`theme.rs`'s `Metrics`),
- * and one of them is not a step in this scale at all, so without the seam a
- * brand that retunes `spacing` grew the component tree and left a rendered
- * document at another design system's rhythm.
- *
- * What stays the runtime's is what a spacing step cannot describe: the columns
- * a line number, marker and accent bar are laid in, the minimum widths a table
- * column may shrink to, and the fixed row heights a diff's virtualizer measures
- * without laying the row out. Those are a row model, not padding.
- */
 export interface NativeTextMetrics {
-  /** Code type size in pixels, from `typography.codeBlock`. */
   readonly codeTextSize: number;
-  /** Code line height in pixels, from `typography.codeBlock`. */
+
   readonly codeLineHeight: number;
-  /** A diff line's type size, from `typography.codeBlock`. */
+
   readonly diffTextSize: number;
-  /** A diff line's leading, from `typography.codeBlock`. */
+
   readonly diffLineHeight: number;
-  /** A rendered document's body size, from `typography.body`. */
+
   readonly mdTextSize: number;
-  /** A rendered document's body leading, from `typography.body`. */
+
   readonly mdLineHeight: number;
-  /** `[h1, h2, h3, h4to6]` sizes, from the scale's heading roles and `body`. */
+
   readonly mdHeadingSizes: number[];
-  /** The same headings' leadings. */
+
   readonly mdHeadingLineHeights: number[];
-  /** A markdown code card's corner, from `radius.lg`. */
+
   readonly mdCodeRadius: number;
-  /**
-   * The language strip a fence paints above its code, from `caption`. The
-   * runtime's own is `11` (`packages/native/src/theme.rs`'s `Metrics`), a size
-   * no role in the scale carries, so a brand's quiet label role stopped at the
-   * one label a document paints.
-   */
+
   readonly mdCodeHeaderTextSize: number;
-  /** An inline code chip's corner, from `radius.sm`. */
+
   readonly mdInlineCodeRadius: number;
-  /** The gutter's right inset, from `spacing.lg`. */
+
   readonly codeGutterPaddingRight: number;
-  /** A diff row's horizontal inset, from `spacing.xl`. */
+
   readonly diffRowPaddingX: number;
-  /** The pad under a diff's last row, from `spacing.md`. */
+
   readonly diffBodyBottomPad: number;
-  /** The gap between two document blocks, from `spacing.lg`. */
+
   readonly mdBlockGap: number;
-  /** A document table cell's inset on every side, from `spacing.lg`. */
+
   readonly mdTableCellPadding: number;
-  /** A fenced code card's horizontal inset, from `spacing.lg`. */
+
   readonly mdCodePaddingX: number;
-  /** A fenced code card's vertical inset, from `spacing.md`. */
+
   readonly mdCodePaddingY: number;
-  /** The language strip's vertical inset, from `spacing.xs`. */
+
   readonly mdCodeHeaderPaddingY: number;
 }
 
-/**
- * The subset of GPUix's `GpuixTheme` this package fills in. Structurally
- * compatible with the runtime's type, whose fields are all optional.
- *
- * The colour fields are optional for the same reason the runtime's are: a role
- * a stored theme lost is a property the host is not handed, and it paints its
- * own default for it. The type scale and the syntax palette are always complete:
- * a stored theme that lost the type group, a role, or a radius or spacing step
- * paints the library's own value — a host is built mid-render, and the gate
- * (`missingTokens`) is the seam that refuses such a theme. The syntax palette
- * resolves from the shipped table when the theme carries none.
- */
 export interface NativeTextTheme {
-  /** The appearance the host's own defaults follow. */
   readonly appearance: ThemeMode;
-  /** The fill behind the value, from the field's own fill role. */
+
   readonly bg?: string;
-  /**
-   * The ink a `<code>`, `<diff>` and `<markdown>` host paints. A field does not
-   * read it: an `<input>`/`<textarea>` paints its value from the element's
-   * `color`, which a field hands over beside this object (see the example).
-   */
+
   readonly text?: string;
-  /** Secondary text inside the host, from `mutedForeground`. */
+
   readonly textMuted?: string;
-  /**
-   * The faint role, measured on {@link bg}. It reaches a `<code>`'s gutter
-   * numbers and a `<diff>`'s meta rows; an `<input>`'s placeholder is fixed by
-   * the runtime and does not read it (see the module comment).
-   */
+
   readonly textFaint?: string;
-  /**
-   * The accent a document host paints its own marks in, from `primary` and
-   * derived for the 85% composite a list number is drawn at ({@link nativeAccent}).
-   */
+
   readonly accent?: string;
-  /** Caret colour, the `primary` mark on {@link bg}. */
+
   readonly caret?: string;
-  /** UI family, from `typography.sans`. */
+
   readonly fontSans: string;
-  /** Monospace family, from `typography.mono`. */
+
   readonly fontMono: string;
-  /** Code block type, from {@link NativeTextMetrics}. */
+
   readonly metrics: NativeTextMetrics;
-  /**
-   * The added-line ink and the hue of its row wash, from the `success` tone's
-   * three roles. Absent when the theme lost one of them.
-   */
+
   readonly diffAdd?: string;
-  /**
-   * The removed-line ink and the hue of its row wash, from `destructive`'s three
-   * roles. Absent when the theme lost one of them.
-   */
+
   readonly diffDel?: string;
-  /** The hunk header's fill: the `muted` role, the chrome stripe. */
+
   readonly diffHunkBg?: string;
-  /** The diff's file-path chrome, from `mutedForeground`. */
+
   readonly textDim?: string;
-  /**
-   * An inline code run's ink: the page's own `foreground`, so a document's code
-   * reads as prose in a chip rather than as a second syntax palette.
-   */
+
   readonly codeText?: string;
-  /** The chip behind an inline code run, from `muted`. */
+
   readonly codeWash?: string;
-  /** Table rules and dividers a rendered document draws, from `border`. */
+
   readonly border?: string;
-  /**
-   * The token colours a `<code>` host highlights with, from
-   * {@link syntaxColors}: the runtime reads them from this field and paints its
-   * own dark-default palette when it is absent.
-   */
+
   readonly syntax: SyntaxColors;
 }
 
-/**
- * The shares a document host paints its accent at, measured from the runtime's
- * markdown renderer (`packages/native/src/markdown/render.rs` at the pinned
- * `@gpuix/native@0.11.0`): an ordered list's number and an unordered list's disc
- * are `opacity(accent, 0.85)`, a block quote's rail is `0.6`, and the wash behind
- * its copy is `0.05`. The numbers are labels a reader reads, so the marker share
- * is the one the accent has to carry.
- */
 export const nativeAccentShares = {
   marker: 0.85,
   rail: 0.6,
   wash: 0.05,
 } as const;
 
-/**
- * The fills a rendered document sits on — the page, a card, a floating surface
- * and a `muted` strip — the same content tones the selection and find washes are
- * measured on.
- */
 export const nativeAccentSurfaces = [
   "background",
   "card",
@@ -411,55 +170,17 @@ export const nativeAccentSurfaces = [
   "muted",
 ] as const;
 
-/** One fill a rendered document sits on. */
 export type NativeAccentSurface = (typeof nativeAccentSurfaces)[number];
 
-/**
- * The granularity of the accent's derivation: 2% of the way from the brand to
- * the theme's foreground per step, so a document keeps as much of the brand as
- * the surface allows.
- */
 const ACCENT_STEPS = 50;
 
-/**
- * The accent a document host paints its own marks in.
- *
- * The host never paints the accent solid: a list number and a bullet are 85% of
- * it over the document's fill, so the role is read through that composite — and
- * the fill role is not readable there. Measured over the 18 shipped,
- * high-contrast, platform and authored styles, `primary` at the marker share
- * lands under the 4.5:1 label floor in **11 of them** — every light style, plus
- * Dark · macOS (3.97:1) and Dark · Linux (4.10:1) — the tightest being Windows XP
- * (Luna) light's `muted` strip at **3.09:1** (the base theme's page reads
- * 4.00:1), while the same colour as a solid mark clears the 3:1 floor — which is
- * why no existing contract saw it.
- *
- * The answer is the theme's own `primary`, moved toward its `foreground` by the
- * smallest 2% step whose marker composite clears the floor on every fill a
- * document can sit on, and whose rail composite stays visible (1.05:1). A theme
- * whose brand already reads returns it unchanged; one the renderer cannot
- * measure is returned unchanged rather than guessed at, the rule the other
- * derived text colours follow. A theme that lost its `primary` answers
- * `undefined`, so the host paints its own mark colour rather than a guess; a
- * fill a stored theme lost does not constrain the step, because nothing is
- * painted there to measure. The input is a {@link NativeTextSource}, the shape a
- * store hands back, so a decoded theme is read without a cast to `Theme`.
- *
- * @example
- * ```ts
- * import { nativeAccent, nativeAccentShares, alpha, type Theme } from "@gpuixui/tokens";
- *
- * const marker = alpha(nativeAccent(theme), nativeAccentShares.marker);
- * ```
- */
 export function nativeAccent(
   source: NativeTextSource,
   floors: ContrastFloors = contrastFloorsFor(source),
 ): string | undefined {
   const colors = themeColors(source);
   const primary = colors.primary;
-  // A theme that lost its brand has no accent to derive: the host paints its own
-  // mark colour, the rule every absent role follows.
+
   if (primary === undefined) {
     return undefined;
   }
@@ -467,8 +188,7 @@ export function nativeAccent(
   const carries = (colour: string): boolean =>
     nativeAccentSurfaces.every((surface) => {
       const fill = colors[surface];
-      // A surface the theme lost cannot constrain the derivation: the host
-      // paints its own fill there, and the rule is not to guess a role.
+
       if (fill === undefined) {
         return true;
       }
@@ -485,68 +205,23 @@ export function nativeAccent(
         (rail === undefined || rail >= decorativeFloor)
       );
     });
-  // The step search is **lazy**: `find` blends only until the first step that
-  // carries, so a brand that already reads costs one blend instead of the whole
-  // ladder. Building the ladder first meant every field and code host paid 51
-  // blends on the paint path, which is 51 × four surfaces × two ratios.
+
   const step = Array.from({ length: ACCENT_STEPS + 1 }, (_, at) => at).find(
     (at) => carries(blend(primary, rest, at / ACCENT_STEPS)),
   );
-  // No step carries is a theme whose brand and ink cannot separate the mark from
-  // its fill; the ink is the most readable colour the theme has.
+
   return step === undefined ? rest : blend(primary, rest, step / ACCENT_STEPS);
 }
 
-/**
- * The theme a native text host takes for one of a field's fills.
- *
- * The object does not paint a field's value on its own: pass the role as the
- * element's `color` beside it, the pair the contrast table measures on the fill.
- * The input is a {@link NativeTextSource}, the shape a store hands back, so a
- * decoded theme is painted without a cast to `Theme`.
- *
- * **A role the theme lost is dropped, not read.** A theme restored from storage
- * can predate a role this release added, and `auditTheme` reports that absence
- * (it does not refuse the theme), so a consumer that runs the gate and paints
- * anyway must not crash here: `statusTone` answers `undefined` for a tone whose
- * three roles are not all there, and the seam reads every role through
- * {@link themeColors} — so a field the theme cannot fill is absent and the host
- * paints its own default, the rule {@link statusTone} and {@link brandText}
- * already follow. The host theme's colour fields are therefore optional.
- *
- * @example
- * ```tsx
- * import { nativeTextTheme } from "@gpuixui/tokens";
- *
- * <input
- *   theme={nativeTextTheme(theme)}
- *   style={{
- *     backgroundColor: theme.colors.input,
- *     color: theme.colors.inputForeground,
- *   }}
- * />
- * // A composite field paints the page role instead, so the host is told which
- * // surface its placeholder is measured on:
- * <input
- *   theme={nativeTextTheme(theme, "background")}
- *   style={{
- *     backgroundColor: theme.colors.background,
- *     color: theme.colors.inputForeground,
- *   }}
- * />
- * ```
- */
 export function nativeTextTheme(
   theme: NativeTextSource,
   fill: NativeTextFill = "input",
 ): NativeTextTheme {
   const colors = themeColors(theme);
-  // A tone is three roles; one a store lost is a tone the host has no ink for,
-  // and the runtime paints its own green or red rather than a guessed role.
+
   const added = statusTone({ colors }, "success");
   const removed = statusTone({ colors }, "destructive");
-  // Every type role a document host reads, through the one seam: a stored theme
-  // that lost the group answers the library's role rather than throwing here.
+
   const code = textStyle(theme, "codeBlock");
   const body = textStyle(theme, "body");
   const h1 = textStyle(theme, "h1");
@@ -559,27 +234,19 @@ export function nativeTextTheme(
     text: colors.inputForeground,
     textMuted: colors.mutedForeground,
     textFaint: colors.placeholder,
-    // A document host paints this at 85% behind its list numbers and bullets, so
-    // the role is derived for that composite rather than handed over raw.
+
     accent: nativeAccent(theme),
     caret: colors.primary,
     fontSans: familyOf(theme, "sans"),
     fontMono: familyOf(theme, "mono"),
-    // A `<code>` host sizes its block from the runtime theme, not from a style
-    // property, so the scale's block role is handed over here. The runtime's
-    // own default is 12.5/18 (`packages/native/src/theme.rs`'s `Metrics`), which
-    // is not this library's type scale: without this a brand's `codeBlock` role
-    // stops at the code host while every other role reaches it. Each role reads
-    // through the paint seam, so a stored theme that lost the group answers the
-    // library's role rather than throwing at a host's first paint.
+
     metrics: {
       codeTextSize: code.fontSize,
       codeLineHeight: code.lineHeight,
-      // A diff is code, so it follows the block role rather than the runtime's
-      // own 12/21: a brand that changes its code scale expects both.
+
       diffTextSize: code.fontSize,
       diffLineHeight: code.lineHeight,
-      // A rendered document is prose, so its body and headings are the scale's.
+
       mdTextSize: body.fontSize,
       mdLineHeight: body.lineHeight,
       mdHeadingSizes: [h1.fontSize, h2.fontSize, h3.fontSize, body.fontSize],
@@ -590,14 +257,10 @@ export function nativeTextTheme(
         body.lineHeight,
       ],
       mdCodeRadius: stepOf(theme.radius, radius, "lg"),
-      // A fence's language strip is a quiet label rather than code, so it
-      // follows the scale's label role; the runtime's own 11 belongs to no role
-      // and would stay put while the rest of a brand's type moved.
+
       mdCodeHeaderTextSize: caption.fontSize,
       mdInlineCodeRadius: stepOf(theme.radius, radius, "sm"),
-      // The document host's insets and gaps are padding, so they are the
-      // spacing scale's: the runtime's own are Comet's (10 and 5 are not steps
-      // here), and a brand that retunes spacing expects a document to follow.
+
       codeGutterPaddingRight: stepOf(theme.spacing, spacing, "lg"),
       diffRowPaddingX: stepOf(theme.spacing, spacing, "xl"),
       diffBodyBottomPad: stepOf(theme.spacing, spacing, "md"),
@@ -605,27 +268,18 @@ export function nativeTextTheme(
       mdTableCellPadding: stepOf(theme.spacing, spacing, "lg"),
       mdCodePaddingX: stepOf(theme.spacing, spacing, "lg"),
       mdCodePaddingY: stepOf(theme.spacing, spacing, "md"),
-      // A language strip is a tight label strip, so it takes the hairline-
-      // adjacent step rather than a card's inset.
+
       mdCodeHeaderPaddingY: stepOf(theme.spacing, spacing, "xs"),
     },
-    // The tone's readable role, not its solid fill: the ink is painted as text
-    // (a file's `+12`, a line's marker and number) and the same value is the
-    // wash's hue. A fill role is designed to carry `xForeground`, so it is the
-    // wrong role to read — light `warning` measures 1.78:1 on the page.
+
     diffAdd: added?.foreground,
     diffDel: removed?.foreground,
     diffHunkBg: colors.muted,
     textDim: colors.mutedForeground,
-    // Inline code is prose in a chip: the runtime's own violet ink and 10% wash
-    // are a second syntax palette no token owns, while the page ink on the muted
-    // surface is the pair the contrast table already measures at the body floor.
+
     codeText: colors.foreground,
     codeWash: colors.muted,
     border: colors.border,
     syntax: syntaxColors(theme),
-    // The runtime reads a code block's token colours from here and paints its
-    // own dark-default palette when the field is absent, so a light theme's
-    // block would be highlighted for a dark canvas.
   };
 }

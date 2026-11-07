@@ -21,19 +21,6 @@ import {
   visibleEntries,
 } from "./log-viewer-demo";
 
-/**
- * The Log viewers preview.
- *
- * `packages/files/docs/log-viewer.mdx` is the package's Markdown, so the site
- * mounts the drawing from `package-preview.ts`. The registry guard sees the
- * demo; these cases hold the drawing to the package's own rules: the rows are
- * `parseLogLine`, the filter is `filterByLevel`, the tint is `levelTone`, the
- * gutter is `LEVEL_COLUMN_WIDTH`, a row is the density's `rowHeight`, and the
- * frame is the height the page's usage passes. The bug guarded is the drawing
- * that painted a 200px list of 17px lines under a hand-rolled toolbar, leaving
- * an empty band under eight rows and no aligned level column.
- */
-
 const root = new URL("../../../../../", import.meta.url);
 
 const read = (path: string): string =>
@@ -53,7 +40,6 @@ const markup = (
     />,
   );
 
-/** One rule body from the drawing's style sheet, without its selector. */
 const rule = (selector: string): string => {
   const css = read("apps/docs/src/styles/demos.css");
   const start = css.indexOf(`${selector} {`);
@@ -61,7 +47,6 @@ const rule = (selector: string): string => {
   return start === -1 || end === -1 ? "" : css.slice(start, end);
 };
 
-/** The level of every painted row, in paint order. */
 const paintedLevels = (html: string): ReadonlyArray<string> =>
   Arr.map(
     Arr.fromIterable(
@@ -76,7 +61,7 @@ describe("the LogViewer preview", () => {
 
     expect(all.length).toBe(LOG_LINES.length);
     expect(all.map((entry) => entry.level)).toContain("error");
-    // The parser strips the level token; the message is what is left.
+
     expect(all[0]).toEqual({
       level: "info",
       message: "dev server started on :5173",
@@ -85,7 +70,7 @@ describe("the LogViewer preview", () => {
     const quiet = visibleEntries(LOG_LINES, ["error", "warn"]);
     const errors = Arr.filter(all, (entry) => entry.level === "error");
     expect(quiet.length).toBe(errors.length + 2);
-    // `warning` is the same severity as `warn`; the parser reads the alias.
+
     expect(
       Arr.some(quiet, (entry) => entry.message.includes("legacyProxy")),
     ).toBe(true);
@@ -107,7 +92,7 @@ describe("the LogViewer preview", () => {
       expect(entries.length).toBeGreaterThan(0);
       expect(Arr.every(entries, (entry) => entry.level === level)).toBe(true);
       expect(painted).toEqual(entries.map((entry) => entry.level));
-      // No level but the chosen one reaches the list.
+
       expect(Arr.every(painted, (paintedLevel) => paintedLevel === level)).toBe(
         true,
       );
@@ -127,15 +112,14 @@ describe("the LogViewer preview", () => {
     const html = markup(true);
     const page = read("packages/files/docs/log-viewer.mdx");
 
-    // The gutter is the package's own column width, on every row.
     expect(LEVEL_COLUMN_WIDTH).toBe(56);
     expect(
       html.match(new RegExp(`width:${LEVEL_COLUMN_WIDTH}px`, "g")),
     ).toHaveLength(visibleEntries(LOG_LINES, LOG_LEVELS).length);
-    // A row is the density's row, not a line-height the drawing invented.
+
     expect(rule(".gx-logviewer-row")).toContain("height: var(--row-height);");
     expect(rule(".gx-logviewer-list")).not.toContain("height:");
-    // The frame is the viewport the component's page documents.
+
     expect(LOG_FRAME_HEIGHT).toBe(240);
     expect(page).toContain(`height={${LOG_FRAME_HEIGHT}}`);
     expect(html).toContain(`style="height:${LOG_FRAME_HEIGHT}px"`);
@@ -144,8 +128,6 @@ describe("the LogViewer preview", () => {
   it("fills the frame with every filtered row", () => {
     const entries = visibleEntries(LOG_LINES, LOG_LEVELS);
 
-    // Follow mode anchors the scroller; it does not truncate the rows, which
-    // is what left the old 200px frame empty under eight 17px lines.
     expect(paintedLevels(markup(true))).toHaveLength(entries.length);
     expect(paintedLevels(markup(false))).toHaveLength(entries.length);
     expect(paintedLevels(markup(true, ["error"]))).toHaveLength(
@@ -162,7 +144,7 @@ describe("the LogViewer preview", () => {
     expect(html).toContain(">Follow tail<");
     expect(demo).toContain(">Append a line<");
     expect(html).toContain(">Error<");
-    // The readout is a caption under the frame, never inside it.
+
     expect(html).toContain('</div></div><p class="gx-demo-readout">');
   });
 
@@ -178,8 +160,7 @@ describe("the LogViewer preview", () => {
     expect(one.length).toBe(LOG_LINES.length + 1);
     expect(two.length).toBe(LOG_LINES.length + 2);
     expect(one).not.toEqual(two);
-    // The appended line is the next of the preview's own queue, and it parses
-    // like any other line, so follow mode paints it.
+
     expect(Option.getOrNull(Arr.last(one))).toBe(
       APPENDED_LINES[LOG_LINES.length % APPENDED_LINES.length],
     );
@@ -198,10 +179,10 @@ describe("the LogViewer preview", () => {
     expect(source).toContain("levelTone");
     expect(source).toContain("LEVEL_COLUMN_WIDTH");
     expect(source).toContain("LOG_LEVELS");
-    // A second grammar would show up as a regex beside the package's parser.
+
     expect(source).not.toContain("RegExp");
     expect(source).not.toContain("/^");
-    // The filter's set is the package's, never a locally sorted list.
+
     expect(source).not.toContain(".sort(");
   });
 });

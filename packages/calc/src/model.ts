@@ -1,12 +1,3 @@
-/**
- * The model seam.
- *
- * Everything the session and the app need to know about *which* calculator they
- * are driving lives here: the modes, the keypad, the searchable catalogue and
- * the feature capabilities. The fx-991ES Plus is the only model today; a TI-84
- * becomes a second `CalculatorModel`, not a fork of the app.
- */
-
 import * as Arr from "effect/Array";
 import type { CalculatorCommand, ModeSpec } from "./commands.js";
 
@@ -18,16 +9,15 @@ export type Tone =
   | "equals"
   | "accent";
 
-/** One physical key: what it paints and what SHIFT/ALPHA make it do. */
 export interface KeypadKey {
   readonly id: string;
   readonly primary: string;
   readonly shift?: string;
   readonly alpha?: string;
   readonly tone?: Tone;
-  /** How many grid columns the key occupies. Defaults to one. */
+
   readonly span?: number;
-  /** An accessible name when the painted glyph is not a word. */
+
   readonly label?: string;
 }
 
@@ -35,7 +25,6 @@ export interface KeypadRow {
   readonly keys: ReadonlyArray<KeypadKey>;
 }
 
-/** The round replay pad: four keys under one cap. */
 export interface DirectionPad {
   readonly up: KeypadKey;
   readonly down: KeypadKey;
@@ -43,10 +32,6 @@ export interface DirectionPad {
   readonly right: KeypadKey;
 }
 
-/**
- * A keypad as the device lays it out: the top cluster (two key columns either
- * side of the replay pad), the small function keys, and the large main keys.
- */
 export interface Keypad {
   readonly cluster: {
     readonly left: ReadonlyArray<KeypadRow>;
@@ -60,7 +45,6 @@ export interface Keypad {
 const rowKeys = (rows: ReadonlyArray<KeypadRow>) =>
   Arr.flatMap(rows, (row) => row.keys);
 
-/** Every key on a keypad, top to bottom. */
 export const keypadKeys = (keypad: Keypad): ReadonlyArray<KeypadKey> => [
   ...rowKeys(keypad.cluster.left),
   keypad.cluster.pad.up,
@@ -72,7 +56,6 @@ export const keypadKeys = (keypad: Keypad): ReadonlyArray<KeypadKey> => [
   ...rowKeys(keypad.main),
 ];
 
-/** What a model can and cannot do, with the reason for every `false`. */
 export interface ModelCapabilities {
   readonly naturalDisplay: boolean;
   readonly complex: boolean;
@@ -85,7 +68,7 @@ export interface ModelCapabilities {
   readonly integral: boolean;
   readonly solve: boolean;
   readonly distribution: boolean;
-  /** Not on the fx-991ES Plus manual's mode list; present on later models. */
+
   readonly verify: false;
   readonly notes: ReadonlyArray<string>;
 }

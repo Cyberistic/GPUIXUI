@@ -1,28 +1,15 @@
-/**
- * Verbatim shadcn/ui recipes for the first conformance slice.
- *
- * Source: `references/ui` @ d2fba50, `apps/v4/registry/new-york-v4/ui/`.
- * Do not edit a string here without checking the upstream file; the
- * `upstream.test.ts` guard fails when the two drift.
- */
-
-/** `input.tsx` — the base class string. */
 export const INPUT_BASE =
   "h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none selection:bg-primary selection:text-primary-foreground file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm dark:bg-input/30";
 
-/** `input.tsx` — focus. */
 export const INPUT_FOCUS =
   "focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50";
 
-/** `input.tsx` — invalid. */
 export const INPUT_INVALID =
   "aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40";
 
-/** `button.tsx` — the cva base. */
 export const BUTTON_BASE =
   "inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4";
 
-/** `button.tsx` — cva sizes. */
 export const BUTTON_SIZES = {
   default: "h-9 px-4 py-2 has-[>svg]:px-3",
   xs: "h-6 gap-1 rounded-md px-2 text-xs has-[>svg]:px-1.5 [&_svg:not([class*='size-'])]:size-3",
@@ -34,7 +21,6 @@ export const BUTTON_SIZES = {
   "icon-lg": "size-10",
 } as const;
 
-/** `button.tsx` — cva variants. */
 export const BUTTON_VARIANTS = {
   default: "bg-primary text-primary-foreground hover:bg-primary/90",
   destructive:
@@ -46,30 +32,15 @@ export const BUTTON_VARIANTS = {
   link: "text-primary underline-offset-4 hover:underline",
 } as const;
 
-/** `dialog.tsx` + `style-luma.css` — the overlay. shadcn's `bg-black/30`
- * scrim maps to the theme's `overlay` role (`bg-overlay`) so the veil respects
- * light, dark and high-contrast themes instead of a fixed literal. */
 export const DIALOG_OVERLAY =
   "fixed inset-0 isolate z-50 data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 bg-overlay duration-100 supports-backdrop-filter:backdrop-blur-sm";
 
-/** `dialog.tsx` + `style-luma.css` — the content surface. */
 export const DIALOG_CONTENT =
   "fixed top-1/2 left-1/2 z-50 w-full -translate-x-1/2 -translate-y-1/2 outline-none bg-popover text-popover-foreground data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 ring-foreground/5 dark:ring-foreground/10 grid max-w-[calc(100%-2rem)] gap-6 rounded-4xl p-6 text-sm shadow-xl ring-1 duration-100 sm:max-w-md";
 
-/** `popover.tsx` + `style-luma.css` — the content surface. */
 export const POPOVER_CONTENT =
   "bg-popover text-popover-foreground data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 ring-foreground/5 dark:ring-foreground/10 flex flex-col gap-4 rounded-3xl p-4 text-sm shadow-lg ring-1 duration-100";
 
-// ── Components (fixed metrics) ────────────────────────────────────────
-//
-// The Tier 2 components adopt shadcn's fixed metrics (`h-9` = 36, `px-4` = 16,
-// `text-sm` = 14/20) instead of the primitives' density scale. These strings
-// are the single source of truth for a component's resting appearance; the
-// caller's `className` is joined after them via `cn`. The soft status tones use
-// the library's `*Soft` roles, which shadcn's class vocabulary maps through
-// `bg-*Soft` / `text-*SoftForeground` / `border-*/30`.
-
-/** `card.tsx` — the surface and its three treatments. */
 export const CARD_BASE = "flex flex-col overflow-hidden rounded-lg bg-card";
 export const CARD_VARIANTS = {
   outline: "border border-input",
@@ -83,7 +54,6 @@ export const CARD_CONTENT = "flex flex-col gap-3 px-4 pb-4";
 export const CARD_FOOTER =
   "flex flex-row items-center justify-end gap-2 px-4 pt-3 pb-4 border-t border-input";
 
-/** `badge.tsx` — the status pill. */
 export const BADGE_BASE =
   "flex flex-row items-center self-start rounded-full px-2 pt-0.5 pb-0.5 whitespace-nowrap";
 export const BADGE_SIZES = {
@@ -101,7 +71,6 @@ export const BADGE_VARIANTS = {
   outline: "text-muted-foreground border border-strong",
 } as const;
 
-/** `alert.tsx` — the surface and its four tones. */
 export const ALERT_BASE =
   "flex flex-row items-start gap-3 p-3 rounded-md border";
 export const ALERT_TONES = {
@@ -116,14 +85,12 @@ export const ALERT_CONTENT = "flex flex-col gap-0.5 flex-grow";
 export const ALERT_TITLE = "text-sm font-semibold font-sans";
 export const ALERT_DESCRIPTION = "text-sm font-sans text-foreground";
 
-/** `avatar.tsx` — the identity disc. */
 export const AVATAR_ROOT =
   "relative flex flex-row items-center justify-center shrink-0";
 export const AVATAR_DISC =
   "flex flex-row items-center justify-center w-full h-full rounded-full overflow-hidden bg-muted";
 export const AVATAR_FALLBACK = "text-sm font-medium font-sans text-foreground";
 
-/** `list.tsx` — the list and its rows. */
 export const LIST_ROOT = "flex flex-col gap-0.5";
 export const LIST_ITEM =
   "flex flex-row items-center gap-3 pl-3 pr-3 rounded-sm";
@@ -131,13 +98,11 @@ export const LIST_ITEM_TITLE = "text-sm font-sans text-foreground";
 export const LIST_ITEM_DESCRIPTION =
   "text-xs font-sans text-muted-foreground text-ellipsis whitespace-nowrap";
 
-/** `pagination.tsx` — the landmarks. */
 export const PAGINATION_ROOT = "flex flex-row items-center gap-1";
 export const PAGINATION_LIST = "flex flex-row items-center gap-1";
 export const PAGINATION_ELLIPSIS =
   "text-xs font-sans text-muted-foreground pl-0.5 pr-0.5";
 
-/** `empty-state.tsx` — the centred panel. */
 export const EMPTY_STATE_ROOT =
   "flex flex-col items-center justify-center gap-3 p-8";
 export const EMPTY_STATE_ICON =
@@ -148,7 +113,6 @@ export const EMPTY_STATE_DESCRIPTION =
   "text-sm font-sans text-muted-foreground text-center";
 export const EMPTY_STATE_ACTION = "flex flex-row";
 
-/** `stepper.tsx` — the step list. */
 export const STEPPER_ROOT = "flex gap-6";
 export const STEPPER_ORIENTATION = {
   horizontal: "flex-row items-start",
@@ -162,9 +126,6 @@ export const STEPPER_LABEL = "text-sm font-medium font-sans";
 export const STEPPER_DESCRIPTION = "text-xs font-sans text-muted-foreground";
 export const STEPPER_TEXT = "flex flex-col gap-0.5";
 
-/** `accordion.tsx` — the disclosure stack. The trigger height keeps density
- * (ADR 0006) and the item divider is conditional on the last item, so both stay
- * in the component's `style`. */
 export const ACCORDION_ROOT = "flex flex-col w-full";
 export const ACCORDION_ITEM = "flex flex-col";
 export const ACCORDION_TRIGGER =
@@ -175,7 +136,6 @@ export const ACCORDION_INDICATOR = "text-xs font-sans text-muted-foreground";
 export const ACCORDION_CONTENT =
   "flex flex-col gap-2 px-1 pb-2 text-muted-foreground";
 
-/** `breadcrumb.tsx` — the trail and its crumbs. */
 export const BREADCRUMB_ROOT = "flex flex-row items-center";
 export const BREADCRUMB_LIST = "flex flex-row items-center flex-wrap gap-1";
 export const BREADCRUMB_ITEM = "flex flex-row items-center gap-1";
@@ -186,8 +146,6 @@ export const BREADCRUMB_SEPARATOR =
   "text-xs font-sans text-muted-foreground select-none";
 export const BREADCRUMB_ELLIPSIS = "text-xs font-sans text-muted-foreground";
 
-/** `carousel.tsx` — the slide shell. The slide's `display` is the component's
- * active-index switch and stays in `style`. */
 export const CAROUSEL_ROOT = "flex flex-col gap-2";
 export const CAROUSEL_INDICATORS =
   "flex flex-row items-center justify-center gap-1";
@@ -195,18 +153,14 @@ export const CAROUSEL_TRACK =
   "flex flex-row overflow-hidden rounded-lg border border-input bg-card";
 export const CAROUSEL_SLIDE = "flex flex-col flex-grow";
 
-/** `collapsible.tsx` — the single disclosure section. */
 export const COLLAPSIBLE_ROOT = "flex flex-col gap-0.5";
 export const COLLAPSIBLE_TRIGGER =
   "flex flex-row items-center justify-between gap-2 px-2 py-1.5 rounded-sm text-sm font-medium font-sans text-foreground cursor-pointer";
 export const COLLAPSIBLE_CONTENT =
   "flex flex-col gap-2 px-2 pt-1.5 pb-2 text-muted-foreground";
 
-/** `countdown.tsx` — the clock text. The expired colour stays in `style`. */
 export const COUNTDOWN = "text-xs font-sans";
 
-/** `field.tsx` — the labelled control block. The input height keeps density
- * (ADR 0006) and its validity colours stay in `style`. */
 export const FIELD_ROOT = "flex flex-col gap-1";
 export const FIELD_LABEL_ROW = "flex flex-row gap-0.5";
 export const FIELD_LABEL = "text-sm font-medium font-sans text-foreground";
@@ -215,18 +169,14 @@ export const FIELD_DESCRIPTION = "text-xs font-sans text-muted-foreground";
 export const FIELD_ERROR = "text-xs font-sans text-destructive";
 export const FIELD_INPUT = "text-sm font-sans w-full px-2 rounded-md border";
 
-/** `fieldset.tsx` — the named group, on the card's surface and edge. */
 export const FIELDSET_ROOT =
   "flex flex-col gap-3 rounded-lg border border-input bg-card p-4";
 export const FIELDSET_LEGEND = "text-sm font-medium font-sans";
 
-/** `form.tsx` — the owned-value form boundary. */
 export const FORM_ROOT = "flex flex-col gap-3";
 export const FORM_ERRORS = "flex flex-col gap-0.5";
 export const FORM_ERROR = "text-xs font-sans text-destructive";
 
-/** `hotkey-recorder.tsx` — the chord capture control. The min-height keeps
- * density (ADR 0006). */
 export const HOTKEY_RECORDER =
   "flex flex-row items-center justify-between gap-2 px-2 bg-background rounded-md border border-input";
 export const HOTKEY_RECORDER_TEXT = "text-sm font-sans text-muted-foreground";
@@ -234,15 +184,12 @@ export const HOTKEY_RECORDER_KEYS = "flex flex-row items-center gap-1";
 export const HOTKEY_RECORDER_CLEAR =
   "text-xs font-sans flex items-center justify-center size-4 rounded-sm text-muted-foreground";
 
-/** `inline-edit.tsx` — the display/input swap. Both heights keep density
- * (ADR 0006). */
 export const INLINE_EDIT_DISPLAY =
   "flex flex-row items-center self-start px-1 rounded-sm";
 export const INLINE_EDIT_DISPLAY_TEXT = "text-sm font-medium font-sans";
 export const INLINE_EDIT_INPUT =
   "text-sm font-sans px-1.5 bg-background text-input-foreground rounded-sm border border-input";
 
-/** `keyboard-shortcuts.tsx` — the cheat sheet and its keycaps. */
 export const KEYBOARD_SHORTCUTS_ROOT = "flex flex-col gap-4";
 export const KEYBOARD_SHORTCUTS_GROUP = "flex flex-col gap-0.5";
 export const KEYBOARD_SHORTCUTS_HEADING =
@@ -258,8 +205,6 @@ export const KEYCAP =
   "flex flex-row items-center justify-center min-w-5 h-5 px-1.5 bg-muted rounded-sm border border-input";
 export const KEYCAP_TEXT = "text-xs font-sans text-muted-foreground";
 
-/** `mention-input.tsx` — the mention field and its floating list. The field
- * height keeps density (ADR 0006). */
 export const MENTION_INPUT_FIELD =
   "flex flex-row items-center px-2 bg-background rounded-md border border-input";
 export const MENTION_INPUT_CONTROL =
@@ -270,7 +215,6 @@ export const MENTION_INPUT_ITEM =
   "flex flex-row items-center px-1.5 py-1 rounded-sm";
 export const MENTION_INPUT_ITEM_TEXT = "text-sm font-sans";
 
-/** `search-input.tsx` — the search field. The height keeps density (ADR 0006). */
 export const SEARCH_INPUT =
   "flex flex-row items-center gap-2 px-2 bg-background border border-input rounded-md";
 export const SEARCH_INPUT_ICON =
@@ -280,18 +224,6 @@ export const SEARCH_INPUT_CONTROL =
 export const SEARCH_INPUT_CLEAR =
   "text-xs font-sans flex items-center justify-center size-[18px] rounded-sm text-muted-foreground cursor-pointer";
 
-/**
- * `tag-input.tsx` — the token group. The min-height and field height keep
- * density (ADR 0006).
- *
- * A chip is a **chip**: `bg-secondary` is a fill a step away from the field's
- * own `bg-background`, and its label is the page's `foreground`, because the
- * token a reader typed is body copy. `text-muted-foreground` painted it at the
- * secondary floor — 6.4:1 in the light styles, under the 7:1 a body role is
- * held to — on a fill that was, in a dark style, a shade of the field behind
- * it. The removal glyph stays `muted-foreground`, which is measured on
- * `secondary` at the secondary floor.
- */
 export const TAG_INPUT_ROOT =
   "flex flex-row flex-wrap items-center gap-1 px-1.5 py-0.5 bg-background rounded-md border border-input";
 export const TAG_INPUT_FIELD =
@@ -306,8 +238,6 @@ export const TAG_INPUT_CHIP_TEXT =
 export const TAG_INPUT_CHIP_REMOVE =
   "text-xs font-sans flex items-center justify-center size-4 rounded-sm text-muted-foreground";
 
-/** `timeline.tsx` — the event rail. The dot fill and the last item's padding
- * stay in `style`; the connector is a 1px element (`w-px`). */
 export const TIMELINE_ROOT = "flex flex-col gap-3";
 export const TIMELINE_ITEM = "flex flex-row items-stretch self-stretch gap-2";
 export const TIMELINE_RAIL = "flex flex-col items-center w-4";
@@ -318,375 +248,214 @@ export const TIMELINE_TIMESTAMP = "text-xs font-sans text-muted-foreground";
 export const TIMELINE_TITLE = "text-sm font-medium font-sans";
 export const TIMELINE_DESCRIPTION = "text-sm font-sans text-muted-foreground";
 
-// ── Overlay components (fixed metrics) ────────────────────────────────
-//
-// The overlay wave converted the floating/modal surfaces onto the shared
-// recipes below. Each is the resting appearance in shadcn's class vocabulary;
-// density-driven control geometry (row heights), state (highlight, destructive
-// tone) and the anchored positioning stay in the component's `style`, exactly
-// as the non-overlay components did. `DIALOG_OVERLAY`, `DIALOG_CONTENT` and
-// `POPOVER_CONTENT` above keep their full shadcn string (positioning and motion
-// included) for provenance; the components compile them and override the
-// positioning the renderer already owns.
-
-/** `dialog.tsx` — the heading block. The close-control clearance stays in
- * `style` (it is the only shadcn deviation the library needs). */
 export const DIALOG_HEADER = "flex flex-col gap-2";
 
-/** `dialog.tsx` — the surface's title. `leading-none` is dropped because the
- * native `lineHeight` is absolute pixels, where Tailwind's unitless `1` is a
- * ratio; `text-base` already carries the right leading. The colour is explicit:
- * native text does not inherit `color` from the surface. */
 export const DIALOG_TITLE = "text-base font-medium text-popover-foreground";
 
-/** `dialog.tsx` — the supporting copy. */
 export const DIALOG_DESCRIPTION = "text-sm text-muted-foreground";
 
-/** `dialog.tsx` — the right-aligned actions row. */
 export const DIALOG_FOOTER = "flex flex-row items-center justify-end gap-2";
 
-/** `menu/surface.tsx` — the floating menu box, shared verbatim by DropdownMenu,
- * ContextMenu and their submenus (`cn-dropdown-menu-content`,
- * `cn-context-menu-content` and `cn-*-sub-content` agree). The `gap-0.5` is
- * the library's own: the rows keep density height (ADR 0006) with no vertical
- * padding, so the surface carries the 2px separation shadcn gets from `py-2`. */
 export const MENU_CONTENT =
   "bg-popover text-popover-foreground min-w-48 rounded-3xl p-1.5 gap-0.5 shadow-lg ring-1 ring-foreground/5";
 
-/** `menu/item.tsx` — the resting row. The accent bar (`borderLeftWidth`), the
- * highlight/destructive colours and the density height stay in `style`; the
- * geometry, radius and type are fixed shadcn metrics. */
 export const MENU_ITEM =
   "flex flex-row items-center gap-2 rounded-2xl pl-1.5 pr-2 text-sm font-medium text-popover-foreground";
 
-/** `menu/item.tsx` — the group heading. */
 export const MENU_LABEL =
   "text-muted-foreground px-3 py-2.5 text-xs select-none";
 
-/** `menu/item.tsx` — the hairline between rows. `-mx-1.5` is dropped because
- * the native renderer has no negative margin; the separator stays inside the
- * surface's padding. */
 export const MENU_SEPARATOR = "bg-border/50 my-1.5 h-px";
 
-/** `menu/item.tsx` — the labelled group of rows. */
 export const MENU_GROUP = "flex flex-col gap-0.5";
 
-/** `command-menu.tsx` — the search field. The density height and the field
- * chrome (fill, border, radius) stay in `style`; the width and type are shadcn. */
 export const COMMAND_INPUT = "w-full text-sm";
 
-/** `command-menu.tsx` — the match column. */
 export const COMMAND_LIST = "flex flex-col gap-2";
 
-/** `command-menu.tsx` — the no-match message. */
 export const COMMAND_EMPTY = "py-6 text-center text-sm text-muted-foreground";
 
-/** `command-menu.tsx` — the trailing key hint (`text-xs`; `tracking-widest`
- * and `ml-auto` are dropped — the native renderer has neither). */
 export const COMMAND_SHORTCUT = "text-xs text-muted-foreground";
 
-/** `command-menu.tsx` — the keyboard hint under the list. */
 export const COMMAND_HINT = "text-xs text-muted-foreground";
 
-// ── The final wave (toast, tabs, preview-card, confirm-dialog, drawer, ─────
-// navigation-menu, combobox, date-picker, time-picker, color-picker,
-// message-scroller) ────────────────────────────────────────────────────────
-//
-// As in the overlay wave, each string is the resting appearance in shadcn's
-// class vocabulary, compiled against the default registry (fixed metrics). The
-// density-driven control geometry (row/control heights), state colours
-// (highlight, selected, destructive, hover/focus) and the renderer-owned
-// positioning/scroll stay in the component's `style`, exactly as before.
-
-/** `toast/viewport.tsx` — the corner region. The corner anchoring (`position`,
- * right, bottom) stays in `style`; the column, right alignment, width and
- * pass-through pointer are the resting recipe. */
 export const TOAST_VIEWPORT =
   "flex flex-col items-end w-[356px] pointer-events-none";
 
-/** `toast/viewport.tsx` — the stack. The cards and their gaps are in flow, so
- * the stack has no gap of its own: the gap is a measured spacer that animates
- * between the collapsed and expanded shapes. Cards are centred, so an inset
- * card loses the same width on both sides and reads as a smaller card behind
- * the front one rather than a card pushed to one edge. */
 export const TOAST_STACK = "flex flex-col items-center w-full";
 
-/** `toast/viewport.tsx` — one card's surface. The slot's height and width are
- * the stack's geometry and stay in `style`; the surface keeps its measured
- * height and is clipped by that slot, so a peeking card is the top of a card
- * rather than a small one. The lift is the slot's to paint — the visible box is
- * the slot, and a surface's own shadow would be clipped with its content — so
- * the viewport copies this recipe's radius and shadow onto a slot that is the
- * whole card. */
 export const TOAST_CARD =
   "w-full bg-popover text-popover-foreground border border-border rounded-xl shadow-md pointer-events-auto overflow-hidden";
 
-/** `toast/viewport.tsx` — the card's measured body: the padding and row the
- * outer surface clips. */
 export const TOAST_BODY = "flex flex-row items-start gap-2.5 px-4 py-3.5";
 
-/** `toast/viewport.tsx` — the swipe's grab area: the glyph and copy, never the
- * action or the close, because a pointer capture on their ancestor swallows a
- * ghost control's click. */
 export const TOAST_DRAG = "flex flex-row items-start gap-2.5 flex-grow min-w-0";
 
-/** `toast/viewport.tsx` — the title/description column. */
 export const TOAST_COPY = "flex flex-col gap-1 flex-grow min-w-0";
 
-/** `toast/viewport.tsx` — the card title. */
 export const TOAST_TITLE =
   "text-sm font-semibold font-sans text-popover-foreground";
 
-/** `toast/viewport.tsx` — the card description. */
 export const TOAST_DESCRIPTION = "text-xs font-sans text-muted-foreground";
 
-/** `toast/viewport.tsx` — the tone glyph (label role); the tone colour and the
- * glyph width stay in `style`. */
 export const TOAST_GLYPH = "text-sm font-medium font-sans";
 
-/** `tabs.tsx` — the root; the axis is the orientation variant below. */
 export const TABS_ROOT = "flex gap-2";
 
-/** `tabs.tsx` — the root axis: the horizontal list sits above its panel. */
 export const TABS_ORIENTATION = {
   horizontal: "flex-col",
   vertical: "flex-row",
 } as const;
 
-/** `tabs.tsx` — the rail. The axis is `TABS_LIST_ORIENTATION`; the density
- * height of the triggers stays in the trigger's `style`. */
 export const TABS_LIST =
   "flex items-stretch gap-1 p-1 bg-background border border-border rounded-md";
 
-/** `tabs.tsx` — the rail axis. */
 export const TABS_LIST_ORIENTATION = {
   horizontal: "flex-row",
   vertical: "flex-col",
 } as const;
 
-/** `tabs.tsx` — a trigger's resting box. Selection colour, hover, focus and
- * the density height stay in `style`. */
 export const TABS_TRIGGER =
   "flex flex-row items-center justify-center px-3 rounded-sm text-sm font-medium font-sans";
 
-/** `tabs.tsx` — the panel. */
 export const TABS_CONTENT = "flex flex-col gap-2 text-foreground";
 
-/** `preview-card.tsx` — the hoverable card surface (`hover-card.tsx`'s
- * `rounded-md border bg-popover p-4`, but the library's own padding/radius so
- * the card reads as a card, not a popover). */
 export const PREVIEW_CARD_CONTENT =
   "bg-popover text-popover-foreground min-w-[240px] max-w-[360px] p-3 rounded-lg border border-border shadow-md text-sm font-sans pointer-events-auto";
 
-/** `confirm-dialog.tsx` — the busy glyph (label role; `color: inherit` stays in
- * `style` because it is the one value no utility names). */
 export const CONFIRM_DIALOG_BUSY = "text-sm font-medium font-sans";
 
-/** `drawer.tsx` — the scrim role (shadcn's `bg-black/50` → `overlay`), so the
- * veil stays contrast-aware. The flex anchoring and window size stay in style. */
 export const DRAWER_OVERLAY = "bg-overlay";
 
-/** `drawer.tsx` — the edge surface. Size, `overflow: scroll` and `position`
- * stay in `style` (the renderer owns the window measure). */
 export const DRAWER_CONTENT =
   "flex flex-col gap-3 p-6 bg-popover text-popover-foreground border border-border shadow-lg pointer-events-auto";
 
-/** `drawer.tsx` — the heading block. The close-control clearance stays in style. */
 export const DRAWER_HEADER = "flex flex-col gap-1 pr-6";
 
-/** `drawer.tsx` — the surface's title. */
 export const DRAWER_TITLE =
   "text-base font-semibold font-sans text-popover-foreground";
 
-/** `drawer.tsx` — the supporting copy. */
 export const DRAWER_DESCRIPTION = "text-sm font-sans text-muted-foreground";
 
-/** `drawer.tsx` — the right-aligned actions row. */
 export const DRAWER_FOOTER = "flex flex-row items-center justify-end gap-2";
 
-/** `navigation-menu.tsx` — the nav bar. */
 export const NAVIGATION_MENU_ROOT = "flex flex-row items-center";
 
-/** `navigation-menu.tsx` — the row of items. */
 export const NAVIGATION_MENU_LIST = "flex flex-row items-center gap-0.5";
 
-/** `navigation-menu.tsx` — one item (`position: relative` anchors its panel). */
 export const NAVIGATION_MENU_ITEM = "flex flex-row relative";
 
-/** `navigation-menu.tsx` — the anchored panel. */
 export const NAVIGATION_MENU_CONTENT =
   "flex flex-col gap-0.5 min-w-[220px] p-1.5 bg-popover text-popover-foreground rounded-lg border border-border shadow-md pointer-events-auto";
 
-/** `navigation-menu.tsx` — a nav row's resting box; the hover accent stays in
- * `style`. */
 export const NAVIGATION_MENU_LINK =
   "flex flex-row items-center justify-start w-full p-1.5 rounded-sm";
 
-/** `combobox.tsx` — the field-shaped trigger. The density height, the
- * placeholder/selected colour and hover stay in `style`. */
 export const COMBOBOX_TRIGGER =
   "flex flex-row items-center justify-between gap-2 w-full px-2 bg-background border border-strong rounded-md text-sm font-medium font-sans";
 
-/** `combobox.tsx` — the popup surface. `maxHeight` and `overflow-y: scroll`
- * stay in `style` (scroll logic). */
 export const COMBOBOX_CONTENT =
   "flex flex-col gap-0.5 min-w-[220px] p-1 bg-popover text-popover-foreground rounded-md border border-border shadow-md pointer-events-auto";
 
-/** `combobox.tsx` — the search field. The density height stays in `style`. */
 export const COMBOBOX_INPUT =
   "text-sm font-sans px-2 bg-input text-input-foreground rounded-sm border border-border";
 
-/** `combobox.tsx` — the listbox column. */
 export const COMBOBOX_LIST = "flex flex-col";
 
-/** `combobox.tsx` — a row's resting box. The density height, highlight,
- * selection and disabled states stay in `style`. */
 export const COMBOBOX_ITEM =
   "flex flex-row items-center gap-2 px-2 py-1 rounded-sm text-sm font-sans";
 
-/** `combobox.tsx` — the trigger's label text (state colour stays in `style`). */
 export const COMBOBOX_TRIGGER_TEXT = "text-sm font-medium font-sans";
 
-/** `combobox.tsx` — the caret glyph. */
 export const COMBOBOX_CARET = "text-xs font-sans text-muted-foreground";
 
-/** `combobox.tsx` — a row's label text. */
 export const COMBOBOX_ITEM_TEXT = "text-sm font-sans text-popover-foreground";
 
-/** `combobox.tsx` — a row's description. */
 export const COMBOBOX_ITEM_DESCRIPTION =
   "text-xs font-sans text-muted-foreground";
 
-/** `combobox.tsx` — the selected mark. */
 export const COMBOBOX_ITEM_MARK = "text-xs font-sans text-primary";
 
-/** `combobox.tsx` — the no-match message. */
 export const COMBOBOX_EMPTY = "text-sm font-sans text-muted-foreground py-3";
 
-/** `date-picker.tsx` — the field-shaped trigger. */
 export const DATE_PICKER_TRIGGER =
   "flex flex-row items-center justify-between gap-2 w-[220px] px-2 bg-background border border-strong rounded-md text-sm font-medium font-sans";
 
-/** `date-picker.tsx` — the trigger's label text (state colour stays in `style`). */
 export const DATE_PICKER_TRIGGER_TEXT = "text-sm font-medium font-sans";
 
-/** `date-picker.tsx` — the caret glyph. */
 export const DATE_PICKER_CARET = "text-xs font-sans text-muted-foreground";
 
-/** `date-picker.tsx` — the popup surface. */
 export const DATE_PICKER_CONTENT =
   "flex flex-col gap-2 p-2 bg-popover text-popover-foreground rounded-md border border-border pointer-events-auto";
 
-/** `calendar.tsx` — the month row: one panel per painted month. */
 export const CALENDAR_ROOT = "flex flex-row items-start";
 
-/** `calendar.tsx` — one month panel (caption, weekday header, grid). */
 export const CALENDAR_MONTH = "flex flex-col gap-0.5";
 
-/** `calendar.tsx` — the month caption. */
 export const CALENDAR_MONTH_LABEL =
   "text-sm font-medium font-sans text-foreground";
 
-/** `calendar.tsx` — the grid column. The cell size (`CELL`) and day states stay
- * in `style` (the cell is a measured square, and selection/today/focus are
- * state). */
 export const CALENDAR_GRID = "flex flex-col gap-0.5";
 
-/** `calendar.tsx` — the weekday header cell. */
 export const CALENDAR_WEEKDAY =
   "text-xs font-sans text-muted-foreground text-center";
 
-/** `calendar.tsx` — a day cell's resting box; the measured `CELL` square and the
- * selected/range/today/focus states stay in `style`. */
 export const CALENDAR_DAY =
   "text-xs font-sans flex items-center justify-center rounded-sm";
 
-/** `time-picker.tsx` — the field group. The density height and focus ring stay
- * in `style`. */
 export const TIME_PICKER_ROOT =
   "flex flex-row items-center gap-0.5 px-1.5 bg-input border border-border rounded-md";
 
-/** `time-picker.tsx` — one segment input. The `SEGMENT_WIDTH` and the cleared
- * background stay in `style` (the input's own geometry and default fill). */
 export const TIME_PICKER_SEGMENT =
   "text-sm font-sans text-input-foreground text-center h-full p-0";
 
-/** `time-picker.tsx` — the colon. */
 export const TIME_PICKER_SEPARATOR =
   "text-sm font-sans text-muted-foreground select-none";
 
-/** `time-picker.tsx` — the clear control. The hover accent stays in `style`. */
 export const TIME_PICKER_CLEAR =
   "text-xs font-sans flex items-center justify-center size-[18px] rounded-sm text-muted-foreground cursor-pointer";
 
-/** `color-picker.tsx` — the trigger: a swatch and its label, inside a Button. */
 export const COLOR_PICKER_TRIGGER =
   "flex flex-row items-center gap-2.5 self-start rounded-full border border-border bg-background p-1.5 pr-4";
 
-/** `color-picker.tsx` — the floating panel's column. */
 export const COLOR_PICKER_PANEL = "flex flex-col gap-3.5 p-3.5";
 
-/** `color-picker.tsx` — a labelled slider row. */
 export const COLOR_PICKER_ROW = "flex flex-col gap-2";
 
-/** `color-picker.tsx` — the saturation/value field's frame. */
 export const COLOR_PICKER_AREA = "relative w-full rounded-xl";
 
-/** `color-picker.tsx` — the value field's row. */
 export const COLOR_PICKER_FIELD = "flex flex-row items-center gap-2";
 
-/**
- * `color-picker.tsx` — the hex field.
- *
- * A field inside a layer is a hole in it: the page's fill, not the panel's, so
- * the text keeps the contrast it has on the page. The shared `Input` paints the
- * input fill instead, which on a popover is the surface under it.
- */
 export const COLOR_PICKER_INPUT = "bg-background text-input-foreground";
 
-/** `color-picker.tsx` — the preset swatch row. */
 export const COLOR_PICKER_SWATCHES =
   "flex flex-row flex-wrap items-center gap-1.5";
 
-/** `color-picker.tsx` — the contrast readout. */
 export const COLOR_PICKER_CONTRAST =
   "flex flex-row items-center gap-2.5 text-sm";
 
-/** `color-picker.tsx` — a swatch disc, in the trigger and in the preset row. */
 export const COLOR_PICKER_CELL = "rounded-full border border-border";
 
-/** `message-scroller.tsx` — the scroller root, the box the jump control floats in. */
 export const MESSAGE_SCROLLER_ROOT = "relative flex flex-col min-h-0 min-w-0";
 
-/** `message-scroller.tsx` — the scroll viewport. `overflow-y: scroll` stays in
- * `style` (scroll logic). */
 export const MESSAGE_SCROLLER_VIEWPORT =
   "flex flex-col min-h-0 min-w-0 bg-background text-foreground";
 
-/** `message-scroller.tsx` — the rows column. */
 export const MESSAGE_SCROLLER_CONTENT = "flex flex-col min-w-0";
 
-/** `message-scroller.tsx` — one message row. */
 export const MESSAGE_SCROLLER_ITEM =
   "flex flex-col min-w-0 shrink-0 self-stretch";
 
-/** `message-scroller.tsx` — the jump control's centring strip. It floats over
- * the viewport's bottom edge; its inset is a theme metric and stays in `style`. */
 export const MESSAGE_SCROLLER_JUMP =
   "flex flex-row items-center justify-center pointer-events-none";
 
-/** `bubble.tsx` — the bubble's row: an optional avatar beside the column. */
 export const BUBBLE_ROOT = "flex flex-row items-end gap-2 min-w-0";
 
-/** `bubble.tsx` — the content/actions column inside the bubble row. */
 export const BUBBLE_COLUMN = "flex flex-col gap-1 min-w-0";
 
-/** `bubble.tsx` — the framed surface. */
 export const BUBBLE_CONTENT =
   "flex flex-col gap-1 rounded-xl px-3 py-2 text-sm min-w-0";
 
-/** `bubble.tsx` — the seven surfaces. `ghost` has no frame or padding; the
- * padding is removed in `style` because the recipe's box is the same. */
 export const BUBBLE_VARIANTS = {
   default: "bg-primary text-primary-foreground",
   secondary: "bg-secondary text-secondary-foreground",
@@ -697,352 +466,242 @@ export const BUBBLE_VARIANTS = {
   destructive: "bg-destructiveSoft text-destructiveSoftForeground",
 } as const;
 
-/** `bubble.tsx` — the hover/focus action strip under the content. */
 export const BUBBLE_ACTIONS = "flex flex-row items-center gap-1 min-h-0";
 
-/** `bubble.tsx` — the reaction pill. The part hangs it over the surface's edge;
- * the type and the pill's box are the recipe's, so the hang can be measured
- * from the compiled row. */
 export const BUBBLE_REACTIONS =
   "flex flex-row items-center justify-center gap-1 rounded-full bg-muted px-1.5 py-0.5 text-sm";
 
-/** `bubble.tsx` — consecutive bubbles from one sender. */
 export const BUBBLE_GROUP = "flex flex-col min-w-0";
 
-/** `message.tsx` — one conversation row. The variant's direction and alignment
- * are state, and stay in `style`. */
 export const MESSAGE_ROOT = "flex flex-row gap-3 self-stretch px-1";
 
-/** `message.tsx` — the column beside the avatar. */
 export const MESSAGE_CONTENT = "flex flex-col gap-2 min-w-0 flex-grow";
 
-/** `message.tsx` — the author/timestamp line. */
 export const MESSAGE_HEADER =
   "flex flex-row items-center gap-2 min-w-0 text-xs font-medium font-sans text-muted-foreground";
 
-/** `message.tsx` — the under-bubble line (actions, delivery state). */
 export const MESSAGE_FOOTER = "flex flex-row items-center gap-2 min-w-0";
 
-/** `message.tsx` — consecutive rows from one sender. */
 export const MESSAGE_GROUP = "flex flex-col min-w-0";
 
-/** `message.tsx` — the variant's author line. */
 export const MESSAGE_AUTHOR =
   "text-xs font-medium font-sans text-muted-foreground";
 
-/** `message.tsx` — the reasoning panel. */
 export const MESSAGE_REASONING =
   "flex flex-col gap-1 rounded-md border border-border bg-card px-3 py-2";
 
-/** `message.tsx` — the reasoning disclosure trigger. */
 export const MESSAGE_REASONING_TRIGGER =
   "flex flex-row items-center justify-between gap-2 text-xs font-medium font-sans text-muted-foreground";
 
-/** `message.tsx` — the reasoning body. */
 export const MESSAGE_REASONING_CONTENT =
   "text-xs font-sans text-muted-foreground";
 
-/** `message.tsx` — one tool call. */
 export const MESSAGE_TOOL_CALL =
   "flex flex-col gap-1 rounded-md border border-border bg-card px-3 py-2";
 
-/** `message.tsx` — a tool call's name and status row. */
 export const MESSAGE_TOOL_CALL_HEAD =
   "flex flex-row items-center justify-between gap-2";
 
-/** `message.tsx` — the tool's name. */
 export const MESSAGE_TOOL_CALL_NAME =
   "text-xs font-medium font-sans text-foreground";
 
-/** `message.tsx` — the tool's status line. */
 export const MESSAGE_TOOL_CALL_STATUS =
   "flex flex-row items-center gap-1 text-xs font-sans text-muted-foreground";
 
-/** `message.tsx` — the tool's result. */
 export const MESSAGE_TOOL_CALL_RESULT =
   "text-xs font-sans text-muted-foreground";
 
-/** `message.tsx` — the citation list. */
 export const MESSAGE_SOURCES = "flex flex-col gap-1";
 
-/** `message.tsx` — one citation. */
 export const MESSAGE_SOURCE =
   "flex flex-row items-center gap-1 text-xs font-sans text-muted-foreground";
 
-/** `message.tsx` — the streaming indicator. */
 export const MESSAGE_STREAMING =
   "flex flex-row items-center gap-1.5 text-xs font-sans text-muted-foreground";
 
-/** `message.tsx` — the action row. */
 export const MESSAGE_ACTIONS = "flex flex-row items-center gap-1";
 
-/** `chat.tsx` — the conversation column. */
 export const CHAT_ROOT = "flex flex-col gap-3 min-h-0 min-w-0 flex-grow";
 
-/** `chat.tsx` — the fixed header row. */
 export const CHAT_HEADER =
   "flex flex-row items-start justify-between gap-3 shrink-0";
 
-/** `chat.tsx` — the header's title and status column. */
 export const CHAT_HEADER_COPY = "flex flex-col gap-0.5 min-w-0 flex-grow";
 
-/** `chat.tsx` — the conversation title. */
 export const CHAT_HEADER_TITLE =
   "text-sm font-medium font-sans text-foreground";
 
-/** `chat.tsx` — the one-line status under the title. */
 export const CHAT_HEADER_STATUS = "text-xs font-sans text-muted-foreground";
 
-/** `chat.tsx` — the header's action row. */
 export const CHAT_HEADER_ACTIONS = "flex flex-row items-center gap-1 shrink-0";
 
-/** `chat.tsx` — the scroller inside the conversation. It owns the flexible
- * middle: `flex: 1 1 0` and `min-height: 0` keep the header and composer fixed
- * while rows arrive. */
 export const CHAT_MESSAGES = "flex flex-col min-h-0 min-w-0 flex-grow";
 
-/** `chat.tsx` — the empty-conversation panel. */
 export const CHAT_EMPTY =
   "flex flex-col items-center justify-center gap-1 py-8 text-center";
 
-/** `chat.tsx` — the empty panel's title. */
 export const CHAT_EMPTY_TITLE = "text-sm font-medium font-sans text-foreground";
 
-/** `chat.tsx` — the empty panel's description. */
 export const CHAT_EMPTY_DESCRIPTION = "text-xs font-sans text-muted-foreground";
 
-/** `chat.tsx` — the composer surface. */
 export const CHAT_COMPOSER =
   "flex flex-col gap-2 rounded-lg border border-border bg-background p-2";
 
-/** `chat.tsx` — the composer's field-and-actions row. */
 export const CHAT_COMPOSER_ROW = "flex flex-row items-center gap-2";
 
-/** `chat.tsx` — the composer field. The focus ring and selection wash stay in
- * `style`. */
 export const CHAT_COMPOSER_FIELD =
   "text-sm font-sans flex-grow px-2 py-1 bg-transparent text-input-foreground";
 
-/** `chat.tsx` — the attachment row above the field. */
 export const CHAT_COMPOSER_ATTACHMENTS = "flex flex-row flex-wrap gap-1.5";
 
-/** `chat.tsx` — the keyboard hint under the row. */
 export const CHAT_COMPOSER_HINT = "text-xs font-sans text-muted-foreground";
 
-// ── Sidebar (shadcn `sidebar.tsx`, the base registry) ────────────────────────
-//
-// The widths, insets and states are the component's own numbers (the renderer
-// has no CSS variables and no `data-*` selectors); these strings are the resting
-// appearance. shadcn's `--sidebar` roles map to this library's surfaces: the
-// chrome is the `card` role and the content beside it the `background` role,
-// because the theme carries no separate sidebar family.
-
-/** `sidebar.tsx` — the wrapper both the sidebar and its content sit in. */
 export const SIDEBAR_ROOT = "flex flex-row w-full h-full";
 
-/** `sidebar.tsx` — the panel's inner column. */
 export const SIDEBAR_INNER =
   "flex flex-col w-full h-full bg-card text-card-foreground";
 
-/** `sidebar.tsx` — the floating and inset variants' rounded, lifted panel. */
 export const SIDEBAR_FLOATING = "rounded-lg border border-border shadow-sm";
 
-/** `sidebar.tsx` — the content beside the sidebar. */
 export const SIDEBAR_INSET = "flex flex-col flex-grow bg-background";
 
-/** `sidebar.tsx` — the panel's header. */
 export const SIDEBAR_HEADER = "flex flex-col gap-2 p-2";
 
-/** `sidebar.tsx` — the scrolling middle. The scroll behaviour stays in `style`. */
 export const SIDEBAR_CONTENT = "flex flex-col flex-grow gap-0 min-h-0";
 
-/** `sidebar.tsx` — the panel's footer. */
 export const SIDEBAR_FOOTER = "flex flex-col gap-2 p-2";
 
-/** `sidebar.tsx` — the rule between two regions. */
 export const SIDEBAR_SEPARATOR = "h-px bg-border mx-2";
 
-/** `sidebar.tsx` — one labelled group. */
 export const SIDEBAR_GROUP = "flex flex-col w-full p-2 relative";
 
-/** `sidebar.tsx` — a group's heading row. Its height is the collapse target. */
 export const SIDEBAR_GROUP_LABEL =
   "flex flex-row items-center gap-2 h-8 px-2 rounded-md overflow-hidden";
 
-/** `sidebar.tsx` — a group heading's text. */
 export const SIDEBAR_GROUP_LABEL_TEXT =
   "text-xs font-medium font-sans text-muted-foreground";
 
-/** `sidebar.tsx` — a group's trailing action. Size and position stay in `style`. */
 export const SIDEBAR_GROUP_ACTION =
   "flex flex-row items-center justify-center rounded-md text-card-foreground";
 
-/** `sidebar.tsx` — the rows under a group heading. */
 export const SIDEBAR_GROUP_CONTENT = "flex flex-col w-full text-sm";
 
-/** `sidebar.tsx` — a menu list. */
 export const SIDEBAR_MENU = "flex flex-col w-full gap-0.5";
 
-/** `sidebar.tsx` — one menu row, the anchor for its action and badge. */
 export const SIDEBAR_MENU_ITEM = "relative";
 
-/** `sidebar.tsx` — a menu row's resting box. Height, state and icon collapse
- * stay in `style`. */
 export const SIDEBAR_MENU_BUTTON =
   "flex flex-row items-center justify-start w-full gap-2 px-2 rounded-md text-sm text-left text-card-foreground overflow-hidden";
 
-/** `sidebar.tsx` — the button's height by size. */
 export const SIDEBAR_MENU_BUTTON_SIZES = {
   default: "h-9",
   sm: "h-8",
   lg: "h-12",
 } as const;
 
-/** `sidebar.tsx` — the flexible, truncated label inside a menu button. */
 export const SIDEBAR_MENU_LABEL =
   "flex-grow text-sm font-sans whitespace-nowrap text-ellipsis overflow-hidden";
 
-/** `sidebar.tsx` — a row's trailing action. Size and position stay in `style`. */
 export const SIDEBAR_MENU_ACTION =
   "flex flex-row items-center justify-center rounded-md text-card-foreground";
 
-/** `sidebar.tsx` — a row's trailing count. Position stays in `style`. */
 export const SIDEBAR_MENU_BADGE =
   "flex flex-row items-center justify-center h-5 min-w-5 px-1 rounded-md text-xs font-medium font-sans text-muted-foreground";
 
-/** `sidebar.tsx` — a loading row. */
 export const SIDEBAR_MENU_SKELETON =
   "flex flex-row items-center h-9 gap-2 px-2 rounded-md";
 
-/** `sidebar.tsx` — the skeleton's leading square. */
 export const SIDEBAR_MENU_SKELETON_ICON = "size-4 rounded-md bg-muted";
 
-/** `sidebar.tsx` — the skeleton's text bar. Its width stays in `style`. */
 export const SIDEBAR_MENU_SKELETON_TEXT = "h-4 rounded-md bg-muted flex-grow";
 
-/** `sidebar.tsx` — a submenu list. Its rail stays in `style`. */
 export const SIDEBAR_MENU_SUB = "flex flex-col min-w-0 gap-1 py-0.5";
 
-/** `sidebar.tsx` — one submenu row. */
 export const SIDEBAR_MENU_SUB_ITEM = "relative";
 
-/** `sidebar.tsx` — a submenu row's box. Height and state stay in `style`. */
 export const SIDEBAR_MENU_SUB_BUTTON =
   "flex flex-row items-center justify-start min-w-0 gap-2 px-2 rounded-md text-muted-foreground overflow-hidden";
 
-/** `sidebar.tsx` — the field in the panel's header. Height stays in `style`. */
 export const SIDEBAR_INPUT = "w-full bg-background";
 
-/** `sidebar.tsx` — the icon-collapse tooltip. */
 export const SIDEBAR_TOOLTIP =
   "bg-popover text-popover-foreground rounded-md border border-border px-2 py-1 shadow-sm pointer-events-auto";
 
-/** `sidebar.tsx` — the tooltip's text. */
 export const SIDEBAR_TOOLTIP_TEXT =
   "text-xs font-sans text-popover-foreground whitespace-nowrap";
 
-/** `sidebar.tsx` — the mobile sheet's scrim. */
 export const SIDEBAR_SCRIM = "bg-overlay";
 
-/** `sidebar.tsx` — the mobile sheet's surface. */
 export const SIDEBAR_SHEET =
   "flex flex-col h-full bg-card text-card-foreground border-border shadow-lg";
 
-/** `user-menu.tsx` — the identity row that opens the menu. */
 export const USER_MENU_TRIGGER =
   "flex flex-row items-center gap-2 px-2 rounded-md bg-transparent text-card-foreground";
 
-/** `user-menu.tsx` — the name over the address. */
 export const USER_MENU_IDENTITY = "flex flex-col items-start min-w-0 flex-grow";
 
-/** `user-menu.tsx` — the name. */
 export const USER_MENU_NAME =
   "min-w-0 overflow-hidden text-sm font-medium font-sans text-card-foreground whitespace-nowrap text-ellipsis";
 
-/** `user-menu.tsx` — the address. */
 export const USER_MENU_EMAIL =
   "min-w-0 overflow-hidden text-xs font-sans text-muted-foreground whitespace-nowrap text-ellipsis";
 
-/** `aspect-ratio.tsx` — the box. `aspect-(--ratio)` is the runtime's
- * `aspectRatio` value, so the recipe keeps only what the box owns. */
 export const ASPECT_RATIO = "relative w-full";
 
-/** `hover-card.tsx` — the surface. shadcn's `w-64 p-4` card; the travel is the
- * motion seam's. */
 export const HOVER_CARD_CONTENT =
   "bg-popover text-popover-foreground w-64 p-4 rounded-md border border-border shadow-md text-sm font-sans pointer-events-auto";
 
-/** `item.tsx` — the group (`role="list"`). */
 export const ITEM_GROUP = "flex flex-col w-full gap-2";
 
-/** `item.tsx` — one row. Padding and gap are the size's, not the variant's. */
 export const ITEM_BASE = "flex flex-row flex-wrap items-center w-full";
 
-/** `item.tsx` — the surface treatment. */
 export const ITEM_VARIANTS = {
   default: "",
   outline: "border border-input rounded-md",
   muted: "bg-muted rounded-md",
 } as const;
 
-/** `item.tsx` — the row's density. */
 export const ITEM_SIZES = {
   default: "gap-3 p-3",
   sm: "gap-2 p-2",
 } as const;
 
-/** `item.tsx` — the leading slot. */
 export const ITEM_MEDIA = "flex flex-row items-center justify-center shrink-0";
 
-/** `item.tsx` — the media box a variant paints; the caller sizes `default`. */
 export const ITEM_MEDIA_VARIANTS = {
   default: "",
   icon: "size-9 rounded-md bg-muted",
   image: "size-10 rounded-md overflow-hidden",
 } as const;
 
-/** `item.tsx` — the text column. */
 export const ITEM_CONTENT = "flex flex-col flex-1 min-w-0 gap-1";
 
-/** `item.tsx` — the title: one line, clipped. */
 export const ITEM_TITLE =
   "text-sm font-medium font-sans text-foreground whitespace-nowrap text-ellipsis overflow-hidden";
 
-/** `item.tsx` — the supporting copy. */
 export const ITEM_DESCRIPTION =
   "text-sm font-sans text-muted-foreground overflow-hidden";
 
-/** `item.tsx` — the trailing actions. */
 export const ITEM_ACTIONS = "flex flex-row items-center gap-2";
 
-/** `item.tsx` — the full-width row above the content. */
 export const ITEM_HEADER =
   "flex flex-row items-center justify-between w-full gap-2";
 
-/** `item.tsx` — the full-width row below the content. */
 export const ITEM_FOOTER =
   "flex flex-row items-center justify-between w-full gap-2";
 
-/** `input-group.tsx` — the bordered row. The focus and invalid rings are the
- * state recipes below; the field inside paints none of its own. */
 export const INPUT_GROUP =
   "flex flex-col w-full min-w-0 rounded-md border border-input bg-transparent";
 
-/** `input-group.tsx` — the line the field and its inline addons share. */
 export const INPUT_GROUP_ROW = "flex flex-row items-center w-full min-w-0";
 
-/** `input-group.tsx` — a block addon's own line. */
 export const INPUT_GROUP_BLOCK = "flex flex-row items-center w-full min-w-0";
 
-/** `input-group.tsx` — the ring and edge while the field holds focus. */
 export const INPUT_GROUP_FOCUS = "border-ring ring-[3px] ring-ring/50";
 
-/** `input-group.tsx` — the ring and edge while the field is invalid. */
 export const INPUT_GROUP_INVALID =
   "border-destructive ring-[3px] ring-destructive/20";
 
-/** `input-group.tsx` — where an addon sits. The group lays the alignments out,
- * so an `inline-start` addon may be written after the field it leads. */
 export const INPUT_GROUP_ADDONS = {
   "inline-start": "flex flex-row items-center shrink-0 pl-3 gap-2",
   "inline-end": "flex flex-row items-center shrink-0 pr-3 gap-2",
@@ -1052,6 +711,5 @@ export const INPUT_GROUP_ADDONS = {
     "flex flex-row items-center justify-start w-full shrink-0 px-3 pb-2 gap-2",
 } as const;
 
-/** `input-group.tsx` — a leading or trailing mark's text. */
 export const INPUT_GROUP_TEXT =
   "flex flex-row items-center text-sm font-sans text-muted-foreground whitespace-nowrap";

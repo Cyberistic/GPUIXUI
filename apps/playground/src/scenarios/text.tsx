@@ -1,12 +1,3 @@
-/**
- * `text-native` — `<text>`, `<code>` and `<markdown>`.
- *
- * The trap upstream documents: GPUI does not inherit `color`, so text with no
- * explicit colour paints black and vanishes on a dark surface. This scenario
- * sets a colour on every node and checks both text channels — `getAllText()`
- * sees `<text>`, and `getPaintedText()` sees what `<code>`/`<markdown>` paint
- * themselves.
- */
 import { Effect } from "effect";
 import * as Option from "effect/Option";
 import { useTheme } from "@gpuixui/tokens/react";

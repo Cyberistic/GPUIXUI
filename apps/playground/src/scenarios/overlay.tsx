@@ -1,24 +1,3 @@
-/**
- * `overlay-dialog` — an `<anchored>` popup that closes on Escape and outside
- * click.
- *
- * GPUix has no `z-index`; a deferred `<anchored>` layer paints above the tree,
- * which is what makes an overlay possible at all. Measured on this host (plan
- * `140` §4):
- *
- * - the `<anchored>` node paints **no surface of its own**, so
- *   `getElementBounds` is `null` for it and `onMouseDownOutside` on the
- *   `<anchored>` never fires. The handlers belong on the **content div inside**
- *   it, which is exactly what GPUix's own `FloatingLayer` does.
- * - Escape reaches the focused element's `onKeyDown`, so the popup content
- *   takes focus on open (`autoFocus`) and handles `escape` itself.
- *
- * Limitation: the `<anchored>` node has no focus method of its own. Native
- * focus is moved through the renderer (`renderer.focusElement`), which
- * `modal-focus-trap` measures: focus enters the modal, Tab stays inside, and
- * closing returns focus to the trigger. This probe deliberately keeps the
- * trigger focused and does not claim focus return.
- */
 import { useState } from "react";
 import { Effect } from "effect";
 import * as Option from "effect/Option";

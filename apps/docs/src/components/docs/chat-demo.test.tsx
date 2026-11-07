@@ -7,26 +7,6 @@ import { describe, expect, it } from "vitest";
 import { galleryMarkup } from "@/lib/icon-gallery";
 import { ChatDemo } from "./chat-demo";
 
-/**
- * The chat block, as it renders.
- *
- * The bug this guards is the layout shift: the block used to draw a transcript
- * that sized itself to its rows and a status switcher as a control strip, so the
- * composer moved as messages arrived. The block is now a fixed-height frame
- * with a fixed header, the transcript as the only flexible row, a floating jump
- * control and a fixed composer.
- *
- * The second bug this guards is the pair of plain rows: the agent's replies were
- * unboxed prose and the reader's bubble was the neutral fill, so the block did
- * not show the chat family it documents. Every turn is now a `Message` row with
- * a `Bubble` — the reader on the primary fill, the agent muted — an avatar and
- * meta line only where a speaker starts, and the grouped run's corners joined.
- *
- * The third bug is the heading: the block printed "Ready", a status with nothing
- * to say. The line now carries the prompt it offers, and the conversation is the
- * guild's — a dossier, its intel bank, its seals, the exam and the register.
- */
-
 const markup = renderToStaticMarkup(<ChatDemo />);
 
 const css = readFileSync(
@@ -72,8 +52,7 @@ describe("the chat block", () => {
 
   it("centres Send on the composer row's cross axis", () => {
     expect(block(".gx-chat-composer-row")).toContain("align-items: center");
-    // The native row is the drawing's source of truth: a component that went
-    // back to `items-end` fails here before the drawing can follow it.
+
     expect(
       classesToStyle(CHAT_COMPOSER_ROW, themes.dark).style.alignItems,
     ).toBe("center");
@@ -105,8 +84,6 @@ describe("the chat block", () => {
   });
 
   it("groups one speaker's consecutive rows and joins their corners", () => {
-    // One run of two assistant rows: its first bubble joins below, its last
-    // joins above, so the pair reads as one column.
     expect(markup.match(/data-group="first"/g)?.length).toBe(1);
     expect(markup.match(/data-group="last"/g)?.length).toBe(1);
     expect(block(".gx-chat-turn")).toContain("gap: 6px");
@@ -144,17 +121,12 @@ describe("the chat block", () => {
     expect(jump).toContain("justify-content: center");
     expect(jump).toContain("pointer-events: none");
     expect(block(".gx-chat-jump .gx-btn")).toContain("pointer-events: auto");
-    // Pinned, the control is not painted at all: nothing reserves a rail.
+
     expect(markup).not.toContain("gx-chat-jump");
     expect(markup).not.toContain("Jump to latest");
   });
 
   it("keeps the scrollbar off the avatar", () => {
-    // A macOS overlay scrollbar takes no space and draws over whatever is
-    // under it, so the avatar on the right-hand rows sat in the strip the
-    // scrollbar would cover. The transcript's right padding reserves that
-    // strip, and the gutter holds it open on platforms with a classic
-    // scrollbar so the two do not add up.
     const messages = block(".gx-chat-messages");
     expect(messages).toContain("overflow-y: auto");
     expect(messages).toContain("padding-right: 10px");
@@ -171,9 +143,6 @@ describe("the chat block", () => {
   });
 
   it("draws Send as the icon set's paper plane, named by the word", () => {
-    // The bug: the composer said "Send" in text and the icon set already had a
-    // mark for it — shadcn's composer draws the plane. The drawing borrows the
-    // package's own markup rather than a second path, so the two cannot drift.
     expect(markup).not.toContain(">Send<");
     expect(markup).toContain('aria-label="Send"');
     expect(markup).toContain(galleryMarkup(icons.send));

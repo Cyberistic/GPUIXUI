@@ -1,15 +1,3 @@
-/**
- * MotionGrid's arithmetic.
- *
- * The bugs this guards: a fractional cell leaving a seam between two cells whose
- * painted widths do not add up to the frame; a grid that can be told it has no
- * columns, so the frame has no width and the first cell divides by zero; a
- * caller's `NaN` reaching the runtime as a `null` measure; a frame that is sized
- * by the current arrangement instead of the caller's columns; and a slot that
- * does not wrap at the last column, so every cell after the first row leaves the
- * frame.
- */
-
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
@@ -26,7 +14,6 @@ import {
   itemsOf,
 } from "./logic.js";
 
-/** The suite's grid: 3 columns of 100 × 80 with 10 px gaps. */
 const layout = motionGridLayout({
   columns: Option.some(3),
   cellWidth: Option.some(100),
@@ -120,8 +107,6 @@ describe("the frame's size", () => {
   });
 
   it("reserves every declared column, even when the last row is short", () => {
-    // The width is the caller's arrangement, not the cells on screen: a filter
-    // that removes a cell must not resize the frame under the ones that stay.
     expect(motionGridWidth(layout)).toBe(320);
     expect(motionGridRows(1, layout.columns)).toBe(1);
   });
@@ -165,9 +150,6 @@ describe("motionGridSlot", () => {
   });
 
   it("reads a stored cell list as cells, and nothing for anything else", () => {
-    // The bug guarded: a grid restored with a saved layout carries JSON's `null`
-    // for a list its record never carried, and `Arr.length`/`items.map` threw
-    // before a cell painted.
     const first = { id: "a" } as const;
     const second = { id: "b" } as const;
     expect(itemsOf([first, second])).toEqual([first, second]);
@@ -177,8 +159,6 @@ describe("motionGridSlot", () => {
   });
 
   it("drops an entry that names no cell, keeping the ones beside it", () => {
-    // The id is the cell's key, so an entry a store left as `null` or wrote a
-    // number into has no element a reorder can keep.
     const first = { id: "a" } as const;
     const second = { id: "b" } as const;
     expect(

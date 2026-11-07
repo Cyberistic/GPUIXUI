@@ -1,9 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Preferences — a System-Settings-style window (plan 729): a searchable source
- * list of panes, and a pane built only from inset groups of switches, selects
- * and segmented controls.
- */
 import { InsetGroup, InsetGroupRow } from "@gpuixui/components/inset-group";
 import { SearchInput } from "@gpuixui/components/search-input";
 import { SegmentedControl } from "@gpuixui/components/segmented-control";

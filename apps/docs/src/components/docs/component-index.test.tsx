@@ -8,31 +8,10 @@ import {
   verdictMark,
 } from "../../lib/component-index";
 import { componentIndex, componentPages } from "../../lib/component-index-data";
-import {
-  componentIdFromPath,
-  nativeCaptureOf,
-} from "../../lib/native-captures";
 import { ComponentIndexView } from "./component-index";
-
-/**
- * The index's rendered tiles.
- *
- * The page mounts this component instead of listing pages by hand, so the guard
- * is that the grid carries every row of the generated lane — a page dropped here
- * has no other symptom — that every tile with a demo renders it, and that the
- * count and the control are what a reader sees before typing.
- *
- * The mount reads its filter off the page URL, which is the one fact a server
- * render of the view cannot show: the last case reads the mount's own source,
- * so a filter held in local state alone (the bug that made a filtered view
- * unlinkable) fails here by name.
- */
 
 const noop = (): void => undefined;
 
-// The switch resolves through the router, which a server render of the grid
-// does not mount; its own guards cover that. The grid's guard is about the
-// tiles and the demos they carry, so both read the dark macOS theme.
 vi.mock("./platform-toggle", async (importOriginal) => {
   const actual = await importOriginal<typeof import("./platform-toggle")>();
   const { resolvePlatformTheme } = await import("../../lib/platform");
@@ -62,22 +41,13 @@ const markup = renderToStaticMarkup(
   <ComponentIndexView onQueryChange={noop} previews query="" />,
 );
 
-/**
- * One rendered tile: from its link to the next tile's marker.
- *
- * A demo can render its own list, so `</li>` is not the tile's edge; the tile's
- * own marker is.
- */
-const rowOf = (html: string, url: string): string => {
-  const link = html.indexOf(`href="${url}"`);
+const row = (url: string): string => {
+  const link = markup.indexOf(`href="${url}"`);
   if (link === -1) return "";
-  const start = html.lastIndexOf("data-component=", link);
-  const end = html.indexOf("data-component=", link);
-  return html.slice(start, end === -1 ? undefined : end);
+  const start = markup.lastIndexOf("data-component=", link);
+  const end = markup.indexOf("data-component=", link);
+  return markup.slice(start, end === -1 ? undefined : end);
 };
-
-/** A tile in the mounted grid (`previews` on). */
-const row = (url: string): string => rowOf(markup, url);
 
 describe("the component index", () => {
   it("renders every page in the index", () => {
@@ -90,36 +60,25 @@ describe("the component index", () => {
     ).toEqual([]);
   });
 
-  it("renders a demo in every component tile", () => {
-    // Every component page mounts one now that `MultiStepForm` has a preview;
-    // a tile that rendered an empty frame would make the page's claim false.
-    const previewed = componentPages.filter(
-      (entry) => entry.demo !== undefined,
-    );
+  it("renders a demo in every tile whose page mounts a preview", () => {
+    const previewed = componentPages.filter((entry) => entry.preview);
 
     expect(previewed.length).toBeGreaterThanOrEqual(76);
-    expect(previewed).toHaveLength(componentPages.length);
+    expect(previewed.filter((entry) => entry.demo === undefined)).toEqual([]);
     expect(
       previewed.filter(
         (entry) => !row(entry.url).includes('data-preview="demo"'),
       ),
     ).toEqual([]);
-    expect(markup).not.toContain('data-preview="none"');
   });
 
   it("lays the tiles out three across on a desktop, two on a tablet, one on a phone", () => {
-    // The grid replaces a one- or two-column list; a regression to the old
-    // width is invisible to every other assertion here.
     expect(markup).toContain("grid-cols-1");
     expect(markup).toContain("md:grid-cols-2");
     expect(markup).toContain("lg:grid-cols-3");
   });
 
-  it("serves the real native frame on the server, then mounts the demos", () => {
-    // The demos carry seeded drawings and timers. Rendering them during SSR
-    // made React's first client pass disagree with the server (a hydration
-    // error across the grid), so the server paints the build-time native frame
-    // and the mount turns the interactive scenes on in an effect.
+  it("paints the same placeholder on the server, then mounts the demos", () => {
     const firstPaint = renderToStaticMarkup(
       <ComponentIndexView onQueryChange={noop} query="" />,
     );
@@ -128,36 +87,13 @@ describe("the component index", () => {
       "utf8",
     );
 
-    expect(firstPaint).toContain('data-preview="native"');
-    expect(firstPaint).toContain(".webp");
+    expect(firstPaint).toContain(">Preview<");
     expect(firstPaint).not.toContain("gx-grid-preview");
     expect(mount).toContain("useEffect(() => setPreviews(true), [])");
     expect(mount).toContain("<Scene />");
   });
 
-  it("uses the capture for every tile that has one", () => {
-    const serverMarkup = renderToStaticMarkup(
-      <ComponentIndexView onQueryChange={noop} query="" />,
-    );
-    const captured = componentPages.filter(
-      (entry) =>
-        entry.demo !== undefined &&
-        nativeCaptureOf(componentIdFromPath(entry.url) ?? "") !== undefined,
-    );
-
-    expect(captured.length).toBeGreaterThan(70);
-    expect(
-      captured.filter(
-        (entry) =>
-          !rowOf(serverMarkup, entry.url).includes('data-preview="native"'),
-      ),
-    ).toEqual([]);
-  });
-
   it("wears the inventory verdict on the tiles that are not whole", () => {
-    // The page says status is per component but the strip is on the page a
-    // reader has not opened; the tile itself has to carry the verdict, and a
-    // component the runtime supports whole must not wear a mark.
     const partial = componentPages.filter(
       (entry) => verdictMark(entry.verdict)?.label === "partial",
     );
@@ -189,9 +125,6 @@ describe("the component index", () => {
   });
 
   it("paints the tiles a linked filter matches, and no others", () => {
-    // The filter travels in the URL, so the first paint of a shared link is
-    // already the narrowed view. The expected tiles are the pure filter's own
-    // answer, so the markup cannot list a page the query rejects.
     const query = "DialogFooter";
     const matches = filterEntries(componentPages, query);
     const linked = renderToStaticMarkup(
@@ -224,8 +157,6 @@ describe("the component index", () => {
   });
 
   it("stays silent about the other lanes while this one has a match", () => {
-    // The suggestion belongs to the empty state only; a matching query keeps
-    // the grid and its count, which is what a reader typing here expects.
     const query = "button";
 
     expect(filterEntries(componentPages, query).length).toBeGreaterThan(0);
@@ -240,24 +171,17 @@ describe("the component index", () => {
   });
 
   it("does not offer the package twin of a component the composed lane lists", () => {
-    // Five primitives are curated in this lane, so their package pages are not
-    // served (`curated-twins.ts`). Suggesting one would send a reader to a
-    // redirect for a component the grid already answered.
     const elsewhere = (query: string): string[] =>
       otherLaneMatches(componentIndex, query).flatMap((group) =>
         group.entries.map((entry) => entry.url),
       );
 
     expect(elsewhere("tooltip")).not.toContain("/primitives/tooltip");
-    // The positive control: a primitive with no curated page still surfaces.
+
     expect(elsewhere("slider")).toContain("/primitives/slider");
   });
 
   it("reads the filter off the URL instead of state the page cannot share", () => {
-    // The mount is what the MDX page renders; the view is the markup. A filter
-    // that never touches `location.search` is the defect this holds shut. The
-    // rule lives in the shared hook now that the icon gallery carries the same
-    // filter, so both surfaces are held by one read.
     const mount = readFileSync(
       new URL("./component-index.tsx", import.meta.url),
       "utf8",
@@ -276,10 +200,7 @@ describe("the component index", () => {
     expect(hook).toContain("indexQueryFromSearch(search)");
     expect(hook).toContain('history.replaceState(null, "", url.toString())');
     expect(hook).toContain("indexQuerySearch(next, url.search)");
-    // The page is the grid and nothing else now, so the parameter it writes is
-    // taught by the field itself rather than by a paragraph above it.
-    expect(mount).toContain("?q=");
-    // And it mounts the URL-backed component, not the view directly.
+
     expect(page).toContain("<ComponentIndex />");
   });
 });

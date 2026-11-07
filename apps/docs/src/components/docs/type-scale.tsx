@@ -3,16 +3,6 @@ import { platformLabel } from "../../lib/platform";
 import { PreviewSurface } from "./preview-surface";
 import { usePlatform } from "./platform-toggle";
 
-/**
- * The type scale, drawn from the theme rather than copied.
- *
- * Every row carries the resolved size, leading and weight of a role and the
- * sentence a reader should use it for. The guidance list is the only place the
- * roles are enumerated, and `type-scale.test.tsx` holds it to the theme, so a
- * role added to `@gpuixui/tokens` fails the docs until it is described here.
- */
-
-/** The roles a component may name, with what each is for. */
 export const roleGuidance = [
   {
     role: "display",
@@ -70,10 +60,8 @@ export const roleGuidance = [
   readonly use: string;
 }>;
 
-/** Roles painted in the mono family. */
 const monoRoles: ReadonlyArray<TextRole> = ["code", "codeBlock"];
 
-/** The specimen rows, given a resolved theme (no context, so it is testable). */
 export function TypeScaleBody({ theme }: { readonly theme: Theme }) {
   return (
     <div className="gx-type-list">
@@ -109,7 +97,6 @@ export function TypeScaleBody({ theme }: { readonly theme: Theme }) {
   );
 }
 
-/** The specimen on the platform surface, so the families follow the switch. */
 export function TypeScale() {
   const { platform, theme } = usePlatform();
 

@@ -1,13 +1,3 @@
-/**
- * The runtime-free core of `@gpuixui/primitives`.
- *
- * Nothing here imports `@gpuix/react` at runtime — only its types, which
- * `verbatimModuleSyntax` erases. That is deliberate: this is the layer whose
- * tests need no renderer, and it is where the design system's decisions
- * actually live (theme role → `StyleDesc` resolution, keyboard contracts,
- * controlled state).
- */
-
 export { alpha } from "@gpuixui/tokens";
 export {
   accessibleName,

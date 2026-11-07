@@ -1,12 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * TimePicker example: a standup time with a 15-minute arrow step.
- *
- * The app owns the `HH:mm` value; the picker owns the two segments, the arrow
- * arithmetic and the optional clear. Typing `9` in the hour segment reports
- * `09:00`, and `clearable` returns the field to "not set".
- */
-
 import { useState } from "react";
 import { Card, CardDescription, CardHeader, CardTitle } from "../src/card.js";
 import { textStyle, useTheme } from "../src/internal/theme.js";
@@ -17,7 +9,6 @@ import {
   TimePickerSeparator,
 } from "../src/time-picker.js";
 
-/** A standup time field with a quarter-hour arrow step. */
 export const TimePickerExample = () => {
   const theme = useTheme();
   const [standup, setStandup] = useState<string | null>("09:30");

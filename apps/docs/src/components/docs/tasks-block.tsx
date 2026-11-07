@@ -4,56 +4,37 @@ import { BlockIcon, type BlockIconName } from "./block-icons";
 import { ReorderableTabs, type ReorderableTab } from "./reorderable-tabs";
 import { RailToggle, useRailCollapse } from "./sidebar-rail";
 
-/**
- * The tasks block — a Notion-style Tasks view.
- *
- * The reference is Notion's Tasks screen: a top bar over two panes, a
- * workspace sidebar, and on the right a page title, a task inbox and two rows
- * of document cards.
- *
- * The reproduction owns the state a reader can watch: a tick takes a task out
- * of the open count and every card's count follows the same array, **New
- * Task** appends to the inbox, a card's menu pins and unpins it, a section's
- * chevron folds it away, and the rail collapses to its icons.
- *
- * There is no tasks component in the library; this is a recipe built from
- * `Card`, `Badge`, `Button`, `Checkbox`, `Text`, `Stack` and `Icon`.
- */
-
-/** One task. A task belongs to a document, or to the inbox itself. */
 export interface Task {
   readonly id: string;
-  /** The document the task hangs off; none for an inbox task. */
+
   readonly doc: Option.Option<string>;
   readonly title: string;
-  /** The date shown beside the task, if it has one. */
+
   readonly date?: string;
-  /** The date carries a folder glyph in the reference. */
+
   readonly folder?: boolean;
-  /** The date sits at the far right of the row, not beside the text. */
+
   readonly trailing?: boolean;
   readonly done: boolean;
 }
 
-/** One document, and the tasks that hang off it. */
 export interface TaskDoc {
   readonly id: string;
   readonly title: string;
-  /** The accent the card's border and title take. */
+
   readonly accent: "blue" | "orange" | "yellow" | "slate" | "violet";
-  /** The card's cover strip: a photo, or a tinted band. */
+
   readonly cover?: "photo" | "band";
-  /** Which photograph a `photo` cover paints, so no two cards share one. */
+
   readonly coverArt?: "gon" | "killua";
-  /** The cover's own tint, when it is a band. */
+
   readonly coverTone?: string;
-  /** Whether the card is in the **Pinned Docs** row. */
+
   readonly pinned: boolean;
-  /** The clock badge in the card's corner. */
+
   readonly badge?: "clock" | "pie";
 }
 
-/** The tasks the inbox starts with. */
 export const initialTasks: ReadonlyArray<Task> = [
   {
     id: "replica-ball",
@@ -178,7 +159,6 @@ export const initialTasks: ReadonlyArray<Task> = [
   },
 ];
 
-/** The documents the cards show. */
 export const initialDocs: ReadonlyArray<TaskDoc> = [
   {
     id: "zoldyck-tree",
@@ -299,26 +279,18 @@ export const initialDocs: ReadonlyArray<TaskDoc> = [
   },
 ];
 
-/** The open tasks a document holds. */
 export const openTasksOf = (
   tasks: ReadonlyArray<Task>,
   doc: string,
 ): ReadonlyArray<Task> =>
   tasks.filter((task) => Option.contains(task.doc, doc) && !task.done);
 
-/** The task's state toggled; every other field is kept. */
 export const toggleTask = (
   tasks: ReadonlyArray<Task>,
   id: string,
 ): ReadonlyArray<Task> =>
   tasks.map((task) => (task.id === id ? { ...task, done: !task.done } : task));
 
-/**
- * A task appended to the inbox.
- *
- * The new task's id is the first free number, so two presses never collide
- * and a task that was removed does not take its successor's name.
- */
 export const addInboxTask = (
   tasks: ReadonlyArray<Task>,
   title = "New task",
@@ -336,7 +308,6 @@ export const addInboxTask = (
   ];
 };
 
-/** The same documents with one document's pinned flag changed. */
 export const setPinned = (
   docs: ReadonlyArray<TaskDoc>,
   id: string,
@@ -344,7 +315,6 @@ export const setPinned = (
 ): ReadonlyArray<TaskDoc> =>
   docs.map((doc) => (doc.id === id ? { ...doc, pinned } : doc));
 
-/** The documents in the **Pinned Docs** row, and those in the row below. */
 export const splitPinned = (
   docs: ReadonlyArray<TaskDoc>,
 ): {
@@ -379,7 +349,6 @@ const ICON = {
   note: "file",
 } as const satisfies Readonly<Record<string, BlockIconName>>;
 
-/** The block's own icon names, each mapped to the glyph it draws. */
 type GlyphName = keyof typeof ICON;
 
 const Glyph = ({
@@ -390,12 +359,11 @@ const Glyph = ({
   readonly size?: number;
 }) => <BlockIcon name={ICON[name]} size={size} />;
 
-/** The sidebar's rows, in the reference's order. */
 interface SidebarItem {
   readonly label: string;
   readonly icon: GlyphName;
   readonly active?: boolean;
-  /** The row's trailing control: a `+`, a focus glyph or a chevron. */
+
   readonly trailing?: "plus" | "focus" | "chevron";
 }
 
@@ -427,13 +395,6 @@ const SIDEBAR_FOOT: ReadonlyArray<SidebarItem> = [
   { label: "Help Center", icon: "help" },
 ];
 
-/**
- * One checkbox.
- *
- * The browser preview draws the library's own box: the drawing is a child that
- * takes no pointer input, so a press anywhere in the target activates once.
- * Space is held until the key is released, as the native box does.
- */
 const TaskCheck = ({
   label,
   checked,
@@ -467,7 +428,6 @@ const TaskCheck = ({
   </span>
 );
 
-/** The date pill beside an inbox task. */
 const DatePill = ({ task }: { readonly task: Task }) => (
   <span className="gx-task-date" data-folder={task.folder || undefined}>
     {task.folder ? <Glyph name="folder" size={11} /> : null}
@@ -475,7 +435,6 @@ const DatePill = ({ task }: { readonly task: Task }) => (
   </span>
 );
 
-/** One task row in the inbox. */
 const InboxRow = ({
   task,
   onToggle,
@@ -499,11 +458,9 @@ const InboxRow = ({
   </li>
 );
 
-/** The card's count line, in the reference's voice. */
 const countLabel = (count: number): string =>
   count === 1 ? "1 task to do" : `${count} tasks to do`;
 
-/** The page a document tab opens: its cover, its count and every task. */
 const DocView = ({
   doc,
   tasks,
@@ -541,7 +498,6 @@ const DocView = ({
   );
 };
 
-/** One document card. */
 const DocCard = ({
   doc,
   tasks,
@@ -625,7 +581,6 @@ const DocCard = ({
   );
 };
 
-/** A section header: the title, the `···` and the far-right chevron. */
 const SectionHead = ({
   title,
   collapsed,
@@ -656,7 +611,6 @@ const SectionHead = ({
   </header>
 );
 
-/** The page's own tab: the Tasks view itself. */
 const TASKS_TAB = "tasks";
 
 const TASKS_HOME_TAB: ReorderableTab = {
@@ -678,7 +632,6 @@ export const TasksRender = () => {
   const { pinned, rest } = splitPinned(docs);
   const activeDoc = docs.find((doc) => doc.id === activeTab);
 
-  /** A document opened as its own tab, or the existing tab brought forward. */
   const openDoc = (doc: TaskDoc): void => {
     setOpenTabs((current) =>
       current.some((tab) => tab.id === doc.id)
@@ -688,7 +641,6 @@ export const TasksRender = () => {
     setActiveTab(doc.id);
   };
 
-  /** `+` opens a blank view, which the reader can close again. */
   const addTab = (): void => {
     const id = `new-${openTabs.length + 1}`;
     setOpenTabs((current) => [
@@ -698,7 +650,6 @@ export const TasksRender = () => {
     setActiveTab(id);
   };
 
-  /** A closed tab hands the pane to its neighbour, or back to the page. */
   const closeTab = (id: string): void => {
     setOpenTabs((current) => {
       const index = current.findIndex((tab) => tab.id === id);
@@ -760,8 +711,7 @@ export const TasksRender = () => {
         </span>
       </header>
 
-      {/* The views sit on their own row: the bar keeps the window controls and
-          the reader's tabs get the whole width, so a new tab pushes neither. */}
+      {}
       <div className="gx-task-tabbar">
         <ReorderableTabs
           active={activeTab}

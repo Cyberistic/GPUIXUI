@@ -1,13 +1,3 @@
-/**
- * The copy action's decisions, without a renderer.
- *
- * The bugs these guard: an icon-only control whose name goes blank because a
- * caller threaded `""` through (a reader hears an unnamed button); a glyph that
- * disagrees with the name it sits beside; and an acknowledgement window that
- * cannot run — a zero or `NaN` clears in the press frame, and an infinite one
- * paints a confirmation forever.
- */
-
 import { describe, expect, it } from "vitest";
 import {
   COPY_ACKNOWLEDGEMENT_MS,

@@ -1,11 +1,3 @@
-/**
- * Breadcrumb behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: a trail that dropped the current page when collapsed; a
- * separator left behind after its item was hidden; a current page that stayed in
- * the tab order; and a link that only answered the mouse.
- */
-
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
 import { a11yNodes, nodesWithRole } from "../internal/a11y.js";
@@ -83,7 +75,6 @@ describe("Breadcrumb", () => {
     clickCentreOf(trail, "gpuixui");
     expect(onSelect).toHaveBeenCalledTimes(1);
 
-    // The current page is text: it has no interaction and no tab stop.
     expect(
       trail.renderer.findByTestId("current")?.customProps?.tabIndex,
     ).toBeUndefined();
@@ -129,9 +120,6 @@ describe("Breadcrumb", () => {
   it("announces the current page as selected, the stand-in for aria-current", () => {
     const trail = renderComponent(<Trail />);
 
-    // `0.11.0` has no `aria-current`; the current page publishes the
-    // selection the Stepper, Timeline and Pagination already use, so a reader
-    // is told which crumb is the page and not only which colour it paints.
     const selected = a11yNodes(trail.renderer).filter((node) =>
       Option.contains(node.selected, true),
     );
@@ -148,7 +136,7 @@ describe("Breadcrumb", () => {
 
     expect(ellipsis).toBeDefined();
     expect(ellipsis?.customProps?.tabIndex).toBeUndefined();
-    // Only the one visible link is a tab stop.
+
     expect(trail.renderer.findByTestId("projects")?.customProps?.tabIndex).toBe(
       0,
     );

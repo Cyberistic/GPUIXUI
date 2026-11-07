@@ -50,26 +50,3 @@ A **changed query, or a flipped option, starts at its first match**: the active
 index numbers one range set, so it cannot name a match in the next one. A
 document edit is different — after a single replace the bar stays on the match
 that moved into the active slot, which is the one the reader is working through.
-
-## Notes
-- **Literal matching**: no regex mode.
-- **The active match cannot move the editor**: the bar reports `n / m` and the caller jumps.
-- **The bar does not own the text**: replacements arrive through `onValueChange`.
-- **The match count is a named status, and it appears with the query**: `1 / 2`
-  and `No matches` are the bar's one piece of state, so the readout is a
-  `role="status"` node carrying those words as its name — the runtime publishes
-  a node only when it has a role, and a status without a name announces nothing.
-  Before a query the node is not painted at all: an empty query has no matches,
-  and `No matches` at rest announces a search the reader never made.
-- **A disabled bar is inert**: fields, toggles and actions disable, and `F3` no
-  longer steps the match — the field is read-only, not silent, so the key handler
-  refuses it. `src/behaviour/search-replace.test.tsx` holds the reading.
-- **A blank name reads as its default**: the two fields and the four actions are
-  copy from an i18n table or a saved record as often as literals, so an empty or
-  whitespace-only name is an absence — never an unnamed control — a name given
-  is trimmed, and a name that is not text at all reads as the default instead of
-  throwing out of the name seam.
-- **A document that is not text reads as an empty one**: `value` is a document
-  restored from storage as often as a literal, and a saved record writes `null`
-  where it carried no text; it is read once through `draftOf`, so typing a query
-  reports `No matches` instead of throwing out of the render.

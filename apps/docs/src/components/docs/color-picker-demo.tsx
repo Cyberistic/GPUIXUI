@@ -1,18 +1,3 @@
-/**
- * Browser previews for the Color picker page.
- *
- * The site cannot mount a GPUix component, so these drawings mirror the shipped
- * picker with HTML: the trigger swatch, the panel, the three-layer
- * saturation/value area, the six-ramp hue rail, the alpha rail, the hex field,
- * the contrast readout and the preset row. The rules — the hex grammar, the
- * commit, the contrast — live in `color-picker-preview.ts`, and
- * `color-picker-drawing.test.tsx` holds the style sheet to the component's own
- * recipes through `classesToStyle`.
- *
- * The drawing uses a checkerless alpha rail for the same reason the component
- * does: the runtime has no repeating gradient.
- */
-
 import type { Theme } from "@gpuixui/tokens";
 import { createPortal } from "react-dom";
 import {
@@ -47,33 +32,14 @@ import {
 } from "./color-picker-preview";
 import { usePlatform } from "./platform-toggle";
 
-/** The panel's width and the area's height, as the component draws them. */
 const PANEL_WIDTH = 304;
 const AREA_HEIGHT = 148;
 const THUMB = 20;
 
-/**
- * How long the panel's exit runs, in milliseconds.
- *
- * The style sheet's `--gx-overlay-ms` is the same number: the timer here is the
- * fallback for a run the browser never reports (a tab in the background), and
- * it must not cut the tween short.
- */
 const PANEL_EXIT_MS = 320;
 
 const percent = (fraction: number): string => `${fraction * 100}%`;
 
-/**
- * A drag on one of the picker's rails.
- *
- * The rail captures the pointer on the press, so a drag that leaves the rail
- * keeps reporting to it — clamped to the ends — until the release. That is the
- * rule the runtime's own slider follows: a control that only hears the press
- * is a control whose knob cannot be dragged.
- *
- * `read` is handed the element's own box, so the rule that turns a pointer
- * into a value is the caller's and stays in one place.
- */
 const useRailDrag = <T,>(
   read: (
     box: DOMRect,
@@ -87,16 +53,10 @@ const useRailDrag = <T,>(
     (event: ReactPointerEvent<HTMLElement>) => {
       const element = event.currentTarget;
       if (event.buttons === 0 && dragging.current) {
-        // No button is held: the release happened outside the window, so the
-        // gesture is over. (The check read `!== 0`, which ended the drag on the
-        // first move *with* the button down — the press reported once and the
-        // knob then ignored every move, which is a knob that cannot be dragged.)
         dragging.current = false;
         try {
           element.releasePointerCapture?.(event.pointerId);
-        } catch {
-          // Already released, or never held.
-        }
+        } catch {}
         return;
       }
       if (!dragging.current) return;
@@ -109,16 +69,11 @@ const useRailDrag = <T,>(
     (event: ReactPointerEvent<HTMLElement>) => {
       if (event.button !== 0) return;
       dragging.current = true;
-      // Report the press first: the capture is what carries the gesture past the
-      // element's box, but it throws `NotFoundError` when the pointer is not
-      // active, and a throw here aborted the handler before the value was ever
-      // read — which is a knob that cannot be dragged.
+
       onValue(read(event.currentTarget.getBoundingClientRect(), event));
       try {
         event.currentTarget.setPointerCapture?.(event.pointerId);
-      } catch {
-        // No capture available: the drag still works inside the element.
-      }
+      } catch {}
     },
     [onValue, read],
   );
@@ -127,9 +82,7 @@ const useRailDrag = <T,>(
     dragging.current = false;
     try {
       event.currentTarget.releasePointerCapture?.(event.pointerId);
-    } catch {
-      // Already released, or never held.
-    }
+    } catch {}
   }, []);
 
   return { onPointerDown, onPointerMove: handle, onPointerUp };
@@ -154,9 +107,9 @@ interface PanelProps {
   readonly background: string;
   readonly swatches: ReadonlyArray<Swatch>;
   readonly disabled?: boolean;
-  /** Whether the panel is open; a closing panel paints its exit. */
+
   readonly open?: boolean;
-  /** Called when the exit run ends, so the panel can leave the tree. */
+
   readonly onAnimationEnd?: () => void;
   readonly onDraft?: (draft: string) => void;
   readonly onCommit?: () => void;
@@ -166,7 +119,6 @@ interface PanelProps {
   readonly onPreset?: (swatch: Swatch) => void;
 }
 
-/** A rail's thumb, placed by the fraction it reports. */
 const RailThumb = ({
   fill,
   fraction,
@@ -180,7 +132,6 @@ const RailThumb = ({
   />
 );
 
-/** The panel, with no state of its own. */
 const Panel = ({
   label,
   hsva,
@@ -411,7 +362,6 @@ const Panel = ({
   );
 };
 
-/** The trigger: the swatch, the label and the current hex. */
 const Trigger = ({
   label,
   hsva,
@@ -445,18 +395,6 @@ const Trigger = ({
   </button>
 );
 
-/**
- * A panel that leaves the way it came.
- *
- * The panel is not unmounted when it closes: it stays in the tree with
- * `data-open="false"` and the style sheet runs the exit over it, so the surface
- * travels back into the trigger pill instead of being cut. It is unmounted once
- * the run ends.
- *
- * The reduced-motion case is the one that needs no timer: the run is switched
- * off, so the panel is removed at once — which is what `animationend` would
- * report had it fired.
- */
 const usePanelPresence = (open: boolean) => {
   const [mounted, setMounted] = useState(open);
 
@@ -469,33 +407,20 @@ const usePanelPresence = (open: boolean) => {
       setMounted(false);
       return;
     }
-    // The timer is the fallback for a run the browser never reports (a tab in
-    // the background), so it must not cut the tween short.
+
     const timer = window.setTimeout(() => setMounted(false), PANEL_EXIT_MS);
     return () => window.clearTimeout(timer);
   }, [open]);
 
   return {
     mounted,
-    /**
-     * Leave the tree when the *exit* ends.
-     *
-     * The panel animates in as well, and an `animationend` does not say which
-     * run it belongs to — so an unconditional unmount ended the entrance, and
-     * the picker closed itself the moment it reopened.
-     */
+
     onAnimationEnd: () => {
       if (!open) setMounted(false);
     },
   };
 };
 
-/**
- * The closed state, as a control.
- *
- * A trigger painted shut and never opening is a dead control on a page that
- * documents one that opens, so this state owns a real toggle.
- */
 const ClosedPicker = ({ theme }: { readonly theme: Theme }) => {
   const swatches = defaultSwatches(theme);
   const [hsva] = useState<Hsva>(
@@ -530,7 +455,6 @@ const ClosedPicker = ({ theme }: { readonly theme: Theme }) => {
   );
 };
 
-/** A deploy-style workflow: the app owns the value, the picker reports it. */
 export function ColorPickerWorkflowBody({
   theme,
   initiallyOpen = true,
@@ -540,17 +464,14 @@ export function ColorPickerWorkflowBody({
   portal = false,
 }: {
   readonly theme: Theme;
-  /** The landing mounts it closed so the picker opens on a press. */
+
   readonly initiallyOpen?: boolean;
   readonly label?: string;
-  /** The colour the panel opens on; the theme primary when absent. */
+
   readonly defaultValue?: string;
-  /** Reports every committed colour, so a host can theme the page with it. */
+
   readonly onValueChange?: (value: string) => void;
-  /**
-   * Floats the panel in the page instead of the picker's box. A picker inside
-   * a multi-column flow otherwise fragments its open panel across columns.
-   */
+
   readonly portal?: boolean;
 }) {
   const swatches = defaultSwatches(theme);
@@ -574,9 +495,6 @@ export function ColorPickerWorkflowBody({
     left: number;
   } | null>(null);
 
-  // The panel is placed in page coordinates, not viewport coordinates: a
-  // scrolled page moves it with its trigger instead of leaving it behind a
-  // frame while a scroll listener catches up.
   useLayoutEffect(() => {
     if (!portal || !panel.mounted) return;
     const update = (): void => {
@@ -596,7 +514,6 @@ export function ColorPickerWorkflowBody({
     return () => window.removeEventListener("resize", update);
   }, [panel.mounted, portal]);
 
-  // A press anywhere else, or Escape, closes the floating panel.
   useEffect(() => {
     if (!portal || !open) return;
     const onPointer = (event: PointerEvent): void => {
@@ -709,15 +626,12 @@ export function ColorPickerWorkflowBody({
   );
 }
 
-/** The workflow on the platform surface, so the switch repaints it. */
 export const ColorPickerWorkflow = () => {
   const { look, platform, theme } = usePlatform();
-  // A switch starts the preview again on the new theme's primary, so the mark
-  // follows the colour the reader just selected rather than a stale hex.
+
   return <ColorPickerWorkflowBody key={`${platform}-${look}`} theme={theme} />;
 };
 
-/** One labelled state, as the states preview draws it. */
 const StateGroup = ({
   children,
   label,
@@ -731,7 +645,6 @@ const StateGroup = ({
   </div>
 );
 
-/** An open panel on a preset, a refused draft, and a closed disabled trigger. */
 export function ColorPickerStatesBody({ theme }: { readonly theme: Theme }) {
   const defaults = defaultSwatches(theme);
   const start = parseHex(theme.colors.primary) ?? {
@@ -772,7 +685,6 @@ export function ColorPickerStatesBody({ theme }: { readonly theme: Theme }) {
   );
 }
 
-/** The states on the platform surface, so the switch repaints them. */
 export const ColorPickerStates = () => {
   const { theme } = usePlatform();
   return <ColorPickerStatesBody theme={theme} />;

@@ -1,14 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Dashboard — the report screen: a workspace sidebar, four KPI tiles, the
- * visitors chart with its range control, and the document table.
- *
- * The block is shadcn's `dashboard-01` rebuilt from GPUIxUI parts: the
- * sidebar is `Sidebar`/`SidebarMenu*`, the KPI tiles are `Card`, the chart is
- * `AreaChart` over the charts row, the report is `Tabs` over `Table`, and every
- * pill is `Badge`. Range, tab and selection are real state, so the screen can be
- * driven in the renderer rather than painted.
- */
 import { Badge } from "@gpuixui/components/badge";
 import { Avatar } from "@gpuixui/components/avatar";
 import { Card } from "@gpuixui/components/card";
@@ -81,7 +71,6 @@ import {
   toggleRow,
 } from "./logic.js";
 
-/** A titled card around one chart, in the row under the traffic chart. */
 const ChartCard = ({
   title,
   note,

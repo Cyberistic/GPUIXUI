@@ -1,11 +1,3 @@
-/**
- * What a counting number prints, without a renderer.
- *
- * The bugs these guard: a `NaN` value printed as "NaN", a decimal count that
- * throws inside `toFixed`, and a duration that is fractional, negative or not
- * finite and leaves the tween sampling forever.
- */
-
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
 import { countDuration, countedText } from "./logic.js";

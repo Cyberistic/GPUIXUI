@@ -1,16 +1,3 @@
-/**
- * Holds the selection arithmetic the `modifier-select-lifecycle` probe reads a
- * window with, and the claims the probe has to keep making.
- *
- * The failure being guarded is a plain-press-only list: a probe with no
- * `clickWith` verb measures a selection that never sees a chord, so `shift`
- * replaces the set instead of extending it and every readout still looks
- * plausible. The rule and the probe are therefore held separately — the
- * arithmetic here, the payload the window delivered there — and the anchor's
- * two behaviours (a `shift` press keeps it, a `cmd` toggle moves it) are each
- * one case, because a component that moves the anchor on a range press passes a
- * single range and fails the second one.
- */
 import { readFileSync } from "node:fs";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -39,7 +26,6 @@ const readme = readFileSync(
   "utf8",
 );
 
-/** The `modifierSelectSteps` effect, bounded by the next declaration. */
 const steps = (() => {
   const start = scenarios.indexOf("const modifierSelectSteps");
   if (start === -1) return "";
@@ -56,7 +42,6 @@ const steps = (() => {
   );
 })();
 
-/** The count the README prints for this probe, if any. */
 const printedCheckCount = (): number =>
   Number(
     /(\d+) checks, `--only modifier-select-lifecycle`/.exec(readme)?.[1] ??
@@ -67,7 +52,6 @@ const withShift: PressedModifiers = { ...NO_MODIFIERS, shift: true };
 const withCmd: PressedModifiers = { ...NO_MODIFIERS, cmd: true };
 const withBoth: PressedModifiers = { ...NO_MODIFIERS, cmd: true, shift: true };
 
-/** A selection built from presses, so a case reads as the gesture it names. */
 const after = (
   presses: ReadonlyArray<readonly [number, PressedModifiers]>,
 ): RowSelection =>
@@ -206,9 +190,6 @@ describe("the chord the payload names", () => {
   });
 
   it("reads an absent modifier field as no modifiers rather than a crash", () => {
-    // A click carries the set at the pinned release; an absent field is a
-    // runtime change, and the readout prints the four flags so the probe
-    // measures it instead of inheriting it.
     expect(pressedModifiers(undefined)).toEqual(NO_MODIFIERS);
   });
 });
@@ -230,8 +211,6 @@ describe("the probe's documentation", () => {
   });
 
   it("presses with a chord, now that the host can hold one", () => {
-    // The whole finding is that a modified press reaches a row; a probe that
-    // fell back to plain `click` would still select rows and read green.
     expect((steps.match(/ctx\.host\.clickWith\(/g) ?? []).length).toBe(8);
   });
 

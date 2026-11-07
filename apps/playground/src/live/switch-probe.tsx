@@ -1,28 +1,3 @@
-/**
- * The `switch-lifecycle` probe: the shipped `Switch` in a real window.
- *
- * A switch's state is two paints and one **position** — the track's fill, the
- * knob's ink and the knob's inset. The package's suites read the resolved
- * `StyleDesc` and drive the motion clock through the render tree; a window is
- * the only place that says the fill reached the glass and the knob really
- * travelled. The knob is a part the component renders itself and carries no
- * `testId`, so the probe reads it out of a captured frame by its colour, inside
- * the box the switch's own address covers.
- *
- * Four measurements, each with its own state so none can borrow another's:
- *
- * 1. the accent-family switch — a press toggles it, and the knob moves from one
- *    authored inset to the same inset on the far side;
- * 2. Space — the control's own keyboard contract, which a window's key delivery
- *    is the only way to prove;
- * 3. a disabled twin — a press reports nothing;
- * 4. a platform style's own switch — its off and on fills and its knob, painted
- *    from the platform table rather than the accent recipe.
- *
- * The slide is read on the renderer's **motion clock**: freeze, press, advance
- * by an exact offset, capture. Half the `fast` level is half the travel, so the
- * thumb is measurably neither at the start nor at the end.
- */
 import { Duration, Effect } from "effect";
 import * as Option from "effect/Option";
 import { Pixels, Smoke } from "@gpuixui/testing";
@@ -56,10 +31,8 @@ import {
   type SwitchPaint,
 } from "./switch.js";
 
-/** A switch's own state is one re-render behind the press that changed it. */
 const SETTLE = Duration.millis(120);
 
-/** The captures a reader can look at. */
 const REST = "switch-rest";
 const ON = "switch-on";
 const PLATFORM_OFF = "switch-platform-off";
@@ -68,10 +41,8 @@ const FROZEN = "switch-frozen";
 const PARTIAL = "switch-partial";
 const SETTLED = "switch-settled";
 
-/** The platform whose own toggle the probe paints. */
 const PLATFORM = "darwin";
 
-/** The shipped `Switch`, two states of it and the readouts they print. */
 export const SwitchProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -139,7 +110,6 @@ export const SwitchProbe = (): ReactNode => {
   );
 };
 
-/** The painted box of `testId`, failing by name when the runtime omitted it. */
 const paintedBox = (
   ctx: Smoke.AsyncSmokeContext,
   testId: string,
@@ -151,14 +121,6 @@ const paintedBox = (
     );
   });
 
-/**
- * The device scale the window paints at, read once.
- *
- * A capture arrives device-scaled, so every logical box is converted by this
- * one number. It is asserted once and not per capture: the polls below capture
- * as often as their paint needs, and a printed check count that moved with the
- * machine's load would not be reproducible.
- */
 const captureScaleOf = (
   ctx: Smoke.AsyncSmokeContext,
   name: string,
@@ -173,7 +135,6 @@ const captureScaleOf = (
     );
   });
 
-/** One capture's frame, decoded through the window's own pixel reader. */
 const frameOf = (
   ctx: Smoke.AsyncSmokeContext,
   name: string,
@@ -183,7 +144,6 @@ const frameOf = (
     return yield* ctx.host.pixels(name);
   });
 
-/** Both paints of one state, read out of a single capture. */
 const paintsOf = (
   ctx: Smoke.AsyncSmokeContext,
   name: string,
@@ -203,16 +163,6 @@ const paintsOf = (
     thumb: paintInBand(frame, band, thumb, scale),
   }));
 
-/**
- * The thumb at rest, polled until the slide has finished.
- *
- * A press on a switch leaves the pointer on it, so the track paints its
- * `hover` fill rather than the role it rests on; parking the pointer away is
- * what captures the resting frame. The poll is for the 160ms slide behind the
- * two paints — the readout lands a frame before the knob does. The settled
- * frame is returned too, so the track beside the knob is read from that same
- * frame rather than a second capture.
- */
 const restedThumb = (
   ctx: Smoke.AsyncSmokeContext,
   name: string,
@@ -238,8 +188,7 @@ const restedThumb = (
         track: paintInBand(frame, band, track, scale),
         thumb: paintInBand(frame, band, thumbInk, scale),
       })),
-      // Both resting paints at once: the knob at the far inset, and the track
-      // on its resting role rather than the fill the pointer left behind.
+
       (read) =>
         Option.isSome(read.track) &&
         Option.exists(read.thumb, (found) => sitsAtTheEnd(band, start, found)),
@@ -252,12 +201,6 @@ const restedThumb = (
     } as const;
   });
 
-/**
- * The canonical colours the probe counts.
- *
- * A frame is read for exact bytes, so each ink is resolved from the same theme
- * the switch paints from — the two cannot drift.
- */
 const inksOf = (
   ctx: Smoke.AsyncSmokeContext,
   name: string,
@@ -268,7 +211,6 @@ const inksOf = (
     Option.fromNullishOr(Pixels.hexToRgba(hex)),
   );
 
-/** The switch's own ink: the accent family's two track fills and two knobs. */
 const darkInks = (ctx: Smoke.AsyncSmokeContext, theme: Theme) =>
   Effect.gen(function* () {
     return {
@@ -301,7 +243,6 @@ export const switchSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     const platformBand = yield* paintedBox(ctx, SWITCH_IDS.platform);
     const scale = yield* captureScaleOf(ctx, REST);
 
-    // ── At rest: the accent family's own two paints ─────────────────────────
     yield* ctx.expectEqual(
       "the shipped Switch starts unchecked",
       yield* ctx.host.text(SWITCH_IDS.readout),
@@ -334,7 +275,6 @@ export const switchSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // ── A press: the state, the paint, and the knob's own travel ─────────────
     yield* ctx.host.click(SWITCH_IDS.field);
     yield* ctx.expectEqual(
       "a press toggles the switch and reports it once",
@@ -380,7 +320,6 @@ export const switchSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // ── Space: the control's own keyboard contract ──────────────────────────
     yield* ctx.host.key("space");
     yield* ctx.host.keyUp("space");
     yield* ctx.expectEqual(
@@ -392,7 +331,6 @@ export const switchSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       switchReadout(false, 2),
     );
 
-    // ── A disabled twin refuses the press ───────────────────────────────────
     yield* ctx.host.click(SWITCH_IDS.disabled);
     yield* ctx.expectEqual(
       "a disabled switch reports nothing",
@@ -405,7 +343,6 @@ export const switchSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       switchReadout(false, 2),
     );
 
-    // ── A platform style paints its own toggle, not the accent recipe ───────
     const platformRest = yield* paintsOf(
       ctx,
       PLATFORM_OFF,
@@ -472,7 +409,6 @@ export const switchSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // ── The slide, on the renderer's own motion clock ───────────────────────
     const pauseClock = yield* ctx.expectSome(
       "the window exposes a motion clock",
       Option.fromNullishOr(ctx.host.clockPause),

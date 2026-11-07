@@ -10,28 +10,15 @@ import {
   valueKey,
 } from "./slider-preview";
 
-/**
- * A slider's fill, thumbs and stepper, and a range drag's ends.
- *
- * Guarded bugs: the Components page drew `Quality · 62` over an **empty** track
- * — its fill was the span between the first and last value, which is zero for a
- * single value — and took no pointer at all, so nothing responded. A range
- * press on the coincident pair a price filter opens with must still open in
- * either direction, and the ends must never cross.
- */
-
 const RANGE = { min: 0, max: 100, step: 1 } as const;
 const PRICE = { min: 0, max: 200, step: 5 } as const;
 
 describe("the track a value paints", () => {
   it("fills from the start of the track to a single thumb", () => {
-    // The bug: `[62]` painted `left: 62%, width: 0%` — a readout of 62 and no
-    // filled span. A single value fills from the floor.
     expect(trackPaint([62], RANGE)).toStrictEqual({ left: 0, width: 0.62 });
   });
 
   it("fills between the two ends of a pair, on the range's own scale", () => {
-    // 20 and 80 on a 0..200 range are 10% and 40% of the track, not 20 and 80.
     expect(trackPaint([20, 80], PRICE)).toStrictEqual({
       left: 0.1,
       width: 0.3,
@@ -57,9 +44,6 @@ describe("the track a value paints", () => {
 
 describe("a key on the drawing", () => {
   it("names an arrow the way the primitive does, so it steps", () => {
-    // The runtime reports `right`; the browser reports `ArrowRight`. A drawing
-    // that passed the DOM name through moved on Home/End and sat still on every
-    // arrow.
     expect(valueKey("ArrowRight")).toBe("right");
     expect(valueKey("ArrowUp")).toBe("up");
     expect(valueKey("Home")).toBe("home");
@@ -105,12 +89,11 @@ describe("the stepper", () => {
 
 describe("a range drag", () => {
   it("moves the end under the pointer and pins the other", () => {
-    // Pressing near the high end pins the low one at 20.
     expect(dragSpan({ anchor: 20 }, 55, RANGE)).toStrictEqual({
       start: 20,
       end: 55,
     });
-    // Pressing near the low end pins the high one at 80.
+
     expect(dragSpan({ anchor: 80 }, 64, RANGE)).toStrictEqual({
       start: 64,
       end: 80,
@@ -118,7 +101,6 @@ describe("a range drag", () => {
   });
 
   it("keeps the ends ordered when one is dragged past the other", () => {
-    // The pair is ordered by construction, so there is no crossing to refuse.
     expect(dragSpan({ anchor: 20 }, 95, RANGE)).toStrictEqual({
       start: 20,
       end: 95,
@@ -148,11 +130,6 @@ describe("a range drag", () => {
   });
 
   it("lets one end cross its pair and keeps following the pointer", () => {
-    // The bug: the drag remembered the grabbed end and ran it through
-    // `moveSpanEnd`, which refuses to cross — the pair clamped together and the
-    // next move re-read the stale press point, so the thumb jumped back. The
-    // span around a pinned anchor is ordered by construction, and the pointer's
-    // value stays the end that moved.
     const crossing = dragSpan({ anchor: 80 }, 20, RANGE);
     expect(crossing).toStrictEqual({ start: 20, end: 80 });
 
@@ -187,7 +164,7 @@ describe("the slider drawings", () => {
     ]) {
       const source = read(demo);
       expect(source).toContain("SliderDrawing");
-      // A second hand-rolled track would be a slider nobody ships again.
+
       expect(source).not.toContain("gx-slider-fill");
     }
   });

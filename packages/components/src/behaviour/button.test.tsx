@@ -1,21 +1,3 @@
-/**
- * `Button` and `IconButton` behaviour, in the real GPUix renderer.
- *
- * These two are this package's stand-in for `@gpuixui/primitives` (plan 110 §7),
- * so every later overlay inherits their correctness. The bugs these guard: a
- * click that fires twice (once from the pointer, once from a synthesised key); a
- * disabled control that still runs its handler or still takes a tab stop; a
- * keyboard activation that works for Enter but not Space; a **held** key that
- * re-ran the activation on every repeat, so holding Enter on a focused row ran
- * its action more than once; an icon-only
- * control with no accessible name; a filled action whose hover was a
- * half-alpha fill, so the same button read two colours on two surfaces; and an
- * outlined action that drew its edge in the decorative `border` role — the same
- * value as the fill it outlined — so the control had no outline at all; and an
- * outlined action's pointer state painted the `hover`/`active` wash that is its
- * own fill in several shipped styles, so it never answered the pointer.
- */
-
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { Icon } from "@gpuixui/icons";
@@ -76,8 +58,6 @@ describe("Button", () => {
     button.renderer.nativeSimulateKeyDown(element.id, "enter");
     expect(onClick).toHaveBeenCalledTimes(1);
 
-    // Space activates on the release, the way a platform button does: the press
-    // starts the gesture and the release finishes it.
     button.renderer.nativeSimulateKeyDown(element.id, "space");
     expect(onClick).toHaveBeenCalledTimes(1);
     button.renderer.nativeSimulateKeyUp(element.id, "space");
@@ -98,7 +78,6 @@ describe("Button", () => {
     expect(element).toBeDefined();
     if (element === undefined) return;
 
-    // The platform sends key-down again, with `isHeld`, while a key is held.
     button.renderer.nativeSimulateKeyDown(element.id, "enter");
     button.renderer.nativeSimulateKeyDown(element.id, "enter", true);
     expect(onClick).toHaveBeenCalledTimes(1);
@@ -128,8 +107,7 @@ describe("Button", () => {
     button.renderer.nativeSimulateKeyDown(element.id, "enter");
 
     expect(onClick).not.toHaveBeenCalled();
-    // The default variant is filled, so it wears the neutral pair rather than a
-    // fade — see `paints a disabled filled action with the measured pair`.
+
     expect(
       button.renderer.findByTestId("button")?.style.opacity,
     ).toBeUndefined();
@@ -159,15 +137,13 @@ describe("Button", () => {
     );
 
     try {
-      // The label is the control, so it stays beside the busy mark.
       expect(button.renderer.getAllText()).toContain("Save changes");
-      // The leading glyph is what the spinner stands in for.
+
       expect(button.renderer.findByType("svg")).toHaveLength(0);
       expect(
         nodesWithRole(button.renderer, "status").map((node) => node.name),
       ).toEqual(["Loading"]);
 
-      // Busy refuses the press without leaving the tab order.
       clickCentreOf(button, "button");
       expect(onClick).not.toHaveBeenCalled();
       expect(
@@ -179,13 +155,6 @@ describe("Button", () => {
   });
 
   it("paints a disabled filled action with the measured pair, not a fade", () => {
-    // The bug: every disabled action faded itself to 50%. A fade composites the
-    // label into the strip behind the control, so the same disabled primary read
-    // a different colour on a page and a card — and on the card of four shipped
-    // light styles the pair landed at 1.47:1–1.49:1, under the disabled floor
-    // (`disabled.test.ts` in `@gpuixui/tokens` measures that premise). A filled
-    // action now wears the neutral pair the contrast contract measures on every
-    // surface a control can sit on.
     Arr.forEach(
       [
         ["primary", "dark"],
@@ -221,9 +190,6 @@ describe("Button", () => {
   });
 
   it("keeps the measured fade on a disabled ghost action", () => {
-    // An unfilled action has no fill to collapse into: the dim is the surface
-    // behind it, and the tokens' `disabledFadeFailures` measures that composite.
-    // This is the negative control for the pair above.
     const button = renderComponent(
       <Button testId="button" variant="ghost" disabled>
         Cancel
@@ -234,7 +200,7 @@ describe("Button", () => {
 
     const style = button.renderer.findByTestId("button")?.style;
     expect(style?.opacity).toBe(disabledOpacity);
-    // The dim is the whole state: there is no fill to move under the pointer.
+
     expect(style?.hover).not.toMatchObject({
       backgroundColor: disabledAction(darkTheme).backgroundColor,
     });
@@ -246,9 +212,6 @@ describe("Button", () => {
   });
 
   it("does not repaint a disabled action under the pointer", () => {
-    // A disabled control that tints on hover still answers the pointer, so the
-    // reader is told the control is live. A filled action's hover and press are
-    // the resting fill; a ghost's are absent (the case below).
     const resting = {
       backgroundColor: disabledAction(darkTheme).backgroundColor,
     };
@@ -271,7 +234,6 @@ describe("Button", () => {
   });
 
   it("still answers the pointer on an enabled action", () => {
-    // The control for the case above: the live control keeps its feedback.
     const button = renderComponent(
       <Button testId="button" variant="primary">
         Save
@@ -344,7 +306,7 @@ describe("Button", () => {
         expect(style?.active).toMatchObject({
           backgroundColor: filledPressed(darkTheme, action),
         });
-        // The half-alpha fill let the surface through and depended on it.
+
         expect(style?.hover).not.toMatchObject({
           backgroundColor: alpha(darkTheme.colors[action], 0.5),
         });
@@ -355,11 +317,6 @@ describe("Button", () => {
   });
 
   it("keeps the measured wash on an action with no fill", () => {
-    // A ghost action rests on the surface behind it, so its pointer states are
-    // the theme's `hover` / `active` washes. This is the case the outlined
-    // action's fix must not reach: deriving a fill for the ghost would paint an
-    // opaque button under the pointer (`filledHover(theme, "secondary")`) where
-    // the surface is meant to show through.
     const button = renderComponent(
       <Button testId="button" variant="ghost">
         Cancel
@@ -382,14 +339,6 @@ describe("Button", () => {
   });
 
   it("paints a secondary action's pointer step in a fill that changes", () => {
-    // The bug: the outlined action swapped its fill for the `hover` / `active`
-    // washes, and in several shipped styles that wash *is* the `secondary`
-    // fill — hovered 1.000:1 in High contrast light, High contrast dark and
-    // Light · macOS, and the base light hover at 1.036:1 — so a control a
-    // reader picks for clarity answered the pointer with no visible change
-    // (`action-feedback.test.ts` in `@gpuixui/tokens` measures 15 of the
-    // variant's 32 placements under the floor). The step is now the same
-    // derivation the filled roles use, read off the renderer here.
     Arr.forEach(
       [
         ["light", lightTheme],
@@ -405,15 +354,10 @@ describe("Button", () => {
 
         hoverCentreOf(button, "button");
 
-        // Read the paint, then give the one window back before asserting: a
-        // failed expectation must name one case, not strand the renderer for
-        // every test after it.
         const style = button.renderer.findByTestId("button")?.style;
 
         button.unmount();
 
-        // Both states are the theme's derived step from the fill they replace,
-        // and never the wash the bug painted.
         expect(style?.hover, mode).toMatchObject({
           backgroundColor: filledHover(theme, "secondary"),
         });
@@ -424,9 +368,6 @@ describe("Button", () => {
           backgroundColor: theme.colors.hover,
         });
 
-        // The measured claim: the contract that holds a pointer step to the
-        // perceptibility floor has nothing to report for this role, so each
-        // state reads as a different fill rather than the one it replaces.
         expect(
           Arr.filter(
             actionFeedbackFailures(theme),
@@ -452,8 +393,6 @@ describe("Button", () => {
             ["light", lightTheme],
           ] as const,
           ([mode, theme]) => {
-            // The mechanism: the runtime keeps 40% of every other focusable
-            // element, which composites this label into its own fill.
             const dimmed = Arr.filter(
               keyboardDimFailures(theme, contrastFloors.secondary),
               (failure) => failure.fill === fill && failure.label === label,
@@ -463,7 +402,6 @@ describe("Button", () => {
               expect(failure.ratio ?? 1).toBeLessThan(contrastFloors.secondary);
             });
 
-            // The pair this opts out of is the one the design holds to 4.5:1.
             expect(
               contrastRatio(theme.colors[label], theme.colors[fill]) ?? 0,
             ).toBeGreaterThanOrEqual(contrastFloors.secondary);
@@ -536,16 +474,12 @@ describe("Button", () => {
           theme.colors.borderStrong,
         );
 
-        // The decorative role this replaced sits under the boundary floor on
-        // the fill it outlines; in the dark theme it is that fill's own value,
-        // so the outline was not painted at all.
         const decorative = contrastRatio(
           theme.colors.border,
           theme.colors.secondary,
         );
         expect(decorative ?? Infinity).toBeLessThan(contrastFloors.boundary);
 
-        // A control's edge is measured on every strip an outline button sits on.
         Arr.forEach(
           ["background", "card", "muted", "secondary"] as const,
           (surface) => {
@@ -563,8 +497,6 @@ describe("Button", () => {
   });
 
   it("paints every variant's label in the role its own fill carries", () => {
-    // A glyph inside the action takes this same role, so the pair is stated
-    // once: a chevron is the label drawn in vectors, not a second colour.
     Arr.forEach(
       [
         ["primary", "primaryForeground"],
@@ -598,12 +530,6 @@ describe("Button", () => {
   });
 
   it("paints the documented default for a stored variant name it does not ship", () => {
-    // The bug this guards: the variant table was read before anything asked
-    // whether the name was in it, so a variant that arrived from storage — an
-    // action record, a saved toolbar, a name a release renamed — answered
-    // `undefined` and `LOOKS[variant].variant` threw a `TypeError` mid-render.
-    // The window painted nothing, the action included, instead of the secondary
-    // control the default documents.
     // @ts-expect-error — a variant a store wrote, not the union the props declare.
     const stored: ButtonVariant = "tertiary";
     const onClick = vi.fn();
@@ -635,7 +561,6 @@ describe("IconButton", () => {
 
     expect(sizeOf(button, "icon-button")).toEqual(
       Option.some({
-        // Square: the density's control height on both axes.
         width: controlHeight(darkTheme, "md"),
         height: controlHeight(darkTheme, "md"),
       }),
@@ -662,8 +587,6 @@ describe("IconButton", () => {
   });
 
   it("keeps the keyboard dim on a ghost icon control", () => {
-    // The opt-out belongs to a filled action, whose label collapses into its
-    // own fill. An icon control paints no fill, so it keeps the cue.
     const button = renderComponent(
       <IconButton testId="icon-button" label="Close">
         ✕

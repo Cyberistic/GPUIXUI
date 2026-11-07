@@ -1,11 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Calendar — a week view (plan 729): calendars with switches in the sidebar,
- * ‹ Today › and a Day/Week/Month switch in the toolbar, and the week's events
- * placed on an hour grid. Overlapping events cascade as Calendar.app draws
- * them: a later lane starts part-way in and lies over the earlier one, so every
- * event keeps most of the column instead of an equal sliver (`layoutDay`).
- */
 import { SegmentedControl } from "@gpuixui/components/segmented-control";
 import { Button, Stack, Switch, Text } from "@gpuixui/primitives";
 import { Window, WindowToolbar } from "@gpuixui/shell";
@@ -23,7 +16,6 @@ const GUTTER = 48;
 const HEADER = 24;
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
 
-/** `9.5` → `9:30`. */
 const hourLabel = (hour: number): string =>
   `${Math.floor(hour)}:${String(Math.round((hour % 1) * 60)).padStart(2, "0")}`;
 
@@ -39,8 +31,7 @@ export const CalendarBlock = ({
     Arr.map(calendars, (c) => c.id),
   );
   const shown = visible(events, on);
-  // The bar, the wash and the ink of a calendar's events: its tone's family,
-  // or the accent's for the primary calendar.
+
   const paint = (id: CalendarId) => {
     const tone = calendars.find((c) => c.id === id)?.tone ?? "primary";
     if (tone === "primary") {
@@ -176,8 +167,7 @@ export const CalendarBlock = ({
               layoutDay(Arr.filter(shown, (event) => event.day === index)),
               ({ event, lane, lanes }) => {
                 const { bar, wash, ink } = paint(event.calendar);
-                // The runtime takes `left` in points only, so the cascade is
-                // flex: `lane` parts of inset, then `lanes` parts of event.
+
                 return (
                   <div
                     key={event.id}
@@ -199,8 +189,7 @@ export const CalendarBlock = ({
                         flexBasis: 0,
                         minWidth: 0,
                         marginRight: 2,
-                        // A later lane lies over an earlier one; a hairline of the
-                        // window's own colour keeps their edges apart.
+
                         ...(lane === 0
                           ? {}
                           : {

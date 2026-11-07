@@ -1,51 +1,19 @@
-/**
- * Prove the theme editor edits, audits and resets a theme in a browser that
- * refuses site data.
- *
- * `/themes` is the page a consumer opens to take one of the library's
- * styles, change it and copy the result. Three properties had no browser
- * measurement: that a hydrated colour field reaches the preview and the audit,
- * that **Reset** returns the page to the base it opened on, and that the editor
- * survives a browser whose `localStorage` throws — the platform switch already
- * answers that refusal as absence, while the editor read the store directly
- * from its mount effect and lost the page to `Something went wrong`.
- *
- * The failing edit is not a chosen hex: the probe reads the page's own
- * `background` value and writes it into `primary`, so the pair the audit flags
- * is the one the gate measures — `src/lib/theme-editor-probe.test.ts` holds
- * that expectation to `themeFindings`.
- *
- * Run (a dev or preview server is already up):
- * `nub apps/docs/scripts/theme-editor-probe.ts`
- * `--url <url>`, `--timeout <ms>` (hydration budget), `--chrome <path>`.
- */
-
 import * as Schema from "effect/Schema";
 import * as Option from "effect/Option";
 import { findChrome, openChrome } from "./chrome-session.ts";
 import { hasHandler } from "./react-ready.ts";
 
-/** The page a preview server serves. */
 export const defaultUrl = "http://localhost:4175/themes";
 
-/** The editor's root. */
 export const editorSelector = ".gx-theme-editor";
 
-/** The control **Reset** presses. */
 export const resetSelector = ".gx-te-reset";
 
-/** The live audit readout under the preview. */
 export const auditSelector = ".gx-te-audit";
 
-/** A colour field's label, as the editor names it. */
 export const colourField = (role: string): string =>
   `input[aria-label="${role} value"]`;
 
-/**
- * The script installed before the page's own scripts, so every storage call a
- * reader's browser would refuse is refused here — and counted, so a probe that
- * never reached the store cannot pass as one that survived it.
- */
 export const storageRefusal = `(() => {
   let attempts = 0;
   const refuse = () => function () {
@@ -60,7 +28,6 @@ export const storageRefusal = `(() => {
   });
 })()`;
 
-/** The state the probe reads at one instant. */
 export class EditorReadout extends Schema.Class<EditorReadout>("EditorReadout")(
   {
     mounted: Schema.Boolean,
@@ -75,10 +42,8 @@ export class EditorReadout extends Schema.Class<EditorReadout>("EditorReadout")(
 
 const ReadoutBody = Schema.fromJsonString(EditorReadout);
 
-/** Read the page's readout; `None` when it is not the shape the probe wrote. */
 export const parseReadout = Schema.decodeUnknownOption(ReadoutBody);
 
-/** The readout as one JSON line the probe parses back. */
 const readEditor = `(() => {
   const value = (role) =>
     document.querySelector('input[aria-label="' + role + ' value"]')?.value ??
@@ -95,20 +60,12 @@ const readEditor = `(() => {
   });
 })()`;
 
-/** Whether the editor's Reset button carries React's own handler. */
 export const hydrated = `(() => {
   const reset = document.querySelector('${resetSelector}');
   if (reset === null) return "missing";
   return ${hasHandler("reset")} ? "ready" : "cold";
 })()`;
 
-/**
- * Write a value into a controlled colour field.
- *
- * React keeps its own value tracker, so assigning `input.value` directly never
- * reaches its change handler — the same rule the search probe measured. The
- * prototype's setter is what makes the `input` event carry a value React reads.
- */
 export const typeValue = (role: string, value: string): string => `(() => {
   const input = document.querySelector('${colourField(role)}');
   if (input === null) return "no-input";
@@ -122,7 +79,6 @@ export const typeValue = (role: string, value: string): string => `(() => {
   return "typed";
 })()`;
 
-/** Poll `read` until `accept` holds, or the budget runs out. */
 const until = async (
   read: () => Promise<string>,
   accept: (value: string) => boolean,
@@ -137,7 +93,6 @@ const until = async (
   return accept(value) ? value : undefined;
 };
 
-/** Run the project. Returns the process exit code. */
 export const main = async (argv: ReadonlyArray<string>): Promise<number> => {
   const argument = (flag: string): string | undefined => {
     const index = argv.indexOf(flag);
@@ -202,8 +157,6 @@ export const main = async (argv: ReadonlyArray<string>): Promise<number> => {
       );
     }
 
-    // The browser refused every call above and the editor drew anyway — the
-    // failure this probe exists for is the page that never reaches this line.
     if (failures.length === 0) {
       console.log(
         `base: primary ${opening.primary}, ${opening.attempts} refused storage calls, audit passes`,

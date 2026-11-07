@@ -54,8 +54,3 @@ Alert
 | `AlertLink` | `onSelect` | `() => void` | — | the text action's handler, on click, `Enter` or `Space` |
 | `AlertDismiss` | `onDismiss` | `() => void` (required) | — | runs on click, `Enter` or `Space`; there is no optional dismiss |
 | `AlertDismiss` | `label` | `string` | `"Dismiss"` | the control's accessible name |
-
-## Notes
-- The root carries `role="alert"`; `AlertIcon` has no role.
-- Every alert needs an `AlertTitle`; colour is never the only signal.
-- The dismiss control's name comes from `label`, not the glyph.

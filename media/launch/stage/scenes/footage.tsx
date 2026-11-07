@@ -1,9 +1,3 @@
-/**
- * Real GPUix footage on a stage: a take's frames (the native renderer's own 2×
- * captures, `media/launch/takes/<take>/`), stepped on the stage's clock so a
- * recording is frame-exact. The stage draws the page around it; the product is
- * the product.
- */
 import { useEffect, useState, type CSSProperties } from "react";
 import { clock } from "../kit/clock";
 
@@ -13,7 +7,6 @@ const takes = import.meta.glob("../../takes/*/*.png", {
   import: "default",
 }) as Record<string, string>;
 
-/** A take's frames, in order. */
 export const framesOf = (take: string): ReadonlyArray<string> =>
   Object.keys(takes)
     .filter((path) => path.includes(`/takes/${take}/`))

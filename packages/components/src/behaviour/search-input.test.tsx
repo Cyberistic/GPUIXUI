@@ -1,16 +1,3 @@
-/**
- * SearchInput behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: typing that never reached `onValueChange`; a clear
- * control offered on an empty field; clearing that forgot to give focus back to
- * the field; Enter that submitted nothing; Escape that swallowed the key on an
- * empty field; a controlled field that changed its own display when the consumer
- * said no; a caller `ref` that the internal focus ref silently replaced; and a
- * **disabled** field that could still be emptied through Escape or its clear
- * target — a read-only host still delivers keys, so the guard belongs on the
- * field's own edit path rather than on whether the host can be focused.
- */
-
 import { describe, expect, it, vi } from "vitest";
 import type { PublicInstance } from "@gpuix/react";
 import * as Option from "effect/Option";
@@ -50,7 +37,6 @@ const Search = ({
   </div>
 );
 
-/** Focus the field, then send each character as a real key press. */
 const type = (root: ComponentTestRoot, text: string): void => {
   root.renderer.focusElement(root.renderer.findByTestId("search")?.id ?? -1);
   text.split("").forEach((key) => root.renderer.simulateKeystrokes(key));
@@ -130,7 +116,7 @@ describe("SearchInput", () => {
     type(search, "a");
 
     expect(onValueChange).toHaveBeenCalledWith("a");
-    // The consumer did not adopt the value, so the field is still empty.
+
     expect(search.renderer.findByTestId("search-clear")).toBeUndefined();
 
     search.unmount();
@@ -146,7 +132,6 @@ describe("SearchInput", () => {
 
     expect(ref.current?.id).toBe(search.renderer.findByTestId("search")?.id);
 
-    // The internal ref still points at the same node: clearing focuses it.
     type(search, "abc");
     clickCentreOf(search, "search-clear");
     expect(focusedTestId(search)).toEqual(Option.some("search"));
@@ -164,8 +149,6 @@ describe("SearchInput", () => {
       search.renderer.findByTestId("search-clear")?.customProps?.tabIndex,
     ).toBe(-1);
 
-    // The target is still painted — the field shows its query — but it must
-    // not advertise a press it refuses.
     expect(search.renderer.findByTestId("search-clear")?.style.hover).toBe(
       undefined,
     );
@@ -192,7 +175,7 @@ describe("SearchInput", () => {
 
     expect(onClear).not.toHaveBeenCalled();
     expect(onValueChange).not.toHaveBeenCalled();
-    // The query is still there: the hint returns only on an empty field.
+
     expect(search.renderer.getAllText()).not.toContain("Search…");
 
     search.unmount();
@@ -210,7 +193,6 @@ describe("SearchInput", () => {
       />,
     );
 
-    // A read-only host still receives keys, so Escape reaches the field.
     search.renderer.focusElement(
       search.renderer.findByTestId("search")?.id ?? -1,
     );

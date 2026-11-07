@@ -8,7 +8,6 @@
     "build": "vite build",
     "preview": "vite preview",
     "blocks:thumbnails": "nub scripts/block-thumbnails.ts",
-    "native:previews": "nub scripts/native-previews.ts",
     "check-types": "tsc --noEmit",
     "test": "vitest run"
   },

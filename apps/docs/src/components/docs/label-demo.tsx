@@ -1,11 +1,3 @@
-/**
- * Browser preview for the Label page.
- *
- * `Label` is the visible name of a field, not the field itself, so the preview
- * shows the three paint states — plain, required and invalid — each with the
- * optional description line. The Code tab shows the native usage.
- */
-
 export const LabelDemo = () => (
   <div className="gx-demo gx-demo-column gx-label-scene">
     <p className="gx-demo-label">States</p>

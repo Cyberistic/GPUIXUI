@@ -1,12 +1,3 @@
-/**
- * Timeline behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: a rail that keeps drawing past the last event, a status
- * that paints the wrong dot, a current event that is never announced, a style
- * callback that cannot see `last`, and an upcoming dot painted in the `muted`
- * surface role — 1.06:1 on the page, a dot nobody could see.
- */
-
 import { contrastFloors, contrastRatio, indicatorRoles } from "@gpuixui/tokens";
 import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
@@ -20,7 +11,6 @@ import {
 } from "../internal/test-root.js";
 import { Timeline, TimelineItem } from "../timeline.js";
 
-/** A three-event deploy history. */
 const History = () => (
   <Timeline label="Deploy history">
     <TimelineItem
@@ -45,7 +35,6 @@ const History = () => (
   </Timeline>
 );
 
-/** An item's dot, read through the rail column. */
 const dotOf = (root: ComponentTestRoot, testId: string) => {
   const item = root.renderer.findByTestId(testId);
   const railId = item?.children[0];
@@ -55,14 +44,12 @@ const dotOf = (root: ComponentTestRoot, testId: string) => {
   return dotId === undefined ? undefined : root.renderer.getElement(dotId);
 };
 
-/** The styled `<text>` behind a string. */
 const textStyleOf = (root: ComponentTestRoot, value: string) => {
   const leaf = root.renderer.findByText(value);
   if (leaf?.parentId == null) return undefined;
   return root.renderer.getElement(leaf.parentId);
 };
 
-/** How many children the rail column has: dot alone for the last event. */
 const railChildCount = (root: ComponentTestRoot, testId: string): number => {
   const item = root.renderer.findByTestId(testId);
   const railId = item?.children[0];
@@ -127,10 +114,6 @@ describe("Timeline", () => {
   });
 
   it("paints every dot in a mark a reader can see on the page and a card", () => {
-    // The upcoming dot painted `muted` — a *surface* role. At 1.06:1 on the
-    // page it drew a dot nobody could see, and no mark contract measures that
-    // role. A dot is a mark, so each fill has to clear the non-text floor on
-    // every strip a timeline is drawn on.
     const probes = [lightTheme, darkTheme].map((theme) => {
       const history = renderComponent(<History />, theme.mode);
       const dots = ["build", "tests", "deploy"].map(
@@ -173,11 +156,6 @@ describe("Timeline", () => {
       "a dot a reader cannot find on the strip it is drawn on",
     ).toEqual([]);
 
-    // The premise: `muted` is a surface role, and the token package's mark
-    // contract does not measure it, so a dot painted in it is a dot nobody
-    // checked. Read from the contract rather than from today's palette — the
-    // wash's ratio moves with a palette edit, the role list is the rule. (The
-    // light theme's wash measured 1.06:1 on the page when this case landed.)
     expect(indicatorRoles).not.toContain("muted");
   });
 

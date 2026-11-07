@@ -1,19 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Stepper: a multi-step progress indicator.
- *
- * The status is derived from `value`, never passed: a step before the current
- * one is complete, the current one is current, the rest are upcoming. The
- * component holds no state and takes no callback — the workflow that owns the
- * value renders the stepper from it, the same way a `Field` does not own its
- * value.
- *
- * Measured limitation: `@gpuix/native@0.11.0` has no `aria-current`, so the
- * current step carries `aria-selected` — the substitution Pagination uses.
- * There is no connector line either: the runtime has no pseudo-elements, and a
- * connector is not one of the two parts the contract fixes.
- */
-
 import type { Props } from "@gpuix/react";
 import {
   mergeStyles,
@@ -52,13 +37,10 @@ import {
   type StepperStatus,
 } from "./stepper/logic.js";
 
-/** Where a step sits relative to the current one. */
 export type { StepperStatus } from "./stepper/logic.js";
 
-/** The two axes a stepper can run along. */
 export type { StepperOrientation } from "./stepper/logic.js";
 
-/** What a step derives from the root. */
 interface StepperContextValue {
   readonly value: number;
   readonly orientation: StepperOrientation;
@@ -68,7 +50,6 @@ const StepperContext = createContext<StepperContextValue | undefined>(
   undefined,
 );
 
-/** The stepper a part belongs to. Throws when there is none. */
 const useStepper = (): StepperContextValue => {
   const value = useContext(StepperContext);
   if (value === undefined) {
@@ -77,7 +58,6 @@ const useStepper = (): StepperContextValue => {
   return value;
 };
 
-/** The marker's fill and text colour for one status. */
 const markerPalette = (
   theme: Theme,
   status: StepperStatus,
@@ -98,27 +78,16 @@ const markerPalette = (
     Match.exhaustive,
   );
 
-/** {@link Stepper} props. */
 export interface StepperProps extends Omit<Props, "children"> {
-  /**
-   * The current step, 1-based. Steps below it are complete, it is current and
-   * the rest are upcoming. A value the caller cannot read (`NaN` or an
-   * infinity, from arithmetic over a step index) reads as the first step.
-   */
   readonly value: number;
-  /** Default `"horizontal"`. */
+
   readonly orientation?: StepperOrientation;
-  /** The list's accessible name. */
+
   readonly label?: string;
   readonly className?: string;
   readonly children?: PartChildren;
 }
 
-/**
- * A read-only step list. The statuses come from `value`, resolved once through
- * `currentStep`: a value the caller cannot name reads as the first step, so the
- * paint and the announcement agree instead of every step reading upcoming.
- */
 export const Stepper = ({
   value,
   orientation: requestedOrientation = "horizontal",
@@ -129,11 +98,9 @@ export const Stepper = ({
   ...rest
 }: StepperProps) => {
   const theme = useTheme();
-  // An axis saved with the workspace reaches the root as a name this release
-  // may not carry; the recipe, the alignment and the context read one answer.
+
   const orientation = orientationOf(requestedOrientation);
-  // A list's name is copy too: a blank or non-text one is an absence, so the
-  // runtime is handed no `aria-label` rather than an empty name.
+
   const name = accessibleName(textOf(label));
   assertParts(stepperRoot, children);
 
@@ -157,26 +124,22 @@ export const Stepper = ({
   );
 };
 
-/** {@link StepperStep} props. */
 export interface StepperStepProps extends Omit<Props, "children" | "style"> {
-  /** This step's position, 1-based. Must agree with the root's scale. */
   readonly value: number;
-  /** The step's name. */
+
   readonly label: string;
-  /** One line of supporting copy under the name. */
+
   readonly description?: string;
-  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+
   readonly className?: string;
-  /** A style, or a function of the step's derived status. */
+
   readonly style?: StateStyle<StepperStepState>;
 }
 
-/** What a step draws: its derived status. */
 export interface StepperStepState {
   readonly status: StepperStatus;
 }
 
-/** One numbered step: marker, name and optional description. */
 export const StepperStep = ({
   value,
   label,
@@ -190,11 +153,7 @@ export const StepperStep = ({
   const status = statusOf(current, value);
   const marker = markerPalette(theme, status);
   const side = controlHeight(theme, "md");
-  // A title and a description are copy as often as they are literals (an i18n
-  // table's missing row, a workflow record's blank field): a blank title names
-  // the step by its position, and a blank or whitespace description paints no
-  // line rather than a zero-height run over a typed blank one. A record's
-  // non-text field is no copy at all.
+
   const name = stepName(label, value);
   const detail = visibleCopy(textOf(description));
 
@@ -243,7 +202,6 @@ export const StepperStep = ({
   );
 };
 
-/** Every part of Stepper, so a misplaced sibling is named. */
 const stepperParts: ReadonlyArray<PartComponent> = [Stepper, StepperStep];
 
 const stepperRoot: PartsContract = {
@@ -253,7 +211,6 @@ const stepperRoot: PartsContract = {
   hint: "Put StepperStep directly inside Stepper.",
 };
 
-/** Inventory record, mirrored into `.agents/slop/COMPONENTS.md` (plan 117 §2). */
 export const stepperMeta = {
   name: "Stepper",
   tier: 2,

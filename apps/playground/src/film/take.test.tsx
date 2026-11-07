@@ -1,8 +1,3 @@
-/**
- * The film's take runner. The bugs it guards: a capture that differs run to run
- * (an unpaused clock), and scripted input that never reached the tree (a press
- * that changed nothing, or changed it before the frame it was scripted on).
- */
 import { Switch } from "@gpuixui/primitives";
 import { lightTheme } from "@gpuixui/tokens";
 import { ThemeProvider } from "@gpuixui/tokens/react";
@@ -29,7 +24,6 @@ const press: Take = {
   ],
 };
 
-/** The same take with the pointer resting on the switch and never pressing. */
 const rest: Take = {
   ...press,
   pointer: [{ frame: 0, aim: { testId: "switch" } }],
@@ -60,10 +54,6 @@ describe("capture", async () => {
   });
 });
 
-/**
- * Guards: the capture loop is synchronous, so an animation on `setTimeout` and
- * `performance.now` never ran and every chart was captured with its marks at zero.
- */
 describe("virtualTime", () => {
   it("runs due timers in order, on the clock they asked for", () => {
     const time = virtualTime();

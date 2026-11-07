@@ -1,12 +1,3 @@
-/**
- * The terminal probe's own rules, where a pty is not needed.
- *
- * The bugs this file catches: a fixture colour and its hex drifting apart (the
- * app paints one and the probe looks for the other, so a correct run reports no
- * page), a press frame being accepted before the page it replaced (the probe
- * would assert a repaint it never saw), a shell path with a quote corrupting the
- * command, and a CLI that spawns a pty for an argument it should have rejected.
- */
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Option } from "effect";
 import * as Arr from "effect/Array";
@@ -45,7 +36,6 @@ import {
   terminalRegistry,
 } from "./run.js";
 
-/** A page frame with a run of ink pixels, the shape a click repaints. */
 const inked = (
   page: Pixels.Rgba,
   ink: Pixels.Rgba,
@@ -61,7 +51,6 @@ const inked = (
   return frame;
 };
 
-/** A solid frame, the shape a terminal capture decodes to. */
 const solidFrame = (colour: Pixels.Rgba, width = 4, height = 2): KittyFrame => {
   const data = new Uint8Array(width * height * 4);
   for (let at = 0; at < data.length; at += 4) {
@@ -162,8 +151,6 @@ describe("reading a run's frames", () => {
   });
 
   it("measures the first frame when the page never painted", () => {
-    // A wrong page colour must fail its checks with the pixels it did paint;
-    // only a stream with no frame at all is "no evidence".
     const evidence = evidenceOf([frame(TERMINAL_PRESSED)]);
     expect(Option.isSome(evidence)).toBe(true);
     expect(
@@ -206,8 +193,6 @@ describe("the command this runner spawns", () => {
   });
 
   it("quotes a path a shell would otherwise split", () => {
-    // A checkout under a directory with a quote must not turn into a second
-    // command; the escaped form is the one bash and sh both read.
     expect(terminalCommand("/tmp/it's here/main.js")).toBe(
       `stty rows ${TERMINAL_GRID.rows} cols ${TERMINAL_GRID.columns}; exec nub '/tmp/it'\\''s here/main.js'`,
     );

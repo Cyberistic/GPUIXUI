@@ -1,12 +1,3 @@
-/**
- * Guards the first conformance slice.
- *
- * Bug guarded: the native fields used the invented `comfortable` density
- * (32px / 10px) instead of shadcn's `h-9 px-3 py-1` (36 / 12 / 4), and the
- * components had no class compiler at all. These tests pin the upstream values
- * and the state buckets the components apply.
- */
-
 import { describe, expect, it } from "vitest";
 import type { MotionStyle } from "@gpuix/react";
 import { alpha, lightTheme, platformTheme, themes } from "@gpuixui/tokens";
@@ -39,7 +30,6 @@ const buttonDefault = classesToStyle(
   lightTheme,
 );
 
-/** `MotionProps.initial` is `false | MotionStyle | undefined`. */
 const initialOf = (motion: TwMotion): MotionStyle =>
   motion.initial === false || motion.initial === undefined
     ? {}
@@ -58,9 +48,6 @@ describe("cn", () => {
 
 describe("platform corners", () => {
   it("rounds Windows controls at 4px and surfaces at 8px", () => {
-    // The recipe names a step, not a value: `rounded-md` resolves through the
-    // platform theme, so a Windows button takes Fluent's 4px control corner
-    // without a Windows-only recipe.
     const windows = platformTheme(themes.light, "win32");
     expect(classesToStyle(BUTTON_BASE, windows).style.borderRadius).toBe(4);
     expect(classesToStyle(CARD_BASE, windows).style.borderRadius).toBe(8);

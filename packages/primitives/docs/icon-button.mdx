@@ -49,8 +49,3 @@ const theme = useTheme();
 | `className` | `string` | — | a Tailwind string joined after the recipe |
 | `style` | `StateStyle<ButtonState>` | — | resolved against `{ disabled, focused }`, merged last |
 | `testId` | `string` | — | stable locator |
-
-## Notes
-- No `aria-disabled` and no `aria-pressed`: use `Toggle` for a pressed mode.
-- No tooltip of its own, but it is a `Tooltip` trigger.
-- The glyph is not sized by `size`; pass `icon={<Icon size="sm" … />}`.

@@ -10,21 +10,6 @@ import {
   type PreviewRow,
 } from "./search-input-preview";
 
-/**
- * Browser previews for the Search input page.
- *
- * The shipped field paints its own hint (the native host is handed no
- * `placeholder`), reports every edit and clears through a 24px control that only
- * exists while there is text. The preview takes the field's geometry from the
- * theme bridge — the height from density, the 6px radius and 8px padding the
- * recipe compiles — and mirrors three decisions a drawing cannot show: Escape
- * clears only a non-empty field, clearing returns focus to the input, and a
- * disabled field refuses every edit path — the field and its clear target leave
- * the tab order, the target answers no press and paints no hover wash, and
- * Escape is left for an enclosing surface. The target keeps its paint, so an
- * archived query still reads. Matching and the count are the app's.
- */
-
 const deployments: ReadonlyArray<PreviewRow> = [
   { name: "api-gateway", region: "fra1 · edge" },
   { name: "billing-worker", region: "iad1 · queue" },
@@ -34,7 +19,6 @@ const deployments: ReadonlyArray<PreviewRow> = [
   { name: "web-console", region: "sfo1 · frontend" },
 ];
 
-/** The leading search mark, drawn in the browser's own SVG. */
 const SearchGlyph = () => (
   <svg
     aria-hidden="true"
@@ -49,7 +33,6 @@ const SearchGlyph = () => (
   </svg>
 );
 
-/** The clear control's glyph, at the `sm` 14px icon step the component paints. */
 const ClearGlyph = () => (
   <svg
     aria-hidden="true"
@@ -63,7 +46,6 @@ const ClearGlyph = () => (
 );
 
 interface PreviewFieldProps {
-  /** The accessible name, the way a caller names the field. */
   readonly label: string;
   readonly value: string;
   readonly placeholder?: string;
@@ -73,15 +55,6 @@ interface PreviewFieldProps {
   readonly onClear?: () => void;
 }
 
-/**
- * One search field: the field surface, the hint and the conditional clear
- * control.
- *
- * Clearing goes through the input's ref, because the shipped component returns
- * the focus to the field after a clear. Escape is read before the browser's own
- * handling: on an empty field the preview does nothing, which is the case that
- * leaves the key for an enclosing dialog.
- */
 const PreviewField = ({
   label,
   value,
@@ -94,9 +67,6 @@ const PreviewField = ({
   const input = useRef<HTMLInputElement>(null);
 
   const clear = (): void => {
-    // The shipped field refuses every edit path while disabled, so the preview
-    // does too — a `readOnly` host still receives keys, which is why the guard
-    // belongs here rather than only on the button.
     if (disabled) return;
     onChange?.("");
     onClear?.();
@@ -145,7 +115,6 @@ const PreviewField = ({
   );
 };
 
-/** A filter bar over a deployment list: live count, Enter, Escape, clear. */
 const SearchWorkflow = () => {
   const [query, setQuery] = useState("");
   const [submits, setSubmits] = useState(0);
@@ -189,7 +158,6 @@ const SearchWorkflow = () => {
   );
 };
 
-/** Rest, filled, disabled and the page-role fill on a muted toolbar. */
 const SearchStates = () => {
   const [empty, setEmpty] = useState("");
   const [filled, setFilled] = useState("invoice");
@@ -290,7 +258,6 @@ const theme = useTheme();
   </div>
 </>;`;
 
-/** One exported example per preview, with the usage its Code tab shows. */
 export {
   SearchStates,
   SearchWorkflow,

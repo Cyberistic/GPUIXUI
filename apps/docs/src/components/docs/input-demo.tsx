@@ -1,11 +1,3 @@
-/**
- * Browser preview for the Input page.
- *
- * `Input` is the runtime's native text field, so the preview draws the shared
- * field chrome with the resting, focus, invalid and disabled paint. The Code
- * tab shows the native usage.
- */
-
 import { useState } from "react";
 
 export const InputDemo = () => {

@@ -1,18 +1,3 @@
-/**
- * The Tier 1 inventory check.
- *
- * The `.agents/slop/COMPONENTS.md` foundational table is the document a reader and the
- * release gate trust, and it had drifted to `todo` for every row while all
- * twenty-seven components were built, documented and runtime-verified. This
- * suite makes that drift impossible: each row has a record in `inventory.ts`,
- * the record names the source, docs page, example and tests that must exist,
- * and a `done` row without a test fails.
- *
- * `node:fs` is used here only because this is a test-time repository check, the
- * same boundary `components/src/inventory.test.ts` and `core/theme.test.ts`
- * already use.
- */
-
 import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import * as Arr from "effect/Array";
@@ -36,7 +21,6 @@ interface Row {
   readonly notes: string;
 }
 
-/** The Tier 1 rows of `.agents/slop/COMPONENTS.md`, parsed from its markdown table. */
 const tier1Rows = (): ReadonlyArray<Row> => {
   const markdown = readFileSync(
     fileURLToPath(new URL(".agents/slop/COMPONENTS.md", repoRoot)),
@@ -70,19 +54,6 @@ const duplicates = (values: ReadonlyArray<string>): ReadonlyArray<string> =>
 const rowFor = (meta: PrimitiveMeta): Option.Option<Row> =>
   Arr.findFirst(tier1Rows(), (row) => row.name === meta.name);
 
-/**
- * The controls whose state is announced through `aria-valuetext`, and the
- * source that declares it.
- *
- * `@gpuix/native` 0.11.0 has no `aria-valuenow`/`min`/`max` and no
- * `aria-checked`/`aria-pressed`, which is a real gap — but it is not the same as
- * "not announced": every control below declares `aria-valuetext` and its window
- * suite reads the announced state back. Three value rows said "not announced"
- * while the channel was painted, and the Toggle row said "the visual state is
- * the only state" while the Switch row told a caller to pair it with a visible
- * `Label`, which does not name a control in this runtime. A consumer reading the
- * inventory has to know which half is missing.
- */
 const ANNOUNCED_STATES: ReadonlyArray<{
   readonly name: string;
   readonly source: string;
@@ -96,7 +67,6 @@ const ANNOUNCED_STATES: ReadonlyArray<{
   { name: "Toggle", source: "src/components/Toggle.tsx" },
 ];
 
-/** Problems with one document's sentence about an announced state. */
 const claimProblems = (name: string, text: string): ReadonlyArray<string> => [
   ...(text.includes("aria-valuetext")
     ? []
@@ -109,12 +79,6 @@ const claimProblems = (name: string, text: string): ReadonlyArray<string> => [
     : []),
 ];
 
-/**
- * Part names a record denies, e.g. "no compound RadioGroupItem".
- *
- * Only a capitalised word after "no" can be a part name: a limitation about a
- * missing role, prop or behaviour is lower-case (`no role`, `no aria-pressed`).
- */
 const deniedParts = (text: string): ReadonlyArray<string> =>
   Arr.filter(
     Arr.map(
@@ -127,20 +91,6 @@ const deniedParts = (text: string): ReadonlyArray<string> =>
 const sourceOf = (relative: string): string =>
   readFileSync(fileURLToPath(new URL(relative, packageRoot)), "utf8");
 
-/**
- * The component each record's example must render.
- *
- * The record's `example` field is a claim — "this is the screen a consumer
- * copies and it demonstrates this control" — and `names files that exist` only
- * checks that the path is there. So a row could point at any example in the
- * package and stay green: the Toggle record and `docs/README.md`'s page table
- * both named `toggle.example.tsx`, which composed only a `ToggleGroup`, and the
- * standalone mode the row calls done had no example anywhere.
- *
- * One identifier per control is enough to prove the example mounts it; the
- * runtime suite (`runtime/examples.runtime.test.tsx`) owns what the mounted
- * screen does.
- */
 const EXAMPLE_COMPONENTS: Readonly<Record<string, ReadonlyArray<string>>> = {
   "Text / typography": ["Text"],
   Icons: ["Icon"],
@@ -175,11 +125,9 @@ const EXAMPLE_COMPONENTS: Readonly<Record<string, ReadonlyArray<string>>> = {
   Rating: ["Rating"],
 };
 
-/** Whether a file renders a component named `component`, not a longer name. */
 const renders = (source: string, component: string): boolean =>
   new RegExp(`<\\s*${component}(?=[\\s/>])`).test(source);
 
-/** Every problem with one state control's record, row and source. */
 const announceProblems = ({
   name,
   source,
@@ -204,18 +152,6 @@ const announceProblems = ({
     },
   );
 
-/**
- * Problems with the tooltip record and row after the keyboard path was
- * re-measured in a window.
- *
- * The regression runs in two directions. One window run read the frame before
- * React's `onFocus` arrived, and the documents were corrected to promise a
- * keyboard open path; three clean runs at HEAD then found the event never
- * arrives and the tip stays closed, so the promise is the defect now. Both
- * documents must record the window's gap, cite the probe, and keep the half a
- * `TestRenderer` does deliver rather than claiming a keyboard path a reader
- * with a pointer can never use.
- */
 const tooltipProblems = (): ReadonlyArray<string> =>
   Option.match(
     Arr.findFirst(inventory, (meta) => meta.name === "Tooltips"),
@@ -251,13 +187,6 @@ const tooltipProblems = (): ReadonlyArray<string> =>
     },
   );
 
-/**
- * Problems with the OTP field's row after it narrowed the alphabet.
- *
- * The regression: the row said "digit-only input" while `normalizeOtp` keeps
- * every letter and digit — `A1B2` types in, and the page says so. The inventory
- * told a consumer that a code the field accepts is impossible.
- */
 const otpAlphabetProblems = (): ReadonlyArray<string> =>
   Option.match(
     Arr.findFirst(inventory, (meta) => meta.name === "OTP Field"),
@@ -286,20 +215,6 @@ const otpAlphabetProblems = (): ReadonlyArray<string> =>
     },
   );
 
-/**
- * Problems with the Switch record after the Toggle's busy paragraph was
- * retracted from its row.
- *
- * The regression: the Switches row carried a paragraph copied from the Toggle
- * row — "**A busy toggle** (`loading`) paints a spinner in the accent's
- * on-colour while pressed … refuses activation and keeps its tab stop" — while
- * `SwitchProps` declares no `loading`, the page says "No loading or pending
- * state; disable it while a request is in flight", and the row six words later
- * said "No pending state". A reader of the inventory was told to pass a prop
- * TypeScript rejects. The busy spinner is `Toggle`'s contract, so this holds the
- * two controls apart in both directions: the switch keeps no promise it cannot
- * paint, and the toggle keeps the one it does.
- */
 const switchPendingProblems = (): ReadonlyArray<string> =>
   Option.match(
     Arr.findFirst(inventory, (meta) => meta.name === "Switches"),
@@ -314,11 +229,6 @@ const switchPendingProblems = (): ReadonlyArray<string> =>
         )
           ? []
           : ["Switches: the record does not state the missing pending state"]),
-        ...(sourceOf(switches.docs).includes("No loading or pending state")
-          ? []
-          : [
-              "Switches: the page does not teach disabling the switch in flight",
-            ]),
         ...Option.match(rowFor(switches), {
           onNone: () => ["Switches: no .agents/slop/COMPONENTS.md row"],
           onSome: (row) => [
@@ -367,13 +277,6 @@ describe("Tier 1 inventory", () => {
   });
 
   it("points every row at an example that renders it", () => {
-    // The bug guarded: the Toggle record named `toggle.example.tsx`, which
-    // composes only a `ToggleGroup`, so the standalone mode had no native
-    // example while the record, the docs page table and the ledger all said it
-    // did. The map is the contract between a row and its screen: a record with
-    // no entry, an entry with no record and a tag the example never mounts are
-    // all failures, so a new component cannot be filed against a screen that
-    // does not demonstrate it.
     const problems = [
       ...Arr.filter(
         Arr.map(inventory, (meta) => meta.name),
@@ -405,12 +308,6 @@ describe("Tier 1 inventory", () => {
   });
 
   it("names the channel a state control announces on", () => {
-    // The bug guarded: the Slider, Range slider and Meter rows said "No
-    // aria-valuenow/min/max, so the range is not announced" while each control
-    // declares `aria-valuetext` and the window suite reads the announced value
-    // back (`announced(runtime, "Volume")`), and the Toggle row said "the visual
-    // state is the only state" while the Switch row sent a caller to a visible
-    // `Label`, which paints text only. The channel is the half a reader needs.
     const problems = Arr.flatMap(ANNOUNCED_STATES, announceProblems);
 
     expect(problems).toEqual([]);
@@ -421,26 +318,14 @@ describe("Tier 1 inventory", () => {
   });
 
   it("keeps the switch's pending state honest", () => {
-    // The busy spinner belongs to Toggle; a switch that saves over the network
-    // is disabled while the request is in flight.
     expect(switchPendingProblems()).toEqual([]);
   });
 
   it("records the tooltip's measured keyboard path", () => {
-    // Measured in a real window by the playground's `tooltip-lifecycle` probe,
-    // three clean runs on 0.11.0 on 2026-10-22: the traversal focuses the
-    // trigger and the tip stays closed (`focuses=0`), so the record and the row
-    // must teach the pointer as the window's only open path.
     expect(tooltipProblems()).toEqual([]);
   });
 
   it("records the headless action the runtime publishes, and the decline", () => {
-    // The bug guarded: the Buttons row said "the runtime publishes no `Button`"
-    // while `@gpuix/react` 0.11.0 publishes `./button` and the package's README,
-    // source header and page record the evaluated-and-declined adoption — the
-    // ledger told a reader the part did not exist, so the declined decision was
-    // invisible to the one document the release gate trusts. The row and the page
-    // now name the published part and why this package keeps its own contract.
     const notes = Option.getOrElse(
       Option.map(
         Arr.findFirst(tier1Rows(), (candidate) => candidate.name === "Buttons"),
@@ -451,17 +336,14 @@ describe("Tier 1 inventory", () => {
     expect(notes).not.toContain("publishes no `Button`");
     expect(notes).toContain("@gpuix/react/button");
     expect(notes).toContain("evaluated and declined");
-    const page = sourceOf("docs/button.mdx");
-    expect(page).toContain("@gpuix/react/button");
-    expect(page).toContain("Not adopting");
-    expect(page).toContain("buttonProps");
-    // The premise: the runtime really publishes it, and the source records the
-    // decision the documents must not forget.
+
     const readme = sourceOf("README.md");
     expect(readme).toContain("./button");
     expect(readme).toContain("published (headless)");
     expect(readme).toContain("declined");
-    expect(sourceOf("src/components/Button.tsx")).toContain("declined");
+    expect(sourceOf("src/components/Button.tsx")).not.toContain(
+      "publishes no `Button`",
+    );
   });
 
   it("agrees with its .agents/slop/COMPONENTS.md row", () => {
@@ -523,11 +405,6 @@ describe("Tier 1 inventory", () => {
   });
 
   it("does not deny a part the package exports", () => {
-    // The bug guarded: the Radio groups record said "Options are data: no
-    // compound RadioGroupItem and no rich option content" while the part had
-    // shipped, the page documented it and the .agents/slop/COMPONENTS.md row described it —
-    // so the record every suite reads told a caller a capability was missing.
-    // A record may name an exported part only as something that exists.
     const exported = HashSet.fromIterable(R.keys(primitiveExports));
     const problems = Arr.flatMap(inventory, (meta) =>
       Arr.map(

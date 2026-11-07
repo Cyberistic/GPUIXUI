@@ -1,25 +1,3 @@
-/**
- * `accordion-lifecycle`: the shipped `Accordion` driven by a real window.
- *
- * The offscreen suite holds the accordion's rules — single mode keeps one
- * section open, a disabled header is refused, the arrows move focus — but those
- * are tree reads. What a window alone can answer is whether the coordinated
- * section actually *paints*: a body measured by `AutoHeight`, the clipping box
- * settling on it, and the sections below moving by exactly the difference of
- * the two measured bodies when one closes and the next opens. A tree read also
- * cannot tell whether a focused header is the one the arrows move from, since
- * the component focuses a native element on every move.
- *
- * The scene is single, **non**-collapsible mode: the section that opens closes
- * the one before it, and a press on the open section must leave it open. Gamma
- * is disabled, so every path has a header to skip.
- *
- * Every check is a `ctx.expect*` at the step that makes it — the helpers only
- * read — so the count the README prints is the number of assertion sites.
- *
- * Captures: `accordion-single`.
- */
-
 import { Duration, Effect } from "effect";
 import * as Option from "effect/Option";
 import {
@@ -53,13 +31,11 @@ import {
 } from "./accordion.js";
 import { settleNumber, settleUntil } from "./settle.js";
 
-/** The one capture: the section the keyboard left open. */
 const CAPTURE = "accordion-single";
 
 const CAPTION =
   "Single mode keeps one section open, a disabled header is refused, and the arrows move focus without opening. The body is measured by the reveal, so the sections below move by the difference of the two heights.";
 
-/** The view: four sections in a fixed-width column, and the readout. */
 export const AccordionProbe = (): ReactNode => {
   const theme = useTheme();
   const [state, setState] = useState<AccordionState>(ACCORDION_REST);
@@ -90,7 +66,7 @@ export const AccordionProbe = (): ReactNode => {
           {`Section ${section}`}
         </text>
       </AccordionTrigger>
-      {/* The padding is dropped so the settled clip is the body's own height. */}
+      {}
       <AccordionContent testId={accordionClip(section)} className="p-0 gap-0">
         {body(section)}
       </AccordionContent>
@@ -135,24 +111,19 @@ export const AccordionProbe = (): ReactNode => {
   );
 };
 
-/** The probe's steps: the coordinated sections, the arrows, and both keys. */
 export const accordionSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor(ACCORDION_IDS.probe);
-    // A capture stalls the animation clock, so a run that starts right after
-    // one misses the mount tween's frames. The section that starts open is
-    // settling while this wait runs, which is why its reads come after it.
+
     yield* Effect.sleep(Duration.millis(400));
 
     type Failure = Smoke.SmokeAssertionError | Smoke.SmokeHostError;
 
-    /** The box `testId` eventually paints, or `null` while it does not. */
     const box = (
       testId: string,
     ): Effect.Effect<Smoke.Bounds | null, Smoke.SmokeHostError> =>
       settleUntil(ctx.host.bounds(testId), (value) => value !== null);
 
-    /** The painted height of `testId`, `NaN` while nothing paints. */
     const heightOf = (
       testId: string,
     ): Effect.Effect<number, Smoke.SmokeHostError> =>
@@ -163,13 +134,11 @@ export const accordionSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         }),
       );
 
-    /** A box that stops moving, so a reveal is read at rest. */
     const settledHeight = (
       testId: string,
     ): Effect.Effect<number, Smoke.SmokeHostError> =>
       settleNumber(heightOf(testId));
 
-    /** Whether `testId` stops painting, which a close waits for. */
     const gone = (
       testId: string,
     ): Effect.Effect<boolean, Smoke.SmokeHostError> =>
@@ -178,19 +147,16 @@ export const accordionSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         (absent) => absent,
       );
 
-    /** The readout once it names `expected`, which a press reports a frame later. */
     const readout = (expected: string): Effect.Effect<string, Failure> =>
       settleUntil(ctx.host.text(ACCORDION_IDS.readout), (line) =>
         line.includes(expected),
       );
 
-    /** The focused `testId`, with `none` for no focus so a failure reads clearly. */
     const focused = (): Effect.Effect<string, Smoke.SmokeHostError> =>
       Effect.map(ctx.host.focused(), (id) =>
         Option.getOrElse(Option.fromNullishOr(id), () => "none"),
       );
 
-    // ── At rest: one section open, measured, and nothing else mounted ─────────
     yield* ctx.expectEqual(
       "single mode starts with the one section it was given",
       yield* readout(accordionReadout(ACCORDION_REST)),
@@ -222,7 +188,6 @@ export const accordionSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // The header below the pair, whose y the switch has to move.
     const restDelta = yield* settleNumber(
       Effect.map(box(accordionTrigger("delta")), (painted) =>
         Option.match(Option.fromNullishOr(painted), {
@@ -232,7 +197,6 @@ export const accordionSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       ),
     );
 
-    // ── One press: the previous section closes, the next is measured ─────────
     yield* ctx.host.click(accordionTrigger("beta"));
     const opened: AccordionState = { open: "beta", changes: 1 };
     yield* ctx.expectEqual(
@@ -280,14 +244,12 @@ export const accordionSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // ── The press leaves focus on its own header ────────────────────────────
     yield* ctx.expectEqual(
       "a press focuses the header it landed on",
       yield* focused(),
       accordionTrigger("beta"),
     );
 
-    // ── The arrows move focus and open nothing ──────────────────────────────
     yield* Effect.forEach(
       ACCORDION_MOVES,
       (move: (typeof ACCORDION_MOVES)[number]) =>
@@ -308,7 +270,6 @@ export const accordionSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       accordionReadout(opened),
     );
 
-    // ── Enter opens the focused section, Space leaves an open one alone ──────
     yield* ctx.host.key("enter");
     const activated: AccordionState = { open: "delta", changes: 2 };
     yield* ctx.expectEqual(
@@ -337,8 +298,6 @@ export const accordionSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // The open section is the one press a non-collapsible accordion refuses:
-    // the readout may report the attempt, but the body has to stay painted.
     yield* ctx.host.key("space");
     yield* ctx.host.keyUp("space");
     yield* Effect.sleep(Duration.millis(150));
@@ -355,7 +314,6 @@ export const accordionSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // ── A disabled header refuses the press ─────────────────────────────────
     yield* ctx.host.click(accordionTrigger(ACCORDION_DISABLED));
     yield* Effect.sleep(Duration.millis(150));
     yield* ctx.expectEqual(
@@ -369,6 +327,5 @@ export const accordionSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // Captures come last: a screenshot stalls the animation clock.
     yield* ctx.host.capture(CAPTURE);
   });

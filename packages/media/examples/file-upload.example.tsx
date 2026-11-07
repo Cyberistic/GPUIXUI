@@ -1,12 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * FileUpload example: a queue over a fake transfer, one file failing.
- *
- * The transfer is a timer that reports progress and resolves, or rejects for a
- * file whose name carries "err" — so the reader can retry one row and remove
- * the other. No network: the package owns none.
- */
-
 import { useState } from "react";
 import { FileUpload, type UploadFunction } from "../src/file-upload.js";
 

@@ -1,25 +1,3 @@
-/**
- * The motion the records deny.
- *
- * A record's `limitations` array is what the docs site's status strip and the
- * package's own inventory render, so an entry saying a surface "mounts and
- * unmounts instantly" is a claim about the motion seam — and that seam is
- * composed either by the component or by a part it renders. Two records and one
- * page shipped that claim after the reveal had landed (the accordion body and
- * the message's reasoning panel both grow through `AutoHeight`), so this suite
- * reads every record and every page against the source graph they name: a
- * source that reaches `presenceMotion`, `useSurfaceTiming`, `useSurfacePresence`,
- * `<AutoHeight>` or a `motion` target cannot publish a claim that it does not
- * move. The three records this suite was written for are held by name as well,
- * because a fix that only reworded the sweep's phrases would pass while leaving
- * a reader without the limit that remains.
- *
- * Sync `node:fs`/`node:path` are deliberate here and not a runtime dependency:
- * this is the same test-time repository walk `inventory.test.ts` performs under
- * plan 117 §3, a plain `it` has no Effect runtime to provide `FileSystem` to,
- * and the package's runtime source imports neither.
- */
-
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -31,18 +9,8 @@ import { inventory, type ComponentMeta } from "./inventory.js";
 
 const packageRoot = fileURLToPath(new URL("../", import.meta.url));
 
-/**
- * The package's text, read once.
- *
- * The tree is static for a run and every record names its own module, so an
- * uncached walk re-read the graph per record and per page: this file measured
- * **17 980** reads in one case, which outran the suite's 5 s default timeout
- * under a loaded run. `texts` is that walk's one pass, and `reads` lets a case
- * hold it there.
- */
 const texts = new Map<string, Option.Option<string>>();
 
-/** Files read this run, so a case can prove the walk is one pass. */
 let reads = 0;
 
 const readText = (relative: string): Option.Option<string> => {
@@ -56,10 +24,8 @@ const readText = (relative: string): Option.Option<string> => {
   return text;
 };
 
-/** Every relative specifier a module imports, as written. */
 const LOCAL_IMPORT = /from "(\.{1,2}\/[^"]+)\.js"/g;
 
-/** A module path as it appears on disk, from the specifier it was imported by. */
 const resolveImport = (
   fromFile: string,
   specifier: string,
@@ -71,7 +37,6 @@ const resolveImport = (
   );
 };
 
-/** The local modules a source file imports, resolved to real paths. */
 const importsByFile = new Map<string, ReadonlyArray<string>>();
 
 const importsOf = (file: string): ReadonlyArray<string> => {
@@ -92,16 +57,9 @@ const importsOf = (file: string): ReadonlyArray<string> => {
   return imports;
 };
 
-/** The seam a component composes to enter and leave. */
 const MOTION_TARGET =
   /presenceMotion\(|useSurfaceTiming\(|useSurfacePresence\(|<AutoHeight|motion=\{/;
 
-/**
- * Whether `file`, or a part it imports, composes the motion seam.
- *
- * `visited` is the search's own set, not a path: reachability is monotone, so a
- * module already walked in this search cannot add a route the first walk missed.
- */
 const reachesMotion = (file: string): boolean => {
   let visited: ReadonlyArray<string> = [];
   const walk = (current: string): boolean => {
@@ -116,25 +74,14 @@ const reachesMotion = (file: string): boolean => {
   return walk(file);
 };
 
-/** One record's declaration, resolved from the collector's own imports. */
 interface RecordFile {
-  /** The record's `name`, as `.agents/slop/COMPONENTS.md` spells it. */
   readonly name: string;
-  /** The file that declares `export const …Meta`, which may be a re-export target. */
+
   readonly file: string;
 }
 
-/** An entry in the collector's import list. */
 const COLLECTOR_IMPORT = /import \{ (\w+Meta) \} from "(\.{1,2}\/[^"]+)\.js";/g;
 
-/**
- * The file behind each record.
- *
- * `src/inventory.ts` imports every `…Meta`; most are declared in that module,
- * but a family's record can be re-exported from its directory (`toastMeta` lives
- * in `toast/viewport.tsx`), so one import step is followed to the declaration,
- * and the record's own `name` says which file it is.
- */
 const collectRecordFiles = (): ReadonlyArray<RecordFile> => {
   const collector = Option.getOrElse(readText("src/inventory.ts"), () => "");
   return Arr.flatMap(
@@ -165,7 +112,6 @@ const collectRecordFiles = (): ReadonlyArray<RecordFile> => {
   );
 };
 
-/** The records' files, resolved once: `fileFor` asks for them per record. */
 let recordFilesOnce: Option.Option<ReadonlyArray<RecordFile>> = Option.none();
 
 const recordFiles = (): ReadonlyArray<RecordFile> =>
@@ -178,14 +124,12 @@ const recordFiles = (): ReadonlyArray<RecordFile> =>
     onSome: (records) => records,
   });
 
-/** The module that declares the record named `name`. */
 const fileFor = (name: string): Option.Option<string> =>
   Option.map(
     Arr.findFirst(recordFiles(), (entry) => entry.name === name),
     (entry) => entry.file,
   );
 
-/** Ways a record or a page says a surface paints without a journey. */
 const DENIALS: ReadonlyArray<string> = [
   "mounts and unmounts instantly",
   "mount and unmount instantly",
@@ -210,7 +154,6 @@ const limitationsOf = (name: string): ReadonlyArray<string> =>
 const mentions = (texts: ReadonlyArray<string>, needle: string): boolean =>
   Arr.some(texts, (text) => Str.includes(needle)(text));
 
-/** Every page in the package's docs collection. */
 const docPages = (): ReadonlyArray<string> =>
   Arr.filter(
     Arr.fromIterable(readdirSync(join(packageRoot, "docs"))),
@@ -243,9 +186,6 @@ describe("the motion the records deny", () => {
       );
     expect(reaching().length).toBeGreaterThan(30);
 
-    // The tree is static for a run, so a second walk re-reads nothing. Uncached,
-    // this case read the tree 17 980 times — 39 records times the graph plus one
-    // graph walk per page — and outran the suite's 5 s default timeout.
     const walk = () => {
       reaching();
       Arr.forEach(docPages(), (page) =>
@@ -256,7 +196,7 @@ describe("the motion the records deny", () => {
     const walked = reads;
     walk();
     expect(reads).toBe(walked);
-    // ~118 files today: every record module, the graph it imports and every page.
+
     expect(walked).toBeLessThan(400);
     expect(walked).toBeGreaterThan(100);
   });
@@ -307,7 +247,6 @@ describe("the motion the records deny", () => {
   it("records the reveal the reasoning panel paints", () => {
     const page = Option.getOrElse(readText("docs/message.mdx"), () => "");
 
-    // The panel is the shipped Collapsible, whose body is the measured reveal.
     expect(Option.getOrElse(readText("src/message.tsx"), () => "")).toContain(
       "<CollapsibleContent",
     );
@@ -323,7 +262,6 @@ describe("the motion the records deny", () => {
     const source = Option.getOrElse(readText("src/drawer.tsx"), () => "");
     const page = Option.getOrElse(readText("docs/drawer.mdx"), () => "");
 
-    // The surface travels its own measured box, not a pixel nudge.
     expect(source).toContain("fadeFromSide(side, travel)");
     expect(source).toContain("isVertical(side) ? box.height : box.width");
     expect(source).toContain("overflow");

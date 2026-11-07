@@ -1,24 +1,3 @@
-/**
- * The `pinned-list-lifecycle` probe: does a section title's held header paint
- * over the rows it covers, and does a press on the row beneath it still reach
- * the row?
- *
- * `PinnedList` exists because the runtime paints no `position: sticky`; a header
- * is a layer repositioned from the measured scroll offset, and the offscreen
- * suite reads those frames back off the element tree. A tree read cannot answer
- * either question this probe asks: a transparent header and an opaque one have
- * the same box, and a `pointerEvents: "none"` layer and a covering one have the
- * same tree. Both live in the glass.
- *
- * The fixture owns the geometry and the control pair (see `pinned-list.ts`): a
- * row whose own centre is under the held header, and a filled cover over a row
- * that proves the host's `click` is hit-tested at a point rather than delivered
- * to the element by id. The control is what makes the pass-through check mean
- * something — a host that never hit-tests would pass it with no header at all.
- *
- * Captures: `pinned-list-rest`, `pinned-list-scrolled`, `pinned-list-end`.
- */
-
 import { Duration, Effect } from "effect";
 import * as Option from "effect/Option";
 import { useWindowSize } from "@gpuix/react";
@@ -44,12 +23,10 @@ import {
 } from "./pinned-list.js";
 import { settleUntil } from "./settle.js";
 
-/** The captures a reader can look at, one per measured state. */
 const REST = "pinned-list-rest";
 const SCROLLED = "pinned-list-scrolled";
 const END = "pinned-list-end";
 
-/** The view: two sectioned rows under a held-title layer, and the control pair. */
 export const PinnedListProbe = (): ReactNode => {
   const theme = useTheme();
   const window = useWindowSize();
@@ -138,17 +115,14 @@ export const PinnedListProbe = (): ReactNode => {
   );
 };
 
-/** The probe's steps: rest, a wheel, the held press, the handover, the return. */
 export const pinnedSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
   Effect.gen(function* () {
     yield* ctx.host.waitFor(PINNED_IDS.list);
-    // Each section reports its height on its own layout pass, and a header
-    // paints on the frame after that.
+
     yield* Effect.sleep(Duration.millis(200));
 
     type Failure = Smoke.SmokeAssertionError | Smoke.SmokeHostError;
 
-    /** A painted box, waiting for the frame that paints it. */
     const box = (testId: string): Effect.Effect<Smoke.Bounds, Failure> =>
       Effect.gen(function* () {
         const painted = yield* settleUntil(
@@ -161,7 +135,6 @@ export const pinnedSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         );
       });
 
-    /** The list's own offset; `NaN` while it has no scroll handle. */
     const offsetY = (): Effect.Effect<number, Smoke.SmokeHostError> =>
       Effect.map(
         Effect.map(
@@ -174,7 +147,6 @@ export const pinnedSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         }),
       );
 
-    /** The readout once it names `expected`. */
     const readout = (
       label: string,
       expected: string,
@@ -189,7 +161,6 @@ export const pinnedSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         );
       });
 
-    /** Captures `name` and hands back the frame with its device scale. */
     const capture = (
       name: string,
     ): Effect.Effect<
@@ -207,7 +178,6 @@ export const pinnedSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
         return { frame, scale };
       });
 
-    /** A logical point's exact colour, failing by name when it lies outside. */
     const sample = (
       frame: Pixels.Pixels,
       scale: number,
@@ -216,13 +186,11 @@ export const pinnedSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     ): Effect.Effect<Pixels.Rgba, Failure> =>
       ctx.expectSome(label, colourAt(frame, point, scale));
 
-    /** The centre of a painted box. */
     const centre = (painted: Smoke.Bounds): Point => ({
       x: painted.x + painted.width / 2,
       y: painted.y + painted.height / 2,
     });
 
-    /** The row's band at the viewport's own middle, clear of the held title. */
     const rowPoint = (painted: Smoke.Bounds): Point => ({
       x: painted.x + painted.width / 2,
       y: painted.y + 60,
@@ -266,7 +234,6 @@ export const pinnedSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       }),
     );
 
-    // ── Rest: the title paints the surface its caller named ──────────────────
     const rest = yield* capture(REST);
     yield* ctx.expectEqual(
       "a travelling title paints the surface role its caller handed it",
@@ -295,7 +262,6 @@ export const pinnedSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // ── The pointer reaches each element before a title covers it ────────────
     yield* ctx.host.click(PINNED_IDS.controlRow);
     yield* readout(
       "a filled cover takes a press aimed at the row under it",
@@ -319,7 +285,6 @@ export const pinnedSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       }),
     );
 
-    // ── One wheel: the title holds, its section travels ──────────────────────
     yield* ctx.host.wheel(PINNED_IDS.list, 0, PINNED_WHEEL);
     const scrolled = yield* offsetY();
     yield* ctx.expectNear(
@@ -359,8 +324,6 @@ export const pinnedSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // The row's centre is the point the host presses; it must lie under the
-    // held title, or the pass-through check below would measure a free row.
     const rowNow = yield* box(PINNED_IDS.rowToday);
     const rowCentreY = rowNow.y + rowNow.height / 2;
     yield* ctx.expectEqual(
@@ -398,12 +361,6 @@ export const pinnedSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // ── The press: the painted header no longer takes the row's press ───────
-    // The layer's opt-out does not reach the element that paints, so the header
-    // and its text carry their own `pointerEvents: "none"`; the row beneath a
-    // held title therefore hears the press aimed at it. The cover control above
-    // is the hit-test counterweight: a host that delivered presses by id would
-    // count both.
     yield* ctx.host.click(PINNED_IDS.rowToday);
     yield* readout(
       "a press through the held title reaches the row beneath it",
@@ -416,7 +373,6 @@ export const pinnedSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       }),
     );
 
-    // ── Past the section's end: the title retires, the next takes the top ────
     yield* ctx.host.wheel(PINNED_IDS.list, 0, PINNED_END_WHEEL);
     const atEnd = yield* offsetY();
     yield* ctx.expectNear(
@@ -443,7 +399,6 @@ export const pinnedSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* capture(END);
 
-    // ── Back to the start: the first title returns to its own place ──────────
     yield* ctx.host.wheel(PINNED_IDS.list, 0, PINNED_RETURN_WHEEL);
     yield* ctx.expectNear(
       "a wheel back returns the list to the top",

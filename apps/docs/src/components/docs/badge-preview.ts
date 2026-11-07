@@ -1,15 +1,3 @@
-/**
- * The badge preview's model: the status vocabulary, the panel's filter and the
- * press route the pill leaves to its row.
- *
- * The shipped badge is a GPUix host tree and the preview cannot mount it, so
- * the rules that can be wrong live here and `badge-preview.test.ts` holds them
- * to the component's own source and recipe. A badge paints one fill and takes
- * no pointer of its own: a press that lands on a status pill belongs to the row
- * it sits in, which is the route the live `list-row-press` probe measured.
- */
-
-/** The deployment states the panel draws, in the order it reads them. */
 export const deploymentStatuses = [
   "passed",
   "failed",
@@ -18,10 +6,8 @@ export const deploymentStatuses = [
   "stale",
 ] as const;
 
-/** A deployment's state. */
 export type DeploymentStatus = (typeof deploymentStatuses)[number];
 
-/** The badge's colour families, in the component's own order. */
 export const badgeVariants = [
   "neutral",
   "primary",
@@ -32,22 +18,12 @@ export const badgeVariants = [
   "outline",
 ] as const;
 
-/** A badge's colour family. */
 export type BadgeVariant = (typeof badgeVariants)[number];
 
-/** The two pill sizes. */
 export const badgeSizes = ["sm", "md"] as const;
 
-/** A pill size. */
 export type BadgeSize = (typeof badgeSizes)[number];
 
-/**
- * The variant a state wears.
- *
- * `outline` is deliberately absent: it is the variant for a label that names
- * something (a branch, a version), not a state, so a status can never be drawn
- * with the one variant that has no fill to carry it.
- */
 const variantFor: Readonly<Record<DeploymentStatus, BadgeVariant>> = {
   passed: "success",
   failed: "danger",
@@ -56,11 +32,9 @@ const variantFor: Readonly<Record<DeploymentStatus, BadgeVariant>> = {
   stale: "warning",
 };
 
-/** The variant a deployment state paints. */
 export const badgeVariantFor = (status: DeploymentStatus): BadgeVariant =>
   variantFor[status];
 
-/** The word a state is announced as, because the tint is never the only signal. */
 const wordFor: Readonly<Record<DeploymentStatus, string>> = {
   passed: "Passed",
   failed: "Failed",
@@ -69,10 +43,8 @@ const wordFor: Readonly<Record<DeploymentStatus, string>> = {
   stale: "Stale",
 };
 
-/** The word a state is printed and announced as. */
 export const statusText = (status: DeploymentStatus): string => wordFor[status];
 
-/** One deployment on the panel. */
 export interface Deployment {
   readonly id: string;
   readonly name: string;
@@ -81,7 +53,6 @@ export interface Deployment {
   readonly when: string;
 }
 
-/** What the panel opens with: every state, and a second failure to filter on. */
 export const initialDeployments: ReadonlyArray<Deployment> = [
   {
     id: "api",
@@ -127,15 +98,8 @@ export const initialDeployments: ReadonlyArray<Deployment> = [
   },
 ];
 
-/** What the panel filters by: every row, or one state. */
 export type DeploymentFilter = "all" | DeploymentStatus;
 
-/**
- * The rows a filter shows.
- *
- * A filter is a view over the same list: it never copies a deployment, and
- * `all` returns the list it was handed.
- */
 export const visibleDeployments = (
   deployments: ReadonlyArray<Deployment>,
   filter: DeploymentFilter,
@@ -144,7 +108,6 @@ export const visibleDeployments = (
     ? deployments
     : deployments.filter((deployment) => deployment.status === filter);
 
-/** How many deployments are in each state. */
 export const statusCounts = (
   deployments: ReadonlyArray<Deployment>,
 ): Record<DeploymentStatus, number> => ({
@@ -155,7 +118,6 @@ export const statusCounts = (
   stale: deployments.filter((row) => row.status === "stale").length,
 });
 
-/** A sentence for the panel: the size, then the states somebody is in. */
 export const describeDeployments = (
   deployments: ReadonlyArray<Deployment>,
 ): string => {
@@ -168,27 +130,15 @@ export const describeDeployments = (
   }`;
 };
 
-/** The two filters the panel offers, in the order it prints them. */
 export const deploymentFilters: ReadonlyArray<DeploymentFilter> = [
   "all",
   "failed",
   "running",
 ];
 
-/** What a press on a pill, a row or an eager pill reaches. */
 export type PressTarget = "row" | "none";
 
-/** Where the pointer landed. */
 export type PressSurface = "status-pill" | "row" | "eager-pill";
 
-/**
- * The handler a press runs.
- *
- * A status pill is out of the pointer (`pointerEvents: "none"`), because a
- * filled child is the boundary the runtime's hit test stops counting at: the
- * press reaches the row instead, which is `selected=badge` in the live probe.
- * The same pill with a caller's `style` handing the pointer back is a hit
- * target of its own and the row hears nothing (`selected=none`).
- */
 export const pressTarget = (landedOn: PressSurface): PressTarget =>
   landedOn === "eager-pill" ? "none" : "row";

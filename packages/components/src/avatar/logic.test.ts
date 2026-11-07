@@ -1,12 +1,3 @@
-/**
- * Avatar initials: the bugs these guard are a code-unit split that tears an
- * emoji in half, a dropped second initial in a hyphenated or spaced name, and an
- * avatar rendered blank instead of showing its placeholder.
- *
- * Every case is a literal input and its expected output, so a change to the rule
- * fails the test rather than moving with it.
- */
-
 import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
 import { AVATAR_STATUSES, initials, isAvatarStatus } from "./logic.js";

@@ -1,19 +1,3 @@
-/**
- * Holds `dock-split-lifecycle` to the component it claims to measure.
- *
- * The bug this guards is honesty, not paint: the probe exists because
- * `split-pane-lifecycle` drives a probe-local control, so a regression in the
- * shipped `@gpuixui/dock` `SplitPane` would leave every feasibility check green.
- * If this probe is ever rewritten around a local copy again, the name and the
- * README would both claim the library's component while measuring the fixture.
- *
- * The pointer half is measured as **blocked** in the shipped component and
- * recorded for the dock owner; the README section must keep saying so, since a
- * reader who sees only the keyboard rows would assume the drag was verified.
- *
- * `node:fs` is deliberate, as in `split-pane.test.ts` and `registry.test.ts`:
- * this reads the repository's own probe and prose, not a runtime path.
- */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { liveRegistry } from "./registry.js";
@@ -28,21 +12,18 @@ const scenarios = readFileSync(
   "utf8",
 );
 
-/** The `dockSplitSteps` effect, bounded to the next top-level declaration. */
 const dockSteps = (() => {
   const start = scenarios.indexOf("const dockSplitSteps");
   const end = scenarios.indexOf("\nconst ", start + 1);
   return start === -1 || end === -1 ? "" : scenarios.slice(start, end);
 })();
 
-/** The probe's view, bounded by the steps effect that follows it. */
 const dockView = (() => {
   const start = scenarios.indexOf("const DockSplitProbe");
   const end = scenarios.indexOf("\nconst dockSplitSteps", start + 1);
   return start === -1 || end === -1 ? "" : scenarios.slice(start, end);
 })();
 
-/** The README section for this probe, bounded by the next probe's heading. */
 const dockSection = (() => {
   const heading = "### `dock-split-lifecycle` — measured on 0.11.0 here";
   const start = readme.indexOf(heading);

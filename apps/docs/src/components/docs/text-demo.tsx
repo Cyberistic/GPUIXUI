@@ -1,11 +1,3 @@
-/**
- * Browser preview for the Text page.
- *
- * `Text` is one run of type, not a control, so the preview is a labelled
- * diagram: a dashed outline around each run with a caption naming its role and
- * tone. The Code tab shows the native usage.
- */
-
 const roles = [
   { role: "h2", label: "h2", sample: "Version 0.11.0" },
   { role: "bodyStrong", label: "bodyStrong", sample: "A lead sentence." },

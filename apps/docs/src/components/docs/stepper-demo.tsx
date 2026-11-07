@@ -1,18 +1,3 @@
-/**
- * Browser previews for the Stepper page.
- *
- * The shipped stepper is a read-only list: it derives each step's status from
- * the one `value` the app passes and holds no state of its own. The preview
- * cannot mount it (the library renders through GPUix), so it mirrors the
- * contract with HTML and says so: the marker is `controlHeight.md` round, the
- * three statuses paint the roles `markerPalette` names, and the value is the
- * app's — the flow's Next runs the step's check first, so the indicator never
- * shows a step the reader has not answered.
- *
- * The rules live in `stepper-preview.ts` so a test can fail on them; this file
- * only renders them. The Code tab always shows the native usage.
- */
-
 import { useState } from "react";
 import {
   advance,
@@ -28,7 +13,6 @@ import {
   type StepStatus,
 } from "./stepper-preview";
 
-/** One step in the list: a numbered marker, its name and its description. */
 const Step = ({
   index,
   status,
@@ -50,7 +34,6 @@ const Step = ({
   );
 };
 
-/** The list alone, for the states preview. */
 const StepList = ({
   orientation = "horizontal",
   value,
@@ -65,7 +48,6 @@ const StepList = ({
   </ol>
 );
 
-/** The body of one step: the field it asks for, or the review summary. */
 const StepBody = ({
   flow,
   onDraft,
@@ -144,7 +126,6 @@ const StepBody = ({
   );
 };
 
-/** Create a workspace: a step the reader can leave only when it is answered. */
 export const StepperWorkflow = () => {
   const [flow, setFlow] = useState<Flow>(initialFlow);
   const [refusals, setRefusals] = useState(0);
@@ -216,7 +197,6 @@ export const StepperWorkflow = () => {
   );
 };
 
-/** One labelled group of markers, for the states preview. */
 const StateGroup = ({
   label,
   orientation = "horizontal",
@@ -234,7 +214,6 @@ const StateGroup = ({
   </div>
 );
 
-/** The derived statuses, both orientations, and a value the steps do not bound. */
 export const StepperStates = () => (
   <div className="gx-demo gx-demo-column gx-stepper-scene">
     <StateGroup label="value = 1 — first step current" value={1} />

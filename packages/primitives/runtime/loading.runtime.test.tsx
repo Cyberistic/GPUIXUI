@@ -1,18 +1,3 @@
-/**
- * The loading indicators in the real GPUix runtime.
- *
- * These are the components the capability map forces to be *discrete*: the
- * runtime's `motion` animates opacity, width and insets and nothing else, so a
- * skeleton pulses opacity and a spinner advances a lit dot instead of rotating
- * (see `docs/gpuix-capabilities.md`). That makes them the components a resolver test cannot
- * judge at all: whether the step actually moves the pixels is only observable in
- * a running frame, so this suite samples the frame over real time.
- *
- * The step is advanced by a React interval, not by GPUI's clock, so the timer
- * here is a real one (`fixture.tsx`'s `sleep`) and the assertion is "both states
- * were painted", which cannot flake the way a single timed sample would.
- */
-
 import { expect, it } from "vitest";
 import { Duration, Effect } from "effect";
 import * as Arr from "effect/Array";
@@ -43,14 +28,12 @@ import {
 } from "./harness.js";
 import { Surface, openWindow, testTheme } from "./fixture.js";
 
-/** The child elements of `testId`, in order. */
 const childrenOf = (runtime: Runtime, testId: string) =>
   Option.getOrElse(
     Option.map(runtime.element(testId), (element) => element.children),
     () => expect.fail(`the runtime retained no ${testId}`),
   );
 
-/** The child element ids of an element by id. */
 const childrenOfId = (runtime: Runtime, id: number) =>
   Option.getOrElse(
     Option.map(
@@ -66,7 +49,6 @@ const idOf = (runtime: Runtime, testId: string): number =>
     () => expect.fail(`the runtime retained no ${testId}`),
   );
 
-/** The painted width of `testId`. */
 const widthOf = (runtime: Runtime, testId: string): number =>
   Option.getOrElse(
     Option.map(runtime.bounds(testId), (bounds) => bounds.width),
@@ -85,13 +67,6 @@ const styleOf = (
     () => expect.fail(`element ${id} vanished`),
   );
 
-/**
- * Read `read()` `samples` times, ~100 ms apart, flushing the frame between.
- *
- * A sampled set rather than one timed reading: the step is a JS interval, so a
- * single sample would be a race with the timer. Both states being painted is
- * what the component promises, and it cannot flake.
- */
 const sample = <A,>(
   runtime: Runtime,
   read: () => A,
@@ -130,9 +105,6 @@ it("announces a determinate Progress's value as a percentage", async () => {
 });
 
 it("says a Progress's share in the caller's words in a window", async () => {
-  // The bug guarded: `aria-valuetext` — the only channel 0.11.0 has — carried a
-  // fixed `42%`/`loading` phrase, so a localised interface could not say its own
-  // words and a download could not fold its buffered share into the sentence.
   const runtime = await openWindow();
   runtime.render(
     <Surface>
@@ -156,10 +128,6 @@ it("says a Progress's share in the caller's words in a window", async () => {
 });
 
 it("keeps a Progress's own words when its formatter says nothing", async () => {
-  // The bug guarded: the caller's answer was published exactly as it arrived, so
-  // a formatter whose locale table had no row for this bar (`""`) reached the
-  // accessibility tree as an empty value — the only channel 0.11.0 has — while
-  // the bar still had a share to report, and the painted value part was blank.
   const runtime = await openWindow();
   runtime.render(
     <Surface>
@@ -175,7 +143,7 @@ it("keeps a Progress's own words when its formatter says nothing", async () => {
     Option.some("42%"),
   );
   expect(runtime.text("pg-value")).toEqual(Option.some("42%"));
-  // The indeterminate word is the provider's fallback for the same blank answer.
+
   runtime.render(
     <Surface>
       <Progress testId="pg" label="Uploading" loadingText="  " />
@@ -196,7 +164,7 @@ it("fills a determinate Progress to its value", async () => {
         <Progress testId="pg" value={value} />
       </Surface>,
     );
-    // The root is the frame; the bar is its only child, the fill the bar's.
+
     const trackId = Option.getOrElse(Arr.head(childrenOf(runtime, "pg")), () =>
       expect.fail("the Progress painted no track"),
     );
@@ -243,21 +211,17 @@ it("paints a Progress's held-ahead buffer in the gap it reports", async () => {
   const fill = boxOf(segmentId(0));
   const bufferId = segmentId(1);
   const buffer = boxOf(bufferId);
-  // The fill is the value's share; the buffer is the segment after it, ending
-  // at the buffer's own share.
+
   expect(Math.abs(fill.width - track.width * 0.4)).toBeLessThan(2);
   expect(Math.abs(buffer.x - (track.x + track.width * 0.4))).toBeLessThan(2);
   expect(Math.abs(buffer.width - track.width * 0.3)).toBeLessThan(2);
-  // Painted in the mark role the indicator contract measures on the track.
+
   expect(styleOf(runtime, bufferId)["backgroundColor"]).toBe(
     testTheme.colors.mutedForeground,
   );
 });
 
 it("paints a muted bar's held share in a role its fill does not use", async () => {
-  // The bug guarded: a `muted` fill is `mutedForeground`, the buffer's own
-  // role, so a 20%-complete bar buffered to 80% painted one continuous 80% bar
-  // and read as finished. Measured in a window, in the colours the runtime kept.
   const runtime = await openWindow();
   runtime.render(
     <Surface>
@@ -280,12 +244,6 @@ it("paints a muted bar's held share in a role its fill does not use", async () =
 });
 
 it("paints no caption line for a Progress label that arrived blank", async () => {
-  // The bug guarded: a bar's label is interface copy from an i18n table or a
-  // saved record, so a missing row arrives as a run of spaces. The caption part
-  // painted it unconditionally, and the runtime lays a run of spaces out as a
-  // full line (16px on 0.11.0), so the bar grew a blank caption row while its
-  // accessible name was correctly absent. The part paints no element now, and a
-  // label that says something still paints.
   const runtime = await openWindow();
   const composed = (label: string) => (
     <Surface>
@@ -305,13 +263,6 @@ it("paints no caption line for a Progress label that arrived blank", async () =>
 });
 
 it("keeps a Progress's stored label for a caption child that says nothing", async () => {
-  // The bug guarded: a caption's `children` is copy a caller forwards from an
-  // i18n table as often as a literal, and the blank rule had only reached the
-  // stored `label` — `children ?? label` covers an absent child, not one that
-  // arrived as `""` or spaces. So a missing translation both **hid** the bar's
-  // label and laid out a blank 16px caption row, while the label prop documents
-  // the part's default. A child that says nothing falls through to the label
-  // now, and a bar with no copy at all still paints no caption.
   const runtime = await openWindow();
   const composed = (label: string, child: string) => (
     <Surface>
@@ -326,10 +277,10 @@ it("keeps a Progress's stored label for a caption child that says nothing", asyn
   runtime.render(composed("Uploading", "   "));
   expect(runtime.allText()).toContain("Uploading");
   expect(runtime.allText()).not.toContain("   ");
-  // Both halves blank: the caption element is absent, so nothing is laid out.
+
   runtime.render(composed("  ", "   "));
   expect(runtime.bounds("caption")).toStrictEqual(Option.none());
-  // A child that says something is still the caller's words.
+
   runtime.render(composed("Uploading", "Saving"));
   expect(runtime.allText()).toContain("Saving");
   expect(runtime.allText()).not.toContain("Uploading");
@@ -346,8 +297,7 @@ it("paints a caller's Progress composition from the same resolved state", async 
       </Progress>
     </Surface>,
   );
-  // The parts read the root's context in the real renderer: a part wired to
-  // the wrong state would paint at the wrong width or not at all.
+
   const track = Option.getOrElse(runtime.bounds("track"), () =>
     expect.fail("the composed track painted no box"),
   );
@@ -384,10 +334,7 @@ it("moves an indeterminate Progress's segment over time", async () => {
   expect(a11yValueOf(runtime.a11y(), { label: "Uploading" })).toEqual(
     Option.some("loading"),
   );
-  // The **painted** position of the moving fill is the measure, not the lead's
-  // declared width: the track used to lay its segments out as blocks, so the
-  // lead's width changed every step while the fill stayed pinned at the start
-  // of the bar and the motion was invisible.
+
   const offsets = await sample(
     runtime,
     () => {
@@ -404,7 +351,7 @@ it("moves an indeterminate Progress's segment over time", async () => {
     6,
   );
   expect(new Set(offsets).size).toBeGreaterThan(1);
-  // The moving fill is inside the track, not clipped below it.
+
   const trackBox = Option.getOrElse(
     Option.flatMap(Arr.head(childrenOf(runtime, "pg")), runtime.boundsOfId),
     () => expect.fail("the Progress painted no track"),
@@ -413,16 +360,8 @@ it("moves an indeterminate Progress's segment over time", async () => {
 });
 
 it("reads a stored Progress share it cannot read as absence, not as NaN%", async () => {
-  // The bug guarded: a dashboard stores a widget's share, and `progressPart`
-  // read it through `Option.fromNullishOr`, which refuses only `null` and
-  // `undefined`. A record whose share arrived as text was therefore a
-  // measurement: the fill's width became "NaN%", which the window paints as no
-  // box at all, the bar announced "NaN%", and `Progress`'s step timer read the
-  // same field as determinate so the segment never moved. A share that is not a
-  // number is absence now — the moving segment, the loading word, and a timer
-  // that drives it.
   const runtime = await openWindow();
-  // The cast is the storage boundary: a saved share is whatever the record wrote.
+
   const stored = { value: "half" } as unknown as ProgressProps;
   runtime.render(
     <Surface>
@@ -450,7 +389,7 @@ it("reads a stored Progress share it cannot read as absence, not as NaN%", async
     6,
   );
   expect(new Set(fillOffsets).size).toBeGreaterThan(1);
-  // A share the store wrote as a number is still the measurement it says.
+
   runtime.render(
     <Surface>
       <Progress testId="pg" value={40} label="Uploading" />
@@ -474,9 +413,6 @@ it("announces an indeterminate Progress in the caller's word", async () => {
 });
 
 it("paints an indeterminate Progress in its own tone", async () => {
-  // The bug guarded: the moving segment ignored the tone and painted the
-  // primary role, so a destructive task looked like a neutral one until the
-  // value arrived.
   const runtime = await openWindow();
   runtime.render(
     <Surface>
@@ -486,7 +422,7 @@ it("paints an indeterminate Progress in its own tone", async () => {
   const track = Option.getOrElse(Arr.head(childrenOf(runtime, "pg")), () =>
     expect.fail("the Progress painted no track"),
   );
-  // The indeterminate track holds a lead segment and then the fill.
+
   const fill = childrenOfId(runtime, track)[1];
   expect(fill).toBeDefined();
   expect(styleOf(runtime, fill ?? -1)["backgroundColor"]).toBe(
@@ -494,15 +430,12 @@ it("paints an indeterminate Progress in its own tone", async () => {
   );
 });
 
-/** Shows the step a counter is on, so a running timer is visible. */
 const StepProbe = ({ running }: { readonly running: boolean }) => {
   const step = useStep(4, 60, running);
   return <Text testId="probe">{String(step)}</Text>;
 };
 
 it("keeps a step counter still while it is not running", async () => {
-  // The bug guarded: the determinate bar ran the step timer for a segment it
-  // never paints, waking the tree every interval for nothing.
   const runtime = await openWindow();
   runtime.render(
     <Surface>
@@ -533,13 +466,6 @@ it("advances a step counter while it is running", async () => {
 });
 
 it("paints a skeleton's blank side as the default box, not as nothing", async () => {
-  // The bug guarded: a placeholder's side comes from a record as often as a
-  // literal, and a field a record carried blank — `""` or a run of spaces — is
-  // not a length. It reached the style as a dimension the runtime cannot parse,
-  // and `@gpuix/native@0.11.0` refuses the **whole** style batch for one
-  // (`Batch op 10 setStyle parse error: invalid dimension: `), so a saved
-  // placeholder took the window down instead of painting the full-width,
-  // one-line box the prop documents as its default.
   const runtime = await openWindow();
   runtime.render(
     <Surface>
@@ -574,12 +500,6 @@ it("pulses a Skeleton's opacity between both of its states", async () => {
 });
 
 it("measures and names a status leaf where it is painted", async () => {
-  // The bug guarded: the four status leaves painted one element each and
-  // published only a `testId`, so a caller could not measure the box a
-  // placeholder reserves, hold the bar's own instance, or name the node an
-  // automation host reads — and a wrapper would become the flex item that
-  // paints, so the box measured would not be the box composed. They take the
-  // runtime's own trio now, the rule every layout leaf follows.
   const runtime = await openWindow();
   const boxes: Array<{ width: number; height: number }> = [];
   const refs: Array<number> = [];
@@ -621,7 +541,7 @@ it("measures and names a status leaf where it is painted", async () => {
   const painted = Option.getOrElse(runtime.bounds("placeholder"), () =>
     expect.fail("the runtime painted no box for the placeholder"),
   );
-  // The reported box is the painted one, and the placeholder holds its side.
+
   expect(Option.getOrUndefined(Arr.last(boxes))).toStrictEqual({
     width: painted.width,
     height: painted.height,
@@ -633,8 +553,7 @@ it("measures and names a status leaf where it is painted", async () => {
   expect(
     Option.map(runtime.element("placeholder"), (element) => element.id),
   ).toStrictEqual(Option.some(held));
-  // Each node that reaches the accessibility tree carries the author id, so an
-  // automation host can address the status rather than guess at its text.
+
   const addressed = (role: string, label: string): string | undefined =>
     Option.getOrElse(a11yNode(runtime.a11y(), { role, label }), () =>
       expect.fail(`the runtime painted no ${role} named ${label}`),
@@ -645,11 +564,6 @@ it("measures and names a status leaf where it is painted", async () => {
 });
 
 it("leaves no unnamed status node for a silent spinner", async () => {
-  // The bug guarded: a blank label — a deliberate silence (`Button`'s blank
-  // `loadingLabel`) or a translation table that answered nothing — still
-  // declared `role="status"` with no `aria-label`, so the window's accessibility
-  // tree carried a Status node with nothing to announce. A named indicator is
-  // still a status; a silent one is decoration, the rule `Icon` follows.
   const runtime = await openWindow();
   const statusLabels = (): ReadonlyArray<string | undefined> =>
     Arr.map(
@@ -682,7 +596,7 @@ it("leaves no unnamed status node for a silent spinner", async () => {
   expect(
     a11yDescriptionOf(runtime.a11y(), { role: "Button", label: "Save" }),
   ).toEqual(Option.none());
-  // The shipped word still names an action that did not opt out.
+
   runtime.render(
     <Surface>
       <Button testId="named-busy" loading>
@@ -694,9 +608,6 @@ it("leaves no unnamed status node for a silent spinner", async () => {
 });
 
 it("paints a Skeleton box when a measured side cannot be laid out", async () => {
-  // The bug guarded: a side that is often a measurement (`NaN` before the
-  // layout arrives) reached `width` verbatim, which the runtime paints as no
-  // box — a placeholder indistinguishable from content that finished loading.
   const runtime = await openWindow();
   runtime.render(
     <Surface>
@@ -713,12 +624,7 @@ it("paints a Skeleton box when a measured side cannot be laid out", async () => 
 });
 
 it("paints the corner a stored radius name documents in a window", async () => {
-  // The bug guarded: a saved corner name a later release dropped reached the
-  // recipe as `rounded-<name>`, which compiles to an unsupported class, and the
-  // resolver answered no number — a Skeleton painted square in a window while
-  // its page promised `sm`. The name is resolved at the seam, so the block
-  // keeps its documented corner and a Box keeps its documented none.
-  const stored = "xl2" as RadiusStep; // the storage boundary
+  const stored = "xl2" as RadiusStep;
   const runtime = await openWindow();
   runtime.render(
     <Surface>
@@ -744,9 +650,7 @@ it("moves a Spinner's lit dot instead of rotating it", async () => {
     </Surface>,
   );
   const dots = childrenOf(runtime, "sp");
-  // Every dot takes the accent and the trail fades through opacity, so the lit
-  // dot is the opaque one. The runtime cannot rotate: the index is the whole
-  // animation.
+
   expect(
     Arr.every(
       dots,
@@ -769,11 +673,6 @@ it("moves a Spinner's lit dot instead of rotating it", async () => {
 });
 
 it("holds every indicator still when the reader asked for less motion", async () => {
-  // The bug guarded: `@gpuix/native` exposes no reduced-motion preference, so
-  // nothing passed one down and all three timed indicators kept waking the
-  // tree and moving — a reader who asked not to see motion saw it anyway.
-  // The frames a running interval would change are the skeleton's opacity, the
-  // spinner's dot opacities and the indeterminate bar's lead width.
   const runtime = await openWindow();
   runtime.render(
     <Surface>
@@ -807,16 +706,12 @@ it("holds every indicator still when the reader asked for less motion", async ()
     ].join("|");
   const frames = await sample(runtime, frame, 6);
   expect(new Set(frames).size).toBe(1);
-  // ...and each one is still an indicator rather than an empty box: three dots
-  // in the status row and a segment inside the track.
+
   expect(childrenOf(runtime, "sp")).toHaveLength(3);
   expect(progressLeadWidth()).not.toBe("none");
 });
 
 it("moves a disabled busy button's spinner onto the neutral pair", async () => {
-  // The bug guarded: a disabled filled action paints `disabled` behind
-  // `disabledForeground`, but the spinner kept the action's on-colour — white
-  // dots on the light theme's neutral fill, an indicator that vanishes.
   const runtime = await openWindow();
   runtime.render(
     <Surface>
@@ -840,8 +735,6 @@ it("moves a disabled busy button's spinner onto the neutral pair", async () => {
 });
 
 it("paints a loading button's spinner in its fill's on-colour", async () => {
-  // The bug guarded: a busy brand button rendered a brand spinner on its own
-  // brand fill (1.00:1), so the indicator vanished exactly where it mattered.
   const runtime = await openWindow();
   runtime.render(
     <Surface>

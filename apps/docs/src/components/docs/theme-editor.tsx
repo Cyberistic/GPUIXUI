@@ -24,7 +24,6 @@ import {
 
 const URL_PARAM = "theme";
 
-/** Replace the share URL without the router's scroll restoration firing. */
 const replaceUrlKeepingScroll = (url: string): void => {
   const y = window.scrollY;
   window.history.replaceState(null, "", url);
@@ -32,12 +31,6 @@ const replaceUrlKeepingScroll = (url: string): void => {
   requestAnimationFrame(() => window.scrollTo(0, y));
 };
 
-/**
- * The browser rendering of one resolved theme, driven only by CSS variables.
- *
- * Exported so the Aero specimen can show the same panel the editor previews,
- * under a look the editor itself is not currently serving.
- */
 export function ThemePreview({ theme }: { theme: Theme }) {
   const vars = toCssVars(theme);
   return (
@@ -74,7 +67,6 @@ export function ThemePreview({ theme }: { theme: Theme }) {
   );
 }
 
-/** Live editor for the library's semantic tokens, with a shareable URL. */
 export function ThemeEditor() {
   const platform = usePlatformOptional();
   const bases = useMemo(
@@ -85,19 +77,20 @@ export function ThemeEditor() {
     [platform],
   );
 
-  return <ThemeEditorSurface bases={bases} />;
+  return (
+    <ThemeEditorSurface
+      bases={bases}
+      advisory={platform?.platform === "default"}
+    />
+  );
 }
 
-/**
- * The editor itself, over an explicit base per mode. Keeping the base a prop is
- * what makes "the preview follows the platform switch" testable: the same
- * editor renders Windows's roles or the built-in identity depending on it, and
- * the reader's pins are applied over whichever one it is handed.
- */
 export function ThemeEditorSurface({
   bases,
+  advisory = false,
 }: {
   readonly bases: Readonly<Record<ThemeMode, Theme>>;
+  readonly advisory?: boolean;
 }) {
   const [state, setState] = useState<EditorState>(defaultState);
   const [mode, setMode] = useState<ThemeMode>("light");
@@ -143,7 +136,11 @@ export function ThemeEditorSurface({
   };
 
   const resolved = resolveTheme(mode, pins, base);
-  const findings = themeFindings(mode, pins, base);
+  const findings = themeFindings(mode, pins, base, { warnings: advisory });
+  const measured = findings.filter((finding) => finding.unmeasurable !== true);
+  const unmeasured = findings.filter(
+    (finding) => finding.unmeasurable === true,
+  );
 
   const copy = () => {
     const both = {
@@ -260,7 +257,7 @@ export function ThemeEditorSurface({
 
       <div
         aria-live="polite"
-        className={`gx-te-audit ${findings.length === 0 ? "gx-te-audit-pass" : "gx-te-audit-fail"}`}
+        className={`gx-te-audit ${findings.length === 0 ? "gx-te-audit-pass" : measured.length > 0 ? "gx-te-audit-fail" : ""}`}
         role="status"
       >
         {findings.length === 0 ? (
@@ -274,13 +271,15 @@ export function ThemeEditorSurface({
               ))}
             </ul>
           </>
+        ) : measured.length === 0 ? (
+          <p>No contrast pair could be measured.</p>
         ) : (
           <>
             <p>
-              {findings.length} from the library&apos;s <code>auditTheme</code>:
+              {measured.length} from the library&apos;s <code>auditTheme</code>:
             </p>
             <ul>
-              {findings.map((finding) => (
+              {measured.map((finding) => (
                 <li
                   data-kind={finding.kind}
                   key={`${finding.kind}-${finding.text}`}
@@ -291,16 +290,13 @@ export function ThemeEditorSurface({
             </ul>
           </>
         )}
+        {unmeasured.length === 0 ? null : (
+          <p className="gx-te-unmeasured">
+            {unmeasured.length} audit checks could not be measured (oklch or
+            translucent colours).
+          </p>
+        )}
       </div>
-
-      <p className="gx-component-note">
-        Browser preview of the semantic tokens from <code>@gpuixui/tokens</code>
-        . The shipped components read these roles through GPUix, not CSS
-        variables; the bridge above only exists for this preview. The base is
-        the platform style the switch selected — switch it and the preview
-        re-bases while your edits stay; <strong>Reset</strong> clears them back
-        to that style.
-      </p>
     </div>
   );
 }

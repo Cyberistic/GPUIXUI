@@ -12,17 +12,6 @@ import {
   type PreviewOption,
 } from "./select-preview";
 
-/**
- * Browser previews for the Select page.
- *
- * The shipped component wraps GPUix's own select, so the open state,
- * positioning and dismissal below mirror measured runtime behaviour rather than
- * a lookalike: the trigger opens on Enter, Space or an arrow, the highlight
- * starts on the chosen row, a disabled row is skipped, the ends wrap, Enter
- * commits, and Escape or a press outside closes and returns the focus to the
- * trigger. `NULL` is browser focus state, not a missing selection.
- */
-
 const regions: ReadonlyArray<PreviewEntry> = [
   {
     label: "Europe",
@@ -51,7 +40,6 @@ const machines: ReadonlyArray<PreviewEntry> = [
   { value: "dedicated", label: "Dedicated host", disabled: true },
 ];
 
-/** A selected set of options for the states preview. */
 const plans: ReadonlyArray<PreviewEntry> = [
   { value: "team", label: "Team" },
   { value: "business", label: "Business" },
@@ -62,7 +50,7 @@ interface PreviewSelectProps {
   readonly id: string;
   readonly entries: ReadonlyArray<PreviewEntry>;
   readonly value: string | null;
-  /** Absent on a disabled preview, which never commits. */
+
   readonly onValueChange?: (value: string) => void;
   readonly label: string;
   readonly placeholder?: string;
@@ -71,13 +59,6 @@ interface PreviewSelectProps {
   readonly disabled?: boolean;
 }
 
-/**
- * One preview control: the field chrome, the popover list and the row states.
- *
- * Every select owns its open state, and each closes on a press outside its own
- * root — the same rule a popover has, so pressing a second trigger closes the
- * first without a shared coordinator.
- */
 const PreviewSelect = ({
   id,
   entries,
@@ -94,7 +75,7 @@ const PreviewSelect = ({
   const root = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
   const rows = useRef(new Map<string, HTMLButtonElement>());
-  /** The row to focus once the open render commits. */
+
   const initialFocus = useRef<string | null>(null);
   const listId = `${id}-list`;
   const chosen = selectedLabel(entries, value);
@@ -136,14 +117,13 @@ const PreviewSelect = ({
       const target = event.target;
       if (!(target instanceof Node)) return;
       if (root.current?.contains(target) === true) return;
-      // A press elsewhere takes the focus with it, so the trigger does not.
+
       close(false);
     };
     window.addEventListener("mousedown", onPress);
     return () => window.removeEventListener("mousedown", onPress);
   }, [open]);
 
-  /** Where an opening key lands: the chosen row, or the nearest enabled edge. */
   const openTarget = (delta: 1 | -1): string | null => {
     const chosen = flatten(entries).find(
       (option) => option.value === value && option.disabled !== true,
@@ -194,7 +174,6 @@ const PreviewSelect = ({
       return;
     }
     if (key === "Tab") {
-      // A select is not modal: Tab closes the list and lets the focus move on.
       close(false);
     }
   };
@@ -284,7 +263,6 @@ const PreviewSelect = ({
   );
 };
 
-/** A realistic composition: the deploy target a workspace is created in. */
 export const SelectDemo = () => {
   const [region, setRegion] = useState<string | null>("eu-west");
   const [machine, setMachine] = useState<string | null>(null);
@@ -332,7 +310,6 @@ export const SelectDemo = () => {
   );
 };
 
-/** The three sizes and the four trigger states the component paints. */
 export const SelectStates = () => {
   const [plan, setPlan] = useState<string | null>("team");
   const [empty, setEmpty] = useState<string | null>(null);

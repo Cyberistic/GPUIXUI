@@ -1,18 +1,3 @@
-/**
- * The house presence: the frames a surface enters and leaves with, the timing
- * each phase runs on, and the window a leaving box stays mounted for.
- *
- * This module is renderer-neutral on purpose. A frames table, a timing and a
- * hold window are numbers; both a component package and a primitive package
- * need the same ones, and neither may depend on the other, so the rule lives in
- * the package that already owns the timing and the reduced-motion policy.
- *
- * GPUix has no `transform` style key, so a surface never scales, rotates or
- * slides; it fades and travels a few pixels on `top` or `left`. A reduced run
- * keeps every frame and loses only the journey, which is why the frames carry
- * no preference and the timing does.
- */
-
 import { schedulableSeconds } from "./duration.js";
 import {
   isMotionEasing,
@@ -21,10 +6,8 @@ import {
   type MotionLevel,
 } from "./timing.js";
 
-/** The side of a trigger or window edge a surface arrives from. */
 export type PresenceSide = "top" | "right" | "bottom" | "left";
 
-/** The numeric fields a presence frame travels on. */
 export interface PresenceFrame {
   readonly opacity?: number;
   readonly height?: number;
@@ -32,22 +15,12 @@ export interface PresenceFrame {
   readonly left?: number;
 }
 
-/** A surface's three frames: its first paint, its resting frame and its exit. */
 export interface PresenceFrames {
   readonly initial: PresenceFrame;
   readonly animate: PresenceFrame;
   readonly exit: PresenceFrame;
 }
 
-/**
- * One frame as a caller may have stored it.
- *
- * A field the config lost is absent or `null` — JSON has no `undefined`, so a
- * key it never carried reads back as `null` — and a measurement that failed is a
- * number the runtime cannot paint. Every {@link PresenceFrame} is one of these,
- * so a component passes its builders' output and a consumer passes what its
- * decoder answered, without an assertion between the two.
- */
 export interface PresenceFrameInput {
   readonly opacity?: number | null;
   readonly height?: number | null;
@@ -55,78 +28,42 @@ export interface PresenceFrameInput {
   readonly left?: number | null;
 }
 
-/**
- * A frame set as a caller may have stored it: a phase the config lost is absent
- * or `null`, which is the shape a decoded config actually has.
- */
 export interface PresenceFramesInput {
   readonly initial?: PresenceFrameInput | null;
   readonly animate?: PresenceFrameInput | null;
   readonly exit?: PresenceFrameInput | null;
 }
 
-/** A tween in the shape a surface paints, with every field optional. */
 export interface PresenceTransition {
-  /** Seconds, as the runtime reads it. */
   readonly duration?: number;
-  /** Seconds the runtime holds the first frame for before it runs. */
+
   readonly delay?: number;
   readonly ease?: MotionEasing;
 }
 
-/**
- * A transition as a caller may have stored it.
- *
- * JSON has no `undefined`, so a field a config never carried reads back as
- * `null`; a measurement that failed is a number the runtime cannot paint; and an
- * easing name a release dropped is a string the runtime cannot read. Every
- * {@link PresenceTransition} is one of these, so a consumer passes what its
- * decoder answered without an assertion between the two.
- */
 export interface PresenceTransitionInput {
   readonly duration?: number | null;
   readonly delay?: number | null;
-  /**
-   * The easing a decoder answered. Read through `isMotionEasing`, so a curve
-   * this release does not name is dropped instead of refused by the type at the
-   * one call site that reads a store.
-   */
+
   readonly ease?: unknown;
 }
 
-/** The enter and exit timing a surface at one level moves with. */
 export interface PresenceTiming {
   readonly enter: PresenceTransition;
   readonly exit: PresenceTransition;
 }
 
-/**
- * The timing a caller may have stored: a phase the config lost is absent or
- * `null`, which is what JSON keeps for a key it never carried. Every
- * {@link PresenceTiming} is one of these, so a level's own timing and a decoded
- * config are both passed to {@link presenceTimingOf} without an assertion.
- */
 export interface PresenceTimingInput {
   readonly enter?: PresenceTransitionInput | null;
   readonly exit?: PresenceTransitionInput | null;
 }
 
-/** The pointer rule a surface paints: only a resting surface is a target. */
 export interface PresenceHitRule {
   readonly pointerEvents?: "auto" | "none";
 }
 
-/**
- * The largest magnitude the renderer paints in a motion style field.
- *
- * `validate_style` checks every inset against a 32-bit float and **rejects the
- * whole description** for one it refuses (`@gpuix/native@0.11.0`,
- * `packages/native/src/motion.rs`), so a number past this bound is not a large
- * frame — it is no motion at all.
- */
 const RENDERABLE_MAX = 3.402_823_466_385_288_6e38;
 
-/** A frame's inset, read as the renderer accepts it: finite, inside a float. */
 const readInset = (value: number | null | undefined): number | undefined =>
   value !== null &&
   value !== undefined &&
@@ -135,53 +72,21 @@ const readInset = (value: number | null | undefined): number | undefined =>
     ? value
     : undefined;
 
-/** A frame's opacity, read as the renderer accepts it: a share of `0..1`. */
 const readOpacity = (value: number | null | undefined): number | undefined => {
   const share = readInset(value);
   return share !== undefined && share >= 0 && share <= 1 ? share : undefined;
 };
 
-/** A frame's size, read as the renderer accepts it: non-negative. */
 const readSize = (value: number | null | undefined): number | undefined => {
   const size = readInset(value);
   return size !== undefined && size >= 0 ? size : undefined;
 };
 
-/**
- * The distance a frame travels, read from a caller's number.
- *
- * An offset is caller arithmetic — the measured gap between a trigger and the
- * surface it opens — so a failed measurement is a number the runtime cannot
- * paint: it draws a non-finite inset as nothing, which leaves the entry and exit
- * frames carrying no start offset at all, and the travel the caller asked for is
- * silently gone. A distance no formula can read, or one the renderer refuses, is
- * therefore **no travel**; the surface still fades, at the axis and direction it
- * named. A negative offset is a direction, not an unusable number, so it is kept.
- */
 const travelOf = (offset: number): number => readInset(offset) ?? 0;
 
-/**
- * The inset a frame travels on, read from a value a caller may have stored.
- *
- * The axis is a union, but a builder is also handed a name from persisted UI
- * state — the same door {@link fadeFromSide}'s side comes through. The
- * branching below used to end in an `else`, so a name the package does not
- * carry travelled on `left`: a surface that asked for a vertical arrival moved
- * sideways. An unnamed axis is the house **vertical** one, the axis every
- * surface that asked for nothing travels on (`below`/`above`, and the `bottom`
- * a stored side falls back to).
- */
 const axisOf = (axis: "top" | "left"): "top" | "left" =>
   axis === "left" ? "left" : "top";
 
-/**
- * A fade that travels `offset` pixels along one axis.
- *
- * A positive `top` starts the surface low and rises it into place; a negative
- * one starts high. An offset that cannot be read travels nowhere
- * ({@link travelOf}), and an axis the table does not name takes the house
- * vertical one ({@link axisOf}).
- */
 export const fadeFrom = (
   axis: "top" | "left",
   offset: number,
@@ -200,33 +105,15 @@ export const fadeFrom = (
       };
 };
 
-/** A fade that travels nowhere: a scrim dims, it does not move. */
 export const fadeOnly: PresenceFrames = {
   initial: { opacity: 0 },
   animate: { opacity: 1 },
   exit: { opacity: 0 },
 };
 
-/**
- * The side a frame travels from, read from a value a caller may have stored.
- *
- * `PresenceSide` is a union, but a side also arrives from persisted state and
- * from a measured placement the library did not type-check. The branching below
- * ends in an `else`, so a name the package does not carry used to travel as
- * `right` — a drawer meant for the top arrived from the side. A side the table
- * does not name takes the house `bottom`, the placement a surface that asked
- * for nothing opens at.
- */
 const sideOf = (side: PresenceSide): PresenceSide =>
   side === "top" || side === "right" || side === "left" ? side : "bottom";
 
-/**
- * A fade that travels in from a window edge.
- *
- * A panel anchored to the right starts further right and moves in, so the
- * surface reads as arriving from outside the window. This is the reverse of
- * {@link fadeFromAnchor}.
- */
 export const fadeFromSide = (
   side: PresenceSide,
   offset: number,
@@ -241,12 +128,6 @@ export const fadeFromSide = (
         : fadeFrom("left", offset);
 };
 
-/**
- * A fade that travels out from the control a surface is anchored to.
- *
- * A surface below its trigger starts above its resting place and moves down
- * while it fades, so the movement points away from the edge it hangs on.
- */
 export const fadeFromAnchor = (
   side: PresenceSide,
   offset: number,
@@ -261,25 +142,6 @@ export const fadeFromAnchor = (
         : fadeFrom("left", -offset);
 };
 
-/**
- * One frame a surface paints, read from a value a caller may have stored.
- *
- * `PresenceFrame` is structural and `PresenceFrames` is exported, so a frame set
- * can arrive from a config that did not decode: JSON has no `undefined`, so a
- * phase the config never carried reads back as `null`, and a coordinate a
- * measurement failed on is `NaN`. The runtime paints a non-finite inset as
- * nothing and takes `animate` as a **required** target, so a field this cannot
- * paint is **dropped** — the element keeps the value its own style states, which
- * is where a frame's zero would have put it — and a phase the value does not
- * name is **no frame**, the answer {@link presenceTimingOf} gives a phase it
- * does not name.
- *
- * Dropped, not passed through, because the renderer validates the **whole**
- * description and paints no frame for one it refuses: every inset must fit a
- * 32-bit float, a size must be non-negative and `opacity` must be `0..1`
- * ({@link RENDERABLE_MAX}), so one out-of-range field beside a readable one used
- * to take the readable one's travel with it.
- */
 const frameOf = (
   frame: PresenceFrameInput | null | undefined,
 ): PresenceFrame => {
@@ -296,7 +158,6 @@ const frameOf = (
   };
 };
 
-/** The three frames a surface paints, each read from a value a caller may have stored. */
 const framesOf = (
   frames: PresenceFramesInput | null | undefined,
 ): PresenceFrames => ({
@@ -305,18 +166,6 @@ const framesOf = (
   exit: frameOf(frames?.exit),
 });
 
-/**
- * A phase read as the run the runtime accepts.
- *
- * A phase the value does not name used to be handed over as `{}`, which the
- * renderer reads as **its own** 300 ms `easeOut` default: the surface ran a
- * journey a window of zero had already ended, and a stored easing or duration
- * the runtime cannot read made it reject the whole description, which paints no
- * frame at all. A phase with no runnable duration is therefore **no journey** —
- * `{ duration: 0 }`, the instant assignment the reduced preference and the window
- * conversion already mean — and a wait or an easing the renderer cannot read is
- * dropped, so the transition this module publishes is always one it accepts.
- */
 const transitionOf = (
   transition: PresenceTransitionInput | null | undefined,
 ): PresenceTransition => {
@@ -333,20 +182,6 @@ const transitionOf = (
   };
 };
 
-/**
- * The timing a surface paints, read from a value a caller may have stored.
- *
- * `PresenceTimingInput` is the shape a decoded config actually has, and this
- * module is a published subpath for a consumer painting its own surface: a
- * config that did not decode can arrive with **no object at all** (JSON has no
- * `undefined`, so a field the config never carried reads back as `null`) or with
- * a phase it never named. Reading `.enter`/`.exit` off it threw `TypeError` out of
- * the render that projected the window. A phase the value does not name is **no
- * journey** ({@link transitionOf}), the answer {@link transitionWindowMs} already
- * gives a field it cannot read — so the surface paints its resting frame at once
- * rather than throwing, and the window and the frame cannot disagree about what a
- * run is.
- */
 export const presenceTimingOf = (
   timing: PresenceTimingInput | null | undefined,
 ): PresenceTiming => ({
@@ -354,16 +189,6 @@ export const presenceTimingOf = (
   exit: transitionOf(timing?.exit),
 });
 
-/**
- * The timings a surface at `level` moves with, under a preference.
- *
- * The enter decelerates and the exit accelerates, so the two are separate
- * transitions rather than one shared curve: a surface that speeds up as it
- * leaves reads as being pulled away. A preference a caller restored from storage
- * is read by `motionTiming`'s own rule, so a name the union does not carry takes
- * the reduced policy rather than the journey — and the parameter takes the value
- * the store wrote, so no assertion stands between the two.
- */
 export const presenceTiming = (
   level: MotionLevel,
   preference: unknown = "animated",
@@ -372,41 +197,11 @@ export const presenceTiming = (
   exit: motionTiming(level, { phase: "exit", preference }),
 });
 
-/**
- * A timing field in milliseconds.
- *
- * A duration or wait that cannot run is no time at all: the field is read
- * through the clock's own rule ({@link schedulableSeconds}), so a value outside
- * it contributes nothing. A negative wait must never subtract from the journey
- * it precedes — a window shorter than its tween opens a leaving box for shorter
- * than it paints.
- */
 const milliseconds = (seconds: number | null | undefined): number =>
   (schedulableSeconds(seconds) ?? 0) * 1000;
 
-/**
- * The longest window a host timer holds, in whole milliseconds.
- *
- * This conversion is the value an unmount is scheduled with (`setTimeout`, in
- * `useSurfacePresence` and the toast stack), not with the renderer's clock: a
- * timer's delay is a signed 32-bit count of milliseconds, so a longer one is
- * clamped to `1` and fires at once. A window past this bound is therefore **no
- * window**, the answer an unrepresentable sum already gets — otherwise a
- * leaving surface unmounts in the frame it begins to leave.
- */
 const SCHEDULABLE_WINDOW_MS = 2_147_483_647;
 
-/**
- * The window a run occupies, in whole milliseconds.
- *
- * The wait a delayed run sits out first is part of its window — the runtime
- * holds the first frame for it — so a window that counted only the duration
- * would unmount a feedback layer before its journey began. A run with no
- * duration and no wait is no window at all, and so is one whose whole window
- * cannot be scheduled: a sum the arithmetic cannot represent, or one past the
- * milliseconds a host timer accepts ({@link SCHEDULABLE_WINDOW_MS}). The box
- * unmounts rather than staying mounted for a number the scheduler cannot take.
- */
 export const transitionWindowMs = (
   timing: PresenceTransition | null | undefined,
 ): number => {
@@ -416,48 +211,13 @@ export const transitionWindowMs = (
   return Number.isFinite(total) && total <= SCHEDULABLE_WINDOW_MS ? total : 0;
 };
 
-/**
- * The mount window a leaving surface occupies, in whole milliseconds.
- *
- * The seam and the toast stack both keep a leaving box painted for exactly the
- * length of its exit tween, so the conversion lives in one place and a
- * preference change rescales both.
- */
 export const exitWindowMs = (
   timing: PresenceTimingInput | null | undefined,
 ): number => transitionWindowMs(presenceTimingOf(timing).exit);
 
-/**
- * A millisecond wait as the seconds the renderer schedules.
- *
- * A stagger's pace is caller arithmetic, so a finite value can still convert to
- * a wait no clock can sit out (`1e300` ms is `1e297` seconds): that description
- * is refused whole and the arrival paints no frame, so it is **no wait** — the
- * rule {@link transitionWindowMs} already applies to a duration.
- */
 const waitSeconds = (delayMs: number): number | undefined =>
   schedulableSeconds(delayMs / 1000);
 
-/**
- * A house timing that waits `delayMs` before it runs — a stagger.
- *
- * The delay is named in milliseconds and handed to the runtime in seconds. It
- * goes with the journey: the runtime waits a delay out *before* an instant
- * assignment, so a timing the reader's preference collapsed to zero duration
- * drops it rather than holding a resting frame back by exactly the wait the
- * reduced policy removes.
- *
- * A journey the timing cannot run at all drops it for the same reason, and that
- * is the same reading {@link transitionWindowMs} takes of a duration — no
- * schedulable travel is no journey. A stored timing that never carried a
- * duration, or carries one that is unreadable or not positive, is therefore
- * painted at once instead of sitting at its first frame for the wait: the two
- * halves of the module cannot disagree about what a run is.
- *
- * A delay that cannot be scheduled (negative, infinite, `NaN`, or a conversion
- * past the clock's range — {@link waitSeconds}) adds nothing, and the timing is
- * returned as it was, so an unstaggered run keeps the object it was given.
- */
 export const delayedTiming = (
   timing: PresenceTransition | null | undefined,
   delayMs: number,
@@ -468,18 +228,6 @@ export const delayedTiming = (
     : { ...timing, delay: wait };
 };
 
-/**
- * The `motion` prop a surface paints for its current presence.
- *
- * Both halves are read from values a caller may have stored, because this module
- * is a published entry for a consumer painting its own surface: a timing the
- * value does not name is **no transition** ({@link presenceTimingOf}) and a frame
- * it cannot paint is dropped or no frame at all ({@link framesOf}) — including a
- * field outside the renderer's own range, which rejects the whole description —
- * so a decoded config cannot hand the runtime `undefined` where its target
- * belongs or a value it paints as nothing. A readable pair is passed through as
- * it was given.
- */
 export const presenceMotion = (
   frames: PresenceFramesInput | null | undefined,
   present: boolean,
@@ -498,18 +246,6 @@ export const presenceMotion = (
   };
 };
 
-/**
- * The pointer rule a surface paints for its current presence.
- *
- * A surface that stays painted for its exit is still a box with controls in it,
- * so a leaving one takes no presses until its tween ends and it unmounts.
- *
- * `rest` is what the surface is while it is open, and the two answers are not
- * interchangeable. An overlay is a **target**: it blocks the pointer behind it,
- * which is what `"auto"` buys over the implicit hitbox its fill already inserts.
- * A reveal is a **wrapper**: it paints no surface of its own, so `"auto"` would
- * put a hitbox over the content it wraps, and it paints nothing at rest.
- */
 export const presenceStyle = (
   present: boolean,
   rest: "target" | "wrapper" = "target",

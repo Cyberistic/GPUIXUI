@@ -1,16 +1,3 @@
-/**
- * Accordion behaviour, in the real GPUix renderer.
- *
- * The bugs these guard: single mode left two sections open; a non-collapsible
- * section closed everything when its own header was pressed; multiple mode lost
- * an open section when another was toggled; a disabled section opened anyway;
- * `aria-expanded` disagreed with the visible body; a controlled accordion
- * changed its own open set when the consumer said no; and arrow movement either
- * landed on a disabled header or opened the section it moved to. A caller `ref`
- * on a header was discarded in favour of the internal one. A held Enter flipped
- * a just-opened section shut again on each repeat of the key.
- */
-
 import * as Option from "effect/Option";
 import { contrastFloors, contrastRatio } from "@gpuixui/tokens";
 import { describe, expect, it, vi } from "vitest";
@@ -42,7 +29,6 @@ const section = (value: string, label: string, disabled = false) => (
   </AccordionItem>
 );
 
-/** A three-question FAQ, with the third disabled. */
 const Faq = ({
   collapsible = false,
   value,
@@ -65,10 +51,6 @@ const Faq = ({
   </Accordion>
 );
 
-/**
- * The accordion the motion cases drive: two fixed bodies, so the panel's
- * painted heights and the shift of the section below are arithmetic.
- */
 const MotionAccordion = ({
   reduced = false,
 }: {
@@ -92,25 +74,21 @@ const MotionAccordion = ({
   </MotionProvider>
 );
 
-/** The motion description the runtime is running for `testId`. */
 const motionOf = (
   page: ReturnType<typeof renderComponent>,
   testId: string,
 ): unknown => page.renderer.findByTestId(testId)?.customProps?.motion;
 
-/** The painted height of `testId`. */
 const heightOf = (
   page: ReturnType<typeof renderComponent>,
   testId: string,
 ): number => requireBounds(page, testId).height;
 
-/** The painted top edge of `testId`. */
 const topOf = (
   page: ReturnType<typeof renderComponent>,
   testId: string,
 ): number => requireBounds(page, testId).y;
 
-/** The painted heights of a panel at 20 ms steps, for the frames it is moving. */
 const steps = (
   page: ReturnType<typeof renderComponent>,
   testId: string,
@@ -125,12 +103,6 @@ const steps = (
   });
 
 describe("Accordion motion", () => {
-  /**
-   * The bug this guards: the panel's target arrived through `onLayout` after its
-   * first paint, so the opening frame was handed height 0 and the growth started
-   * a frame late. The target is the height the panel settles on, known before
-   * that frame paints.
-   */
   it("hands the runtime the measured height on the frame it opens", () => {
     const page = renderComponent(<MotionAccordion />);
     try {
@@ -169,14 +141,13 @@ describe("Accordion motion", () => {
       expect(
         opening.filter((height) => height > 0 && height < resting).length,
       ).toBeGreaterThan(1);
-      // The section below moves by exactly the panel it gained, so nothing jumps.
+
       expect(after - before).toBe(resting);
 
       clickCentreOf(page, "trigger-one");
       settle(page);
       const closing = steps(page, "content-one");
 
-      // It shrinks through real frames rather than vanishing...
       expect(
         closing.filter((height) => height > 0 && height < resting).length,
       ).toBeGreaterThan(1);
@@ -184,7 +155,7 @@ describe("Accordion motion", () => {
       await waitFor(() =>
         expect(page.renderer.findByTestId("content-one")).toBeUndefined(),
       );
-      // ...and the page below lands where it started.
+
       expect(topOf(page, "item-two")).toBe(before);
     } finally {
       page.unmount();
@@ -205,9 +176,6 @@ describe("Accordion motion", () => {
         return y;
       });
 
-      // A snap mounts the open body at its full height in one frame and leaves
-      // the section below with two positions; a height tween moves it through
-      // several.
       expect(new Set(moving).size).toBeGreaterThan(2);
       expect(moving.every((y) => y >= before)).toBe(true);
     } finally {
@@ -216,8 +184,6 @@ describe("Accordion motion", () => {
   });
 
   it("cross-fades its two chevrons instead of swapping the mark", () => {
-    // The runtime has no `transform`, so the indicator cannot rotate: both marks
-    // stay mounted in the header and cross-fade, the incoming one rising 2px.
     const page = renderComponent(<MotionAccordion />);
     try {
       page.renderer.clockPause();
@@ -240,14 +206,14 @@ describe("Accordion motion", () => {
       expect(motionOf(page, "trigger-one-chevron-up")).toMatchObject({
         animate: { opacity: 1, top: 0 },
       });
-      // Both marks stay painted, which is what makes it a cross-fade.
+
       expect(
         page.renderer.findByTestId("trigger-one-chevron-down"),
       ).toBeDefined();
       expect(
         page.renderer.findByTestId("trigger-one-chevron-up"),
       ).toBeDefined();
-      // The two marks share one slot, so the header keeps its box.
+
       expect(heightOf(page, "trigger-one")).toBe(header);
     } finally {
       page.unmount();
@@ -266,7 +232,7 @@ describe("Accordion motion", () => {
       expect(motionOf(page, "content-one")).toMatchObject({
         transition: { duration: 0 },
       });
-      // The fade snaps with the box, so the delay it wears while animated goes.
+
       expect(motionOf(page, "content-one-measured")).toMatchObject({
         transition: { duration: 0 },
       });
@@ -407,8 +373,6 @@ describe("Accordion", () => {
     faq.renderer.nativeSimulateKeyDown(trigger.id, "enter");
     expect(faq.renderer.findByTestId("content-two")).toBeDefined();
 
-    // The platform repeats the key-down while the key is held; a collapsible
-    // section would flip shut again if a repeat counted as an activation.
     faq.renderer.nativeSimulateKeyDown(trigger.id, "enter", true);
     expect(faq.renderer.findByTestId("content-two")).toBeDefined();
 
@@ -515,24 +479,18 @@ describe("Accordion", () => {
   });
 
   it("signals the hover with the measured state wash, not the brand fill", () => {
-    // The bug: hover repainted the label in `colors.primary` — a fill role
-    // designed to carry `primaryForeground` — so the header fell to 5.61:1 on
-    // the base light page and 4.38:1 on Linux light's, under the body floor,
-    // while every other trigger in the library tints the `hover` wash and
-    // keeps the label role the contract measures on it.
     const faq = renderComponent(<Faq />, "light");
     const hover = faq.renderer.findByTestId("trigger-two")?.style.hover;
 
     expect(hover).toMatchObject({
       backgroundColor: lightTheme.colors.hover,
     });
-    // The label keeps the role it has at rest, which the pair table holds to
-    // the body floor on the wash.
+
     expect(hover).toMatchObject({ color: null });
     expect(
       contrastRatio(lightTheme.colors.foreground, lightTheme.colors.hover) ?? 0,
     ).toBeGreaterThanOrEqual(contrastFloors.body);
-    // The premise: the role the header used to paint cannot meet that floor.
+
     expect(
       contrastRatio(lightTheme.colors.primary, lightTheme.colors.background) ??
         0,
@@ -576,7 +534,6 @@ describe("Accordion", () => {
 
     expect(ref.current?.id).toBe(faq.renderer.findByTestId("trigger-one")?.id);
 
-    // The internal ref still carries header movement.
     faq.renderer.focusElement(ref.current?.id ?? -1);
     faq.renderer.simulateKeystrokes("down");
     expect(focusedTestId(faq)).toEqual(Option.some("trigger-two"));
@@ -585,9 +542,6 @@ describe("Accordion", () => {
   });
 
   it("opens a saved multiple accordion whose open set is not a list", async () => {
-    // Which sections are open is saved with the workspace, and a store writes
-    // `null` for a layout that carried none. The root read the membership of
-    // that value on the first render, so the accordion threw before it painted.
     const onValueChange = vi.fn();
     const faq = renderComponent(
       // @ts-expect-error — the open set a store wrote where it carried none.
@@ -616,7 +570,7 @@ describe("Accordion", () => {
 
   it("keeps the open sections beside an entry a store wrote as a hole", () => {
     const onValueChange = vi.fn();
-    // A hole in the saved set is a section the store never named.
+
     const saved = [null, "two"];
     const faq = renderComponent(
       // @ts-expect-error — a section a store saved as a hole in the set.

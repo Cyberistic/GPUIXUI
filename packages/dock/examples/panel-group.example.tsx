@@ -1,10 +1,3 @@
-/**
- * A three-panel group: sidebar, editor and inspector, with a collapse toggle on
- * the two side panels. The whole shape — fractions, orientation, collapse flags
- * — is one `PanelLayout`, so this screen is a single `useState` that persists
- * as a JSON string.
- */
-
 import { useState } from "react";
 import { ThemeProvider } from "@gpuixui/tokens/react";
 import { darkTheme } from "@gpuixui/tokens";
@@ -53,7 +46,6 @@ const PANELS: Readonly<Record<string, string>> = {
   inspector: "A collapse persists in the layout and round-trips through JSON.",
 };
 
-/** Three panes with per-pane collapse toggles, persisted as one shape. */
 export const PanelGroupExample = () => {
   const [layout, setLayout] = useState<PanelLayout>(initial);
   return (

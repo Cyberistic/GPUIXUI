@@ -1,28 +1,3 @@
-/**
- * Prove that the `/live` route paints — and that a press reaches JavaScript.
- *
- * `live-surface-probe.ts` settled whether the wasm renderer paints at all. This
- * probe holds the page a reader actually opens to the same rule: it loads
- * `/live` in a headless browser, waits for the page to report the element
- * bounds it laid out, samples the button's fill and the banner's resting fill
- * out of the captured PNG, presses through the renderer's own input path and
- * samples the banner again.
- *
- * Four things have to hold, and each of them can fail on its own:
- *
- * 1. the page reports `status=painting` (the renderer started),
- * 2. the sampled button pixel **is** `controlStyle(primary)`'s fill,
- * 3. the banner's pixel changes from the resting role to the pressed one —
- *    the listener repainted, through the renderer's event path,
- * 4. the retained tree carries the card's heading.
- *
- * Run (a dev server is already up):
- * `nub apps/docs/scripts/live-route-probe.ts`
- * Frames: `.artifacts/live/docs-live-route-*.png` (verification-only).
- *
- * Measured on macOS 15.8.1 x86_64, headless Google Chrome 155.0.8059.80 over
- * SwiftShader. See `docs/preview-strategy.md` §The live surface.
- */
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -31,7 +6,6 @@ import { fillAt, parseReport } from "./live-frame.ts";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 
-/** The default page, and the dev server it is served from. */
 export const defaultUrl = "http://localhost:4175/live";
 
 const point = (
@@ -52,7 +26,6 @@ const same = (left: string | undefined, right: string | undefined): boolean =>
     ? left.toLowerCase() === right.toLowerCase()
     : false;
 
-/** Run the route probe. Returns the process exit code. */
 export const main = async (argv: ReadonlyArray<string>): Promise<number> => {
   const urlIndex = argv.indexOf("--url");
   const url = argv[urlIndex + 1] ?? defaultUrl;
@@ -102,8 +75,6 @@ export const main = async (argv: ReadonlyArray<string>): Promise<number> => {
       return 1;
     }
 
-    // The report is written a frame after the batch; give the compositor the
-    // same frame to paint before capturing it.
     await new Promise((wait) => setTimeout(wait, 500));
     const first = await session.page.capture();
     await writeFile(join(out, "docs-live-route-before.png"), first);

@@ -1,12 +1,3 @@
-/**
- * Guards the extension registry.
- *
- * Bug guarded: adding a utility, variant, alias or unsupported reason meant
- * editing `classesToStyle` itself, so `@gpuixui/tw` could not be extended by a
- * consumer. Each test also checks the default registry did not gain the
- * extension, so a passing suite cannot be an accident of the default table.
- */
-
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import { lightTheme } from "@gpuixui/tokens";

@@ -1,28 +1,3 @@
-/**
- * The `diff-viewer-lifecycle` probe: the **shipped** `DiffViewer` painted in a
- * real window.
- *
- * The editor package's page makes three claims about paint and layout that the
- * offscreen renderer cannot hold: an added line tints the `success` soft role
- * and a removed line the `destructive` one; a split diff puts one change on one
- * row between two equal columns, with a side that ran out painted blank; and a
- * line that outgrows its column stays one line tall while its column scrolls.
- * The headless `editor-surface` scenario measured the raw `<diff>` host a patch
- * string goes into; nothing had painted the wrapper a consumer imports.
- *
- * The probe mounts four viewers, each bounded to the caller's width on a card
- * page:
- *
- * 1. **Unified** — the row count, each row's height and its own text (marker,
- *    both gutters, line), and the tint each kind paints, counted inside its own
- *    box.
- * 2. **Split** — equal side columns with a divider; the removed and added
- *    halves of a replacement share a baseline, an appended line paints a blank
- *    left cell, and each side keeps its own tint.
- * 3. **The long line** — a 160-character addition in a 420-point surface stays
- *    one line tall and its column keeps the caller's width.
- * 4. **Nothing changed** — one context row, no tint of either kind.
- */
 import { Duration, Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -57,16 +32,13 @@ import {
 } from "./diff-viewer.js";
 import { captureScale } from "./frame.js";
 
-/** The captures a reader can look at, one per painted state. */
 const UNIFIED = "diff-unified";
 const SPLIT = "diff-split";
 const LONG = "diff-long";
 const SAME = "diff-same";
 
-/** Long enough for the first layout pass to reach the frame. */
 const SETTLE = Duration.millis(140);
 
-/** One viewer, with the caption that says what it is. */
 const Section = ({
   caption,
   children,
@@ -90,13 +62,6 @@ const Section = ({
   );
 };
 
-/**
- * The page: the four viewers the probe reads.
- *
- * Every viewer is handed the caller's width, which is the contract a diff
- * surface in a pane has: the surface takes the room its pane gives it rather
- * than growing to its longest line.
- */
 const DiffViewerPage = (): ReactNode => {
   const theme = useTheme();
   return (
@@ -149,7 +114,6 @@ const DiffViewerPage = (): ReactNode => {
   );
 };
 
-/** The probe's window: one page, laid out at the window's own size. */
 export const DiffViewerProbe = (): ReactNode => {
   const window = useWindowSize();
   const theme = useTheme();
@@ -166,13 +130,11 @@ export const DiffViewerProbe = (): ReactNode => {
   );
 };
 
-/** One painted box, with a failure that names the locator. */
 const boxOf = (ctx: Smoke.AsyncSmokeContext, testId: string) =>
   Effect.flatMap(ctx.host.bounds(testId), (bounds) =>
     ctx.expectSome(`the ${testId} paints a box`, Option.fromNullishOr(bounds)),
   );
 
-/** The boxes of every row a viewer painted, by index. */
 const rowsOf = (ctx: Smoke.AsyncSmokeContext, viewer: string, count: number) =>
   Effect.forEach(
     Arr.range(0, count - 1),
@@ -184,7 +146,6 @@ const rowsOf = (ctx: Smoke.AsyncSmokeContext, viewer: string, count: number) =>
     { concurrency: 1 },
   );
 
-/** The boxes of both sides of every split pair, in row order. */
 const splitRowsOf = (ctx: Smoke.AsyncSmokeContext, count: number) =>
   Effect.forEach(
     Arr.range(0, count - 1),
@@ -203,14 +164,12 @@ const splitRowsOf = (ctx: Smoke.AsyncSmokeContext, count: number) =>
     { concurrency: 1 },
   );
 
-/** Captures the window and decodes it. */
 const frameOf = (ctx: Smoke.AsyncSmokeContext, name: string) =>
   Effect.gen(function* () {
     yield* ctx.host.capture(name);
     return yield* ctx.host.pixels(name);
   });
 
-/** The capture's device scale, which the boxes are counted in. */
 const scaleOf = (ctx: Smoke.AsyncSmokeContext, frame: Pixels.Pixels) =>
   Effect.gen(function* () {
     const size = yield* ctx.host.windowSize();
@@ -220,7 +179,6 @@ const scaleOf = (ctx: Smoke.AsyncSmokeContext, frame: Pixels.Pixels) =>
     );
   });
 
-/** How many pixels of `hex` paint inside `box`. */
 const countIn = (
   ctx: Smoke.AsyncSmokeContext,
   frame: Pixels.Pixels,
@@ -233,7 +191,6 @@ const countIn = (
     countPaint(frame, box, scale, hex),
   );
 
-/** How many device pixels a box covers. */
 const areaOf = (box: Smoke.Bounds, scale: number): number =>
   Math.round(box.width * box.height * scale * scale);
 
@@ -247,8 +204,7 @@ export const diffViewerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
     );
     yield* ctx.host.waitFor(diffRowId(DIFF_IDS.long, 0));
     yield* ctx.host.waitFor(diffRowId(DIFF_IDS.same, 0));
-    // The runner waits for a mount marker; the first layout pass that carries
-    // the rows' heights lands after it.
+
     yield* Effect.sleep(SETTLE);
 
     const unifiedRoot = yield* boxOf(ctx, DIFF_IDS.unified);
@@ -259,7 +215,6 @@ export const diffViewerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       1,
     );
 
-    // ---- unified: the rows ----
     const unifiedRows = yield* rowsOf(
       ctx,
       DIFF_IDS.unified,
@@ -303,7 +258,6 @@ export const diffViewerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // ---- unified: the tints ----
     const unifiedFrame = yield* frameOf(ctx, UNIFIED);
     const scale = yield* scaleOf(ctx, unifiedFrame);
     const removed = Arr.getUnsafe(unifiedRows, 1);
@@ -348,7 +302,6 @@ export const diffViewerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       Math.round(areaOf(context.box, scale) * 0.35),
     );
 
-    // ---- split: equal columns, one change per row ----
     const splitRoot = yield* boxOf(ctx, DIFF_IDS.split);
     yield* ctx.expectNear(
       "the split surface takes its caller's width too",
@@ -518,7 +471,6 @@ export const diffViewerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       0,
     );
 
-    // ---- a long line stays one row, inside the caller's bound ----
     const longRoot = yield* boxOf(ctx, DIFF_IDS.long);
     yield* ctx.expectNear(
       "the long-line surface keeps the width its caller bounded",
@@ -556,7 +508,6 @@ export const diffViewerSteps: Smoke.AsyncSmokeScenario["steps"] = (ctx) =>
       true,
     );
 
-    // ---- nothing changed ----
     const sameRow = yield* boxOf(ctx, diffRowId(DIFF_IDS.same, 0));
     yield* ctx.expectNear(
       "an unchanged diff's row paints one code line tall",

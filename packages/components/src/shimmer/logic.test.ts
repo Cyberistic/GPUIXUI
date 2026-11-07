@@ -1,12 +1,3 @@
-/**
- * The shimmer's sweep arithmetic.
- *
- * The bugs these guard: a profile that starts or ends on the surface (a hard
- * band at the border), a peak that never crosses the surface, an alpha outside
- * 0…1, a counter that does not wrap, and a zero interval (a surface that ticks
- * every millisecond).
- */
-
 import { describe, expect, it } from "vitest";
 import {
   SHIMMER_STEPS,

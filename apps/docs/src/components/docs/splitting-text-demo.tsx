@@ -1,10 +1,3 @@
-/**
- * Browser preview for the Splitting text page.
- *
- * The native headline arrives word by word with a staggered fade and rise; the
- * preview splits the same phrase and staggers each word's entrance, replayable.
- */
-
 import { useState } from "react";
 
 const words = ["Build", "native", "interfaces"];

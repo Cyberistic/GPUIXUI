@@ -1,15 +1,3 @@
-/**
- * `Slider` and `RangeSlider` — the element tree the runtime receives.
- *
- * The bug this suite guards is the one an element-tree test can see: a value
- * control must announce its value through `aria-valuetext` (there is no
- * `aria-valuenow` in `@gpuix/native` 0.11.0), must not invent the attributes the runtime
- * ignores, must keep its keyboard contract even while painting a ring, and must
- * drop both its tab stop and its key handling when disabled. The pointer
- * geometry and the native focus movement are the runtime suite's job
- * (`runtime/value.runtime.test.tsx`).
- */
-
 import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
@@ -50,7 +38,6 @@ import {
 
 const idle: FocusState = { focused: false, onFocus: vi.fn(), onBlur: vi.fn() };
 
-/** A thumb's focus ring, if it paints one. */
 const ringOf = (
   element: ReactElement,
 ): Option.Option<Record<string, unknown>> =>
@@ -89,11 +76,10 @@ const rangeHandlers = (
   onPointerUp: () => {},
 });
 
-/** The rail and its parts: fill, thumb (and, for a range, a second of each). */
 const railOf = (element: ReactElement): ReactElement => {
   const child =
     elementChildren(element)[0] ?? expect.fail("the slider has no child");
-  // A context provider draws nothing; the rail is its only child.
+
   return Option.isSome(hostTag(child))
     ? child
     : (elementChildren(child)[0] ?? expect.fail("the slider has no rail"));
@@ -104,10 +90,6 @@ const partsOf = (element: ReactElement): ReadonlyArray<ReactElement> =>
 
 describe("Slider", () => {
   it("draws a size name the scale does not carry at the default size", () => {
-    // The bug guarded: the rail's height, the thumb's side and the pointer
-    // inset all read the control size, and a stored name the scale no longer
-    // carries resolved each to `undefined`/`NaN` — a slider whose rail and
-    // thumb painted nothing, so there was nowhere to press.
     const stored = renderSlider(
       { size: "xl" as ControlSize, value: 40 },
       testTheme,
@@ -131,13 +113,6 @@ describe("Slider", () => {
   });
 
   it("reads a saved bound it cannot read as the documented range", () => {
-    // The bug guarded: a slider's bounds are saved with the form that draws it
-    // — a restored settings pane, a channel control in a record — so a bound
-    // arrives as whatever the store wrote. `??` kept the documented default
-    // only for `null`/`undefined`, and `normalizeRange` answers any other
-    // unreadable bound with `min + 1`, so a stored text `max` painted a 0..1
-    // slider: 40 was clamped to 1 and its fill sat at the end of the track
-    // instead of at 40%.
     const stored = renderSlider(
       { value: 40, max: "255" } as unknown as SliderProps,
       testTheme,
@@ -158,9 +133,7 @@ describe("Slider", () => {
       expectSome(hostStyle(documented, "width")),
     );
     expect(expectSome(hostStyle(fill, "width"))).toBe("40%");
-    // A stored `step` is the same read: text is not a number, so the documented
-    // step of one still quantises the control. Read as `0` it was continuous,
-    // and the thumb reported the raw pointer position.
+
     expect(
       expectSome(
         hostProp(
@@ -204,11 +177,6 @@ describe("Slider", () => {
   });
 
   it("keeps its own words for a formatter that says nothing", () => {
-    // The bug guarded: `formatValue` is interface copy from a localised table,
-    // and an answer of `""` was published as it arrived — a slider announcing
-    // nothing on `aria-valuetext`, its only channel (0.11.0 has no
-    // `aria-valuenow`). A blank answer is absence, so the clamped number stands;
-    // a real answer is still the caller's, trimmed.
     const announce = (formatValue?: (value: number) => string): string =>
       expectSome(
         hostPropString(
@@ -228,12 +196,6 @@ describe("Slider", () => {
   });
 
   it("hands its element the caller's address, layout and help", () => {
-    // Bug guarded: a slider is the control a form owns, but it had no address
-    // and no announced help — a form could not focus the slider it failed on,
-    // an automation host could not name it, and a visible `Label`'s
-    // description reached nobody. The root is both the slider and its tab
-    // stop, so all four land there, and the track's own registration survives
-    // the caller's ref.
     const ref = vi.fn();
     const layout = vi.fn();
     const registerTrack = vi.fn();
@@ -317,8 +279,6 @@ describe("Slider", () => {
   });
 
   it("declares the keyboard ring on the track, which is the tab stop", () => {
-    // The thumb cannot be focused, so a ring declared there would never paint;
-    // the outline belongs on the element that holds focus.
     const element = renderSlider(
       {},
       testTheme,
@@ -422,9 +382,6 @@ describe("RangeSlider", () => {
   });
 
   it("keeps each end's own words for a formatter that says nothing", () => {
-    // The bug guarded, one control over: a range's `formatValue` is the same
-    // localised copy, and each thumb's `aria-valuetext` is its only channel. A
-    // blank answer left both thumbs announcing nothing beside a painted span.
     const announce = (
       formatValue?: (value: number) => string,
     ): ReadonlyArray<string> => {
@@ -448,10 +405,6 @@ describe("RangeSlider", () => {
   });
 
   it("addresses the thumb the form focuses and announces the group's help", () => {
-    // Bug guarded: the same address/help hole one control over. The group is
-    // not focusable, so the address lands on the thumb the reader last used —
-    // the start while neither holds focus — and the help rides the group node,
-    // which is where a reader hears the group's name.
     const ref = vi.fn();
     const layout = vi.fn();
     const renderWith = (focusedIndex: Option.Option<0 | 1>) =>
@@ -497,10 +450,6 @@ describe("RangeSlider", () => {
   });
 
   it("derives the thumb names from the group's trimmed name", () => {
-    // The bug guarded: both names interpolated `label` raw, so a padded group
-    // name announced its padding twice and a blank one named the ends
-    // " minimum"/" maximum" instead of leaving them unnamed like an unnamed
-    // group (the case below).
     const thumbsOf = (label: string) => {
       const [, start, , end] = partsOf(
         renderRangeSlider(
@@ -538,10 +487,6 @@ describe("RangeSlider", () => {
   });
 
   it("does not report a span an arrow could not move", () => {
-    // The bug guarded: the tuple was rebuilt on every interaction, so `Object.is`
-    // never saw the same span. An arrow at a bound reported the value it already
-    // held — a spurious dirty flag, save or analytics event — while the single
-    // slider reported nothing.
     const onSpanChange = vi.fn();
     const element = renderRangeSlider(
       { label: "Price" },
@@ -562,8 +507,6 @@ describe("RangeSlider", () => {
   });
 
   it("declares the keyboard ring on both thumbs, never a shadow", () => {
-    // Each range thumb is its own tab stop, so both declare the outline; the
-    // runtime paints it on the thumb holding keyboard focus.
     const [, start, , end] = partsOf(render());
     for (const thumb of [start, end]) {
       const element = thumb ?? expect.fail("no thumb");
@@ -660,10 +603,6 @@ describe("the slider parts", () => {
   });
 
   it("puts the thumb's centre on the value's fraction at 0, 50 and 100", () => {
-    // The track pads by half a thumb and the thumb pulls itself back by the
-    // same half, so the usable span is the track minus the two halves and the
-    // thumb's centre lands exactly on the fraction — the numbers the runtime
-    // suite measures in pixels.
     const side = testTheme.iconSize.md;
     const half = Math.round(side / 2);
     const geometry = (value: number) => {
@@ -714,9 +653,6 @@ describe("the slider parts", () => {
   });
 
   it("turns the default composition and every part onto a vertical track", () => {
-    // The bug guarded: `orientation` reached the root but not the parts, so a
-    // vertical slider still laid a horizontal rail, grew its fill sideways and
-    // pulled the thumb on the wrong axis.
     const element = renderSlider(
       { value: 40, orientation: "vertical" },
       testTheme,
@@ -736,8 +672,7 @@ describe("the slider parts", () => {
     expect(expectSome(hostStyle(rail, "flexDirection"))).toBe("column");
     expect(expectSome(hostStyle(rail, "justifyContent"))).toBe("flex-end");
     const parts = partsOf(element);
-    // A vertical rail paints its parts from the floor up, so the thumb comes
-    // first in the tree and the fill after it.
+
     const thumb = parts[0] ?? expect.fail("no thumb");
     const fill = parts[1] ?? expect.fail("no fill");
     expect(expectSome(hostStyleString(fill, "height"))).toBe("40%");
@@ -765,10 +700,6 @@ describe("the slider parts", () => {
   });
 
   it("lets a caller restyle the rail", () => {
-    // The gap guarded: `SliderTrack` was the one part with no styling seam — it
-    // took only `children`, so a rail could not be restyled apart from the root
-    // (a thicker rail, a different role) while the fill and the thumb both took
-    // `className` and `style`.
     const element = renderSliderTrack(
       { className: "gap-sm", style: { padding: 7 }, testId: "rail" },
       paint([0.5]),
@@ -800,14 +731,11 @@ describe("the slider parts", () => {
       elementChildren(provider)[0] ??
       expect.fail("the provider carried no body");
 
-    // The default composition would put a host rail here; the caller's own
-    // track component must be the body instead.
     expect(track.type).toBe(SliderTrack);
     expect(expectSome(elementProp(track, "children"))).toBeDefined();
   });
 });
 
-/** Keeps the element prop helper honest: a slider has no `value` prop of its own. */
 describe("slider prop surface", () => {
   it("reads its value from state, not from a forwarded prop", () => {
     const element = renderSlider(

@@ -4,20 +4,6 @@ import { DocsView, loadDocsPage } from "@/lib/docs-view";
 import { docsMetadata } from "@/lib/page-meta";
 import { appName, docsRoute } from "@/lib/shared";
 
-/**
- * A docs page. The docs live at the site root, so the root splat is the docs
- * route; a static route (`/live`, `/api/search`, `/llms.txt`, the landing)
- * outranks it.
- *
- * Its title, description and canonical URL come from the loader, which is the
- * page that is rendering; the fallback only covers the type, where `loaderData`
- * is optional because the route declares a loader at all.
- *
- * A package page a curated page replaces redirects before the loader runs, so
- * a reader who followed an older address lands on the one page that documents
- * the component (`curated-twins.ts`). The query travels with them, so a
- * `?q=` filter or a live scene survives the redirect.
- */
 export const Route = createFileRoute("/$")({
   component: Page,
   beforeLoad: ({ location, params }) => {

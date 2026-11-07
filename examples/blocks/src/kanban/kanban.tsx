@@ -1,13 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Kanban — three columns of cards; a card is dragged to another column.
- *
- * The drag is the divider's rule (`@gpuixui/dock`): a card subscribes to both
- * `onMouseDown` and `onMouseMove`, so the runtime captures the pointer for the
- * whole gesture. While it is held, a raised copy follows the pointer, drawn
- * last so it paints over every column. On release the card moves to the
- * column whose measured bounds (`onLayout`) hold the pointer.
- */
 import { Avatar } from "@gpuixui/components/avatar";
 import { Badge } from "@gpuixui/components/badge";
 import { Card } from "@gpuixui/components/card";
@@ -42,18 +33,16 @@ const rectOf = (event: EventPayload): Rect => ({
   height: event.height ?? 0,
 });
 
-/** The board, as a window's whole content. */
 export const Kanban = () => {
   const theme = useTheme();
   const [tasks, setTasks] = useState(board);
-  // The press lives in a ref: the runtime can deliver a whole gesture before
-  // React commits the render the press scheduled (`drag-between-panes`).
+
   const drag = useRef<Drag | null>(null);
   const [offset, setOffset] = useState<Pick<Drag, "id" | "dx" | "dy"> | null>(
     null,
   );
   const bounds = useRef<Partial<Record<Column, Bounds>>>({});
-  // Where each card and the board sit in the window, for the ghost's position.
+
   const rects = useRef<Partial<Record<string, Rect>>>({});
   const origin = useRef<Rect>({ x: 0, y: 0, width: 0, height: 0 });
 
@@ -77,9 +66,6 @@ export const Kanban = () => {
     </Stack>
   );
 
-  // Both listeners sit on the card, the element that paints a background: a
-  // press stops at the first painted hitbox, and the pair arms pointer capture.
-  // The card stays in its slot, faded, and keeps the gesture.
   const card = (column: Column, task: Task) => (
     <Card
       key={task.id}
@@ -119,8 +105,6 @@ export const Kanban = () => {
     </Card>
   );
 
-  // The runtime paints siblings in tree order and the published API has no
-  // `zIndex`, so the lifted card is drawn last, over every column.
   const ghost = Option.flatMap(Option.fromNullishOr(offset), (lifted) =>
     Option.flatMap(Option.fromNullishOr(rects.current[lifted.id]), (rect) =>
       Option.map(

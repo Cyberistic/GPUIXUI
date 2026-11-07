@@ -1,12 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Rolling text example: a counter that rolls, and a status that drops in.
- *
- * The clock is the application's — a rolling value is a controlled value, so the
- * example owns the interval it changes on. The second line rolls downwards under
- * the reduced preference, which paints each value without the journey.
- */
-
 import { useEffect, useState } from "react";
 import { Button } from "@gpuixui/components/authoring";
 import { MotionProvider } from "@gpuixui/components/motion";
@@ -14,7 +6,6 @@ import { RollingText } from "../src/rolling-text.js";
 
 const statuses = ["Running", "Deploying", "Healthy", "Draining"] as const;
 
-/** A deploy counter and a status, both rolling. */
 export const RollingTextExample = () => {
   const [deploys, setDeploys] = useState(1_284);
   const [status, setStatus] = useState(0);

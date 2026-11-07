@@ -1,12 +1,3 @@
-/**
- * Keyboard scrolling's arithmetic.
- *
- * The runtime's offset is negative and an overshoot is clamped by `scrollTo`
- * (measured in `runtime/layout.runtime.test.tsx`), so these cases pin what the
- * component can decide without a renderer: which key moves which axis, by what,
- * and where it refuses to act.
- */
-
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import { SCROLL_END, revealScroll, scrollTarget } from "./scroll.js";
@@ -14,7 +5,6 @@ import { SCROLL_END, revealScroll, scrollTarget } from "./scroll.js";
 const metrics = { line: 32, page: { width: 80, height: 60 } } as const;
 const at = (x: number, y: number) => ({ x, y });
 
-/** A box in window pixels: the row's height is the only part a reveal reads. */
 const box = (y: number, height = 24) => ({ x: 10, y, width: 200, height });
 
 describe("scrollTarget", () => {
@@ -43,16 +33,13 @@ describe("scrollTarget", () => {
   });
 
   it("pages a sideways region by its width, not by a height it never shows", () => {
-    // The bug guarded: a page carried one number — the scroller's height — and
-    // paged only the vertical axis, so a horizontal region answered
-    // PageUp/PageDown with `None` and a reader could move one line at a time.
     expect(
       scrollTarget("pagedown", "horizontal", at(-10, 0), metrics),
     ).toStrictEqual(Option.some(at(-90, 0)));
     expect(
       scrollTarget("pageup", "horizontal", at(-90, 0), metrics),
     ).toStrictEqual(Option.some(at(-10, 0)));
-    // A two-axis region pages the axis a reader thinks of as the screen: y.
+
     expect(
       scrollTarget("pagedown", "both", at(-40, -10), metrics),
     ).toStrictEqual(Option.some(at(-40, -70)));
@@ -70,13 +57,7 @@ describe("scrollTarget", () => {
     );
   });
 
-  // Bug guarded: `ScrollArea`'s axis is a stored layout choice, and the key
-  // contract read it raw — a name the union does not carry matched neither
-  // branch of `scrolls`, so every key answered `None` while the paint fell
-  // through to **both** scrollbars. The region was a tab stop that moved
-  // nothing; it reads the documented `vertical` now, in step with the paint.
   it("reads a stored axis as the region's documented axis", () => {
-    // The parameter is `unknown` because a saved axis arrives as one string.
     const stored: unknown = "sideways";
     expect(scrollTarget("down", stored, at(0, -100), metrics)).toStrictEqual(
       Option.some(at(0, -132)),
@@ -84,7 +65,7 @@ describe("scrollTarget", () => {
     expect(scrollTarget("pagedown", stored, at(0, -10), metrics)).toStrictEqual(
       Option.some(at(0, -70)),
     );
-    // A vertical region still leaves the sideways keys alone.
+
     expect(scrollTarget("right", stored, at(0, 0), metrics)).toStrictEqual(
       Option.none(),
     );
@@ -128,8 +109,6 @@ describe("revealScroll", () => {
   const viewport = { x: 0, y: 100, width: 200, height: 100 };
 
   it("moves a row below the fold up by exactly its overshoot", () => {
-    // The row's bottom is 20px past the viewport's: the content moves up 20px,
-    // and the offset's magnitude grows by the same 20.
     expect(revealScroll(box(190, 30), viewport, at(0, -40))).toStrictEqual(
       Option.some(at(0, -60)),
     );
@@ -145,7 +124,7 @@ describe("revealScroll", () => {
     expect(revealScroll(box(120), viewport, at(0, -40))).toStrictEqual(
       Option.none(),
     );
-    // Touching an edge is inside: no scroll for a row that ends on the fold.
+
     expect(revealScroll(box(176), viewport, at(0, -40))).toStrictEqual(
       Option.none(),
     );
@@ -157,11 +136,6 @@ describe("revealScroll", () => {
     );
   });
 
-  // The bug guarded: a tall row was aligned by whichever edge the scan reached
-  // first, so one starting below the fold scrolled to its **bottom** — the
-  // last lines of a row whose start the reader has never seen — and one whose
-  // top was already at the fold moved again because its bottom was past it.
-  // The documented rule is the row's top, on either side of the fold.
   it("aligns a tall row's top when it starts below the fold", () => {
     expect(revealScroll(box(200, 140), viewport, at(0, 0))).toStrictEqual(
       Option.some(at(0, -100)),

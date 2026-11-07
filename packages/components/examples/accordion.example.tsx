@@ -1,11 +1,4 @@
 /** @jsxImportSource @gpuix/react */
-/**
- * Accordion example: a five-question FAQ in single, non-collapsible mode.
- *
- * One answer is always visible, so the page never looks empty; pressing the open
- * question again is deliberately a no-op.
- */
-
 import {
   Accordion,
   AccordionContent,
@@ -47,7 +40,6 @@ const questions: ReadonlyArray<{
   },
 ];
 
-/** The FAQ card. */
 export const AccordionExample = () => {
   const theme = useTheme();
   return (
